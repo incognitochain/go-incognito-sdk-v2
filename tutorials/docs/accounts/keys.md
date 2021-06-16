@@ -4,7 +4,7 @@ description: Tutorial on key types in Incognito.
 
 ## Keys
 
-Each user of Incognito has 4 types of keys. Each key is encoded in base58. 
+The followings are all types of keys a user might possess. Each key used in this `go-sdk` is encoded with base58. 
 * `privateKey`: the master private key which is used to spend UTXOs, sign transactions, and check the spending status of TXOs. An example of a private key is `1111111ChQjKmu2wZUAYoHWyD5ZiXFNKSWV8hyfMZkGqr74Lj3KGjpFgY18Voum9B2ADfXiYJhoaSdBC8D7u6XSPRAxw8sUBxtEjaY1DJdQ`.
 * `ReadOnlyKey`: this key is used to decrypt the amount of each TXO belonging to the user. An example of a readonly key is `13hdbKkqXZWYRYk9k4LxzTEgqXznAUvGwp6nAUa2fA1UjPuA6cKL23pinwQFBaPDUZAP5H8CDhUHPd7wgP1bDp43q2RmSswgRyTVAPG`.
 * `PrivateOTAKey`: this key is used to check if a TXO belong to the user or not (in Privacy V2 only). An example of a private OTA key is `14yFBV8kHMawSGQdN8XKq9DcmG2yNVuo42JbRTEck78iemqZLrHGt6Sm8idTS96kWCN6njHLxtk9BuhKXfuQqxmHQs6nBbc6LkgDPPC`.
