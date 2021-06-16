@@ -10,7 +10,7 @@ Only with one mnemonic phrase, you'll be able to back up and recover all of your
 All Incognito HD wallets use a variant of the standard 12-word master seed key, and each time this seed is extended at the end by a counter value, allowing an infinite number of new addresses to be generated automatically.
 These wallets following the [BIP-44](https://github.com/bitcoin/bips/blob/master/bip-0044.mediawiki) standard with the `coinType = 587` (see this [post](https://github.com/satoshilabs/slips/blob/master/slip-0044.md)). An example of a key derivation path is 
 <pre>
-m/44'/587'/0'/0/1.
+m/44'/587'/0'/0/1
 </pre>
 
 ## Create a new HD wallet
