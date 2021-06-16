@@ -15,7 +15,7 @@ import (
 ```
 
 ## Tutorials
-Following is a series of examples to help you get familiar with the Incognito network. The list does not cover all the capabilities of the SDK, I will try to cover them as much as possible. 
+Following is a series of examples to help you get familiar with the Incognito network. The list does not cover all the capabilities of the SDK, we will try to cover them as much as possible. 
 
 * [Introduction](tutorials/docs/intro/intro.md)
 * [Client](tutorials/docs/client)
