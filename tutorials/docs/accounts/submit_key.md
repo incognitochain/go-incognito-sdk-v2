@@ -46,7 +46,7 @@ OTA key submission not supported by this node configuration | The current node d
 // for regular cache
 err = client.SubmitKey(privateOTAKey)
 if err != nil {
-log.Fatal(err)
+	log.Fatal(err)
 }
 ```
 
@@ -99,7 +99,7 @@ fromHeight := uint64(0)
 isReset := true
 err = client.AuthorizedSubmitKey(privateOTAKey, accessToken, fromHeight, isReset)
 if err != nil {
-log.Fatal(err)
+	log.Fatal(err)
 }
 ```
 
