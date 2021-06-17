@@ -10,7 +10,7 @@ import (
 func main() {
 	privateKey := "112t8rneWAhErTC8YUFTnfcKHvB1x6uAVdehy1S8GP2psgqDxK3RHouUcd69fz88oAL9XuMyQ8mBY5FmmGJdcyrpwXjWBXRpoWwgJXjsxi4j"
 
-	incClient, err := incclient.NewTestNetClient()
+	incClient, err := incclient.NewTestNet1Client()
 	if err != nil {
 		log.Fatal(err)
 	}
