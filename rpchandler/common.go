@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/incognitochain/go-incognito-sdk-v2/common"
-	"github.com/incognitochain/go-incognito-sdk-v2/common/base58"
 	"github.com/incognitochain/go-incognito-sdk-v2/key"
 	"github.com/incognitochain/go-incognito-sdk-v2/wallet"
 )
@@ -15,8 +14,7 @@ type RPCError struct {
 	Code       int    `json:"Code,omitempty"`
 	Message    string `json:"Message,omitempty"`
 	StackTrace string `json:"StackTrace"`
-
-	err 	   error  `json:"Err"`
+	Err error `json:"Err"`
 }
 
 type JsonRequest struct {
@@ -36,25 +34,6 @@ type JsonResponse struct {
 }
 
 var Server = new(RPCServer)
-var EthServer = new(RPCServer)
-
-func EncodeBase58Check(data []byte) string {
-	b := base58.Base58Check{}.Encode(data, 0)
-	return b
-}
-
-func DecodeBase58Check(s string) ([]byte, error) {
-	b, _, err := base58.Base58Check{}.Decode(s)
-	return b, err
-}
-
-/*Common functions*/
-// RandIntInterval returns a random int in range [L; R]
-func RandIntInterval(L, R int) int {
-	length := R - L + 1
-	r := common.RandInt() % length
-	return L + r
-}
 
 func ParseResponse(respondInBytes []byte) (*JsonResponse, error) {
 	var respond JsonResponse
@@ -99,7 +78,7 @@ func CreateJsonRequest(jsonRPC, method string, params []interface{}, id interfac
 	return request
 }
 
-//Temp function that creates a payment address of a specific shard.
+// CreatePaymentAddress is a temp function that creates a payment address of a specific shard.
 func CreatePaymentAddress(shardID byte) string {
 	pk := common.RandBytes(31)
 	tk := common.RandBytes(32)
