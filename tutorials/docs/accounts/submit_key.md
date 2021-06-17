@@ -3,9 +3,9 @@ description: Tutorial on how to have a full-node cache our output coins.
 ---
 # Full-nodes' Cache
 The benefits of increased privacy are not without costs. Retrieving output coins is one of the most prominent. In Privacy V1, a user's output coins all have the same public key, which is the user's public key. In this approach, a full node's database can effortlessly aggregate these output coins. When a user requests all of his or her output coins, the full-node only needs to look for those that have the same public key.
-Because we used one-time addresses to enhance receiver anonymity in Privacy V2, this no longer holds true. Different public keys will now be assigned to each of a user's output coins. As a result, the full-node is unable to determine if two output coins belong to the same or separate users. As a consequence, the full-node will be unable to respond to a user's request for his/her output coins.
+Because we used one-time addresses to enhance receiver anonymity in Privacy V2, this no longer holds true. Different public keys will now be assigned to each of a user's output coins. As a result, the full-node is unable to determine if two output coins belong to the same or separate users. And thus, the full-node will be unable to respond to a user's request for his/her output coins.
 
-One approach is for full-nodes to cache a user's output coins once the user submits his or her privateOTA key, allowing for quicker retrieval. The full-node may then scan each output coin and identify if it belongs to this user or not. However, determining whether a coin belongs to a user is costly. As a result, the full-node is designed with two modes of operation.
+One approach is for full-nodes to cache a user's output coins once the user submits his or her privateOTA key, allowing for quicker retrieval. The full-node may then scan each output coin and identify if it belongs to this user or not. However, determining whether a coin belongs to a user is costly. Therefore, we designed a full-node with two modes of operation.
 * **Default mode**: after the user's keys are submitted, the full-node only caches the user's output coins. As a result, any output coins V2 received prior to the submission of the privateOTA key will not be stored in the full-node's cache. If a user wishes to use this mode, he/she must submit his/her key before the first output coin arrives.
 * **Enhanced mode**: the full-node will re-scan the database and add all output coins of a user into its cache.
 
@@ -13,11 +13,11 @@ Next, we describe in detail each of these modes of operation and give a brief co
 
 ## Default mode
 In this mode of operation, the full-node only starts caching a user’s output coin after the user submits the privateOTA key.
-Consider the following example, suppose that Bob sends an UTXO (say UTXO A) to Alice at the block height 10, and at this time, Alice has not submitted her privateOTA key to the full node. As a result, the full node has no idea that these coins belong to Alice. 10 blocks later, i.e, block 20, Alice tells the full node to cache her coins. And right after that, David sends another UTXO (say B) to Alice. Now, if Alice queries her output coins from the full-node, the returned result only acknowledges the UTXO B (since the UTXO A has been “lost” in the view of the full-node).
+Consider the following example, suppose that Bob sends an UTXO (say UTXO A) to Alice at the block height 10, and at this time, Alice has not submitted her privateOTA key to the full-node. As a result, the full-node has no idea that these coins belong to Alice. 10 blocks later, i.e, block 20, Alice tells the full-node to cache her coins. And right after that, David sends another UTXO (say B) to Alice. Now, if Alice queries her output coins from the full-node, the returned result only acknowledges the UTXO B (since the UTXO A has been “lost” in the view of the full-node).
 
 Here is the summary of this mode.
-* The full node only does its work after Alice submits her key.
-* Every time a new block arrives, the full node will try to check if any output coins (of this block) belong to Alice. If yes, it caches these coins for Alice. This caching process is called **“passive caching”** and it does not take much effort of the full node.
+* The full-node only does its work after Alice submits her key.
+* Every time a new block arrives, the full-node will try to check if any output coins (of this block) belong to Alice. If yes, it caches these coins for Alice. This caching process is called **“passive caching”** and it does not take much effort of the full-node.
 * All output coins arriving before the key is submitted will be “lost”.
 * To avoid losing UTXOs, users are **RECOMMENDED** to submit their key before any UTXO arrives.
 
