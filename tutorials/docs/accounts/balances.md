@@ -8,7 +8,7 @@ To retrieve the balance of either PRV or any token on the Incognito network, we 
 using the `incclient` package as described in [Client](../client/client.md).
 
 ```go
-client, err := incclient.NewTestNetClient()
+client, err := incclient.NewTestNet1Client()
 ```
 
 Now, reading the balance of a token is pretty simple, just simply call the `GetBalance` function of the client with the inputs consisting of your private key and the tokenID.
@@ -40,7 +40,7 @@ import (
 func main() {
 	privateKey := "112t8rneWAhErTC8YUFTnfcKHvB1x6uAVdehy1S8GP2psgqDxK3RHouUcd69fz88oAL9XuMyQ8mBY5FmmGJdcyrpwXjWBXRpoWwgJXjsxi4j"
 
-	incClient, err := incclient.NewTestNetClient()
+	incClient, err := incclient.NewTestNet1Client()
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -60,7 +60,6 @@ func main() {
 
 	fmt.Printf("balanceToken: %v\n", balanceToken)
 }
-
 ```
 ---
 Return to [the table of contents](../../../README.md).
