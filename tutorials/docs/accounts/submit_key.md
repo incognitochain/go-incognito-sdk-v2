@@ -119,6 +119,7 @@ Node-friendly | Validators/Shard/Full-nodes | Full-nodes
 * Via RPC: `listoutputcoinsfromcache`.
 * Via go-sdk: `GetOutputCoinsV2()` or `GetListOutputCoinsByRPCV2()`.
 
+**NOTE**: these new RPC and functions also return the list of CoinV1's (along with CoinV2's).
 ## Example
 [key_submit.go](../../code/accounts/key_submit/key_submit.go)
 ```go
