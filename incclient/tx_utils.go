@@ -1,7 +1,6 @@
 package incclient
 
 import (
-	"encoding/json"
 	"fmt"
 	"math/big"
 	"sort"
@@ -187,15 +186,10 @@ func (client *IncClient) getRandomCommitmentV1(inputCoins []coin.PlainCoin, toke
 		return nil, err
 	}
 
-	response, err := rpchandler.ParseResponse(responseInBytes)
+	var randomCommitment jsonresult.RandomCommitmentResult
+	err = rpchandler.ParseResponse(responseInBytes, &randomCommitment)
 	if err != nil {
 		return nil, err
-	}
-
-	var randomCommitment jsonresult.RandomCommitmentResult
-	err = json.Unmarshal(response.Result, &randomCommitment)
-	if err != nil {
-		return nil, fmt.Errorf("parse randomCommitment error: %v", err)
 	}
 
 	commitmentList := make([]*crypto.Point, 0)
@@ -231,15 +225,10 @@ func (client *IncClient) getRandomCommitmentV2(shardID byte, tokenID string, len
 		return nil, err
 	}
 
-	response, err := rpchandler.ParseResponse(responseInBytes)
+	var randomCmtAndPk jsonresult.RandomCommitmentAndPublicKeyResult
+	err = rpchandler.ParseResponse(responseInBytes, &randomCmtAndPk)
 	if err != nil {
 		return nil, err
-	}
-
-	var randomCmtAndPk jsonresult.RandomCommitmentAndPublicKeyResult
-	err = json.Unmarshal(response.Result, &randomCmtAndPk)
-	if err != nil {
-		return nil, fmt.Errorf("parse randomCmtAndPk error: %v", err)
 	}
 
 	commitmentList := make([]*crypto.Point, 0)
@@ -377,13 +366,8 @@ func (client *IncClient) GetTokenFee(shardID byte, tokenIDStr string) (uint64, e
 		return 0, err
 	}
 
-	response, err := rpchandler.ParseResponse(responseInBytes)
-	if err != nil {
-		return 0, err
-	}
-
 	var feeEstimateResult rpc.EstimateFeeResult
-	err = json.Unmarshal(response.Result, &feeEstimateResult)
+	err = rpchandler.ParseResponse(responseInBytes, &feeEstimateResult)
 	if err != nil {
 		return 0, err
 	}
@@ -399,13 +383,11 @@ func (client *IncClient) GetTxDetail(txHash string) (*jsonresult.TransactionDeta
 		return nil, err
 	}
 
-	response, err := rpchandler.ParseResponse(responseInBytes)
+	var txDetail jsonresult.TransactionDetail
+	err = rpchandler.ParseResponse(responseInBytes, &txDetail)
 	if err != nil {
 		return nil, err
 	}
-
-	var txDetail jsonresult.TransactionDetail
-	err = json.Unmarshal(response.Result, &txDetail)
 
 	return &txDetail, err
 }
@@ -427,14 +409,8 @@ func (client *IncClient) GetTransactionHashesByReceiver(paymentAddress string) (
 		return nil, err
 	}
 
-	response, err := rpchandler.ParseResponse(responseInBytes)
-	if err != nil {
-		return nil, err
-	}
-
 	var tmpRes map[string][]string
-	err = json.Unmarshal(response.Result, &tmpRes)
-
+	err = rpchandler.ParseResponse(responseInBytes, &tmpRes)
 	if err != nil {
 		return nil, err
 	}
@@ -478,7 +454,7 @@ func (client *IncClient) GetTxHashByPublicKeys(publicKeys []string) (map[string]
 	}
 
 	tmpRes := make(map[string]map[byte][]string)
-	err = rpchandler.NewParseResponse(responseInBytes, &tmpRes)
+	err = rpchandler.ParseResponse(responseInBytes, &tmpRes)
 	if err != nil {
 		return nil, err
 	}
@@ -530,7 +506,7 @@ func (client *IncClient) GetTxHashBySerialNumbers(snList []string, tokenIDStr st
 	}
 
 	res := make(map[string]string)
-	err = rpchandler.NewParseResponse(responseInBytes, &res)
+	err = rpchandler.ParseResponse(responseInBytes, &res)
 	if err != nil {
 		return nil, err
 	}

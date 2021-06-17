@@ -1,7 +1,6 @@
 package incclient
 
 import (
-	"encoding/json"
 	"github.com/incognitochain/go-incognito-sdk-v2/common"
 	"github.com/incognitochain/go-incognito-sdk-v2/rpchandler"
 	"github.com/incognitochain/go-incognito-sdk-v2/rpchandler/jsonresult"
@@ -32,13 +31,8 @@ func (client *IncClient) GetRewardAmount(paymentAddress string) (map[common.Hash
 		return nil, err
 	}
 
-	response, err := rpchandler.ParseResponse(responseInBytes)
-	if err != nil {
-		return nil, err
-	}
-
 	var res map[common.Hash]uint64
-	err = json.Unmarshal(response.Result, &res)
+	err = rpchandler.ParseResponse(responseInBytes, &res)
 	if err != nil {
 		return nil, err
 	}
@@ -78,13 +72,12 @@ func (client *IncClient) ListReward() (map[string]map[common.Hash]uint64, error)
 		return nil, err
 	}
 
-	response, err := rpchandler.ParseResponse(responseInBytes)
+	var res map[string]map[common.Hash]uint64
+	err = rpchandler.ParseResponse(responseInBytes, &res)
 	if err != nil {
 		return nil, err
 	}
 
-	var res map[string]map[common.Hash]uint64
-	err = json.Unmarshal(response.Result, &res)
 	return res, err
 }
 
@@ -98,7 +91,7 @@ func (client *IncClient) GetMiningInfo() (*jsonresult.MiningInfoResult, error){
 	}
 
 	var res jsonresult.MiningInfoResult
-	err = rpchandler.NewParseResponse(responseInBytes, &res)
+	err = rpchandler.ParseResponse(responseInBytes, &res)
 	if err != nil {
 		return nil, err
 	}
@@ -116,7 +109,7 @@ func (client *IncClient) GetSyncStats() (*jsonresult.SyncStats, error){
 	}
 
 	var res jsonresult.SyncStats
-	err = rpchandler.NewParseResponse(responseInBytes, &res)
+	err = rpchandler.ParseResponse(responseInBytes, &res)
 	if err != nil {
 		return nil, err
 	}

@@ -16,13 +16,11 @@ func (client *IncClient) GetActiveShard() (int, error) {
 		return 0, err
 	}
 
-	response, err := rpchandler.ParseResponse(responseInBytes)
+	var activeShards int
+	err = rpchandler.ParseResponse(responseInBytes, &activeShards)
 	if err != nil {
 		return 0, err
 	}
-
-	var activeShards int
-	err = json.Unmarshal(response.Result, &activeShards)
 
 	return activeShards, err
 }
@@ -34,13 +32,8 @@ func (client *IncClient) GetBestBlock() (map[int]uint64, error) {
 		return nil, err
 	}
 
-	response, err := rpchandler.ParseResponse(responseInBytes)
-	if err != nil {
-		return nil, err
-	}
-
 	var bestBlocksResult jsonresult.GetBestBlockResult
-	err = json.Unmarshal(response.Result, &bestBlocksResult)
+	err = rpchandler.ParseResponse(responseInBytes, &bestBlocksResult)
 	if err != nil {
 		return nil, err
 	}
@@ -92,13 +85,8 @@ func (client *IncClient) GetRawMemPool() ([]string, error) {
 		return nil, err
 	}
 
-	response, err := rpchandler.ParseResponse(responseInBytes)
-	if err != nil {
-		return nil, err
-	}
-
 	var txHashes map[string][]string
-	err = json.Unmarshal(response.Result, &txHashes)
+    err = rpchandler.ParseResponse(responseInBytes, &txHashes)
 	if err != nil {
 		return nil, err
 	}
@@ -125,7 +113,7 @@ func (client *IncClient) AuthorizedSubmitKey(otaKey string, accessToken string, 
 		return err
 	}
 
-	_, err = rpchandler.ParseResponse(responseInBytes)
+	err = rpchandler.ParseResponse(responseInBytes, nil)
 	if err != nil {
 		return err
 	}

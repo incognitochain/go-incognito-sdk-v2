@@ -1,7 +1,6 @@
 package incclient
 
 import (
-	"encoding/json"
 	"github.com/incognitochain/go-incognito-sdk-v2/rpchandler"
 )
 
@@ -19,13 +18,11 @@ func (client *IncClient) GetCommitteeStateByShard(shardID int, shardRootHash str
 		return nil, err
 	}
 
-	response, err := rpchandler.ParseResponse(responseInBytes)
+	var res ShardCommitteeState
+	err = rpchandler.ParseResponse(responseInBytes, &res)
 	if err != nil {
 		return nil, err
 	}
-
-	var res ShardCommitteeState
-	err = json.Unmarshal(response.Result, &res)
 
 	return &res, err
 }

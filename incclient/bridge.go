@@ -1,7 +1,6 @@
 package incclient
 
 import (
-	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -132,18 +131,13 @@ func (client *IncClient) GetBurnProof(txHash string) (*jsonresult.GetInstruction
 		return nil, err
 	}
 
-	response, err := rpchandler.ParseResponse(responseInBytes)
+	var tmp jsonresult.GetInstructionProof
+	err = rpchandler.ParseResponse(responseInBytes, &tmp)
 	if err != nil {
 		return nil, err
 	}
 
-	var tmp *jsonresult.GetInstructionProof
-	err = json.Unmarshal(response.Result, &tmp)
-	if err != nil {
-		return nil, err
-	}
-
-	return tmp, nil
+	return &tmp, nil
 }
 
 // CheckShieldStatus returns the status of an eth-shielding request.
@@ -158,13 +152,11 @@ func (client *IncClient) CheckShieldStatus(txHash string) (int, error) {
 		return -1, err
 	}
 
-	response, err := rpchandler.ParseResponse(responseInBytes)
+	var status int
+	err = rpchandler.ParseResponse(responseInBytes, &status)
 	if err != nil {
 		return -1, err
 	}
-
-	var status int
-	err = json.Unmarshal(response.Result, &status)
 
 	return status, err
 }
