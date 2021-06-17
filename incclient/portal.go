@@ -21,6 +21,18 @@ func (client *IncClient) CreatePortalShieldTransaction(privateKey, tokenID, paym
 	return client.CreateRawTransaction(txParam, 2)
 }
 
+func (client *IncClient) CreateAndSendPortalShieldTransaction(privateKey, tokenID, paymentAddr, shieldingProof string) (string, error) {
+	encodedTx, txHash, err := client.CreatePortalShieldTransaction(privateKey, tokenID, paymentAddr, shieldingProof)
+	if err != nil {
+		return "", err
+	}
+	err = client.SendRawTx(encodedTx)
+	if err != nil {
+		return "", err
+	}
+	return txHash, nil
+}
+
 func (client *IncClient) CreatePortalReplaceByFeeTransaction(privateKey, tokenID, batchID string, fee uint) ([]byte, string, error) {
 	portalRBFMetadata, err := metadata.NewPortalReplacementFeeRequest(
 		metadata.PortalV4FeeReplacementRequestMeta,
@@ -34,6 +46,18 @@ func (client *IncClient) CreatePortalReplaceByFeeTransaction(privateKey, tokenID
 
 	txParam := NewTxParam(privateKey, []string{}, []uint64{}, 0, nil, portalRBFMetadata, nil)
 	return client.CreateRawTransaction(txParam, 2)
+}
+
+func (client *IncClient) CreateAndSendPortalReplaceByFeeTransaction(privateKey, tokenID, batchID string, fee uint) (string, error) {
+	encodedTx, txHash, err := client.CreatePortalReplaceByFeeTransaction(privateKey, tokenID, batchID, fee)
+	if err != nil {
+		return "", err
+	}
+	err = client.SendRawTx(encodedTx)
+	if err != nil {
+		return "", err
+	}
+	return txHash, nil
 }
 
 func (client *IncClient) CreatePortalSubmitConfirmationTransaction(privateKey, tokenID, unshieldProof, batchID string) ([]byte, string, error) {
@@ -51,6 +75,18 @@ func (client *IncClient) CreatePortalSubmitConfirmationTransaction(privateKey, t
 	return client.CreateRawTransaction(txParam, 2)
 }
 
+func (client *IncClient) CreateAndSendPortalSubmitConfirmationTransaction(privateKey, tokenID, unshieldProof, batchID string) (string, error) {
+	encodedTx, txHash, err := client.CreatePortalSubmitConfirmationTransaction(privateKey, tokenID, unshieldProof, batchID)
+	if err != nil {
+		return "", err
+	}
+	err = client.SendRawTx(encodedTx)
+	if err != nil {
+		return "", err
+	}
+	return txHash, nil
+}
+
 func (client *IncClient) CreatePortalConvertVaultTransaction(privateKey, tokenID, paymentAddr, convertingProof string) ([]byte, string, error) {
 	portalConvertVaultMetadata, err := metadata.NewPortalConvertVaultRequest(
 		metadata.PortalV4ConvertVaultRequestMeta,
@@ -64,6 +100,18 @@ func (client *IncClient) CreatePortalConvertVaultTransaction(privateKey, tokenID
 
 	txParam := NewTxParam(privateKey, []string{}, []uint64{}, 0, nil, portalConvertVaultMetadata, nil)
 	return client.CreateRawTransaction(txParam, 2)
+}
+
+func (client *IncClient) CreateAndSendPortalConvertVaultTransaction(privateKey, tokenID, paymentAddr, convertingProof string) (string, error) {
+	encodedTx, txHash, err := client.CreatePortalSubmitConfirmationTransaction(privateKey, tokenID, paymentAddr, convertingProof)
+	if err != nil {
+		return "", err
+	}
+	err = client.SendRawTx(encodedTx)
+	if err != nil {
+		return "", err
+	}
+	return txHash, nil
 }
 
 func (client *IncClient) CreatePortalUnshieldTransaction(privateKey, tokenID, remoteAddr string, unshieldingAmount uint64) ([]byte, string, error) {
@@ -95,6 +143,18 @@ func (client *IncClient) CreatePortalUnshieldTransaction(privateKey, tokenID, re
 	return client.CreateRawTokenTransaction(txParam, 2)
 }
 
+func (client *IncClient) CreateAndSendPortalUnshieldTransaction(privateKey, tokenID, remoteAddr string, unshieldingAmount uint64) (string, error) {
+	encodedTx, txHash, err := client.CreatePortalUnshieldTransaction(privateKey, tokenID, remoteAddr, unshieldingAmount)
+	if err != nil {
+		return "", err
+	}
+	err = client.SendRawTokenTx(encodedTx)
+	if err != nil {
+		return "", err
+	}
+	return txHash, nil
+}
+
 func (client *IncClient) CreatePortalRelayHeaderTransaction(privateKey, paymentAddr, header string, blockHeight uint64) ([]byte, string, error) {
 	portalRelayHeaderMetadata, err := metadata.NewRelayingHeader(
 		metadata.RelayingBTCHeaderMeta,
@@ -108,4 +168,16 @@ func (client *IncClient) CreatePortalRelayHeaderTransaction(privateKey, paymentA
 
 	txParam := NewTxParam(privateKey, []string{}, []uint64{}, 0, nil, portalRelayHeaderMetadata, nil)
 	return client.CreateRawTransaction(txParam, 2)
+}
+
+func (client *IncClient) CreateAndSendPortalRelayHeaderTransaction(privateKey, paymentAddr, header string, blockHeight uint64) (string, error) {
+	encodedTx, txHash, err := client.CreatePortalRelayHeaderTransaction(privateKey, paymentAddr, header, blockHeight)
+	if err != nil {
+		return "", err
+	}
+	err = client.SendRawTx(encodedTx)
+	if err != nil {
+		return "", err
+	}
+	return txHash, nil
 }
