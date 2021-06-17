@@ -46,6 +46,7 @@ Following is a series of examples to help you get familiar with the Incognito ne
     * [Node Monitoring](tutorials/docs/staking/node.md)
 * [Shielding/UnShielding](tutorials/docs/bridge/bridge.md)
     * [Creating Shielding Transactions](tutorials/docs/bridge/shield.md)
+    * [Checking Shielding Status](tutorials/docs/bridge/shield_status.md)
     * [Creating Un-Shielding Transactions](tutorials/docs/bridge/unshield.md)
 * [Calling RPCs](tutorials/docs/rpc/rpc.md)
   
