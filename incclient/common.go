@@ -10,7 +10,7 @@ import (
 	"github.com/incognitochain/go-incognito-sdk-v2/wallet"
 )
 
-const DefaultPRVFee = uint64(60)
+const DefaultPRVFee = uint64(100)
 
 type TxParam struct {
 	senderPrivateKey string

@@ -73,19 +73,42 @@ func (server *RPCServer) RetrieveBlock(blockHash string, verbosity string) ([]by
 	return server.SendPostRequestWithQuery(string(query))
 }
 
+func (server *RPCServer) GetShardBestState(shardID byte) ([]byte, error) {
+	if server == nil || len(server.url) == 0 {
+		return nil, fmt.Errorf("rpc server not set")
+	}
+
+	method := getShardBestState
+	params := make([]interface{}, 0)
+	params = append(params, shardID)
+
+	request := rpchandler.CreateJsonRequest("1.0", method, params, 1)
+	query, err := json.Marshal(request)
+	if err != nil {
+		return nil, err
+	}
+
+	return server.SendPostRequestWithQuery(string(query))
+}
+
 func (server *RPCServer) GetBeaconBestState() ([]byte, error) {
 	if server == nil || len(server.url) == 0 {
 		return nil, fmt.Errorf("rpc server not set")
 	}
-	query := `{  
-	   "jsonrpc":"1.0",
-	   "method":"getbeaconbeststatedetail",
-	   "params":[],
-	   "id":1
-	}`
 
-	return server.SendPostRequestWithQuery(query)
+	method := getBeaconBestState
+	params := make([]interface{}, 0)
+
+	request := rpchandler.CreateJsonRequest("1.0", method, params, 1)
+	query, err := json.Marshal(request)
+	if err != nil {
+		return nil, err
+	}
+
+	return server.SendPostRequestWithQuery(string(query))
 }
+
+
 
 func (server *RPCServer) GetRawMempool() ([]byte, error) {
 	if server == nil || len(server.url) == 0 {

@@ -40,3 +40,22 @@ func TestIncClient_AuthorizedSubmitKey(t *testing.T) {
 		count += 1
 	}
 }
+
+func TestIncClient_NewRPCCall(t *testing.T) {
+	var err error
+	ic, err = NewTestNetClient()
+	if err != nil {
+		panic(err)
+	}
+
+	method := "getshardbeststate"
+	params := make([]interface{}, 0)
+	params = append(params, 1)
+
+	resp, err := ic.NewRPCCall("1.0", method, params, 1)
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println(string(resp))
+}
