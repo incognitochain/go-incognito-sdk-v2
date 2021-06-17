@@ -20,7 +20,7 @@ const (
 	WithDrawRewardRequestMeta    = 44
 	WithDrawRewardResponseMeta   = 45
 
-	//statking
+	//staking
 	ShardStakingMeta    = 63
 	StopAutoStakingMeta = 127
 	BeaconStakingMeta   = 64
@@ -92,6 +92,13 @@ const (
 	PortalRequestPortingMetaV3                    = 141
 	PortalRedeemRequestMetaV3                     = 142
 	PortalUnlockOverRateCollateralsMeta           = 143
+
+	// Portal v4
+	PortalV4ShieldingRequestMeta      = 250
+	PortalV4UnshieldingRequestMeta    = 252
+	PortalV4FeeReplacementRequestMeta = 255
+	PortalV4SubmitConfirmedTxMeta     = 256
+	PortalV4ConvertVaultRequestMeta   = 257
 
 	// Incognito => Ethereum's SC for portal
 	PortalCustodianWithdrawConfirmMetaV3         = 170
