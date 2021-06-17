@@ -8,12 +8,12 @@ import (
 	"math/big"
 	"strconv"
 
-	"github.com/incognitochain/go-incognito-sdk-v2/rpchandler"
 	rCommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/light"
 	"github.com/ethereum/go-ethereum/rlp"
 	"github.com/ethereum/go-ethereum/trie"
+	"github.com/incognitochain/go-incognito-sdk-v2/rpchandler"
 )
 
 // GetETHTxByHash retrieves an Ethereum transaction from its hash.
@@ -33,13 +33,11 @@ func (client *IncClient) GetETHTxByHash(tx string) (map[string]interface{}, erro
 		return nil, err
 	}
 
-	response, err := rpchandler.ParseResponse(responseInBytes)
+	var res map[string]interface{}
+	err = rpchandler.ParseResponse(responseInBytes, &res)
 	if err != nil {
 		return nil, err
 	}
-
-	var res map[string]interface{}
-	err = json.Unmarshal(response.Result, &res)
 
 	return res, nil
 }
@@ -60,13 +58,11 @@ func (client *IncClient) GetETHBlockByHash(blockHash string) (map[string]interfa
 		return nil, err
 	}
 
-	response, err := rpchandler.ParseResponse(responseInBytes)
+	var res map[string]interface{}
+	err = rpchandler.ParseResponse(responseInBytes, &res)
 	if err != nil {
 		return nil, err
 	}
-
-	var res map[string]interface{}
-	err = json.Unmarshal(response.Result, &res)
 
 	return res, nil
 }
@@ -87,13 +83,11 @@ func (client *IncClient) GetETHTxReceipt(txHash string) (*types.Receipt, error) 
 		return nil, err
 	}
 
-	response, err := rpchandler.ParseResponse(responseInBytes)
+	var res types.Receipt
+	err = rpchandler.ParseResponse(responseInBytes, &res)
 	if err != nil {
 		return nil, err
 	}
-
-	var res types.Receipt
-	err = json.Unmarshal(response.Result, &res)
 
 	return &res, nil
 }
@@ -246,13 +240,11 @@ func (client *IncClient) GetMostRecentETHBlockNumber() (uint64, error) {
 		return 0, err
 	}
 
-	response, err := rpchandler.ParseResponse(responseInBytes)
+	var hexResult string
+	err = rpchandler.ParseResponse(responseInBytes, &hexResult)
 	if err != nil {
 		return 0, err
 	}
-
-	var hexResult string
-	err = json.Unmarshal(response.Result, &hexResult)
 
 	res, ok := new(big.Int).SetString(hexResult[2:], 16)
 	if !ok {

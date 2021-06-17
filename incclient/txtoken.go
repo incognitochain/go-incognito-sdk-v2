@@ -422,7 +422,7 @@ func (client *IncClient) SendRawTokenTx(encodedTx []byte) error {
 		return nil
 	}
 
-	_, err = rpchandler.ParseResponse(responseInBytes)
+	err = rpchandler.ParseResponse(responseInBytes, nil)
 	if err != nil {
 		return err
 	}

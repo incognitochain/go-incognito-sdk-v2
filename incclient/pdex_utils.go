@@ -1,7 +1,6 @@
 package incclient
 
 import (
-	"encoding/json"
 	"fmt"
 	"math/big"
 	"sort"
@@ -30,13 +29,8 @@ func (client *IncClient) GetPDEState(beaconHeight uint64) (*jsonresult.CurrentPD
 		return nil, err
 	}
 
-	response, err := rpchandler.ParseResponse(responseInBytes)
-	if err != nil {
-		return nil, err
-	}
-
 	var pdeState jsonresult.CurrentPDEState
-	err = json.Unmarshal(response.Result, &pdeState)
+	err = rpchandler.ParseResponse(responseInBytes, &pdeState)
 	if err != nil {
 		return nil, err
 	}
@@ -86,13 +80,8 @@ func (client *IncClient) CheckPrice(tokenToSell, TokenToBuy string, sellAmount u
 		return 0, err
 	}
 
-	response, err := rpchandler.ParseResponse(responseInBytes)
-	if err != nil {
-		return 0, err
-	}
-
 	var convertedPrice []*rpc.ConvertedPrice
-	err = json.Unmarshal(response.Result, &convertedPrice)
+	err = rpchandler.ParseResponse(responseInBytes, &convertedPrice)
 	if err != nil {
 		return 0, err
 	}
@@ -214,13 +203,11 @@ func (client *IncClient) CheckTradeStatus(txHash string) (int, error) {
 		return -1, err
 	}
 
-	response, err := rpchandler.ParseResponse(responseInBytes)
+	var tradeStatus int
+	err = rpchandler.ParseResponse(responseInBytes, &tradeStatus)
 	if err != nil {
 		return -1, err
 	}
-
-	var tradeStatus int
-	err = json.Unmarshal(response.Result, &tradeStatus)
 
 	return tradeStatus, err
 }

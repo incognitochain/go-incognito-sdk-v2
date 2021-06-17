@@ -22,7 +22,7 @@ type ListCustomToken struct {
 	Error   interface{}   `json:"Error"`
 	Params  []interface{} `json:"Params"`
 	Method  string        `json:"Method"`
-	Jsonrpc string        `json:"Jsonrpc"`
+	Jsonrpc string        `json:"JsonRPC"`
 }
 
 type AutoTxByHash struct {
@@ -93,7 +93,7 @@ type AutoTxByHash struct {
 	Error   interface{} `json:"Error"`
 	Params  []string    `json:"Params"`
 	Method  string      `json:"Method"`
-	Jsonrpc string      `json:"Jsonrpc"`
+	Jsonrpc string      `json:"JsonRPC"`
 }
 
 type TokenInitParam struct {

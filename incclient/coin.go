@@ -1,7 +1,6 @@
 package incclient
 
 import (
-	"encoding/json"
 	"fmt"
 	"math/big"
 
@@ -91,13 +90,8 @@ func (client *IncClient) CheckCoinsSpent(shardID byte, tokenID string, snList []
 		return []bool{}, err
 	}
 
-	response, err := rpchandler.ParseResponse(b)
-	if err != nil {
-		return []bool{}, err
-	}
-
 	var tmp []bool
-	err = json.Unmarshal(response.Result, &tmp)
+	err = rpchandler.ParseResponse(b, &tmp)
 	if err != nil {
 		return []bool{}, err
 	}
@@ -177,13 +171,8 @@ func NewOutCoinKeyFromPrivateKey(privateKey string) (*rpc.OutCoinKey, error) {
 }
 
 func ParseCoinFromJsonResponse(b []byte) ([]jsonresult.ICoinInfo, []*big.Int, error) {
-	response, err := rpchandler.ParseResponse(b)
-	if err != nil {
-		return nil, nil, err
-	}
-
 	var tmp jsonresult.ListOutputCoins
-	err = json.Unmarshal(response.Result, &tmp)
+	err := rpchandler.ParseResponse(b, &tmp)
 	if err != nil {
 		return nil, nil, err
 	}

@@ -23,14 +23,48 @@ func (server *RPCServer) GetListRewardAmount() ([]byte, error){
 	return server.SendPostRequestWithQuery(string(query))
 }
 
-func (server *RPCServer) GetRewardAmountByPublicKey(publicKey string) ([]byte, error) {
+func (server *RPCServer) GetRewardAmount(paymentAddress string) ([]byte, error) {
 	if server == nil || len(server.url) == 0 {
 		return nil, fmt.Errorf("rpc server not set")
 	}
 
-	method := getRewardAmountByPublicKey
+	method := getRewardAmount
 	params := make([]interface{}, 0)
-	params = append(params, publicKey)
+	params = append(params, paymentAddress)
+
+	request := rpchandler.CreateJsonRequest("1.0", method, params, 1)
+	query, err := json.Marshal(request)
+	if err != nil {
+		return nil, err
+	}
+
+	return server.SendPostRequestWithQuery(string(query))
+}
+
+func (server *RPCServer) GetMiningInfo() ([]byte, error) {
+	if server == nil || len(server.url) == 0 {
+		return nil, fmt.Errorf("rpc server not set")
+	}
+
+	method := getMiningInfo
+	params := make([]interface{}, 0)
+
+	request := rpchandler.CreateJsonRequest("1.0", method, params, 1)
+	query, err := json.Marshal(request)
+	if err != nil {
+		return nil, err
+	}
+
+	return server.SendPostRequestWithQuery(string(query))
+}
+
+func (server *RPCServer) GetSyncStats() ([]byte, error) {
+	if server == nil || len(server.url) == 0 {
+		return nil, fmt.Errorf("rpc server not set")
+	}
+
+	method := getSyncStats
+	params := make([]interface{}, 0)
 
 	request := rpchandler.CreateJsonRequest("1.0", method, params, 1)
 	query, err := json.Marshal(request)

@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/incognitochain/go-incognito-sdk-v2/common"
-	"github.com/incognitochain/go-incognito-sdk-v2/common/base58"
 	"github.com/incognitochain/go-incognito-sdk-v2/key"
 	"github.com/incognitochain/go-incognito-sdk-v2/wallet"
 )
@@ -15,48 +14,31 @@ type RPCError struct {
 	Code       int    `json:"Code,omitempty"`
 	Message    string `json:"Message,omitempty"`
 	StackTrace string `json:"StackTrace"`
-
-	err 	   error  `json:"Err"`
+	Err error `json:"Err"`
 }
 
 type JsonRequest struct {
-	Jsonrpc string      `json:"Jsonrpc"`
+	JsonRPC string      `json:"Jsonrpc"`
 	Method  string      `json:"Method"`
 	Params  interface{} `json:"Params"`
 	Id      interface{} `json:"Id"`
 }
 
 type JsonResponse struct {
-	Id      *interface{}         `json:"Id"`
-	Result  json.RawMessage      `json:"Result"`
-	Error   *RPCError 			 `json:"Error"`
-	Params  interface{}          `json:"Params"`
-	Method  string               `json:"Method"`
-	Jsonrpc string               `json:"Jsonrpc"`
+	Id      *interface{}    `json:"Id"`
+	Result  json.RawMessage `json:"Result"`
+	Error   *RPCError       `json:"Error"`
+	Params  interface{}     `json:"Params"`
+	Method  string          `json:"Method"`
+	JsonRPC string          `json:"Jsonrpc"`
 }
 
 var Server = new(RPCServer)
-var EthServer = new(RPCServer)
 
-func EncodeBase58Check(data []byte) string {
-	b := base58.Base58Check{}.Encode(data, 0)
-	return b
-}
-
-func DecodeBase58Check(s string) ([]byte, error) {
-	b, _, err := base58.Base58Check{}.Decode(s)
-	return b, err
-}
-
-/*Common functions*/
-// RandIntInterval returns a random int in range [L; R]
-func RandIntInterval(L, R int) int {
-	length := R - L + 1
-	r := common.RandInt() % length
-	return L + r
-}
-
-func ParseResponse(respondInBytes []byte) (*JsonResponse, error) {
+// OldParseResponse parses a raw JSON-RPC response into a JsonResponse.
+//
+// Deprecated: use ParseResponse instead.
+func OldParseResponse(respondInBytes []byte) (*JsonResponse, error) {
 	var respond JsonResponse
 	err := json.Unmarshal(respondInBytes, &respond)
 	if err != nil {
@@ -70,7 +52,8 @@ func ParseResponse(respondInBytes []byte) (*JsonResponse, error) {
 	return &respond, nil
 }
 
-func NewParseResponse(respondInBytes []byte, val interface{}) error {
+// ParseResponse parses a JSON-RPC response to val.
+func ParseResponse(respondInBytes []byte, val interface{}) error {
 	var respond JsonResponse
 	err := json.Unmarshal(respondInBytes, &respond)
 	if err != nil {
@@ -81,7 +64,11 @@ func NewParseResponse(respondInBytes []byte, val interface{}) error {
 		return fmt.Errorf("RPC returns an error: %v", respond.Error)
 	}
 
-	err = json.Unmarshal(respond.Result, &val)
+	if val == nil {
+		return nil
+	}
+
+	err = json.Unmarshal(respond.Result, val)
 	if err != nil {
 		return err
 	}
@@ -89,9 +76,10 @@ func NewParseResponse(respondInBytes []byte, val interface{}) error {
 	return nil
 }
 
+// CreateJsonRequest creates a new JsonRequest given the method and parameters.
 func CreateJsonRequest(jsonRPC, method string, params []interface{}, id interface{}) *JsonRequest{
 	request := new(JsonRequest)
-	request.Jsonrpc = jsonRPC
+	request.JsonRPC = jsonRPC
 	request.Method = method
 	request.Id = id
 	request.Params = params
@@ -99,7 +87,7 @@ func CreateJsonRequest(jsonRPC, method string, params []interface{}, id interfac
 	return request
 }
 
-//Temp function that creates a payment address of a specific shard.
+// CreatePaymentAddress is a temp function that creates a payment address of a specific shard.
 func CreatePaymentAddress(shardID byte) string {
 	pk := common.RandBytes(31)
 	tk := common.RandBytes(32)

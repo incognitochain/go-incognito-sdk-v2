@@ -24,24 +24,6 @@ func (server *RPCServer) GetActiveShards() ([]byte, error) {
 	return server.SendPostRequestWithQuery(string(query))
 }
 
-func (server *RPCServer) GetShardBestState(shardID byte) ([]byte, error) {
-	if server == nil || len(server.url) == 0 {
-		return nil, fmt.Errorf("rpc server not set")
-	}
-
-	method := getShardBestState
-	params := make([]interface{}, 0)
-	params = append(params, shardID)
-
-	request := rpchandler.CreateJsonRequest("1.0", method, params, 1)
-	query, err := json.Marshal(request)
-	if err != nil {
-		return nil, err
-	}
-
-	return server.SendPostRequestWithQuery(string(query))
-}
-
 func (server *RPCServer) ConvertPaymentAddress(addr string) ([]byte, error) {
 	if server == nil || len(server.url) == 0 {
 		return nil, fmt.Errorf("rpc server not set")
