@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"strings"
 
+	ethCommon "github.com/ethereum/go-ethereum/common"
 	"github.com/incognitochain/go-incognito-sdk-v2/common"
 	"github.com/incognitochain/go-incognito-sdk-v2/metadata"
 	"github.com/incognitochain/go-incognito-sdk-v2/rpchandler"
 	"github.com/incognitochain/go-incognito-sdk-v2/rpchandler/jsonresult"
 	"github.com/incognitochain/go-incognito-sdk-v2/wallet"
-	ethCommon "github.com/ethereum/go-ethereum/common"
 )
 
 type ETHDepositProof struct {
