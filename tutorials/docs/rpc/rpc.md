@@ -1,8 +1,7 @@
 ---
 description: Tutorial on how to call any RPC requests with the go-sdk
 ---
-To make an RPC request to a full-node, use the function [`NewRPCCall`](../../../incclient/general.go) in the [`incclient`](../../../incclient) package. It returns the raw reponses in bytes.
-See the following example.
+To make an RPC request to a full-node, use the function [`NewRPCCall`](../../../incclient/general.go) in the [`incclient`](../../../incclient) package. It returns the raw reponse in bytes. See the following example.
 
 ## Example
 ```go
