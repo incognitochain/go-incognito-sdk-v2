@@ -76,11 +76,11 @@ func (client *IncClient) CreateAndSendPortalReplaceByFeeTransaction(
 }
 
 func (client *IncClient) CreatePortalSubmitConfirmationTransaction(
-	privateKey, tokenID, unshieldProof, batchID string, inputCoins []coin.PlainCoin, coinIndices []uint64,
+	privateKey, tokenID, unShieldProof, batchID string, inputCoins []coin.PlainCoin, coinIndices []uint64,
 ) ([]byte, string, error) {
 	portalSubmitConfirmationMetadata, err := metadata.NewPortalSubmitConfirmedTxRequest(
 		metadata.PortalV4SubmitConfirmedTxMeta,
-		unshieldProof,
+		unShieldProof,
 		tokenID,
 		batchID,
 	)
@@ -96,9 +96,9 @@ func (client *IncClient) CreatePortalSubmitConfirmationTransaction(
 }
 
 func (client *IncClient) CreateAndSendPortalSubmitConfirmationTransaction(
-	privateKey, tokenID, unshieldProof, batchID string, inputCoins []coin.PlainCoin, coinIndices []uint64,
+	privateKey, tokenID, unShieldProof, batchID string, inputCoins []coin.PlainCoin, coinIndices []uint64,
 ) (string, error) {
-	encodedTx, txHash, err := client.CreatePortalSubmitConfirmationTransaction(privateKey, tokenID, unshieldProof, batchID, inputCoins, coinIndices)
+	encodedTx, txHash, err := client.CreatePortalSubmitConfirmationTransaction(privateKey, tokenID, unShieldProof, batchID, inputCoins, coinIndices)
 	if err != nil {
 		return "", err
 	}
@@ -143,8 +143,8 @@ func (client *IncClient) CreateAndSendPortalConvertVaultTransaction(
 	return txHash, nil
 }
 
-func (client *IncClient) CreatePortalUnshieldTransaction(
-	privateKey, tokenID, remoteAddr string, unshieldingAmount uint64, inputCoins []coin.PlainCoin, coinIndices []uint64,
+func (client *IncClient) CreatePortalUnShieldTransaction(
+	privateKey, tokenID, remoteAddr string, unShieldingAmount uint64, inputCoins []coin.PlainCoin, coinIndices []uint64,
 ) ([]byte, string, error) {
 	senderWallet, err := wallet.Base58CheckDeserialize(privateKey)
 	if err != nil {
@@ -157,30 +157,30 @@ func (client *IncClient) CreatePortalUnshieldTransaction(
 		return nil, "", err
 	}
 
-	portalUnshieldingMetadata, err := metadata.NewPortalUnshieldRequest(
+	portalUnShieldingMetadata, err := metadata.NewPortalUnshieldRequest(
 		metadata.PortalV4UnshieldingRequestMeta,
 		pubKeyStr,
 		txRandomStr,
 		tokenID,
 		remoteAddr,
-		unshieldingAmount,
+		unShieldingAmount,
 	)
 	if err != nil {
 		return nil, "", err
 	}
 
-	tokenParam := NewTxTokenParam(tokenID, 1, []string{common.BurningAddress2}, []uint64{unshieldingAmount}, false, 0, nil)
-	txParam := NewTxParam(privateKey, []string{}, []uint64{}, 0, tokenParam, portalUnshieldingMetadata, nil)
+	tokenParam := NewTxTokenParam(tokenID, 1, []string{common.BurningAddress2}, []uint64{unShieldingAmount}, false, 0, nil)
+	txParam := NewTxParam(privateKey, []string{}, []uint64{}, 0, tokenParam, portalUnShieldingMetadata, nil)
 	if len(inputCoins) > 0 {
 		return client.CreateRawTransactionWithInputCoins(txParam, inputCoins, coinIndices)
 	}
 	return client.CreateRawTokenTransaction(txParam, 2)
 }
 
-func (client *IncClient) CreateAndSendPortalUnshieldTransaction(
-	privateKey, tokenID, remoteAddr string, unshieldingAmount uint64, inputCoins []coin.PlainCoin, coinIndices []uint64,
+func (client *IncClient) CreateAndSendPortalUnShieldTransaction(
+	privateKey, tokenID, remoteAddr string, unShieldingAmount uint64, inputCoins []coin.PlainCoin, coinIndices []uint64,
 ) (string, error) {
-	encodedTx, txHash, err := client.CreatePortalUnshieldTransaction(privateKey, tokenID, remoteAddr, unshieldingAmount, inputCoins, coinIndices)
+	encodedTx, txHash, err := client.CreatePortalUnShieldTransaction(privateKey, tokenID, remoteAddr, unShieldingAmount, inputCoins, coinIndices)
 	if err != nil {
 		return "", err
 	}
