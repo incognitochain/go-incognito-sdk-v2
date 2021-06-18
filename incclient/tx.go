@@ -267,6 +267,10 @@ func (client *IncClient) CreateAndSendRawConversionTransaction(privateKey string
 }
 
 // CreateRawTransactionWithInputCoins creates a raw PRV transaction from the provided input coins.
+//
+// For transaction with metadata, callers must make sure other values of `param` are valid.
+//
+// NOTE: this servers PRV transactions only.
 func (client *IncClient) CreateRawTransactionWithInputCoins(param *TxParam, inputCoins []coin.PlainCoin, coinIndices []uint64) ([]byte, string, error) {
 	var txHash string
 	senderWallet, err := wallet.Base58CheckDeserialize(param.senderPrivateKey)
@@ -295,7 +299,7 @@ func (client *IncClient) CreateRawTransactionWithInputCoins(param *TxParam, inpu
 		if err != nil {
 			return nil, txHash, err
 		}
-		txInitParam := tx_generic.NewTxPrivacyInitParams(&(senderWallet.KeySet.PrivateKey), paymentInfos, inputCoins, txFee, true, &common.PRVCoinID, nil, nil, kvArgs)
+		txInitParam := tx_generic.NewTxPrivacyInitParams(&(senderWallet.KeySet.PrivateKey), paymentInfos, inputCoins, txFee, true, &common.PRVCoinID, param.md, nil, kvArgs)
 		tx := new(tx_ver1.Tx)
 		err = tx.Init(txInitParam)
 		if err != nil {
@@ -317,7 +321,7 @@ func (client *IncClient) CreateRawTransactionWithInputCoins(param *TxParam, inpu
 		}
 		kvArgs[utils.MyIndices] = coinIndices
 
-		txInitParam := tx_generic.NewTxPrivacyInitParams(&(senderWallet.KeySet.PrivateKey), paymentInfos, inputCoins, txFee, true, &common.PRVCoinID, nil, nil, kvArgs)
+		txInitParam := tx_generic.NewTxPrivacyInitParams(&(senderWallet.KeySet.PrivateKey), paymentInfos, inputCoins, txFee, true, &common.PRVCoinID, param.md, nil, kvArgs)
 		tx := new(tx_ver2.Tx)
 		err = tx.Init(txInitParam)
 		if err != nil {
