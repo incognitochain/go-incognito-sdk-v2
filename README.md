@@ -43,9 +43,11 @@ Following is a series of examples to help you get familiar with the Incognito ne
     * [Creating Staking Transactions](tutorials/docs/staking/stake.md)
     * [Creating UnStaking Transactions](tutorials/docs/staking/unstake.md)
     * [Creating Reward Withdrawal Transactions](tutorials/docs/staking/withdraw_reward.md)
+    * [Node Monitoring](tutorials/docs/staking/node.md)
 * [Shielding/UnShielding](tutorials/docs/bridge/bridge.md)
     * [Creating Shielding Transactions](tutorials/docs/bridge/shield.md)
     * [Creating Un-Shielding Transactions](tutorials/docs/bridge/unshield.md)
+* [Calling RPCs](tutorials/docs/rpc/rpc.md)
   
 ## TODOs
 
