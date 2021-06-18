@@ -2,6 +2,7 @@ package metadata
 
 import (
 	"encoding/json"
+
 	"github.com/pkg/errors"
 )
 
@@ -25,8 +26,8 @@ func ParseMetadata(metaInBytes []byte) (Metadata, error) {
 	}
 
 	var md Metadata
-	typeFloat,ok := mtTemp["Type"].(float64)
-	if !ok{
+	typeFloat, ok := mtTemp["Type"].(float64)
+	if !ok {
 		return nil, errors.Errorf("Could not parse metadata with type: %v", mtTemp["Type"])
 	}
 	theType := int(typeFloat)
@@ -89,6 +90,18 @@ func ParseMetadata(metaInBytes []byte) (Metadata, error) {
 		md = &BurningRequest{}
 	case BurningForDepositToSCRequestMetaV2:
 		md = &BurningRequest{}
+	case RelayingBTCHeaderMeta:
+		md = &RelayingHeader{}
+	case PortalV4ShieldingRequestMeta:
+		md = &PortalShieldingRequest{}
+	case PortalV4UnshieldingRequestMeta:
+		md = &PortalUnshieldRequest{}
+	case PortalV4FeeReplacementRequestMeta:
+		md = &PortalReplacementFeeRequest{}
+	case PortalV4SubmitConfirmedTxMeta:
+		md = &PortalSubmitConfirmedTxRequest{}
+	case PortalV4ConvertVaultRequestMeta:
+		md = &PortalConvertVaultRequest{}
 	default:
 		return nil, errors.Errorf("Could not parse metadata with type: %d", theType)
 	}
