@@ -4,7 +4,7 @@ import (
 	"github.com/incognitochain/go-incognito-sdk-v2/common"
 )
 
-type IssuingETHResponse struct {
+type IssuingEVMResponse struct {
 	MetadataBase
 	RequestedTxID   common.Hash
 	UniqETHTx       []byte
@@ -12,7 +12,7 @@ type IssuingETHResponse struct {
 	SharedRandom       []byte `json:"SharedRandom,omitempty"`
 }
 
-func (iRes IssuingETHResponse) Hash() *common.Hash {
+func (iRes IssuingEVMResponse) Hash() *common.Hash {
 	record := iRes.RequestedTxID.String()
 	record += string(iRes.UniqETHTx)
 	record += string(iRes.ExternalTokenID)
@@ -25,6 +25,6 @@ func (iRes IssuingETHResponse) Hash() *common.Hash {
 	return &hash
 }
 
-func (iRes *IssuingETHResponse) CalculateSize() uint64 {
+func (iRes *IssuingEVMResponse) CalculateSize() uint64 {
 	return calculateSize(iRes)
 }
