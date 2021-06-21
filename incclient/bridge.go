@@ -52,8 +52,8 @@ func (client *IncClient) CreateIssuingETHRequestTransaction(privateKey, tokenIDS
 		return nil, "", err
 	}
 
-	var issuingETHRequestMeta *metadata.IssuingETHRequest
-	issuingETHRequestMeta, err = metadata.NewIssuingETHRequest(proof.blockHash, proof.txIdx, proof.nodeList, *tokenID, metadata.IssuingETHRequestMeta)
+	var issuingETHRequestMeta *metadata.IssuingEVMRequest
+	issuingETHRequestMeta, err = metadata.NewIssuingEVMRequest(proof.blockHash, proof.txIdx, proof.nodeList, *tokenID, metadata.IssuingETHRequestMeta)
 	if err != nil {
 		return nil, "", fmt.Errorf("cannot init issue eth request for %v, tokenID %v: %v", proof, tokenIDStr, err)
 	}
