@@ -43,12 +43,18 @@ func ParseMetadata(metaInBytes []byte) (Metadata, error) {
 	case ContractingRequestMeta:
 		md = &ContractingRequest{}
 	case IssuingETHRequestMeta:
-		md = &IssuingETHRequest{}
+		md = &IssuingEVMRequest{}
 	case IssuingETHResponseMeta:
-		md = &IssuingETHResponse{}
+		md = &IssuingEVMResponse{}
+	case IssuingBSCRequestMeta:
+		md = &IssuingEVMRequest{}
+	case IssuingBSCResponseMeta:
+		md = &IssuingEVMResponse{}
 	case BurningRequestMeta:
 		md = &BurningRequest{}
 	case BurningRequestMetaV2:
+		md = &BurningRequest{}
+	case BurningPBSCRequestMeta:
 		md = &BurningRequest{}
 	case ShardStakingMeta:
 		md = &StakingMetadata{}
@@ -94,7 +100,7 @@ func ParseMetadata(metaInBytes []byte) (Metadata, error) {
 		md = &RelayingHeader{}
 	case PortalV4ShieldingRequestMeta:
 		md = &PortalShieldingRequest{}
-	case PortalV4UnshieldingRequestMeta:
+	case PortalV4UnShieldingRequestMeta:
 		md = &PortalUnshieldRequest{}
 	case PortalV4FeeReplacementRequestMeta:
 		md = &PortalReplacementFeeRequest{}
