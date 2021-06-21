@@ -12,31 +12,31 @@ import (
 	"github.com/incognitochain/go-incognito-sdk-v2/wallet"
 )
 
-type ETHDepositProof struct {
+type EVMDepositProof struct {
 	blockNumber uint
 	blockHash   ethCommon.Hash
 	txIdx       uint
 	nodeList    []string
 }
 
-func (E ETHDepositProof) TxIdx() uint {
+func (E EVMDepositProof) TxIdx() uint {
 	return E.txIdx
 }
 
-func (E ETHDepositProof) BlockNumber() uint {
+func (E EVMDepositProof) BlockNumber() uint {
 	return E.blockNumber
 }
 
-func (E ETHDepositProof) BlockHash() ethCommon.Hash {
+func (E EVMDepositProof) BlockHash() ethCommon.Hash {
 	return E.blockHash
 }
 
-func (E ETHDepositProof) NodeList() []string {
+func (E EVMDepositProof) NodeList() []string {
 	return E.nodeList
 }
 
-func NewETHDepositProof(blockNumber uint, blockHash ethCommon.Hash, txIdx uint, nodeList []string) *ETHDepositProof {
-	proof := ETHDepositProof{
+func NewETHDepositProof(blockNumber uint, blockHash ethCommon.Hash, txIdx uint, nodeList []string) *EVMDepositProof {
+	proof := EVMDepositProof{
 		blockNumber: blockNumber,
 		blockHash:   blockHash,
 		txIdx:       txIdx,
@@ -46,7 +46,7 @@ func NewETHDepositProof(blockNumber uint, blockHash ethCommon.Hash, txIdx uint, 
 	return &proof
 }
 
-func (client *IncClient) CreateIssuingETHRequestTransaction(privateKey, tokenIDStr string, proof ETHDepositProof) ([]byte, string, error) {
+func (client *IncClient) CreateIssuingETHRequestTransaction(privateKey, tokenIDStr string, proof EVMDepositProof) ([]byte, string, error) {
 	tokenID, err := new(common.Hash).NewHashFromStr(tokenIDStr)
 	if err != nil {
 		return nil, "", err
@@ -62,8 +62,38 @@ func (client *IncClient) CreateIssuingETHRequestTransaction(privateKey, tokenIDS
 
 	return client.CreateRawTransaction(txParam, -1)
 }
-func (client *IncClient) CreateAndSendIssuingETHRequestTransaction(privateKey, tokenIDStr string, proof ETHDepositProof) (string, error) {
+func (client *IncClient) CreateAndSendIssuingETHRequestTransaction(privateKey, tokenIDStr string, proof EVMDepositProof) (string, error) {
 	encodedTx, txHash, err := client.CreateIssuingETHRequestTransaction(privateKey, tokenIDStr, proof)
+	if err != nil {
+		return "", err
+	}
+
+	err = client.SendRawTx(encodedTx)
+	if err != nil {
+		return "", err
+	}
+
+	return txHash, nil
+}
+
+func (client *IncClient) CreateIssuingBSCRequestTransaction(privateKey, tokenIDStr string, proof EVMDepositProof) ([]byte, string, error) {
+	tokenID, err := new(common.Hash).NewHashFromStr(tokenIDStr)
+	if err != nil {
+		return nil, "", err
+	}
+
+	var issuingETHRequestMeta *metadata.IssuingEVMRequest
+	issuingETHRequestMeta, err = metadata.NewIssuingEVMRequest(proof.blockHash, proof.txIdx, proof.nodeList, *tokenID, metadata.IssuingBSCRequestMeta)
+	if err != nil {
+		return nil, "", fmt.Errorf("cannot init issue eth request for %v, tokenID %v: %v", proof, tokenIDStr, err)
+	}
+
+	txParam := NewTxParam(privateKey, []string{}, []uint64{}, DefaultPRVFee, nil, issuingETHRequestMeta, nil)
+
+	return client.CreateRawTransaction(txParam, -1)
+}
+func (client *IncClient) CreateAndSendIssuingBSCRequestTransaction(privateKey, tokenIDStr string, proof EVMDepositProof) (string, error) {
+	encodedTx, txHash, err := client.CreateIssuingBSCRequestTransaction(privateKey, tokenIDStr, proof)
 	if err != nil {
 		return "", err
 	}

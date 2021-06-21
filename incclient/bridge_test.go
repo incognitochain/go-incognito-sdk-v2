@@ -204,7 +204,7 @@ func (acc Account) DepositERC20(vaultAddress, tokenAddress common.Address, incPa
 	fmt.Printf("Waiting for the approval tx to be confirmed...\n")
 	time.Sleep(20 * time.Second)
 
-	status, err := ic.GetETHTransactionStatus(approvedTx.Hash().String())
+	status, err := ic.GetEVMTransactionStatus(approvedTx.Hash().String())
 	if err != nil {
 		return nil, err
 	}
@@ -594,7 +594,7 @@ func TestIncClient_ShieldETH(t *testing.T) {
 
 	fmt.Printf("Start shielding eth...")
 
-	ethProof, pETHAmount, err := ic.GetETHDepositProof(ethTxHash.String())
+	ethProof, pETHAmount, err := ic.GetEVMDepositProof(ethTxHash.String())
 	if err != nil {
 		panic(err)
 	}
@@ -695,7 +695,7 @@ func TestIncClient_ShieldERC20(t *testing.T) {
 	fmt.Printf("Waiting for 15 confirmations...\n")
 	time.Sleep(90 * time.Second)
 
-	status, err := ic.GetETHTransactionStatus(ethTxHash.String())
+	status, err := ic.GetEVMTransactionStatus(ethTxHash.String())
 	if err != nil {
 		panic(err)
 	}
@@ -707,7 +707,7 @@ func TestIncClient_ShieldERC20(t *testing.T) {
 
 	//ethTxHash := common.HexToHash("0x75807ac2052d7a612d857aa4e5e3fea3e0a07007543c9fb7b5bea1d6cba069f4")
 
-	ethProof, _, err := ic.GetETHDepositProof(ethTxHash.String())
+	ethProof, _, err := ic.GetEVMDepositProof(ethTxHash.String())
 	if err != nil {
 		panic(err)
 	}
@@ -843,7 +843,7 @@ func TestIncClient_UnShieldETH(t *testing.T) {
 	fmt.Printf("Unshield tx: %v\n", txHash.String())
 
 	fmt.Printf("Check unshield tx status...\n")
-	receipt, err := ic.GetETHTxReceipt(txHash.String())
+	receipt, err := ic.GetEVMTxReceipt(txHash.String())
 	if err != nil {
 		panic(err)
 	}
@@ -961,7 +961,7 @@ func TestIncClient_UnShieldERC20(t *testing.T) {
 	fmt.Printf("Unshield tx: %v\n", txHash.String())
 
 	fmt.Printf("Check unshield tx status...\n")
-	receipt, err := ic.GetETHTxReceipt(txHash.String())
+	receipt, err := ic.GetEVMTxReceipt(txHash.String())
 	if err != nil {
 		panic(err)
 	}
@@ -1008,7 +1008,7 @@ func TestIncClient_GetETHTxReceipt(t *testing.T) {
 
 	txHash := "0xc400656111f353ef021f3f65711461679e4e1227071411c2789cac762e8948bb"
 
-	receipt, err := ic.GetETHTxReceipt(txHash)
+	receipt, err := ic.GetEVMTxReceipt(txHash)
 	if err != nil {
 		panic(err)
 	}
@@ -1027,7 +1027,7 @@ func TestIncClient_GetMostRecentETHBlockNumber(t *testing.T) {
 		panic(err)
 	}
 
-	blockNum, err := ic.GetMostRecentETHBlockNumber()
+	blockNum, err := ic.GetMostRecentEVMBlockNumber()
 	if err != nil {
 		panic(err)
 	}

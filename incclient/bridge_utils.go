@@ -16,8 +16,8 @@ import (
 	"github.com/incognitochain/go-incognito-sdk-v2/rpchandler"
 )
 
-// GetETHTxByHash retrieves an Ethereum transaction from its hash.
-func (client *IncClient) GetETHTxByHash(tx string) (map[string]interface{}, error) {
+// GetEVMTxByHash retrieves an Ethereum transaction from its hash.
+func (client *IncClient) GetEVMTxByHash(tx string) (map[string]interface{}, error) {
 	method := "eth_getTransactionByHash"
 	params := []interface{}{tx}
 
@@ -42,8 +42,8 @@ func (client *IncClient) GetETHTxByHash(tx string) (map[string]interface{}, erro
 	return res, nil
 }
 
-// GetETHBlockByHash retrieves an Ethereum block from its hash.
-func (client *IncClient) GetETHBlockByHash(blockHash string) (map[string]interface{}, error) {
+// GetEVMBlockByHash retrieves an Ethereum block from its hash.
+func (client *IncClient) GetEVMBlockByHash(blockHash string) (map[string]interface{}, error) {
 	method := "eth_getBlockByHash"
 	params := []interface{}{blockHash, false}
 
@@ -67,8 +67,8 @@ func (client *IncClient) GetETHBlockByHash(blockHash string) (map[string]interfa
 	return res, nil
 }
 
-// GetETHTxReceipt retrieves a Ethereum transaction receipt from its hash.
-func (client *IncClient) GetETHTxReceipt(txHash string) (*types.Receipt, error) {
+// GetEVMTxReceipt retrieves a Ethereum transaction receipt from its hash.
+func (client *IncClient) GetEVMTxReceipt(txHash string) (*types.Receipt, error) {
 	method := "eth_getTransactionReceipt"
 	params := []interface{}{txHash}
 
@@ -92,10 +92,10 @@ func (client *IncClient) GetETHTxReceipt(txHash string) (*types.Receipt, error) 
 	return &res, nil
 }
 
-// GetETHDepositProof retrieves an Ethereum-depositing proof of a transaction hash.
-func (client *IncClient) GetETHDepositProof(txHash string) (*ETHDepositProof, uint64, error) {
+// GetEVMDepositProof retrieves an Ethereum-depositing proof of a transaction hash.
+func (client *IncClient) GetEVMDepositProof(txHash string) (*EVMDepositProof, uint64, error) {
 	// Get tx content
-	txContent, err := client.GetETHTxByHash(txHash)
+	txContent, err := client.GetEVMTxByHash(txHash)
 	if err != nil {
 		fmt.Println("cannot get eth by hash", err)
 		return nil, 0, err
@@ -155,7 +155,7 @@ func (client *IncClient) GetETHDepositProof(txHash string) (*ETHDepositProof, ui
 		return nil, 0, fmt.Errorf("cannot convert blockNumber into integer")
 	}
 
-	blockHeader, err := client.GetETHBlockByHash(blockHashStr)
+	blockHeader, err := client.GetEVMBlockByHash(blockHashStr)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -181,7 +181,7 @@ func (client *IncClient) GetETHDepositProof(txHash string) (*ETHDepositProof, ui
 		if !ok {
 			return nil, 0, fmt.Errorf("cannot parse sibling tx: %v", tx)
 		}
-		siblingReceipt, err := client.GetETHTxReceipt(txStr)
+		siblingReceipt, err := client.GetEVMTxReceipt(txStr)
 		if err != nil {
 			return nil, 0, err
 		}
@@ -223,8 +223,8 @@ func (client *IncClient) GetETHDepositProof(txHash string) (*ETHDepositProof, ui
 	return NewETHDepositProof(uint(blockNumber), blockHash, uint(txIndex), encNodeList), amount, nil
 }
 
-// GetMostRecentETHBlockNumber retrieves the most recent Ethereum block number.
-func (client *IncClient) GetMostRecentETHBlockNumber() (uint64, error) {
+// GetMostRecentEVMBlockNumber retrieves the most recent Ethereum block number.
+func (client *IncClient) GetMostRecentEVMBlockNumber() (uint64, error) {
 	method := "eth_blockNumber"
 	params := make([]interface{}, 0)
 
@@ -254,9 +254,9 @@ func (client *IncClient) GetMostRecentETHBlockNumber() (uint64, error) {
 	return res.Uint64(), nil
 }
 
-// GetETHTransactionStatus returns the status of an Ethereum transaction.
-func (client *IncClient) GetETHTransactionStatus(txHash string) (int, error) {
-	receipt, err := client.GetETHTxReceipt(txHash)
+// GetEVMTransactionStatus returns the status of an Ethereum transaction.
+func (client *IncClient) GetEVMTransactionStatus(txHash string) (int, error) {
+	receipt, err := client.GetEVMTxReceipt(txHash)
 	if err != nil {
 		return -1, err
 	}
