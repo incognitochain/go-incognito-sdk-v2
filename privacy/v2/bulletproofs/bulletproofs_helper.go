@@ -89,10 +89,10 @@ func vectorAdd(a []*crypto.Scalar, b []*crypto.Scalar) ([]*crypto.Scalar, error)
 
 func setAggregateParams(N int) *bulletproofParams {
 	aggParam := new(bulletproofParams)
-	aggParam.g = AggParam.g[0:N]
-	aggParam.h = AggParam.h[0:N]
-	aggParam.u = AggParam.u
-	aggParam.cs = AggParam.cs
+	aggParam.g = aggParam.g[0:N]
+	aggParam.h = aggParam.h[0:N]
+	aggParam.u = aggParam.u
+	aggParam.cs = aggParam.cs
 	return aggParam
 }
 

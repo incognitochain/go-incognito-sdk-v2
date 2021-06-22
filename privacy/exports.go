@@ -18,9 +18,8 @@ import (
 	"github.com/incognitochain/go-incognito-sdk-v2/privacy/v2/bulletproofs"
 )
 
-
 const (
-	RingSize          = utils.RingSize
+	RingSize = utils.RingSize
 )
 
 // PedCom represents the parameters for the Pedersen commitment scheme.
@@ -31,28 +30,37 @@ type HybridCipherText = hybridencryption.HybridCipherText
 
 // SchnorrSignature represents a Schnorr signature.
 type SchnorrSignature = schnorr.SchnSignature
+
 // SchnorrPublicKey is a public key used in the Schnorr signature scheme.
 type SchnorrPublicKey = schnorr.SchnorrPublicKey
+
 // SchnorrPrivateKey is a private key used in the Schnorr signature scheme.
 type SchnorrPrivateKey = schnorr.SchnorrPrivateKey
 
 // Proof represents a payment proof.
 type Proof = proof.Proof
+
 // ProofV1 represents a Proof of version 1 used in transactions v1.
 type ProofV1 = zkp.ProofV1
+
 // ProofV2 represents a Proof of version 2 used in transactions v2.
 type ProofV2 = v2.ProofV2
+
 // ProofForConversion represents a Proof used in conversion transactions. (e.g. to convert UTXOs v1 into UTXOs v2).
 type ProofForConversion = conversion.ConversionProofVer1ToVer2
+
 // PaymentWitness is a witness used to construct a ProofV1.
 type PaymentWitness = zkp.PaymentWitness
+
 // PaymentWitnessParam is used to initialize a PaymentWitness.
 type PaymentWitnessParam = zkp.PaymentWitnessParam
 
 // RangeProof represents a range proof.
 type RangeProof = range_proof.RangeProof
+
 // RangeProofV1 represents a RangeProof of version 1 used in transactions v1.
 type RangeProofV1 = aggregatedrange.AggregatedRangeProof
+
 // RangeProofV2 represents a RangeProof of version 2 used in transactions v2.
 type RangeProofV2 = bulletproofs.RangeProof
 

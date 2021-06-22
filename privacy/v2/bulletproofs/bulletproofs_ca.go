@@ -5,12 +5,11 @@ import (
 	"github.com/incognitochain/go-incognito-sdk-v2/coin"
 	"github.com/incognitochain/go-incognito-sdk-v2/crypto"
 	"github.com/incognitochain/go-incognito-sdk-v2/privacy/utils"
-	"math"
 )
 
-var CACommitmentScheme = CopyPedersenCommitmentScheme(crypto.PedCom)
+var cACommitmentScheme = copyPedersenCommitmentScheme(crypto.PedCom)
 
-func CopyPedersenCommitmentScheme(sch crypto.PedersenCommitment) crypto.PedersenCommitment {
+func copyPedersenCommitmentScheme(sch crypto.PedersenCommitment) crypto.PedersenCommitment {
 	var result crypto.PedersenCommitment
 	var generators []*crypto.Point
 	for _, gen := range sch.G {
@@ -20,6 +19,7 @@ func CopyPedersenCommitmentScheme(sch crypto.PedersenCommitment) crypto.Pedersen
 	return result
 }
 
+// GetFirstAssetTag returns the first asset tag of a list out CoinV2's.
 func GetFirstAssetTag(coins []*coin.CoinV2) (*crypto.Point, error) {
 	if coins == nil || len(coins) == 0 {
 		return nil, fmt.Errorf("cannot get asset tag from empty input")
@@ -31,8 +31,9 @@ func GetFirstAssetTag(coins []*coin.CoinV2) (*crypto.Point, error) {
 	return result, nil
 }
 
-func (wit Witness) ProveUsingBase(anAssetTag *crypto.Point) (*RangeProof, error) {
-	CACommitmentScheme.G[crypto.PedersenValueIndex] = anAssetTag
+// ProveUsingBase returns a RangeProof for a Witness created using the base point v.
+func (wit Witness) ProveUsingBase(b *crypto.Point) (*RangeProof, error) {
+	cACommitmentScheme.G[crypto.PedersenValueIndex] = b
 	proof := new(RangeProof)
 	numValue := len(wit.values)
 	if numValue > utils.MaxOutputCoin {
@@ -81,8 +82,8 @@ func (wit Witness) ProveUsingBase(anAssetTag *crypto.Point) (*RangeProof, error)
 	} else {
 		alpha = crypto.RandomScalar()
 		rho = crypto.RandomScalar()
-		A.Add(A, new(crypto.Point).ScalarMult(CACommitmentScheme.G[crypto.PedersenRandomnessIndex], alpha))
-		S.Add(S, new(crypto.Point).ScalarMult(CACommitmentScheme.G[crypto.PedersenRandomnessIndex], rho))
+		A.Add(A, new(crypto.Point).ScalarMult(cACommitmentScheme.G[crypto.PedersenRandomnessIndex], alpha))
+		S.Add(S, new(crypto.Point).ScalarMult(cACommitmentScheme.G[crypto.PedersenRandomnessIndex], rho))
 		proof.a = A
 		proof.s = S
 	}
@@ -140,8 +141,8 @@ func (wit Witness) ProveUsingBase(anAssetTag *crypto.Point) (*RangeProof, error)
 	// commitment to t1, t2
 	tau1 := crypto.RandomScalar()
 	tau2 := crypto.RandomScalar()
-	proof.t1 = CACommitmentScheme.CommitAtIndex(t1, tau1, crypto.PedersenValueIndex)
-	proof.t2 = CACommitmentScheme.CommitAtIndex(t2, tau2, crypto.PedersenValueIndex)
+	proof.t1 = cACommitmentScheme.CommitAtIndex(t1, tau1, crypto.PedersenValueIndex)
+	proof.t2 = cACommitmentScheme.CommitAtIndex(t2, tau2, crypto.PedersenValueIndex)
 
 	x := generateChallenge(z.ToBytesS(), []*crypto.Point{proof.t1, proof.t2})
 	xSquare := new(crypto.Scalar).Mul(x, x)
@@ -203,154 +204,8 @@ func (wit Witness) ProveUsingBase(anAssetTag *crypto.Point) (*RangeProof, error)
 	return proof, nil
 }
 
-func (proof RangeProof) VerifyUsingBase(anAssetTag *crypto.Point) (bool, error) {
-	CACommitmentScheme.G[crypto.PedersenValueIndex] = anAssetTag
-	numValue := len(proof.cmsValue)
-	if numValue > utils.MaxOutputCoin {
-		return false, fmt.Errorf("must less than MaxOutputNumber")
-	}
-	numValuePad := roundUpPowTwo(numValue)
-	maxExp := utils.MaxExp
-	N := numValuePad * maxExp
-	aggParam := setAggregateParams(N)
-
-	cmsValue := proof.cmsValue
-	for i := numValue; i < numValuePad; i++ {
-		cmsValue = append(cmsValue, new(crypto.Point).Identity())
-	}
-
-	// recalculate challenge y, z
-	y := generateChallenge(aggParam.cs.ToBytesS(), []*crypto.Point{proof.a, proof.s})
-	z := generateChallenge(y.ToBytesS(), []*crypto.Point{proof.a, proof.s})
-	zSquare := new(crypto.Scalar).Mul(z, z)
-
-	x := generateChallenge(z.ToBytesS(), []*crypto.Point{proof.t1, proof.t2})
-	xSquare := new(crypto.Scalar).Mul(x, x)
-
-	// HPrime = H^(y^(1-i)
-	HPrime := computeHPrime(y, N, aggParam.h)
-
-	// g^tHat * h^tauX = V^(z^2) * g^delta(y,z) * T1^x * T2^(x^2)
-	yVector := powerVector(y, N)
-	deltaYZ, err := computeDeltaYZ(z, zSquare, yVector, N)
-	if err != nil {
-		return false, err
-	}
-
-	LHS := CACommitmentScheme.CommitAtIndex(proof.tHat, proof.tauX, crypto.PedersenValueIndex)
-	RHS := new(crypto.Point).ScalarMult(proof.t2, xSquare)
-	RHS.Add(RHS, new(crypto.Point).AddPedersen(deltaYZ, CACommitmentScheme.G[crypto.PedersenValueIndex], x, proof.t1))
-
-	expVector := vectorMulScalar(powerVector(z, numValuePad), zSquare)
-	RHS.Add(RHS, new(crypto.Point).MultiScalarMult(expVector, cmsValue))
-
-	if !crypto.IsPointEqual(LHS, RHS) {
-		return false, fmt.Errorf("verify aggregated range proof statement 1 failed")
-	}
-	uPrime := new(crypto.Point).ScalarMult(aggParam.u, crypto.HashToScalar(x.ToBytesS()))
-	innerProductArgValid := proof.innerProductProof.Verify(aggParam.g, HPrime, uPrime, x.ToBytesS())
-	if !innerProductArgValid {
-		return false, fmt.Errorf("verify aggregated range proof statement 2 failed")
-	}
-
-	return true, nil
-}
-
-func (proof RangeProof) VerifyFasterUsingBase(anAssetTag *crypto.Point) (bool, error) {
-	CACommitmentScheme.G[crypto.PedersenValueIndex] = anAssetTag
-	numValue := len(proof.cmsValue)
-	if numValue > utils.MaxOutputCoin {
-		return false, fmt.Errorf("must less than MaxOutputNumber")
-	}
-	numValuePad := roundUpPowTwo(numValue)
-	maxExp := utils.MaxExp
-	N := maxExp * numValuePad
-	aggParam := setAggregateParams(N)
-
-	cmsValue := proof.cmsValue
-	for i := numValue; i < numValuePad; i++ {
-		cmsValue = append(cmsValue, new(crypto.Point).Identity())
-	}
-
-	// recalculate challenge y, z
-	y := generateChallenge(aggParam.cs.ToBytesS(), []*crypto.Point{proof.a, proof.s})
-	z := generateChallenge(y.ToBytesS(), []*crypto.Point{proof.a, proof.s})
-	zSquare := new(crypto.Scalar).Mul(z, z)
-
-	x := generateChallenge(z.ToBytesS(), []*crypto.Point{proof.t1, proof.t2})
-	xSquare := new(crypto.Scalar).Mul(x, x)
-
-	// g^tHat * h^tauX = V^(z^2) * g^delta(y,z) * T1^x * T2^(x^2)
-	yVector := powerVector(y, N)
-	deltaYZ, err := computeDeltaYZ(z, zSquare, yVector, N)
-	if err != nil {
-		return false, err
-	}
-
-	// Verify the first argument
-	LHS := CACommitmentScheme.CommitAtIndex(proof.tHat, proof.tauX, crypto.PedersenValueIndex)
-	RHS := new(crypto.Point).ScalarMult(proof.t2, xSquare)
-	RHS.Add(RHS, new(crypto.Point).AddPedersen(deltaYZ, CACommitmentScheme.G[crypto.PedersenValueIndex], x, proof.t1))
-	expVector := vectorMulScalar(powerVector(z, numValuePad), zSquare)
-	RHS.Add(RHS, new(crypto.Point).MultiScalarMult(expVector, cmsValue))
-	if !crypto.IsPointEqual(LHS, RHS) {
-		return false, fmt.Errorf("verify aggregated range proof statement 1 failed")
-	}
-
-	// Verify the second argument
-	hashCache := x.ToBytesS()
-	L := proof.innerProductProof.l
-	R := proof.innerProductProof.r
-	s := make([]*crypto.Scalar, N)
-	sInverse := make([]*crypto.Scalar, N)
-	logN := int(math.Log2(float64(N)))
-	vSquareList := make([]*crypto.Scalar, logN)
-	vInverseSquareList := make([]*crypto.Scalar, logN)
-
-	for i := 0; i < N; i++ {
-		s[i] = new(crypto.Scalar).Set(proof.innerProductProof.a)
-		sInverse[i] = new(crypto.Scalar).Set(proof.innerProductProof.b)
-	}
-
-	for i := range L {
-		v := generateChallenge(hashCache, []*crypto.Point{L[i], R[i]})
-		hashCache = v.ToBytesS()
-		vInverse := new(crypto.Scalar).Invert(v)
-		vSquareList[i] = new(crypto.Scalar).Mul(v, v)
-		vInverseSquareList[i] = new(crypto.Scalar).Mul(vInverse, vInverse)
-
-		for j := 0; j < N; j++ {
-			if j&int(math.Pow(2, float64(logN-i-1))) != 0 {
-				s[j] = new(crypto.Scalar).Mul(s[j], v)
-				sInverse[j] = new(crypto.Scalar).Mul(sInverse[j], vInverse)
-			} else {
-				s[j] = new(crypto.Scalar).Mul(s[j], vInverse)
-				sInverse[j] = new(crypto.Scalar).Mul(sInverse[j], v)
-			}
-		}
-	}
-	// HPrime = H^(y^(1-i)
-	HPrime := computeHPrime(y, N, aggParam.h)
-	uPrime := new(crypto.Point).ScalarMult(aggParam.u, crypto.HashToScalar(x.ToBytesS()))
-	c := new(crypto.Scalar).Mul(proof.innerProductProof.a, proof.innerProductProof.b)
-	tmp1 := new(crypto.Point).MultiScalarMult(s, aggParam.g)
-	tmp2 := new(crypto.Point).MultiScalarMult(sInverse, HPrime)
-	rightHS := new(crypto.Point).Add(tmp1, tmp2)
-	rightHS.Add(rightHS, new(crypto.Point).ScalarMult(uPrime, c))
-
-	tmp3 := new(crypto.Point).MultiScalarMult(vSquareList, L)
-	tmp4 := new(crypto.Point).MultiScalarMult(vInverseSquareList, R)
-	leftHS := new(crypto.Point).Add(tmp3, tmp4)
-	leftHS.Add(leftHS, proof.innerProductProof.p)
-
-	res := crypto.IsPointEqual(rightHS, leftHS)
-	if !res {
-		return false, fmt.Errorf("verify aggregated range proof statement 2 failed")
-	}
-
-	return true, nil
-}
-
+// TransformWitnessToCAWitness transforms a regular Witness into a new Witness used in confidential assets,
+// given the asset tag blinders.
 func TransformWitnessToCAWitness(wit *Witness, assetTagBlinders []*crypto.Scalar) (*Witness, error) {
 	if len(assetTagBlinders) != len(wit.values) || len(assetTagBlinders) != len(wit.rands) {
 		return nil, fmt.Errorf("cannot transform witness: parameter lengths mismatch")

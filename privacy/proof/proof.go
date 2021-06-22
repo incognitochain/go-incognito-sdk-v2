@@ -5,7 +5,7 @@ import (
 	"github.com/incognitochain/go-incognito-sdk-v2/privacy/proof/range_proof"
 )
 
-// Paymentproof
+// Proof represents a payment proof.
 type Proof interface {
 	GetVersion() uint8
 	Init()
