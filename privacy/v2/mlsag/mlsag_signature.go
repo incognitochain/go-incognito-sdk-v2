@@ -5,34 +5,28 @@ import (
 	"github.com/incognitochain/go-incognito-sdk-v2/crypto"
 )
 
+// Sig represents a MLSAG signature.
 type Sig struct {
 	c         *crypto.Scalar     // 32 bytes
 	keyImages []*crypto.Point    // 32 * size bytes
 	r         [][]*crypto.Scalar // 32 * size_1 * size_2 bytes
 }
 
-func NewMLSAGSig(c *crypto.Scalar, keyImages []*crypto.Point, r [][]*crypto.Scalar) (*Sig, error) {
-	if len(r) == 0 {
-		return nil, fmt.Errorf("cannot create new mlsag signature, length of r is not correct")
-	}
-	if len(keyImages) != len(r[0]) {
-		return nil, fmt.Errorf("cannot create new mlsag signature, length of keyImages is not correct")
-	}
-	res := new(Sig)
-	res.SetC(c)
-	res.SetR(r)
-	res.SetKeyImages(keyImages)
-	return res, nil
-}
-
+// GetC returns s.c.
 func (s Sig) GetC() *crypto.Scalar          { return s.c }
+// GetKeyImages returns the key-image list of a Sig.
 func (s Sig) GetKeyImages() []*crypto.Point { return s.keyImages }
+// GetR returns s.r.
 func (s Sig) GetR() [][]*crypto.Scalar      { return s.r }
 
+// SetC sets s.c = c.
 func (s *Sig) SetC(c *crypto.Scalar)                  { s.c = c }
-func (s *Sig) SetKeyImages(keyImages []*crypto.Point) { s.keyImages = keyImages }
-func (s *Sig) SetR(r [][]*crypto.Scalar)              { s.r = r }
+// SetKeyImages sets v as the key-image list of a Sig.
+func (s *Sig) SetKeyImages(v []*crypto.Point) { s.keyImages = v }
+// SetR sets s.r = r.
+func (s *Sig) SetR(r [][]*crypto.Scalar)      { s.r = r }
 
+// ToBytes returns a the byte-representation of a Sig.
 func (s *Sig) ToBytes() ([]byte, error) {
 	b := []byte{SigPrefix}
 
@@ -84,6 +78,7 @@ func (s *Sig) ToBytes() ([]byte, error) {
 
 	return b, nil
 }
+// FromBytes sets a byte-representation to a Sig.
 func (s *Sig) FromBytes(b []byte) (*Sig, error) {
 	if len(b) == 0 {
 		return nil, fmt.Errorf("length of byte is empty, cannot setbyte mlsagSig")

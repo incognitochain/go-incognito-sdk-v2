@@ -1,27 +1,30 @@
 package mlsag
 
 import (
-	"bytes"
 	"fmt"
 	"github.com/incognitochain/go-incognito-sdk-v2/common"
 	"github.com/incognitochain/go-incognito-sdk-v2/crypto"
 	C25519 "github.com/incognitochain/go-incognito-sdk-v2/crypto/curve25519"
 )
 
-var CurveOrder = new(crypto.Scalar).SetKeyUnsafe(&C25519.L)
+var curveOrder = new(crypto.Scalar).SetKeyUnsafe(&C25519.L)
 
+// Ring represents a ring of public keys used in the MLSAG signature scheme.
 type Ring struct {
 	keys [][]*crypto.Point
 }
 
+// GetKeys returns the keys of a Ring.
 func (ring Ring) GetKeys() [][]*crypto.Point {
 	return ring.keys
 }
 
+// NewRing creates a new Ring from the given list of public keys.
 func NewRing(keys [][]*crypto.Point) *Ring {
 	return &Ring{keys}
 }
 
+// ToBytes returns the byte-representation of a Ring.
 func (ring Ring) ToBytes() ([]byte, error) {
 	k := ring.keys
 	if len(k) == 0 {
@@ -53,6 +56,7 @@ func (ring Ring) ToBytes() ([]byte, error) {
 	return b, nil
 }
 
+// FromBytes sets a byte-representation b to a Ring.
 func (ring *Ring) FromBytes(b []byte) (*Ring, error) {
 	if len(b) < 3 {
 		return nil, fmt.Errorf("RingFromBytes: byte length is too short")
@@ -85,14 +89,6 @@ func (ring *Ring) FromBytes(b []byte) (*Ring, error) {
 	return ring, nil
 }
 
-func createFakePublicKeyArray(length int) []*crypto.Point {
-	K := make([]*crypto.Point, length)
-	for i := 0; i < length; i += 1 {
-		K[i] = crypto.RandomPoint()
-	}
-	return K
-}
-
 // NewRandomRing creates a random ring with dimension: (numFake; len(privateKeys)) where we generate fake public keys inside.
 func NewRandomRing(privateKeys []*crypto.Scalar, numFake, pi int) (K *Ring) {
 	m := len(privateKeys)
@@ -112,6 +108,7 @@ func NewRandomRing(privateKeys []*crypto.Scalar, numFake, pi int) (K *Ring) {
 	return
 }
 
+// Mlsag represents the parameters of a MLSAG private key.
 type Mlsag struct {
 	R           *Ring
 	pi          int
@@ -119,13 +116,33 @@ type Mlsag struct {
 	privateKeys []*crypto.Scalar
 }
 
+// NewMlsag creates a new Mlsag from the given private keys, a Ring and the index of the true private keys.
 func NewMlsag(privateKeys []*crypto.Scalar, R *Ring, pi int) *Mlsag {
 	return &Mlsag{
 		R,
 		pi,
-		ParseKeyImages(privateKeys),
+		parseKeyImages(privateKeys),
 		privateKeys,
 	}
+}
+
+// Sign returns a signature for the given message.
+func (ml *Mlsag) Sign(message []byte) (*Sig, error) {
+	if len(message) != common.HashSize {
+		return nil, fmt.Errorf("cannot mlsag sign the message because its length is not 32, maybe it has not been hashed")
+	}
+	message32byte := [32]byte{}
+	copy(message32byte[:], message)
+
+	alpha, r := ml.createRandomChallenges()          // step 2 in paper
+	c, err := ml.calculateC(message32byte, alpha, r) // step 3 and 4 in paper
+
+	if err != nil {
+		return nil, err
+	}
+	return &Sig{
+		c[0], ml.keyImages, r,
+	}, nil
 }
 
 // parsePublicKey parses public key from private key.
@@ -140,7 +157,7 @@ func parsePublicKey(privateKey *crypto.Scalar, isLast bool) *crypto.Point {
 	return new(crypto.Point).ScalarMultBase(privateKey)
 }
 
-func ParseKeyImages(privateKeys []*crypto.Scalar) []*crypto.Point {
+func parseKeyImages(privateKeys []*crypto.Scalar) []*crypto.Point {
 	m := len(privateKeys)
 
 	result := make([]*crypto.Point, m)
@@ -285,88 +302,10 @@ func (ml *Mlsag) calculateC(message [common.HashSize]byte, alpha []*crypto.Scala
 	return c, nil
 }
 
-// check l*KI = 0 by checking KI is a valid point
-func verifyKeyImages(keyImages []*crypto.Point) bool {
-	var check bool = true
-	for i := 0; i < len(keyImages); i += 1 {
-		if keyImages[i] == nil {
-			return false
-		}
-		lKI := new(crypto.Point).ScalarMult(keyImages[i], CurveOrder)
-		check = check && lKI.IsIdentity()
+func createFakePublicKeyArray(length int) []*crypto.Point {
+	K := make([]*crypto.Point, length)
+	for i := 0; i < length; i += 1 {
+		K[i] = crypto.RandomPoint()
 	}
-	return check
-}
-
-func verifyRing(sig *Sig, R *Ring, message [common.HashSize]byte) (bool, error) {
-	c := *sig.c
-	cBefore := *sig.c
-	if len(R.keys) != len(sig.r) {
-		return false, fmt.Errorf("MLSAG Error : Malformed Ring")
-	}
-	for i := 0; i < len(sig.r); i += 1 {
-		nextC, err := calculateNextC(
-			message,
-			sig.r[i], &c,
-			R.keys[i],
-			sig.keyImages,
-		)
-		if err != nil {
-			return false, err
-		}
-		c = *nextC
-	}
-	return bytes.Equal(c.ToBytesS(), cBefore.ToBytesS()), nil
-}
-
-func Verify(sig *Sig, K *Ring, message []byte) (bool, error) {
-	if len(message) != common.HashSize {
-		return false, fmt.Errorf("cannot mlsag verify the message because its length is not 32, maybe it has not been hashed")
-	}
-	message32byte := [32]byte{}
-	copy(message32byte[:], message)
-	b1 := verifyKeyImages(sig.keyImages)
-	b2, err := verifyRing(sig, K, message32byte)
-	return b1 && b2, err
-}
-
-func (ml *Mlsag) Sign(message []byte) (*Sig, error) {
-	if len(message) != common.HashSize {
-		return nil, fmt.Errorf("cannot mlsag sign the message because its length is not 32, maybe it has not been hashed")
-	}
-	message32byte := [32]byte{}
-	copy(message32byte[:], message)
-
-	alpha, r := ml.createRandomChallenges()          // step 2 in paper
-	c, err := ml.calculateC(message32byte, alpha, r) // step 3 and 4 in paper
-
-	if err != nil {
-		return nil, err
-	}
-	return &Sig{
-		c[0], ml.keyImages, r,
-	}, nil
-}
-
-func PrintScalar(sList []*crypto.Scalar) string {
-	toBePrinted := ""
-	for i, element := range sList {
-		toBePrinted += element.String()
-		if i != len(sList)-1 {
-			toBePrinted += "--"
-		}
-	}
-
-	return toBePrinted
-}
-
-func PrintPoint(sList []*crypto.Point) string {
-	toBePrinted := ""
-	for i, element := range sList {
-		toBePrinted += element.String()
-		if i != len(sList)-1 {
-			toBePrinted += "--"
-		}
-	}
-	return toBePrinted
+	return K
 }

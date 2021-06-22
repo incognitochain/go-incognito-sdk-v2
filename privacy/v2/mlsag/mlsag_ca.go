@@ -6,6 +6,7 @@ import (
 	"github.com/incognitochain/go-incognito-sdk-v2/crypto"
 )
 
+// SignConfidentialAsset returns a (confidential-asset) signature for the given message.
 func (ml *Mlsag) SignConfidentialAsset(message []byte) (*Sig, error) {
 	if len(message) != common.HashSize {
 		return nil, fmt.Errorf("cannot mlsag sign the message because its length is not 32, maybe it has not been hashed")
