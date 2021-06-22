@@ -1,6 +1,7 @@
 package key
 
 import (
+	"encoding/hex"
 	"errors"
 
 	"github.com/incognitochain/go-incognito-sdk-v2/crypto"
@@ -133,6 +134,12 @@ func (addr PaymentAddress) GetPublicSpend() *crypto.Point {
 func (addr PaymentAddress) GetPublicView() *crypto.Point {
 	pubView, _ := new(crypto.Point).FromBytesS(addr.Tk)
 	return pubView
+}
+
+// String returns a string representation of a PaymentAddress.
+func (addr PaymentAddress) String() string {
+	byteArrays := addr.Bytes()
+	return hex.EncodeToString(byteArrays[:])
 }
 
 // GetOTAPublicKey returns the PublicOTAKey of a PaymentAddress.
