@@ -27,6 +27,7 @@ func (ring Ring) ToBytes() ([]byte, error) {
 	if len(k) == 0 {
 		return nil, fmt.Errorf("RingToBytes: Ring is empty")
 	}
+
 	// Make sure that the ring size is a rectangle row*column
 	for i := 1; i < len(k); i += 1 {
 		if len(k[i]) != len(k[0]) {
@@ -39,7 +40,7 @@ func (ring Ring) ToBytes() ([]byte, error) {
 		return nil, fmt.Errorf("RingToBytes: Ring size is too large")
 	}
 	b := make([]byte, 3)
-	b[0] = MlsagPrefix
+	b[0] = SigPrefix
 	b[1] = byte(n)
 	b[2] = byte(m)
 
@@ -56,12 +57,11 @@ func (ring *Ring) FromBytes(b []byte) (*Ring, error) {
 	if len(b) < 3 {
 		return nil, fmt.Errorf("RingFromBytes: byte length is too short")
 	}
-	if b[0] != MlsagPrefix {
-		return nil, fmt.Errorf("RingFromBytes: byte[0] is not MlsagPrefix")
+	if b[0] != SigPrefix {
+		return nil, fmt.Errorf("RingFromBytes: byte[0] is not SigPrefix")
 	}
 	n := int(b[1])
 	m := int(b[2])
-	// fmt.Println(b[3 : 3+crypto.Ed25519KeySize])
 
 	if len(b) != crypto.Ed25519KeySize*n*m+3 {
 		return nil, fmt.Errorf("RingFromBytes: byte length is not correct")
@@ -81,7 +81,7 @@ func (ring *Ring) FromBytes(b []byte) (*Ring, error) {
 		}
 		key = append(key, curRow)
 	}
-	ring = NewRing(key)
+	ring.keys = key
 	return ring, nil
 }
 
@@ -93,7 +93,7 @@ func createFakePublicKeyArray(length int) []*crypto.Point {
 	return K
 }
 
-// Create a random ring with dimension: (numFake; len(privateKeys)) where we generate fake public keys inside
+// NewRandomRing creates a random ring with dimension: (numFake; len(privateKeys)) where we generate fake public keys inside.
 func NewRandomRing(privateKeys []*crypto.Scalar, numFake, pi int) (K *Ring) {
 	m := len(privateKeys)
 
@@ -128,7 +128,7 @@ func NewMlsag(privateKeys []*crypto.Scalar, R *Ring, pi int) *Mlsag {
 	}
 }
 
-// Parse public key from private key
+// parsePublicKey parses public key from private key.
 func parsePublicKey(privateKey *crypto.Scalar, isLast bool) *crypto.Point {
 	// isLast will commit to random base G
 	if isLast {
@@ -212,26 +212,26 @@ func calculateNextC(digest [common.HashSize]byte, r []*crypto.Scalar, c *crypto.
 	// If you are reviewing my code, please refer to paper
 	// rG: r*G
 	// cK: c*R
-	// rG_cK: rG + cK
+	// sum1: rG + cK
 	//
 	// HK: H_p(K_i)
 	// rHK: r_i*H_p(K_i)
 	// cKI: c*R~ (KI as keyImage)
-	// rHK_cKI: rHK + cKI
+	// sum2: rHK + cKI
 
 	// Process columns before the last
 	for i := 0; i < len(K)-1; i += 1 {
 		rG := new(crypto.Point).ScalarMultBase(r[i])
 		cK := new(crypto.Point).ScalarMult(K[i], c)
-		rG_cK := new(crypto.Point).Add(rG, cK)
+		sum1 := new(crypto.Point).Add(rG, cK) // rG + cK
 
 		HK := crypto.HashToPoint(K[i].ToBytesS())
 		rHK := new(crypto.Point).ScalarMult(HK, r[i])
 		cKI := new(crypto.Point).ScalarMult(keyImages[i], c)
-		rHK_cKI := new(crypto.Point).Add(rHK, cKI)
+		sum2 := new(crypto.Point).Add(rHK, cKI) // rHK + cKI
 
-		b = append(b, rG_cK.ToBytesS()...)
-		b = append(b, rHK_cKI.ToBytesS()...)
+		b = append(b, sum1.ToBytesS()...)
+		b = append(b, sum2.ToBytesS()...)
 	}
 
 	// Process last column
@@ -240,8 +240,8 @@ func calculateNextC(digest [common.HashSize]byte, r []*crypto.Scalar, c *crypto.
 		r[len(K)-1],
 	)
 	cK := new(crypto.Point).ScalarMult(K[len(K)-1], c)
-	rG_cK := new(crypto.Point).Add(rG, cK)
-	b = append(b, rG_cK.ToBytesS()...)
+	sum := new(crypto.Point).Add(rG, cK) // rG + cK
+	b = append(b, sum.ToBytesS()...)
 
 	return crypto.HashToScalar(b), nil
 }
@@ -289,7 +289,7 @@ func (ml *Mlsag) calculateC(message [common.HashSize]byte, alpha []*crypto.Scala
 func verifyKeyImages(keyImages []*crypto.Point) bool {
 	var check bool = true
 	for i := 0; i < len(keyImages); i += 1 {
-		if keyImages[i]==nil{
+		if keyImages[i] == nil {
 			return false
 		}
 		lKI := new(crypto.Point).ScalarMult(keyImages[i], CurveOrder)
@@ -298,13 +298,12 @@ func verifyKeyImages(keyImages []*crypto.Point) bool {
 	return check
 }
 
-func verifyRing(sig *MlsagSig, R *Ring, message [common.HashSize]byte) (bool, error) {
+func verifyRing(sig *Sig, R *Ring, message [common.HashSize]byte) (bool, error) {
 	c := *sig.c
 	cBefore := *sig.c
-	if len(R.keys) != len(sig.r){
+	if len(R.keys) != len(sig.r) {
 		return false, fmt.Errorf("MLSAG Error : Malformed Ring")
 	}
-	//fmt.Printf("VERIFY cBefore: %v\n", cBefore.String())
 	for i := 0; i < len(sig.r); i += 1 {
 		nextC, err := calculateNextC(
 			message,
@@ -315,17 +314,12 @@ func verifyRing(sig *MlsagSig, R *Ring, message [common.HashSize]byte) (bool, er
 		if err != nil {
 			return false, err
 		}
-		//fmt.Printf("BUGLOG3 r[%v] = %v\n", i, PrintScalar(sig.r[i]))
-		//fmt.Printf("BUGLOG3 key[%v] = %v\n", i, PrintPoint(R.keys[i]))
-		//fmt.Printf("BUGLOG3 keyImages = %v\n", PrintPoint(sig.keyImages))
-		//fmt.Printf("BUGLOG3 c[%v] = %v\n", i, nextC.String())
-		//fmt.Println("BUGLOG3 ===============")
 		c = *nextC
 	}
 	return bytes.Equal(c.ToBytesS(), cBefore.ToBytesS()), nil
 }
 
-func Verify(sig *MlsagSig, K *Ring, message []byte) (bool, error) {
+func Verify(sig *Sig, K *Ring, message []byte) (bool, error) {
 	if len(message) != common.HashSize {
 		return false, fmt.Errorf("cannot mlsag verify the message because its length is not 32, maybe it has not been hashed")
 	}
@@ -333,10 +327,10 @@ func Verify(sig *MlsagSig, K *Ring, message []byte) (bool, error) {
 	copy(message32byte[:], message)
 	b1 := verifyKeyImages(sig.keyImages)
 	b2, err := verifyRing(sig, K, message32byte)
-	return (b1 && b2), err
+	return b1 && b2, err
 }
 
-func (ml *Mlsag) Sign(message []byte) (*MlsagSig, error) {
+func (ml *Mlsag) Sign(message []byte) (*Sig, error) {
 	if len(message) != common.HashSize {
 		return nil, fmt.Errorf("cannot mlsag sign the message because its length is not 32, maybe it has not been hashed")
 	}
@@ -349,7 +343,7 @@ func (ml *Mlsag) Sign(message []byte) (*MlsagSig, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &MlsagSig{
+	return &Sig{
 		c[0], ml.keyImages, r,
 	}, nil
 }
@@ -358,7 +352,7 @@ func PrintScalar(sList []*crypto.Scalar) string {
 	toBePrinted := ""
 	for i, element := range sList {
 		toBePrinted += element.String()
-		if i != len(sList) - 1 {
+		if i != len(sList)-1 {
 			toBePrinted += "--"
 		}
 	}
@@ -370,7 +364,7 @@ func PrintPoint(sList []*crypto.Point) string {
 	toBePrinted := ""
 	for i, element := range sList {
 		toBePrinted += element.String()
-		if i != len(sList) - 1 {
+		if i != len(sList)-1 {
 			toBePrinted += "--"
 		}
 	}
