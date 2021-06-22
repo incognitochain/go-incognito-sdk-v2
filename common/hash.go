@@ -12,6 +12,7 @@ var invalidMaxHashSizeErr = fmt.Errorf("invalid max hash size")
 var invalidHashSizeErr = fmt.Errorf("invalid hash size")
 var nilHashErr = fmt.Errorf("input hash is nil")
 
+// Hash is a 32-byte long array wrapping a hashed value.
 type Hash [HashSize]byte
 
 // MarshalText converts hashObj string to bytes array.
