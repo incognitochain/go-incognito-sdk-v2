@@ -70,7 +70,7 @@ func (txToken *TxToken) Init(paramsInterface interface{}) error {
 
 		// set info coin for output coin
 		if len(params.TokenParams.Receiver[0].Message) > 0 {
-			if len(params.TokenParams.Receiver[0].Message) > privacy.MaxSizeInfoCoin {
+			if len(params.TokenParams.Receiver[0].Message) > coin.MaxSizeInfoCoin {
 				return fmt.Errorf("len of message (%v) too large", len(params.TokenParams.Receiver[0].Message))
 			}
 			tempOutputCoin[0].CoinDetails.SetInfo(params.TokenParams.Receiver[0].Message)

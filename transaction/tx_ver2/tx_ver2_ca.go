@@ -116,8 +116,8 @@ func createPrivKeyMlsagCA(inputCoins []coin.PlainCoin, outputCoins []*coin.CoinV
 
 	// 2 final elements in `private keys` for MLSAG
 	assetSum := new(crypto.Scalar).Sub(sumInputAssetTagBlinders, sumOutputAssetTagBlinders)
-	firstCommitmentToZeroRecomputed := new(crypto.Point).ScalarMult(privacy.PedCom.G[privacy.PedersenRandomnessIndex], assetSum)
-	secondCommitmentToZeroRecomputed := new(crypto.Point).ScalarMult(privacy.PedCom.G[privacy.PedersenRandomnessIndex], sumRand)
+	firstCommitmentToZeroRecomputed := new(crypto.Point).ScalarMult(crypto.PedCom.G[crypto.PedersenRandomnessIndex], assetSum)
+	secondCommitmentToZeroRecomputed := new(crypto.Point).ScalarMult(crypto.PedCom.G[crypto.PedersenRandomnessIndex], sumRand)
 	if len(commitmentsToZero) != 2 {
 		fmt.Printf("Received %d points to check when signing MLSAG", len(commitmentsToZero))
 		return nil, utils.NewTransactionErr(utils.UnexpectedError, errors.New("Error : need exactly 2 points for MLSAG double-checking"))

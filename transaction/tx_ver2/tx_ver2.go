@@ -125,7 +125,7 @@ func createPrivKeyMlsag(inputCoins []coin.PlainCoin, outputCoins []*coin.CoinV2,
 			return nil, err
 		}
 	}
-	commitmentToZeroRecomputed := new(crypto.Point).ScalarMult(privacy.PedCom.G[privacy.PedersenRandomnessIndex], sumRand)
+	commitmentToZeroRecomputed := new(crypto.Point).ScalarMult(crypto.PedCom.G[crypto.PedersenRandomnessIndex], sumRand)
 	match := crypto.IsPointEqual(commitmentToZeroRecomputed, commitmentToZero)
 	if !match {
 		return nil, utils.NewTransactionErr(utils.SignTxError, errors.New("Error : asset tag sum or commitment sum mismatch"))

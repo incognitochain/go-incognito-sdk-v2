@@ -50,7 +50,7 @@ func CalculateSumOutputsWithFee(outputCoins []coin.Coin, fee uint64) *crypto.Poi
 		sumOutputsWithFee.Add(sumOutputsWithFee, outputCoins[i].GetCommitment())
 	}
 	feeCommitment := new(crypto.Point).ScalarMult(
-		privacy.PedCom.G[privacy.PedersenValueIndex],
+		crypto.PedCom.G[crypto.PedersenValueIndex],
 		new(crypto.Scalar).FromUint64(fee),
 	)
 	sumOutputsWithFee.Add(sumOutputsWithFee, feeCommitment)

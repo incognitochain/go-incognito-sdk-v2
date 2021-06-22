@@ -145,7 +145,7 @@ func GenerateOutputCoinV1s(paymentInfo []*key.PaymentInfo) ([]*coin.CoinV1, erro
 		outputCoins[i].CoinDetails = new(coin.PlainCoinV1)
 		outputCoins[i].CoinDetails.SetValue(pInfo.Amount)
 		if len(pInfo.Message) > 0 {
-			if len(pInfo.Message) > privacy.MaxSizeInfoCoin {
+			if len(pInfo.Message) > coin.MaxSizeInfoCoin {
 				return nil, fmt.Errorf("length of message (%v) too large", len(pInfo.Message))
 			}
 		}
