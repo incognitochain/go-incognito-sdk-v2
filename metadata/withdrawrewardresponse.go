@@ -15,7 +15,7 @@ type WithDrawRewardResponse struct {
 }
 
 func (withDrawRewardResponse WithDrawRewardResponse) Hash() *common.Hash {
-	if withDrawRewardResponse.Version == common.SALARY_VER_FIX_HASH {
+	if withDrawRewardResponse.Version == common.SalaryVerFixHash {
 		if withDrawRewardResponse.TxRequest == nil {
 			return &common.Hash{}
 		}

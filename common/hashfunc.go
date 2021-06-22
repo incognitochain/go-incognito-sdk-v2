@@ -12,17 +12,16 @@ func SHA256(b []byte) []byte {
 	return hash[:]
 }
 
-// HashB calculates SHA3-256 hashing of input b
-// and returns the result in bytes array.
+// HashB is the same as SHA256.
 func HashB(b []byte) []byte {
 	hash := sha3.Sum256(b)
 	return hash[:]
 }
 
-// HashB calculates SHA3-256 hashing of input b
+// HashH calculates SHA3-256 hashing of input b
 // and returns the result in Hash.
 func HashH(b []byte) Hash {
-	return Hash(sha3.Sum256(b))
+	return sha3.Sum256(b)
 }
 
 // Hash4Bls is Hash function for calculate block hash

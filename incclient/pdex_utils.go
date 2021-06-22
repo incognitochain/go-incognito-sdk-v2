@@ -2,7 +2,6 @@ package incclient
 
 import (
 	"fmt"
-	"math/big"
 	"sort"
 	"strings"
 
@@ -12,6 +11,21 @@ import (
 	"github.com/incognitochain/go-incognito-sdk-v2/rpchandler/rpc"
 	"github.com/incognitochain/go-incognito-sdk-v2/wallet"
 )
+
+// PoolInfo represents a pDEX pool of two tokenIDs.
+type PoolInfo struct {
+	Token1IDStr     string
+	Token1PoolValue uint64
+	Token2IDStr     string
+	Token2PoolValue uint64
+}
+
+// Share represents a pDEX contribution share.
+type Share struct {
+	TokenID1Str string
+	TokenID2Str string
+	ShareAmount uint64
+}
 
 // GetPDEState retrieves the state of pDEX at the provided beacon height.
 // If the beacon height is set to 0, it returns the latest pDEX state.
@@ -40,7 +54,7 @@ func (client *IncClient) GetPDEState(beaconHeight uint64) (*jsonresult.CurrentPD
 
 // GetAllPDEPoolPairs retrieves all pools in pDEX at the provided beacon height.
 // If the beacon height is set to 0, it returns the latest pDEX pool pairs.
-func (client *IncClient) GetAllPDEPoolPairs(beaconHeight uint64) (map[string]*common.PoolInfo, error) {
+func (client *IncClient) GetAllPDEPoolPairs(beaconHeight uint64) (map[string]*PoolInfo, error) {
 	pdeState, err := client.GetPDEState(beaconHeight)
 	if err != nil {
 		return nil, err
@@ -51,7 +65,7 @@ func (client *IncClient) GetAllPDEPoolPairs(beaconHeight uint64) (map[string]*co
 
 // GetPDEPoolPair retrieves the pDEX pool information for pair tokenID1-tokenID2 at the provided beacon height.
 // If the beacon height is set to 0, it returns the latest information.
-func (client *IncClient) GetPDEPoolPair(beaconHeight uint64, tokenID1, tokenID2 string) (*common.PoolInfo, error) {
+func (client *IncClient) GetPDEPoolPair(beaconHeight uint64, tokenID1, tokenID2 string) (*PoolInfo, error) {
 	if beaconHeight == 0 {
 		bestBlocks, err := client.GetBestBlock()
 		if err != nil {
@@ -137,7 +151,7 @@ func (client *IncClient) GetShareAmount(beaconHeight uint64, tokenID1, tokenID2,
 }
 
 // GetAllShares retrieves all shares in pDEX a user has contributed.
-func (client *IncClient) GetAllShares(beaconHeight uint64, paymentAddress string) ([]*common.Share, error) {
+func (client *IncClient) GetAllShares(beaconHeight uint64, paymentAddress string) ([]*Share, error) {
 	if beaconHeight == 0 {
 		bestBlocks, err := client.GetBestBlock()
 		if err != nil {
@@ -157,11 +171,11 @@ func (client *IncClient) GetAllShares(beaconHeight uint64, paymentAddress string
 		return nil, err
 	}
 
-	res := make([]*common.Share, 0)
+	res := make([]*Share, 0)
 	for key, value := range allShares {
 		if strings.Contains(key, keyAddr) {
 			sliceStrings := strings.Split(key, "-")
-			res = append(res, &common.Share{
+			res = append(res, &Share{
 				TokenID1Str: sliceStrings[2],
 				TokenID2Str: sliceStrings[3],
 				ShareAmount: value,
@@ -210,60 +224,6 @@ func (client *IncClient) CheckTradeStatus(txHash string) (int, error) {
 	}
 
 	return tradeStatus, err
-}
-
-// GetTradeValue gets trade value buy calculating things at local.
-func GetTradeValue(tokenToSell, TokenToBuy string, sellAmount uint64, poolPairs map[string]*common.PoolInfo) (uint64, error) {
-	poolPair, err := common.GetPDEPoolPair(tokenToSell, TokenToBuy, poolPairs)
-	if err != nil {
-		return 0, err
-	}
-
-	var sellPoolAmount, buyPoolAmount uint64
-	if poolPair.Token1IDStr == tokenToSell {
-		sellPoolAmount = poolPair.Token1PoolValue
-		buyPoolAmount = poolPair.Token2PoolValue
-	} else {
-		sellPoolAmount = poolPair.Token2PoolValue
-		buyPoolAmount = poolPair.Token1PoolValue
-	}
-
-	return UniSwapValue(sellAmount, sellPoolAmount, buyPoolAmount)
-}
-
-func GetXTradeValue(tokenToSell, tokenToBuy string, sellAmount uint64, poolPairs map[string]*common.PoolInfo) (uint64, error) {
-	if tokenToSell == tokenToBuy {
-		return 0, fmt.Errorf("GetXTradeValue: tokenIDs are the same: %v", tokenToSell)
-	}
-	if tokenToSell == common.PRVIDStr || tokenToBuy == common.PRVIDStr {
-		return GetTradeValue(tokenToSell, tokenToBuy, sellAmount, poolPairs)
-	}
-
-	prvReceived, err := GetTradeValue(tokenToSell, common.PRVIDStr, sellAmount, poolPairs)
-	if err != nil {
-		return 0, err
-	}
-
-	return GetTradeValue(common.PRVIDStr, tokenToBuy, prvReceived, poolPairs)
-}
-
-func UniSwapValue(sellAmount, sellPoolAmount, buyPoolAmount uint64) (uint64, error) {
-	invariant := big.NewInt(0)
-	invariant.Mul(new(big.Int).SetUint64(sellPoolAmount), new(big.Int).SetUint64(buyPoolAmount))
-
-	newSellPoolAmount := big.NewInt(0)
-	newSellPoolAmount.Add(new(big.Int).SetUint64(sellPoolAmount), new(big.Int).SetUint64(sellAmount))
-
-	newBuyPoolAmount := big.NewInt(0).Div(invariant, newSellPoolAmount).Uint64()
-	modValue := big.NewInt(0).Mod(invariant, newSellPoolAmount)
-	if modValue.Cmp(big.NewInt(0)) != 0 {
-		newBuyPoolAmount++
-	}
-	if buyPoolAmount <= newBuyPoolAmount {
-		return 0, fmt.Errorf("cannot calculate trade value: new pool (%v) is greater than oldPool (%v)", newBuyPoolAmount, buyPoolAmount)
-	}
-
-	return buyPoolAmount - newBuyPoolAmount, nil
 }
 
 // BuildPDEShareKey constructs a key for retrieving contributed shares in pDEX.
