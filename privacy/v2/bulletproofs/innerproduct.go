@@ -1,7 +1,6 @@
 package bulletproofs
 
 import (
-	"errors"
 	"fmt"
 	"github.com/incognitochain/go-incognito-sdk-v2/crypto"
 	"math"
@@ -21,17 +20,14 @@ type InnerProductProof struct {
 	p *crypto.Point
 }
 
-func (inner *InnerProductProof) Init() *InnerProductProof {
-	if inner == nil {
-		inner = new(InnerProductProof)
-	}
-	inner.l = []*crypto.Point{}
-	inner.r = []*crypto.Point{}
-	inner.a = new(crypto.Scalar)
-	inner.b = new(crypto.Scalar)
-	inner.p = new(crypto.Point).Identity()
+func (proof *InnerProductProof) Init() *InnerProductProof {
+	proof.l = []*crypto.Point{}
+	proof.r = []*crypto.Point{}
+	proof.a = new(crypto.Scalar)
+	proof.b = new(crypto.Scalar)
+	proof.p = new(crypto.Point).Identity()
 
-	return inner
+	return proof
 }
 
 func (proof InnerProductProof) ValidateSanity() bool {
@@ -79,8 +75,8 @@ func (proof *InnerProductProof) SetBytes(bytes []byte) error {
 
 	proof.l = make([]*crypto.Point, lenLArray)
 	for i := 0; i < lenLArray; i++ {
-		if offset+crypto.Ed25519KeySize > len(bytes){
-			return errors.New("Inner Product Proof byte unmarshaling failed")
+		if offset+crypto.Ed25519KeySize > len(bytes) {
+			return fmt.Errorf("unmarshalling failed")
 		}
 		proof.l[i], err = new(crypto.Point).FromBytesS(bytes[offset : offset+crypto.Ed25519KeySize])
 		if err != nil {
@@ -91,8 +87,8 @@ func (proof *InnerProductProof) SetBytes(bytes []byte) error {
 
 	proof.r = make([]*crypto.Point, lenLArray)
 	for i := 0; i < lenLArray; i++ {
-		if offset+crypto.Ed25519KeySize > len(bytes){
-			return errors.New("Inner Product Proof byte unmarshaling failed")
+		if offset+crypto.Ed25519KeySize > len(bytes) {
+			return fmt.Errorf("unmarshalling failed")
 		}
 		proof.r[i], err = new(crypto.Point).FromBytesS(bytes[offset : offset+crypto.Ed25519KeySize])
 		if err != nil {
@@ -101,20 +97,20 @@ func (proof *InnerProductProof) SetBytes(bytes []byte) error {
 		offset += crypto.Ed25519KeySize
 	}
 
-	if offset+crypto.Ed25519KeySize > len(bytes){
-		return errors.New("Inner Product Proof byte unmarshaling failed")
+	if offset+crypto.Ed25519KeySize > len(bytes) {
+		return fmt.Errorf("unmarshalling failed")
 	}
 	proof.a = new(crypto.Scalar).FromBytesS(bytes[offset : offset+crypto.Ed25519KeySize])
 	offset += crypto.Ed25519KeySize
 
-	if offset+crypto.Ed25519KeySize > len(bytes){
-		return errors.New("Inner Product Proof byte unmarshaling failed")
+	if offset+crypto.Ed25519KeySize > len(bytes) {
+		return fmt.Errorf("unmarshalling failed")
 	}
 	proof.b = new(crypto.Scalar).FromBytesS(bytes[offset : offset+crypto.Ed25519KeySize])
 	offset += crypto.Ed25519KeySize
 
-	if offset+crypto.Ed25519KeySize > len(bytes){
-		return errors.New("Inner Product Proof byte unmarshaling failed")
+	if offset+crypto.Ed25519KeySize > len(bytes) {
+		return fmt.Errorf("unmarshalling failed")
 	}
 	proof.p, err = new(crypto.Point).FromBytesS(bytes[offset : offset+crypto.Ed25519KeySize])
 	if err != nil {
@@ -126,7 +122,7 @@ func (proof *InnerProductProof) SetBytes(bytes []byte) error {
 
 func (wit InnerProductWitness) Prove(GParam []*crypto.Point, HParam []*crypto.Point, uParam *crypto.Point, hashCache []byte) (*InnerProductProof, error) {
 	if len(wit.a) != len(wit.b) {
-		return nil, errors.New("invalid inputs")
+		return nil, fmt.Errorf("invalid inputs")
 	}
 
 	N := len(wit.a)
@@ -295,7 +291,7 @@ func (proof InnerProductProof) VerifyFaster(GParam []*crypto.Point, HParam []*cr
 	xList := make([]*crypto.Scalar, logN)
 	xInverseList := make([]*crypto.Scalar, logN)
 	xSquareList := make([]*crypto.Scalar, logN)
-	xInverseSquare_List := make([]*crypto.Scalar, logN)
+	xInverseSquareList := make([]*crypto.Scalar, logN)
 
 	//a*s ; b*s^-1
 
@@ -306,7 +302,7 @@ func (proof InnerProductProof) VerifyFaster(GParam []*crypto.Point, HParam []*cr
 
 		xInverseList[i] = new(crypto.Scalar).Invert(xList[i])
 		xSquareList[i] = new(crypto.Scalar).Mul(xList[i], xList[i])
-		xInverseSquare_List[i] = new(crypto.Scalar).Mul(xInverseList[i], xInverseList[i])
+		xInverseSquareList[i] = new(crypto.Scalar).Mul(xInverseList[i], xInverseList[i])
 
 		//Update s, s^-1
 		for j := 0; j < n; j++ {
@@ -331,7 +327,7 @@ func (proof InnerProductProof) VerifyFaster(GParam []*crypto.Point, HParam []*cr
 	rightHS.Add(rightHS, new(crypto.Point).ScalarMult(uParam, c))
 
 	leftHSPart1 := new(crypto.Point).MultiScalarMult(xSquareList, proof.l)
-	leftHSPart2 := new(crypto.Point).MultiScalarMult(xInverseSquare_List, proof.r)
+	leftHSPart2 := new(crypto.Point).MultiScalarMult(xInverseSquareList, proof.r)
 
 	leftHS := new(crypto.Point).Add(leftHSPart1, leftHSPart2)
 	leftHS.Add(leftHS, proof.p)

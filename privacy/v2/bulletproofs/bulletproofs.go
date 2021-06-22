@@ -1,9 +1,9 @@
 package bulletproofs
 
 import (
+	"fmt"
 	"github.com/incognitochain/go-incognito-sdk-v2/crypto"
 	"github.com/incognitochain/go-incognito-sdk-v2/privacy/utils"
-	"github.com/pkg/errors"
 	"math"
 )
 
@@ -110,7 +110,7 @@ func (proof RangeProof) Bytes() []byte {
 	return res
 }
 
-func (proof RangeProof) GetCommitments() []*crypto.Point {return proof.cmsValue}
+func (proof RangeProof) GetCommitments() []*crypto.Point { return proof.cmsValue }
 
 func (proof *RangeProof) SetCommitments(cmsValue []*crypto.Point) {
 	proof.cmsValue = cmsValue
@@ -127,8 +127,8 @@ func (proof *RangeProof) SetBytes(bytes []byte) error {
 
 	proof.cmsValue = make([]*crypto.Point, lenValues)
 	for i := 0; i < lenValues; i++ {
-		if offset+crypto.Ed25519KeySize > len(bytes){
-			return errors.New("Range Proof unmarshaling from bytes failed")
+		if offset+crypto.Ed25519KeySize > len(bytes) {
+			return fmt.Errorf("unmarshalling from bytes failed")
 		}
 		proof.cmsValue[i], err = new(crypto.Point).FromBytesS(bytes[offset : offset+crypto.Ed25519KeySize])
 		if err != nil {
@@ -137,8 +137,8 @@ func (proof *RangeProof) SetBytes(bytes []byte) error {
 		offset += crypto.Ed25519KeySize
 	}
 
-	if offset+crypto.Ed25519KeySize > len(bytes){
-		return errors.New("Range Proof unmarshaling from bytes failed")
+	if offset+crypto.Ed25519KeySize > len(bytes) {
+		return fmt.Errorf("unmarshalling from bytes failed")
 	}
 	proof.a, err = new(crypto.Point).FromBytesS(bytes[offset : offset+crypto.Ed25519KeySize])
 	if err != nil {
@@ -146,8 +146,8 @@ func (proof *RangeProof) SetBytes(bytes []byte) error {
 	}
 	offset += crypto.Ed25519KeySize
 
-	if offset+crypto.Ed25519KeySize > len(bytes){
-		return errors.New("Range Proof unmarshaling from bytes failed")
+	if offset+crypto.Ed25519KeySize > len(bytes) {
+		return fmt.Errorf("unmarshalling from bytes failed")
 	}
 	proof.s, err = new(crypto.Point).FromBytesS(bytes[offset : offset+crypto.Ed25519KeySize])
 	if err != nil {
@@ -155,8 +155,8 @@ func (proof *RangeProof) SetBytes(bytes []byte) error {
 	}
 	offset += crypto.Ed25519KeySize
 
-	if offset+crypto.Ed25519KeySize > len(bytes){
-		return errors.New("Range Proof unmarshaling from bytes failed")
+	if offset+crypto.Ed25519KeySize > len(bytes) {
+		return fmt.Errorf("unmarshalling from bytes failed")
 	}
 	proof.t1, err = new(crypto.Point).FromBytesS(bytes[offset : offset+crypto.Ed25519KeySize])
 	if err != nil {
@@ -164,8 +164,8 @@ func (proof *RangeProof) SetBytes(bytes []byte) error {
 	}
 	offset += crypto.Ed25519KeySize
 
-	if offset+crypto.Ed25519KeySize > len(bytes){
-		return errors.New("Range Proof unmarshaling from bytes failed")
+	if offset+crypto.Ed25519KeySize > len(bytes) {
+		return fmt.Errorf("unmarshalling from bytes failed")
 	}
 	proof.t2, err = new(crypto.Point).FromBytesS(bytes[offset : offset+crypto.Ed25519KeySize])
 	if err != nil {
@@ -173,32 +173,31 @@ func (proof *RangeProof) SetBytes(bytes []byte) error {
 	}
 	offset += crypto.Ed25519KeySize
 
-	if offset+crypto.Ed25519KeySize > len(bytes){
-		return errors.New("Range Proof unmarshaling from bytes failed")
+	if offset+crypto.Ed25519KeySize > len(bytes) {
+		return fmt.Errorf("unmarshalling from bytes failed")
 	}
 	proof.tauX = new(crypto.Scalar).FromBytesS(bytes[offset : offset+crypto.Ed25519KeySize])
 	offset += crypto.Ed25519KeySize
 
-	if offset+crypto.Ed25519KeySize > len(bytes){
-		return errors.New("Range Proof unmarshaling from bytes failed")
+	if offset+crypto.Ed25519KeySize > len(bytes) {
+		return fmt.Errorf("unmarshalling from bytes failed")
 	}
 	proof.tHat = new(crypto.Scalar).FromBytesS(bytes[offset : offset+crypto.Ed25519KeySize])
 	offset += crypto.Ed25519KeySize
 
-	if offset+crypto.Ed25519KeySize > len(bytes){
-		return errors.New("Range Proof unmarshaling from bytes failed")
+	if offset+crypto.Ed25519KeySize > len(bytes) {
+		return fmt.Errorf("unmarshalling from bytes failed")
 	}
 	proof.mu = new(crypto.Scalar).FromBytesS(bytes[offset : offset+crypto.Ed25519KeySize])
 	offset += crypto.Ed25519KeySize
-	
-	if offset >= len(bytes){
-		return errors.New("Range Proof unmarshaling from bytes failed")
+
+	if offset >= len(bytes) {
+		return fmt.Errorf("unmarshalling from bytes failed")
 	}
 
 	proof.innerProductProof = new(InnerProductProof)
 	err = proof.innerProductProof.SetBytes(bytes[offset:])
-	// it's the last check, so we just return it
-	//crypto.Logger.Log.Debugf("AFTER SETBYTES ------------ %v\n", proof.Bytes())
+
 	return err
 }
 
@@ -217,7 +216,7 @@ func (wit Witness) Prove() (*RangeProof, error) {
 	proof := new(RangeProof)
 	numValue := len(wit.values)
 	if numValue > utils.MaxOutputCoin {
-		return nil, errors.New("Must less than MaxOutputCoin")
+		return nil, fmt.Errorf("must less than MaxOutputCoin")
 	}
 	numValuePad := roundUpPowTwo(numValue)
 	maxExp := utils.MaxExp
@@ -282,9 +281,9 @@ func (wit Witness) Prove() (*RangeProof, error) {
 	// HPrime = H^(y^(1-i)
 	HPrime := computeHPrime(y, N, aggParam.h)
 
-	// l(X) = (aL -z*1^n) + sL*X; r(X) = y^n hada (aR +z*1^n + sR*X) + z^2 * 2^n
+	// l(X) = (aL -z*1^n) + sL*X; r(X) = y^n Hadamard (aR +z*1^n + sR*X) + z^2 * 2^n
 	yVector := powerVector(y, N)
-	hadaProduct, err := hadamardProduct(yVector, vectorAddScalar(aR, z))
+	hadProduct, err := hadamardProduct(yVector, vectorAddScalar(aR, z))
 	if err != nil {
 		return nil, err
 	}
@@ -300,7 +299,7 @@ func (wit Witness) Prove() (*RangeProof, error) {
 	l0 := vectorAddScalar(aL, zNeg)
 	l1 := sL
 	var r0, r1 []*crypto.Scalar
-	if r0, err = vectorAdd(hadaProduct, vectorSum); err != nil {
+	if r0, err = vectorAdd(hadProduct, vectorSum); err != nil {
 		return nil, err
 	} else {
 		if r1, err = hadamardProduct(yVector, sR); err != nil {
@@ -332,7 +331,7 @@ func (wit Witness) Prove() (*RangeProof, error) {
 	xSquare := new(crypto.Scalar).Mul(x, x)
 
 	// lVector = aL - z*1^n + sL*x
-	// rVector = y^n hada (aR +z*1^n + sR*x) + z^2*2^n
+	// rVector = y^n Hadamard (aR +z*1^n + sR*x) + z^2*2^n
 	// tHat = <lVector, rVector>
 	lVector, err := vectorAdd(vectorAddScalar(aL, zNeg), vectorMulScalar(sL, x))
 	if err != nil {
@@ -391,7 +390,7 @@ func (wit Witness) Prove() (*RangeProof, error) {
 func (proof RangeProof) Verify() (bool, error) {
 	numValue := len(proof.cmsValue)
 	if numValue > utils.MaxOutputCoin {
-		return false, errors.New("Must less than MaxOutputNumber")
+		return false, fmt.Errorf("must less than MaxOutputNumber")
 	}
 	numValuePad := roundUpPowTwo(numValue)
 	maxExp := utils.MaxExp
@@ -431,7 +430,7 @@ func (proof RangeProof) Verify() (bool, error) {
 	RHS.Add(RHS, new(crypto.Point).MultiScalarMult(expVector, cmsValue))
 
 	if !crypto.IsPointEqual(LHS, RHS) {
-		return false, errors.New("verify aggregated range proof statement 1 failed")
+		return false, fmt.Errorf("verify aggregated range proof statement 1 failed")
 	}
 
 	// verify eq (66)
@@ -448,23 +447,23 @@ func (proof RangeProof) Verify() (bool, error) {
 	}
 	tmpHPrime := new(crypto.Point).MultiScalarMult(vectorSum, HPrime)
 	tmpG := new(crypto.Point).Set(aggParam.g[0])
-	for i:= 1; i < N; i++ {
+	for i := 1; i < N; i++ {
 		tmpG.Add(tmpG, aggParam.g[i])
 	}
 	ASx := new(crypto.Point).Add(proof.a, new(crypto.Point).ScalarMult(proof.s, x))
 	P := new(crypto.Point).Add(new(crypto.Point).ScalarMult(tmpG, zNeg), tmpHPrime)
 	P.Add(P, ASx)
 	P.Add(P, new(crypto.Point).ScalarMult(uPrime, proof.tHat))
-	PPrime := new(crypto.Point).Add(proof.innerProductProof.p, new(crypto.Point).ScalarMult(crypto.HBase, proof.mu) )
+	PPrime := new(crypto.Point).Add(proof.innerProductProof.p, new(crypto.Point).ScalarMult(crypto.HBase, proof.mu))
 
 	if !crypto.IsPointEqual(P, PPrime) {
-		return false, errors.New("verify aggregated range proof statement 2-1 failed")
+		return false, fmt.Errorf("verify aggregated range proof statement 2-1 failed")
 	}
 
 	// verify eq (68)
 	innerProductArgValid := proof.innerProductProof.Verify(aggParam.g, HPrime, uPrime, x.ToBytesS())
 	if !innerProductArgValid {
-		return false, errors.New("verify aggregated range proof statement 2 failed")
+		return false, fmt.Errorf("verify aggregated range proof statement 2 failed")
 	}
 
 	return true, nil
@@ -473,7 +472,7 @@ func (proof RangeProof) Verify() (bool, error) {
 func (proof RangeProof) VerifyFaster() (bool, error) {
 	numValue := len(proof.cmsValue)
 	if numValue > utils.MaxOutputCoin {
-		return false, errors.New("Must less than MaxOutputNumber")
+		return false, fmt.Errorf("must less than MaxOutputNumber")
 	}
 	numValuePad := roundUpPowTwo(numValue)
 	maxExp := utils.MaxExp
@@ -505,7 +504,6 @@ func (proof RangeProof) VerifyFaster() (bool, error) {
 	HPrime := computeHPrime(y, N, aggParam.h)
 	uPrime := new(crypto.Point).ScalarMult(aggParam.u, crypto.HashToScalar(x.ToBytesS()))
 
-
 	// Verify eq (65)
 	LHS := crypto.PedCom.CommitAtIndex(proof.tHat, proof.tauX, crypto.PedersenValueIndex)
 	RHS := new(crypto.Point).ScalarMult(proof.t2, xSquare)
@@ -513,7 +511,7 @@ func (proof RangeProof) VerifyFaster() (bool, error) {
 	expVector := vectorMulScalar(powerVector(z, numValuePad), zSquare)
 	RHS.Add(RHS, new(crypto.Point).MultiScalarMult(expVector, cmsValue))
 	if !crypto.IsPointEqual(LHS, RHS) {
-		return false, errors.New("verify aggregated range proof statement 1 failed")
+		return false, fmt.Errorf("verify aggregated range proof statement 1 failed")
 	}
 
 	// Verify eq (66)
@@ -528,17 +526,17 @@ func (proof RangeProof) VerifyFaster() (bool, error) {
 	}
 	tmpHPrime := new(crypto.Point).MultiScalarMult(vectorSum, HPrime)
 	tmpG := new(crypto.Point).Set(aggParam.g[0])
-	for i:= 1; i < N; i++ {
+	for i := 1; i < N; i++ {
 		tmpG.Add(tmpG, aggParam.g[i])
 	}
 	ASx := new(crypto.Point).Add(proof.a, new(crypto.Point).ScalarMult(proof.s, x))
 	P := new(crypto.Point).Add(new(crypto.Point).ScalarMult(tmpG, zNeg), tmpHPrime)
 	P.Add(P, ASx)
 	P.Add(P, new(crypto.Point).ScalarMult(uPrime, proof.tHat))
-	PPrime := new(crypto.Point).Add(proof.innerProductProof.p, new(crypto.Point).ScalarMult(crypto.HBase, proof.mu) )
+	PPrime := new(crypto.Point).Add(proof.innerProductProof.p, new(crypto.Point).ScalarMult(crypto.HBase, proof.mu))
 
 	if !crypto.IsPointEqual(P, PPrime) {
-		return false, errors.New("verify aggregated range proof statement 2-1 failed")
+		return false, fmt.Errorf("verify aggregated range proof statement 2-1 failed")
 	}
 
 	// Verify eq (68)
@@ -587,7 +585,7 @@ func (proof RangeProof) VerifyFaster() (bool, error) {
 
 	res := crypto.IsPointEqual(rightHS, leftHS)
 	if !res {
-		return false, errors.New("verify aggregated range proof statement 2 failed")
+		return false, fmt.Errorf("verify aggregated range proof statement 2 failed")
 	}
 
 	return true, nil
@@ -598,28 +596,28 @@ func VerifyBatch(proofs []*RangeProof) (bool, error, int) {
 	baseG := crypto.PedCom.G[crypto.PedersenValueIndex]
 	baseH := crypto.PedCom.G[crypto.PedersenRandomnessIndex]
 
-	sum_tHat := new(crypto.Scalar).FromUint64(0)
-	sum_tauX := new(crypto.Scalar).FromUint64(0)
-	list_x_alpha := make([]*crypto.Scalar, 0)
-	list_x_beta := make([]*crypto.Scalar, 0)
-	list_xSquare := make([]*crypto.Scalar, 0)
-	list_zSquare := make([]*crypto.Scalar, 0)
+	sumTHat := new(crypto.Scalar).FromUint64(0)
+	sumTauX := new(crypto.Scalar).FromUint64(0)
+	xAlphaList := make([]*crypto.Scalar, 0)
+	xBetaList := make([]*crypto.Scalar, 0)
+	xSquareList := make([]*crypto.Scalar, 0)
+	zSquareList := make([]*crypto.Scalar, 0)
 
-	list_t1 := make([]*crypto.Point, 0)
-	list_t2 := make([]*crypto.Point, 0)
-	list_V := make([]*crypto.Point, 0)
+	t1List := make([]*crypto.Point, 0)
+	txList := make([]*crypto.Point, 0)
+	vList := make([]*crypto.Point, 0)
 
-	sum_mu := new(crypto.Scalar).FromUint64(0)
-	sum_absubthat := new(crypto.Scalar).FromUint64(0)
+	muSum := new(crypto.Scalar).FromUint64(0)
+	tempSum := new(crypto.Scalar).FromUint64(0) // sum of ab - tHat
 
-	list_S := make([]*crypto.Point, 0)
-	list_A := make([]*crypto.Point, 0)
-	list_beta := make([]*crypto.Scalar, 0)
-	list_LR := make([]*crypto.Point, 0)
-	list_lVector := make([]*crypto.Scalar, 0)
-	list_rVector := make([]*crypto.Scalar, 0)
-	list_gVector := make([]*crypto.Point, 0)
-	list_hVector := make([]*crypto.Point, 0)
+	sList := make([]*crypto.Point, 0)
+	aList := make([]*crypto.Point, 0)
+	betaList := make([]*crypto.Scalar, 0)
+	LRList := make([]*crypto.Point, 0)
+	lVectorList := make([]*crypto.Scalar, 0)
+	rVectorList := make([]*crypto.Scalar, 0)
+	gVectorList := make([]*crypto.Point, 0)
+	hVectorList := make([]*crypto.Point, 0)
 
 	twoNumber := new(crypto.Scalar).FromUint64(2)
 	twoVectorN := powerVector(twoNumber, maxExp)
@@ -627,7 +625,7 @@ func VerifyBatch(proofs []*RangeProof) (bool, error, int) {
 	for k, proof := range proofs {
 		numValue := len(proof.cmsValue)
 		if numValue > utils.MaxOutputCoin {
-			return false, errors.New("Must less than MaxOutputNumber"), k
+			return false, fmt.Errorf("must less than MaxOutputNumber"), k
 		}
 		numValuePad := roundUpPowTwo(numValue)
 		N := maxExp * numValuePad
@@ -649,7 +647,7 @@ func VerifyBatch(proofs []*RangeProof) (bool, error, int) {
 		// Random alpha and beta for batch equations check
 		alpha := crypto.RandomScalar()
 		beta := crypto.RandomScalar()
-		list_beta = append(list_beta, beta)
+		betaList = append(betaList, beta)
 
 		// Compute first equation check
 		yVector := powerVector(y, N)
@@ -657,18 +655,18 @@ func VerifyBatch(proofs []*RangeProof) (bool, error, int) {
 		if err != nil {
 			return false, err, k
 		}
-		sum_tHat.Add(sum_tHat, new(crypto.Scalar).Mul(alpha, new(crypto.Scalar).Sub(proof.tHat, deltaYZ)))
-		sum_tauX.Add(sum_tauX, new(crypto.Scalar).Mul(alpha, proof.tauX))
+		sumTHat.Add(sumTHat, new(crypto.Scalar).Mul(alpha, new(crypto.Scalar).Sub(proof.tHat, deltaYZ)))
+		sumTauX.Add(sumTauX, new(crypto.Scalar).Mul(alpha, proof.tauX))
 
-		list_x_alpha = append(list_x_alpha, new(crypto.Scalar).Mul(x, alpha))
-		list_x_beta = append(list_x_beta, new(crypto.Scalar).Mul(x, beta))
-		list_xSquare = append(list_xSquare, new(crypto.Scalar).Mul(xSquare, alpha))
+		xAlphaList = append(xAlphaList, new(crypto.Scalar).Mul(x, alpha))
+		xBetaList = append(xBetaList, new(crypto.Scalar).Mul(x, beta))
+		xSquareList = append(xSquareList, new(crypto.Scalar).Mul(xSquare, alpha))
 		tmp := vectorMulScalar(powerVector(z, numValuePad), new(crypto.Scalar).Mul(zSquare, alpha))
-		list_zSquare = append(list_zSquare, tmp...)
+		zSquareList = append(zSquareList, tmp...)
 
-		list_V = append(list_V, cmsValue...)
-		list_t1 = append(list_t1, proof.t1)
-		list_t2 = append(list_t2, proof.t2)
+		vList = append(vList, cmsValue...)
+		t1List = append(t1List, proof.t1)
+		txList = append(txList, proof.t2)
 
 		// Verify the second argument
 		hashCache := x.ToBytesS()
@@ -727,56 +725,54 @@ func VerifyBatch(proofs []*RangeProof) (bool, error, int) {
 			rVector[j].Mul(rVector[j], beta)
 		}
 
-		list_lVector = append(list_lVector, lVector...)
-		list_rVector = append(list_rVector, rVector...)
+		lVectorList = append(lVectorList, lVector...)
+		rVectorList = append(rVectorList, rVector...)
 
 		tmp1 := new(crypto.Point).MultiScalarMult(vSquareList, L)
 		tmp2 := new(crypto.Point).MultiScalarMult(vInverseSquareList, R)
-		list_LR = append(list_LR, new(crypto.Point).Add(tmp1, tmp2))
+		LRList = append(LRList, new(crypto.Point).Add(tmp1, tmp2))
 
-		list_gVector = append(list_gVector, aggParam.g...)
-		list_hVector = append(list_hVector, aggParam.h...)
+		gVectorList = append(gVectorList, aggParam.g...)
+		hVectorList = append(hVectorList, aggParam.h...)
 
-		sum_mu.Add(sum_mu, new(crypto.Scalar).Mul(proof.mu, beta))
+		muSum.Add(muSum, new(crypto.Scalar).Mul(proof.mu, beta))
 		ab := new(crypto.Scalar).Mul(proof.innerProductProof.a, proof.innerProductProof.b)
-		absubthat := new(crypto.Scalar).Sub(ab, proof.tHat)
-		absubthat.Mul(absubthat, crypto.HashToScalar(x.ToBytesS()))
-		sum_absubthat.Add(sum_absubthat, new(crypto.Scalar).Mul(absubthat, beta))
-		list_A = append(list_A, proof.a)
-		list_S = append(list_S, proof.s)
+		tmpDiff := new(crypto.Scalar).Sub(ab, proof.tHat)       // ab - tHat
+		tmpDiff.Mul(tmpDiff, crypto.HashToScalar(x.ToBytesS())) // (ab - tHat) * Hash(x)
+		tempSum.Add(tempSum, new(crypto.Scalar).Mul(tmpDiff, beta))
+		aList = append(aList, proof.a)
+		sList = append(sList, proof.s)
 	}
 
-	tmp1 := new(crypto.Point).MultiScalarMult(list_lVector, list_gVector)
-	tmp2 := new(crypto.Point).MultiScalarMult(list_rVector, list_hVector)
-	tmp3 := new(crypto.Point).ScalarMult(AggParam.u, sum_absubthat)
-	tmp4 := new(crypto.Point).ScalarMult(baseH, sum_mu)
+	tmp1 := new(crypto.Point).MultiScalarMult(lVectorList, gVectorList)
+	tmp2 := new(crypto.Point).MultiScalarMult(rVectorList, hVectorList)
+	tmp3 := new(crypto.Point).ScalarMult(AggParam.u, tempSum)
+	tmp4 := new(crypto.Point).ScalarMult(baseH, muSum)
 	LHSPrime := new(crypto.Point).Add(tmp1, tmp2)
 	LHSPrime.Add(LHSPrime, tmp3)
 	LHSPrime.Add(LHSPrime, tmp4)
 
-	LHS := new(crypto.Point).AddPedersen(sum_tHat, baseG, sum_tauX, baseH)
+	LHS := new(crypto.Point).AddPedersen(sumTHat, baseG, sumTauX, baseH)
 	LHSPrime.Add(LHSPrime, LHS)
 
-	tmp5 := new(crypto.Point).MultiScalarMult(list_beta, list_A)
-	tmp6 := new(crypto.Point).MultiScalarMult(list_x_beta, list_S)
+	tmp5 := new(crypto.Point).MultiScalarMult(betaList, aList)
+	tmp6 := new(crypto.Point).MultiScalarMult(xBetaList, sList)
 	RHSPrime := new(crypto.Point).Add(tmp5, tmp6)
-	RHSPrime.Add(RHSPrime, new(crypto.Point).MultiScalarMult(list_beta, list_LR))
+	RHSPrime.Add(RHSPrime, new(crypto.Point).MultiScalarMult(betaList, LRList))
 
-	part1 := new(crypto.Point).MultiScalarMult(list_x_alpha, list_t1)
-	part2 := new(crypto.Point).MultiScalarMult(list_xSquare, list_t2)
+	part1 := new(crypto.Point).MultiScalarMult(xAlphaList, t1List)
+	part2 := new(crypto.Point).MultiScalarMult(xSquareList, txList)
 	RHS := new(crypto.Point).Add(part1, part2)
-	RHS.Add(RHS, new(crypto.Point).MultiScalarMult(list_zSquare, list_V))
+	RHS.Add(RHS, new(crypto.Point).MultiScalarMult(zSquareList, vList))
 	RHSPrime.Add(RHSPrime, RHS)
-	//fmt.Println("Batch Verification ", LHSPrime)
-	//fmt.Println("Batch Verification ", RHSPrime)
 
 	if !crypto.IsPointEqual(LHSPrime, RHSPrime) {
-		return false, errors.New("batch verify aggregated range proof failed"), -1
+		return false, fmt.Errorf("batch verify aggregated range proof failed"), -1
 	}
 	return true, nil, -1
 }
 
-// estimateMultiRangeProofSize estimate multi range proof size
+// EstimateMultiRangeProofSize estimates the size of a multi-range proof.
 func EstimateMultiRangeProofSize(nOutput int) uint64 {
 	return uint64((nOutput+2*int(math.Log2(float64(utils.MaxExp*roundUpPowTwo(nOutput))))+5)*crypto.Ed25519KeySize + 5*crypto.Ed25519KeySize + 2)
 }
