@@ -12,20 +12,26 @@ const (
 	PedersenRandomnessIndex = byte(0x04)
 )
 
+// PedCom represents the parameters used in the Pedersen commitment scheme.
 var PedCom = NewPedersenParams()
 
-// PedersenCommitment represents the parameters for the commitment
+// PedersenCommitment represents the base points for the Pedersen commitment scheme.
+//	- G[0]: the base point for key-related commitments.
+// 	- G[1]: the base point for value commitments.
+// 	- G[2]: the base point for SNDerivator commitments.
+// 	- G[3]: the base point for shardID commitments.
+// 	- G[4]: the base point for randomness factor.
 type PedersenCommitment struct {
 	G []*Point // generators
-	// G[0]: public key
-	// G[1]: Value
-	// G[2]: SNDerivator
-	// G[3]: ShardID
-	// G[4]: Randomness
 }
 
-var GBase, HBase *Point
+// GBase is the base point for committing UTXOs' value.
+var GBase *Point
 
+// HBase is the base point for randomness factor.
+var HBase *Point
+
+// NewPedersenParams creates new PedersenCommitment parameters. It also sets GBase as G[1] and HBase as G[4].
 func NewPedersenParams() PedersenCommitment {
 	var pcm PedersenCommitment
 	const capacity = 5 // fixed value = 5
@@ -40,7 +46,7 @@ func NewPedersenParams() PedersenCommitment {
 	return pcm
 }
 
-// CommitAll commits a list of PCM_CAPACITY value(s)
+// CommitAll commits a list of values using the corresponding base points.
 func (com PedersenCommitment) CommitAll(openings []*Scalar) (*Point, error) {
 	if len(openings) != len(com.G) {
 		return nil, errors.New("invalid length of openings to commit")
@@ -54,8 +60,7 @@ func (com PedersenCommitment) CommitAll(openings []*Scalar) (*Point, error) {
 	return commitment, nil
 }
 
-// CommitAtIndex commits specific value with index and returns 34 bytes
-// g^v x h^rand
+// CommitAtIndex commits specific value using the base point at the given index.
 func (com PedersenCommitment) CommitAtIndex(value, rand *Scalar, index byte) *Point {
 	return new(Point).AddPedersen(value, com.G[index], rand, com.G[PedersenRandomnessIndex])
 }
