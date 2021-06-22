@@ -47,7 +47,7 @@ type ProofV1 = zkp.ProofV1
 type ProofV2 = v2.ProofV2
 
 // ProofForConversion represents a Proof used in conversion transactions. (e.g. to convert UTXOs v1 into UTXOs v2).
-type ProofForConversion = conversion.ConversionProofVer1ToVer2
+type ProofForConversion = conversion.ConversionProof
 
 // PaymentWitness is a witness used to construct a ProofV1.
 type PaymentWitness = zkp.PaymentWitness
