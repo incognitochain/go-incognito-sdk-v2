@@ -24,8 +24,10 @@ type ProofV2 struct {
 // GetVersion returns the version of a ProofV2.
 // All ProofV2's have version 2.
 func (proof *ProofV2) GetVersion() uint8 { return 2 }
+
 // GetInputCoins returns the input coins of a ProofV2.
 func (proof ProofV2) GetInputCoins() []coin.PlainCoin { return proof.inputCoins }
+
 // GetOutputCoins returns the output coins of a ProofV2.
 func (proof ProofV2) GetOutputCoins() []coin.Coin {
 	res := make([]coin.Coin, len(proof.outputCoins))
@@ -34,13 +36,15 @@ func (proof ProofV2) GetOutputCoins() []coin.Coin {
 	}
 	return res
 }
+
 // GetRangeProof returns the range proof of a ProofV2.
 func (proof ProofV2) GetRangeProof() range_proof.RangeProof {
 	return proof.rangeProof
 }
 
 // SetVersion sets the version of a ProofV2 to 2.
-func (proof *ProofV2) SetVersion()       { proof.Version = 2 }
+func (proof *ProofV2) SetVersion() { proof.Version = 2 }
+
 // SetInputCoins sets v as the input coins of a ProofV2.
 func (proof *ProofV2) SetInputCoins(v []coin.PlainCoin) error {
 	var err error
@@ -53,6 +57,7 @@ func (proof *ProofV2) SetInputCoins(v []coin.PlainCoin) error {
 	}
 	return nil
 }
+
 // SetOutputCoinsV2 sets v as the output coins of a ProofV2.
 func (proof *ProofV2) SetOutputCoinsV2(v []*coin.CoinV2) error {
 	var err error
@@ -66,6 +71,7 @@ func (proof *ProofV2) SetOutputCoinsV2(v []*coin.CoinV2) error {
 	}
 	return nil
 }
+
 // SetOutputCoins sets v as the output coins of a ProofV2.
 //
 // v should be a list of all CoinV2's or else it would crash.
@@ -81,6 +87,7 @@ func (proof *ProofV2) SetOutputCoins(v []coin.Coin) error {
 	}
 	return nil
 }
+
 // SetRangeProof sets v as the RangProof of a ProofV2.
 func (proof *ProofV2) SetRangeProof(v *bulletproofs.RangeProof) {
 	proof.rangeProof = v
@@ -103,6 +110,7 @@ func (proof ProofV2) MarshalJSON() ([]byte, error) {
 	temp := base64.StdEncoding.EncodeToString(data)
 	return json.Marshal(temp)
 }
+
 // UnmarshalJSON parses a raw-byte data into a ProofV2.
 func (proof *ProofV2) UnmarshalJSON(data []byte) error {
 	dataStr := common.EmptyString
@@ -166,6 +174,7 @@ func (proof ProofV2) Bytes() []byte {
 
 	return bytes
 }
+
 // SetBytes tries to parse the proof from a slice of raw bytes v.
 func (proof *ProofV2) SetBytes(v []byte) error {
 	if len(v) == 0 {
@@ -286,6 +295,7 @@ func (proof *ProofV2) SetBytes(v []byte) error {
 func (proof *ProofV2) IsPrivacy() bool {
 	return proof.GetOutputCoins()[0].IsEncrypted()
 }
+
 // IsConfidentialAsset checks if the proof is a proof for confidential asset tokens.
 //
 // An error means the proof is invalid altogether. After this function returns, we will need to check error first.
