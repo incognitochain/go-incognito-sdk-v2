@@ -35,7 +35,7 @@ func main() {
 	fmt.Printf("check shielding status\n")
 	for {
 		status, err := ic.CheckShieldStatus(txHashStr)
-		if err != nil{
+		if err != nil {
 			log.Fatal(err)
 		}
 		if status == 1 || status == 0 {
@@ -46,5 +46,3 @@ func main() {
 		break
 	}
 }
-
-

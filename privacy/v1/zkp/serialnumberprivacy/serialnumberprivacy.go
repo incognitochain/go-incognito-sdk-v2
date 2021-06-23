@@ -211,7 +211,7 @@ func (proof *SNPrivacyProof) SetBytes(bytes []byte) error {
 	if len(bytes) == 0 {
 		return fmt.Errorf("bytes array is empty")
 	}
-	if len(bytes) < 9*crypto.Ed25519KeySize{
+	if len(bytes) < 9*crypto.Ed25519KeySize {
 		return fmt.Errorf("not enough bytes to unmarshal Serial Number Proof")
 	}
 

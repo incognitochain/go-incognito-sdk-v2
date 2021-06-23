@@ -75,7 +75,7 @@ func (sig SchnSignature) Bytes() []byte {
 
 // SetBytes returns a SchnSignature given its byte-representation.
 func (sig *SchnSignature) SetBytes(bytes []byte) error {
-	if len(bytes) != 2*crypto.Ed25519KeySize && len(bytes) != 3 * crypto.Ed25519KeySize{
+	if len(bytes) != 2*crypto.Ed25519KeySize && len(bytes) != 3*crypto.Ed25519KeySize {
 		return utils.NewPrivacyErr(utils.InvalidInputToSetBytesErr, nil)
 	}
 	sig.e = new(crypto.Scalar).FromBytesS(bytes[0:crypto.Ed25519KeySize])
@@ -140,4 +140,3 @@ func (privateKey SchnorrPrivateKey) Sign(data []byte) (*SchnSignature, error) {
 
 	return signature, nil
 }
-

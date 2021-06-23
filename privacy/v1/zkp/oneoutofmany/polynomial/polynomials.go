@@ -5,7 +5,7 @@ import (
 	"math/big"
 )
 
-// Poly is a data structure representing a polynomial. A Poly is just an array in the reverse order. 
+// Poly is a data structure representing a polynomial. A Poly is just an array in the reverse order.
 //
 // For example, f(x) = 3x^3 + 2x + 1 => [1 2 0 3].
 type Poly []*big.Int
@@ -21,8 +21,8 @@ func NewPoly(coEffs ...int) (p Poly) {
 }
 
 // Trim makes sure that the highest coefficient never has zero value
-// When we Add or subtract two polynomials, sometimes, the highest coefficient is zero, 
-// if we don't remove the highest and zero coefficient, GetDegree() will return the wrong result. 
+// When we Add or subtract two polynomials, sometimes, the highest coefficient is zero,
+// if we don't remove the highest and zero coefficient, GetDegree() will return the wrong result.
 func (p *Poly) Trim() {
 	var last = 0
 	for i := p.GetDegree(); i > 0; i-- { // why i > 0, not i >=0? do not remove the constant
@@ -43,7 +43,7 @@ func (p *Poly) IsZero() bool {
 }
 
 // GetDegree returns the degree of a Poly.
-// 
+//
 // For example, if p = x^3 + 2x^2 + 5, GetDegree() returns 3.
 func (p Poly) GetDegree() int {
 	return len(p) - 1
@@ -260,7 +260,7 @@ func (p Poly) Eval(x *big.Int, m *big.Int) (y *big.Int) {
 }
 
 // clone returns a copy of a Poly whose degree is adjusted by the given value. The adjusted value cannot be negative.
-// 
+//
 // For example, if p = x + 1 and adjust = 2, Clone() will return x^3 + x^2.
 func (p Poly) clone(adjust int) Poly {
 	var q Poly = make([]*big.Int, len(p)+adjust)
