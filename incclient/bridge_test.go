@@ -422,7 +422,7 @@ type BurnProof struct {
 	SigSs           [2][][32]byte
 }
 
-func DecodeBurnProof(r *jsonresult.GetInstructionProof) (*BurnProof, error) {
+func DecodeBurnProof(r *jsonresult.InstructionProof) (*BurnProof, error) {
 	inst := decode(r.Instruction)
 
 	// Block heights
@@ -447,7 +447,7 @@ func DecodeBurnProof(r *jsonresult.GetInstructionProof) (*BurnProof, error) {
 	}
 
 	beaconSigIdxs := []*big.Int{}
-	for _, sIdx := range r.BeaconSigIdxs {
+	for _, sIdx := range r.BeaconSigIndices {
 		beaconSigIdxs = append(beaconSigIdxs, big.NewInt(int64(sIdx)))
 	}
 
@@ -468,7 +468,7 @@ func DecodeBurnProof(r *jsonresult.GetInstructionProof) (*BurnProof, error) {
 	}
 
 	bridgeSigIdxs := []*big.Int{}
-	for _, sIdx := range r.BridgeSigIdxs {
+	for _, sIdx := range r.BridgeSigIndices {
 		bridgeSigIdxs = append(bridgeSigIdxs, big.NewInt(int64(sIdx)))
 		// fmt.Printf("bridgeSigIdxs[%d]: %d\n", i, j)
 	}

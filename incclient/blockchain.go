@@ -32,7 +32,7 @@ func (client *IncClient) GetBestBlock() (map[int]uint64, error) {
 		return nil, err
 	}
 
-	var bestBlocksResult jsonresult.GetBestBlockResult
+	var bestBlocksResult jsonresult.BestBlockResult
 	err = rpchandler.ParseResponse(responseInBytes, &bestBlocksResult)
 	if err != nil {
 		return nil, err
@@ -117,7 +117,7 @@ func (client *IncClient) GetCommitteeStateByShard(shardID int, shardRootHash str
 }
 
 // GetShardBestState returns the latest state of a shard chain.
-func (client *IncClient) GetShardBestState(shardID int) (*jsonresult.GetShardBestState, error) {
+func (client *IncClient) GetShardBestState(shardID int) (*jsonresult.ShardBestState, error) {
 	if shardID < 0 || shardID >= common.MaxShardNumber {
 		return nil, fmt.Errorf("shardID out of range")
 	}
@@ -127,7 +127,7 @@ func (client *IncClient) GetShardBestState(shardID int) (*jsonresult.GetShardBes
 		return nil, err
 	}
 
-	var res jsonresult.GetShardBestState
+	var res jsonresult.ShardBestState
 	err = rpchandler.ParseResponse(responseInBytes, &res)
 	if err != nil {
 		return nil, err
@@ -137,7 +137,7 @@ func (client *IncClient) GetShardBestState(shardID int) (*jsonresult.GetShardBes
 }
 
 // GetBeaconBestState returns the latest state of the beacon chain.
-func (client *IncClient) GetBeaconBestState(shardID int) (*jsonresult.GetBeaconBestState, error) {
+func (client *IncClient) GetBeaconBestState(shardID int) (*jsonresult.BeaconBestState, error) {
 	if shardID < 0 || shardID >= common.MaxShardNumber {
 		return nil, fmt.Errorf("shardID out of range")
 	}
@@ -147,7 +147,7 @@ func (client *IncClient) GetBeaconBestState(shardID int) (*jsonresult.GetBeaconB
 		return nil, err
 	}
 
-	var res jsonresult.GetBeaconBestState
+	var res jsonresult.BeaconBestState
 	err = rpchandler.ParseResponse(responseInBytes, &res)
 	if err != nil {
 		return nil, err

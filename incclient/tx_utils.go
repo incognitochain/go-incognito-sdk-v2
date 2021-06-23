@@ -209,7 +209,7 @@ func (client *IncClient) getRandomCommitmentV1(inputCoins []coin.PlainCoin, toke
 
 	result := make(map[string]interface{})
 	result[utils.CommitmentIndices] = randomCommitment.CommitmentIndices
-	result[utils.MyIndices] = randomCommitment.MyCommitmentIndexs
+	result[utils.MyIndices] = randomCommitment.MyCommitmentIndices
 	result[utils.Commitments] = commitmentList
 
 	return result, nil
