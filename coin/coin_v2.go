@@ -71,7 +71,7 @@ func (t TxRandom) Bytes() []byte {
 // SetBytes sets the content of a slice of bytes b to a TxRandom.
 func (t *TxRandom) SetBytes(v []byte) error {
 	if v == nil || len(v) != TxRandomGroupSize {
-		return fmt.Errorf("cannnot SetByte to TxRandom. Input is invalid")
+		return fmt.Errorf("cannot SetByte to TxRandom. Input is invalid")
 	}
 	_, err := new(crypto.Point).FromBytesS(v[:crypto.Ed25519KeySize])
 	if err != nil {
