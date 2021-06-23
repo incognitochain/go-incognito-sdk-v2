@@ -5,7 +5,7 @@ import "github.com/incognitochain/go-incognito-sdk-v2/common"
 // PortalConvertVaultRequest is a request to convert a centralized vault into a PortalV4 vault.
 // This Metadata should ONLY be enclosed with a normal (PRV) transaction.
 //
-// @@NOTE: This tx is created only one time when migration centralized bridge to portal v4.
+// @@NOTE: This tx is created only one time when migrating centralized bridge to portal v4.
 type PortalConvertVaultRequest struct {
 	MetadataBaseWithSignature
 	TokenID          string // pTokenID in incognito chain
