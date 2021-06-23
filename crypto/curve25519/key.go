@@ -191,11 +191,11 @@ func ScalarmultBase(a *Key) (aG *Key) {
 }
 
 // generates a key which can be used as private key or mask
-// this function is similiar to  RandomScalar except for reduce32, TODO can we merge both
+// this function is similar to  RandomScalar except for reduce32, TODO can we merge both
 func skGen() Key {
-	skey := RandomScalar()
-	ScReduce32(skey)
-	return *skey
+	sKey := RandomScalar()
+	ScReduce32(sKey)
+	return *sKey
 }
 func SkGen() Key {
 	return skGen()
@@ -320,9 +320,9 @@ func AddKeys3(result *Key, a *Key, A *Key, b *Key, B_Precomputed *[8]CachedGroup
 
 }
 
-//addKeys3_3  this is similiar to addkeys3 except it allows for use of precomputed A,B
-//aAbB = a*A + b*B where a, b are scalars, A, B are curve points
-//A,B must be input after applying "precomp"
+// AddKeys3_3  this is similar to addkeys3 except it allows for use of precomputed A,B
+// aAbB = a*A + b*B where a, b are scalars, A, B are curve points
+// A,B must be input after applying "precomp"
 func AddKeys3_3(result *Key, a *Key, A_Precomputed *[8]CachedGroupElement, b *Key, B_Precomputed *[8]CachedGroupElement) {
 	var result_projective ProjectiveGroupElement
 	GeDoubleScalarMultPrecompVartime2(&result_projective, a, A_Precomputed, b, B_Precomputed)

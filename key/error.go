@@ -20,6 +20,7 @@ const (
 	JSONError
 )
 
+// ErrCodeMessage represents a key-related error.
 var ErrCodeMessage = map[int]struct {
 	Code    int
 	Message string
@@ -37,22 +38,21 @@ var ErrCodeMessage = map[int]struct {
 	JSONError:                 {-211, "JSON Marshal, Unmarshal error"},
 }
 
-type CacheError struct {
+// Error represents a wrapped error when using the key package.
+type Error struct {
 	Code    int
 	Message string
 	err     error
 }
 
-func (e CacheError) Error() string {
+// Error returns the beautified string message of an Error.
+func (e Error) Error() string {
 	return fmt.Sprintf("%d: %s %+v", e.Code, e.Message, e.err)
 }
 
-func (e CacheError) GetCode() int {
-	return e.Code
-}
-
-func NewCacheError(key int, err error) *CacheError {
-	return &CacheError{
+// NewError creates a new Error given a code and an error.
+func NewError(key int, err error) *Error {
+	return &Error{
 		err:     errors.Wrap(err, ErrCodeMessage[key].Message),
 		Code:    ErrCodeMessage[key].Code,
 		Message: ErrCodeMessage[key].Message,

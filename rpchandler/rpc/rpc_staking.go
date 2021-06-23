@@ -1,76 +1,28 @@
 package rpc
 
-import (
-	"encoding/json"
-	"fmt"
-	"github.com/incognitochain/go-incognito-sdk-v2/rpchandler"
-)
-
-func (server *RPCServer) GetListRewardAmount() ([]byte, error){
-	if server == nil || len(server.url) == 0 {
-		return nil, fmt.Errorf("rpc server not set")
-	}
-
-	method := listRewardAmount
-	params := make([]interface{}, 0)
-
-	request := rpchandler.CreateJsonRequest("1.0", method, params, 1)
-	query, err := json.Marshal(request)
-	if err != nil {
-		return nil, err
-	}
-
-	return server.SendPostRequestWithQuery(string(query))
+// GetListRewardAmount returns the current reward amounts on the network.
+func (server *RPCServer) GetListRewardAmount() ([]byte, error) {
+	return server.SendQuery(listRewardAmount, nil)
 }
 
+// GetRewardAmount gets the reward amounts of a user.
 func (server *RPCServer) GetRewardAmount(paymentAddress string) ([]byte, error) {
-	if server == nil || len(server.url) == 0 {
-		return nil, fmt.Errorf("rpc server not set")
-	}
-
-	method := getRewardAmount
 	params := make([]interface{}, 0)
 	params = append(params, paymentAddress)
 
-	request := rpchandler.CreateJsonRequest("1.0", method, params, 1)
-	query, err := json.Marshal(request)
-	if err != nil {
-		return nil, err
-	}
-
-	return server.SendPostRequestWithQuery(string(query))
+	return server.SendQuery(getRewardAmount, params)
 }
 
+// GetMiningInfo retrieves the mining status of a remote (validator) node.
+//
+// This RPC should call to the (staked) node, instead of a full-node.
 func (server *RPCServer) GetMiningInfo() ([]byte, error) {
-	if server == nil || len(server.url) == 0 {
-		return nil, fmt.Errorf("rpc server not set")
-	}
-
-	method := getMiningInfo
-	params := make([]interface{}, 0)
-
-	request := rpchandler.CreateJsonRequest("1.0", method, params, 1)
-	query, err := json.Marshal(request)
-	if err != nil {
-		return nil, err
-	}
-
-	return server.SendPostRequestWithQuery(string(query))
+	return server.SendQuery(getMiningInfo, nil)
 }
 
+// GetSyncStats retrieves the sync statistics of a remote (validator) node.
+//
+// This RPC should call to the (staked) node, instead of a full-node.
 func (server *RPCServer) GetSyncStats() ([]byte, error) {
-	if server == nil || len(server.url) == 0 {
-		return nil, fmt.Errorf("rpc server not set")
-	}
-
-	method := getSyncStats
-	params := make([]interface{}, 0)
-
-	request := rpchandler.CreateJsonRequest("1.0", method, params, 1)
-	query, err := json.Marshal(request)
-	if err != nil {
-		return nil, err
-	}
-
-	return server.SendPostRequestWithQuery(string(query))
+	return server.SendQuery(getSyncStats, nil)
 }

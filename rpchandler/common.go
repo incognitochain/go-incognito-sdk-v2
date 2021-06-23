@@ -14,9 +14,10 @@ type RPCError struct {
 	Code       int    `json:"Code,omitempty"`
 	Message    string `json:"Message,omitempty"`
 	StackTrace string `json:"StackTrace"`
-	Err error `json:"Err"`
+	Err        error  `json:"Err"`
 }
 
+// JsonRequest represents a JSON-RPC request.
 type JsonRequest struct {
 	JsonRPC string      `json:"Jsonrpc"`
 	Method  string      `json:"Method"`
@@ -24,6 +25,7 @@ type JsonRequest struct {
 	Id      interface{} `json:"Id"`
 }
 
+// JsonResponse represents a JSON-RPC response.
 type JsonResponse struct {
 	Id      *interface{}    `json:"Id"`
 	Result  json.RawMessage `json:"Result"`
@@ -32,8 +34,6 @@ type JsonResponse struct {
 	Method  string          `json:"Method"`
 	JsonRPC string          `json:"Jsonrpc"`
 }
-
-var Server = new(RPCServer)
 
 // OldParseResponse parses a raw JSON-RPC response into a JsonResponse.
 //
@@ -45,7 +45,7 @@ func OldParseResponse(respondInBytes []byte) (*JsonResponse, error) {
 		return nil, err
 	}
 
-	if respond.Error != nil{
+	if respond.Error != nil {
 		return nil, fmt.Errorf("RPC returns an error: %v", respond.Error)
 	}
 
@@ -60,7 +60,7 @@ func ParseResponse(respondInBytes []byte, val interface{}) error {
 		return err
 	}
 
-	if respond.Error != nil{
+	if respond.Error != nil {
 		return fmt.Errorf("RPC returns an error: %v", respond.Error)
 	}
 
@@ -77,7 +77,7 @@ func ParseResponse(respondInBytes []byte, val interface{}) error {
 }
 
 // CreateJsonRequest creates a new JsonRequest given the method and parameters.
-func CreateJsonRequest(jsonRPC, method string, params []interface{}, id interface{}) *JsonRequest{
+func CreateJsonRequest(jsonRPC, method string, params []interface{}, id interface{}) *JsonRequest {
 	request := new(JsonRequest)
 	request.JsonRPC = jsonRPC
 	request.Method = method

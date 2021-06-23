@@ -2,9 +2,10 @@ package metadata
 
 import "github.com/incognitochain/go-incognito-sdk-v2/common"
 
-// @@NOTE: This tx is created only one time when migration centralized bridge to portal v4
-// PortalConvertVaultRequest
-// metadata - portal centralized incognito address convert vault request - create normal tx with this metadata
+// PortalConvertVaultRequest is a request to convert a centralized vault into a PortalV4 vault.
+// This Metadata should ONLY be enclosed with a normal (PRV) transaction.
+//
+// @@NOTE: This tx is created only one time when migrating centralized bridge to portal v4.
 type PortalConvertVaultRequest struct {
 	MetadataBaseWithSignature
 	TokenID          string // pTokenID in incognito chain
@@ -12,6 +13,7 @@ type PortalConvertVaultRequest struct {
 	IncognitoAddress string
 }
 
+// NewPortalConvertVaultRequest creates a new PortalConvertVaultRequest.
 func NewPortalConvertVaultRequest(
 	metaType int,
 	tokenID string,
@@ -29,6 +31,7 @@ func NewPortalConvertVaultRequest(
 	return convertRequestMeta, nil
 }
 
+// Hash overrides MetadataBase.Hash().
 func (convertVaultReq PortalConvertVaultRequest) Hash() *common.Hash {
 	record := convertVaultReq.MetadataBase.Hash().String()
 	record += convertVaultReq.TokenID
@@ -42,6 +45,7 @@ func (convertVaultReq PortalConvertVaultRequest) Hash() *common.Hash {
 	return &hash
 }
 
+// HashWithoutSig overrides MetadataBase.HashWithoutSig().
 func (convertVaultReq PortalConvertVaultRequest) HashWithoutSig() *common.Hash {
 	record := convertVaultReq.MetadataBaseWithSignature.Hash().String()
 	record += convertVaultReq.TokenID
@@ -51,6 +55,7 @@ func (convertVaultReq PortalConvertVaultRequest) HashWithoutSig() *common.Hash {
 	return &hash
 }
 
+// CalculateSize overrides MetadataBase.CalculateSize().
 func (convertVaultReq *PortalConvertVaultRequest) CalculateSize() uint64 {
 	return calculateSize(convertVaultReq)
 }

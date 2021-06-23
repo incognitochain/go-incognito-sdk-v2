@@ -2,7 +2,7 @@
 description: Tutorial on how to have a full-node cache our output coins.
 ---
 # Full-nodes' Cache
-The benefits of increased privacy are not without costs. Retrieving output coins is one of the most prominent. In Privacy V1, a user's output coins all have the same public key, which is the user's public key. In this approach, a full node's database can effortlessly aggregate these output coins. When a user requests all of his or her output coins, the full-node only needs to look for those that have the same public key.
+The benefits of increased privacy are not without costs. Retrieving output coins is one of the most prominent. In Privacy V1, a user's output coins all have the same public key, which is the user's public key. In this approach, a full-node's database can effortlessly aggregate these output coins. When a user requests all of his or her output coins, the full-node only needs to look for those that have the same public key.
 Because we used one-time addresses to enhance receiver anonymity in Privacy V2, this no longer holds true. Different public keys will now be assigned to each of a user's output coins. As a result, the full-node is unable to determine if two output coins belong to the same or separate users. And thus, the full-node will be unable to respond to a user's request for his/her output coins.
 
 One approach is for full-nodes to cache a user's output coins once the user submits his or her privateOTA key, allowing for quicker retrieval. The full-node may then scan each output coin and identify if it belongs to this user or not. However, determining whether a coin belongs to a user is costly. Therefore, we designed a full-node with two modes of operation.

@@ -19,7 +19,7 @@ package curve25519
 //import "fmt"
 import "testing"
 
-// these test were orignally written for mnemonics, but they can be used here also
+// these test were originally written for mnemonics, but they can be used here also
 
 func Test_Public_Private_Key(t *testing.T) {
 

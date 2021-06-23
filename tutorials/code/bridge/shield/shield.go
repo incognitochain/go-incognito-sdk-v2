@@ -17,13 +17,13 @@ func main() {
 	tokenIDStr := "ffd8d42dc40a8d166ea4848baf8b5f6e9fe0e9c30d60062eb7d44a8df9e00854"
 	ethTxHash := "0xb31d963b3f183d60532ca60d534e0113ca56070af795fde450dd456945a7be42"
 
-	ethProof, depositAmount, err := ic.GetETHDepositProof(ethTxHash)
+	ethProof, depositAmount, err := ic.GetEVMDepositProof(ethTxHash)
 	if err != nil {
 		log.Fatal(err)
 	}
 	fmt.Printf("Deposited amount: %v\n", depositAmount)
 
-	txHashStr, err := ic.CreateAndSendIssuingETHRequestTransaction(privateKey, tokenIDStr, *ethProof)
+	txHashStr, err := ic.CreateAndSendIssuingEVMRequestTransaction(privateKey, tokenIDStr, *ethProof)
 	if err != nil {
 		log.Fatal(err)
 	}

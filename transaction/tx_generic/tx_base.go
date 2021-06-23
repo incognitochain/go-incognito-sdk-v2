@@ -18,26 +18,26 @@ import (
 	"time"
 )
 
+// TxBase represents a PRV transaction field. It is used in both TxVer1 and TxVer2.
 type TxBase struct {
-	// Basic data, required
 	Version  int8   `json:"Version"`
-	Type     string `json:"Type"` // Transaction type
+	Type     string `json:"Type"`
 	LockTime int64  `json:"LockTime"`
-	Fee      uint64 `json:"Fee"` // Fee applies: always consant
+	Fee      uint64 `json:"Fee"`
 	Info     []byte // 512 bytes
 	// Sign and Privacy proof, required
-	SigPubKey            []byte `json:"SigPubKey, omitempty"` // 33 bytes
-	Sig                  []byte `json:"Sig, omitempty"`       //
+	SigPubKey            []byte `json:"SigPubKey,omitempty"`
+	Sig                  []byte `json:"Sig,omitempty"`
 	Proof                privacy.Proof
 	PubKeyLastByteSender byte
-	// Metadata, optional
-	Metadata metadata.Metadata
-	// private field, not use for json parser, only use as temp variable
-	sigPrivKey       []byte       // is ALWAYS private property of struct, if privacy: 64 bytes, and otherwise, 32 bytes
-	cachedHash       *common.Hash // cached hash data of tx
-	cachedActualSize *uint64      // cached actualsize data for tx
+	Metadata             metadata.Metadata
+
+	sigPrivateKey    []byte
+	cachedHash       *common.Hash
+	cachedActualSize *uint64
 }
 
+// TxPrivacyInitParams consists of parameters used to create a new PRV transaction.
 type TxPrivacyInitParams struct {
 	SenderSK    *key.PrivateKey
 	PaymentInfo []*key.PaymentInfo
@@ -47,9 +47,10 @@ type TxPrivacyInitParams struct {
 	TokenID     *common.Hash // default is nil -> use for prv coin
 	MetaData    metadata.Metadata
 	Info        []byte // 512 bytes
-	Kvargs      map[string]interface{}
+	KvArgs      map[string]interface{}
 }
 
+// NewTxPrivacyInitParams creates a new TxPrivacyInitParams based on the given inputs.
 func NewTxPrivacyInitParams(
 	senderSK *key.PrivateKey,
 	paymentInfo []*key.PaymentInfo,
@@ -59,7 +60,7 @@ func NewTxPrivacyInitParams(
 	tokenID *common.Hash, // default is nil -> use for prv coin
 	metaData metadata.Metadata,
 	info []byte,
-	kvargs map[string]interface{}) *TxPrivacyInitParams {
+	kvaArgs map[string]interface{}) *TxPrivacyInitParams {
 	if info == nil {
 		info = []byte{}
 	}
@@ -72,11 +73,12 @@ func NewTxPrivacyInitParams(
 		PaymentInfo: paymentInfo,
 		SenderSK:    senderSK,
 		Info:        info,
-		Kvargs:      kvargs,
+		KvArgs:      kvaArgs,
 	}
 	return params
 }
 
+// GetTxInfo checks and returns valid info.
 func GetTxInfo(paramInfo []byte) ([]byte, error) {
 	if lenTxInfo := len(paramInfo); lenTxInfo > utils.MaxSizeInfo {
 		return []byte{}, fmt.Errorf("length info (%v) exceeds max size (%v)", lenTxInfo, utils.MaxSizeInfo)
@@ -84,6 +86,7 @@ func GetTxInfo(paramInfo []byte) ([]byte, error) {
 	return paramInfo, nil
 }
 
+// CalculateSentBackInfo calculates the remaining amount to send back to the sender.
 func CalculateSentBackInfo(params *TxPrivacyInitParams, senderPaymentAddress key.PaymentAddress) error {
 	// Calculate sum of all output coins' value
 	sumOutputValue := uint64(0)
@@ -93,8 +96,8 @@ func CalculateSentBackInfo(params *TxPrivacyInitParams, senderPaymentAddress key
 
 	// Calculate sum of all input coins' value
 	sumInputValue := uint64(0)
-	for _, coin := range params.InputCoins {
-		sumInputValue += coin.GetValue()
+	for _, c := range params.InputCoins {
+		sumInputValue += c.GetValue()
 	}
 
 	overBalance := int64(sumInputValue - sumOutputValue - params.Fee)
@@ -114,6 +117,7 @@ func CalculateSentBackInfo(params *TxPrivacyInitParams, senderPaymentAddress key
 	return nil
 }
 
+// GetTxVersionFromCoins returns the version of a list of input coins.
 func GetTxVersionFromCoins(inputCoins []coin.PlainCoin) (int8, error) {
 	// If this is nonPrivacyNonInputCoins (maybe)
 	if len(inputCoins) == 0 {
@@ -141,15 +145,15 @@ func GetTxVersionFromCoins(inputCoins []coin.PlainCoin) (int8, error) {
 	}
 }
 
-// return bool indicates whether we should continue "Init" function or not
+// InitializeTxAndParams initializes a new TxBase with values, prepared for the next steps.
 func (tx *TxBase) InitializeTxAndParams(params *TxPrivacyInitParams) error {
 	var err error
-	// Get Keyset from param
 	senderKeySet := key.KeySet{}
 	if err := senderKeySet.InitFromPrivateKey(params.SenderSK); err != nil {
 		return fmt.Errorf("cannot parse Private Key. Err: %v", err)
 	}
-	tx.sigPrivKey = *params.SenderSK
+
+	tx.sigPrivateKey = *params.SenderSK
 	// Tx: initialize some values
 	if tx.LockTime == 0 {
 		tx.LockTime = time.Now().Unix()
@@ -173,8 +177,7 @@ func (tx *TxBase) InitializeTxAndParams(params *TxPrivacyInitParams) error {
 	return nil
 }
 
-// =================== PARSING JSON FUNCTIONS ===================
-
+// UnmarshalJSON does the JSON-unmarshalling operation for a TxBase.
 func (tx *TxBase) UnmarshalJSON(data []byte) error {
 	// For rolling version
 	type Alias TxBase
@@ -206,7 +209,7 @@ func (tx *TxBase) UnmarshalJSON(data []byte) error {
 	}
 
 	proofType := tx.Type
-	if proofType == common.TxTokenConversionType{
+	if proofType == common.TxTokenConversionType {
 		proofType = common.TxNormalType
 	}
 
@@ -222,12 +225,10 @@ func (tx *TxBase) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-// =================== GET/SET FUNCTIONS ===================
-
+// GetVersion returns the version of a TxBase.
 func (tx TxBase) GetVersion() int8 { return tx.Version }
 
-func (tx *TxBase) SetVersion(version int8) { tx.Version = version }
-
+// GetMetadataType returns the metadata type of a TxBase.
 func (tx TxBase) GetMetadataType() int {
 	if tx.Metadata != nil {
 		return tx.Metadata.GetType()
@@ -235,72 +236,45 @@ func (tx TxBase) GetMetadataType() int {
 	return metadata.InvalidMeta
 }
 
+// GetType returns the transaction type of a TxBase.
 func (tx TxBase) GetType() string { return tx.Type }
 
-func (tx *TxBase) SetType(t string) { tx.Type = t }
-
+// GetLockTime returns the lock-time of a TxBase.
 func (tx TxBase) GetLockTime() int64 { return tx.LockTime }
 
-func (tx *TxBase) SetLockTime(locktime int64) { tx.LockTime = locktime }
-
+// GetSenderAddrLastByte returns the last byte of the sender of a transaction.
 func (tx TxBase) GetSenderAddrLastByte() byte { return tx.PubKeyLastByteSender }
 
-func (tx *TxBase) SetGetSenderAddrLastByte(b byte) { tx.PubKeyLastByteSender = b }
-
+// GetTxFee returns the PRV fee of a TxBase.
 func (tx TxBase) GetTxFee() uint64 { return tx.Fee }
 
-func (tx *TxBase) SetTxFee(fee uint64) { tx.Fee = fee }
-
+// GetTxFeeToken returns the token fee of a TxBase. For a TxBase, it returns 0.
 func (tx TxBase) GetTxFeeToken() uint64 { return uint64(0) }
 
+// GetInfo returns the info of a TxBase.
 func (tx TxBase) GetInfo() []byte { return tx.Info }
 
-func (tx *TxBase) SetInfo(info []byte) { tx.Info = info }
-
+// GetSigPubKey returns the sigPubKey of a TxBase.
 func (tx TxBase) GetSigPubKey() []byte { return tx.SigPubKey }
 
-func (tx *TxBase) SetSigPubKey(sigPubkey []byte) { tx.SigPubKey = sigPubkey }
-
+// GetSig returns the signature of a TxBase.
 func (tx TxBase) GetSig() []byte { return tx.Sig }
 
-func (tx *TxBase) SetSig(sig []byte) { tx.Sig = sig }
-
+// GetProof returns the payment proof of a TxBase.
 func (tx TxBase) GetProof() privacy.Proof { return tx.Proof }
 
-func (tx *TxBase) SetProof(proof privacy.Proof) { tx.Proof = proof }
-
+// GetTokenID returns the tokenID of a TxBase. For a TxBase, it returns the tokenID of PRV.
 func (tx TxBase) GetTokenID() *common.Hash { return &common.PRVCoinID }
 
+// GetMetadata returns the metadata of a TxBase.
 func (tx TxBase) GetMetadata() metadata.Metadata { return tx.Metadata }
 
-func (tx *TxBase) SetMetadata(meta metadata.Metadata) { tx.Metadata = meta }
-
-func (tx TxBase) GetPrivateKey() []byte{
-	return tx.sigPrivKey
+// GetPrivateKey returns the sigPrivateKey of a TxBase.
+func (tx TxBase) GetPrivateKey() []byte {
+	return tx.sigPrivateKey
 }
 
-func (tx *TxBase) SetPrivateKey(sk []byte){
-	tx.sigPrivKey = sk
-}
-
-func (tx TxBase) GetCachedActualSize() *uint64{
-	return tx.cachedActualSize
-}
-
-func (tx *TxBase) SetCachedActualSize(sz *uint64){
-	tx.cachedActualSize = sz
-}
-
-func (tx TxBase) GetCachedHash() *common.Hash{
-	return tx.cachedHash
-}
-
-func (tx *TxBase) SetCachedHash(h *common.Hash){
-	tx.cachedHash = h
-}
-
-// =================== FUNCTIONS THAT GET STUFF AND REQUIRE SOME CODING ===================
-
+// GetTxActualSize returns the size of a TxBase in kb.
 func (tx TxBase) GetTxActualSize() uint64 {
 	//txBytes, _ := json.Marshal(tx)
 	//txSizeInByte := len(txBytes)
@@ -337,42 +311,80 @@ func (tx TxBase) GetTxActualSize() uint64 {
 	return *tx.cachedActualSize
 }
 
+// GetReceivers returns a list of receivers (public keys) and a list of corresponding amounts of a TxBase.
 func (tx TxBase) GetReceivers() ([][]byte, []uint64) {
-	pubkeys := [][]byte{}
-	amounts := []uint64{}
+	pubKeys := make([][]byte, 0)
+	amounts := make([]uint64, 0)
 	if tx.Proof != nil && len(tx.Proof.GetOutputCoins()) > 0 {
-		for _, coin := range tx.Proof.GetOutputCoins() {
+		for _, c := range tx.Proof.GetOutputCoins() {
 			added := false
-			coinPubKey := coin.GetPublicKey().ToBytesS()
-			for i, key := range pubkeys {
-				if bytes.Equal(coinPubKey, key) {
+			coinPubKey := c.GetPublicKey().ToBytesS()
+			for i, k := range pubKeys {
+				if bytes.Equal(coinPubKey, k) {
 					added = true
-					amounts[i] += coin.GetValue()
+					amounts[i] += c.GetValue()
 					break
 				}
 			}
 			if !added {
-				pubkeys = append(pubkeys, coinPubKey)
-				amounts = append(amounts, coin.GetValue())
+				pubKeys = append(pubKeys, coinPubKey)
+				amounts = append(amounts, c.GetValue())
 			}
 		}
 	}
-	return pubkeys, amounts
+	return pubKeys, amounts
 }
 
+// GetTransferData returns the transferred data (receivers and amounts) of a TxBase.
 func (tx TxBase) GetTransferData() (bool, []byte, uint64, *common.Hash) {
-	pubkeys, amounts := tx.GetReceivers()
-	if len(pubkeys) == 0 {
+	pubKeys, amounts := tx.GetReceivers()
+	if len(pubKeys) == 0 {
 		return false, nil, 0, &common.PRVCoinID
 	}
-	if len(pubkeys) > 1 {
+	if len(pubKeys) > 1 {
 		return false, nil, 0, &common.PRVCoinID
 	}
-	return true, pubkeys[0], amounts[0], &common.PRVCoinID
+	return true, pubKeys[0], amounts[0], &common.PRVCoinID
 }
 
+// SetVersion sets v as the version of a TxBase.
+func (tx *TxBase) SetVersion(v int8) { tx.Version = v }
+
+// SetType sets v as the type of a TxBase.
+func (tx *TxBase) SetType(v string) { tx.Type = v }
+
+// SetLockTime sets v as the lock-time of a TxBase.
+func (tx *TxBase) SetLockTime(v int64) { tx.LockTime = v }
+
+// SetGetSenderAddrLastByte sets v as the last byte of the sender of a transaction.
+func (tx *TxBase) SetGetSenderAddrLastByte(v byte) { tx.PubKeyLastByteSender = v }
+
+// SetTxFee sets v as the PRV fee of a TxBase.
+func (tx *TxBase) SetTxFee(v uint64) { tx.Fee = v }
+
+// SetInfo sets v as the info of a TxBase.
+func (tx *TxBase) SetInfo(v []byte) { tx.Info = v }
+
+// SetSigPubKey sets v as the sigPubKey of a TxBase.
+func (tx *TxBase) SetSigPubKey(v []byte) { tx.SigPubKey = v }
+
+// SetSig sets v as the signature of a TxBase.
+func (tx *TxBase) SetSig(v []byte) { tx.Sig = v }
+
+// SetProof sets v as the payment proof of a TxBase.
+func (tx *TxBase) SetProof(v privacy.Proof) { tx.Proof = v }
+
+// SetMetadata sets v as the metadata of a TxBase.
+func (tx *TxBase) SetMetadata(v metadata.Metadata) { tx.Metadata = v }
+
+// SetPrivateKey sets v as the sigPrivateKey of a TxBase.
+func (tx *TxBase) SetPrivateKey(v []byte) {
+	tx.sigPrivateKey = v
+}
+
+// ListSerialNumbersHashH returns the hash list of all serial numbers in a TxBase.
 func (tx TxBase) ListSerialNumbersHashH() []common.Hash {
-	result := []common.Hash{}
+	result := make([]common.Hash, 0)
 	if tx.Proof != nil {
 		for _, d := range tx.Proof.GetInputCoins() {
 			hash := common.HashH(d.GetKeyImage().ToBytesS())
@@ -385,6 +397,7 @@ func (tx TxBase) ListSerialNumbersHashH() []common.Hash {
 	return result
 }
 
+// String returns the string-representation of a TxBase.
 func (tx TxBase) String() string {
 	record := strconv.Itoa(int(tx.Version))
 	record += strconv.FormatInt(tx.LockTime, 10)
@@ -397,7 +410,6 @@ func (tx TxBase) String() string {
 	if tx.Metadata != nil {
 		metadataHash := tx.Metadata.Hash()
 		record += metadataHash.String()
-		//Logger.log.Debugf("\n\n\n\n test metadata after hashing: %v\n", metadataHash.GetBytes())
 	}
 
 	// TODO: To be uncomment
@@ -406,6 +418,7 @@ func (tx TxBase) String() string {
 	return record
 }
 
+// Hash calculates the hash of a TxBase.
 func (tx *TxBase) Hash() *common.Hash {
 	if tx.cachedHash != nil {
 		return tx.cachedHash
@@ -415,11 +428,13 @@ func (tx *TxBase) Hash() *common.Hash {
 	return &hash
 }
 
+// HashWithoutMetadataSig calculates the hash of a TxBase with out adding the signature of its metadata.
 func (tx *TxBase) HashWithoutMetadataSig() *common.Hash {
 	// hashing to sign metadata is version-specific
 	return nil
 }
 
+// CalculateTxValue calculates total output values (not including the coins which are sent back to the sender).
 func (tx TxBase) CalculateTxValue() uint64 {
 	if tx.Proof == nil {
 		return 0
@@ -450,18 +465,16 @@ func (tx TxBase) CalculateTxValue() uint64 {
 	return txValue
 }
 
-// =================== FUNCTION THAT CHECK STUFFS  ===================
-
+// CheckTxVersion checks if the version of a TxBase is valid.
 func (tx TxBase) CheckTxVersion(maxTxVersion int8) bool {
 	return !(tx.Version > maxTxVersion)
 }
 
+// IsNonPrivacyNonInput checks if a TxBase is a non-private and non-input transaction.
 func (tx *TxBase) IsNonPrivacyNonInput(params *TxPrivacyInitParams) (bool, error) {
 	var err error
-	//Logger.Log.Debugf("len(inputCoins), fee, hasPrivacy: %d, %d, %v\n", len(params.InputCoins), params.Fee, params.HasPrivacy)
 	if len(params.InputCoins) == 0 && params.Fee == 0 && !params.HasPrivacy {
-		//Logger.Log.Debugf("len(inputCoins) == 0 && fee == 0 && !hasPrivacy\n")
-		tx.sigPrivKey = *params.SenderSK
+		tx.sigPrivateKey = *params.SenderSK
 		if tx.Sig, tx.SigPubKey, err = SignNoPrivacy(params.SenderSK, tx.Hash()[:]); err != nil {
 			return true, err
 		}
@@ -470,6 +483,8 @@ func (tx *TxBase) IsNonPrivacyNonInput(params *TxPrivacyInitParams) (bool, error
 	return false, nil
 }
 
+// IsSalaryTx checks if a TxBase is a salary transaction.
+// A salary transaction is a transaction with 0 input and at least 1 output.
 func (tx TxBase) IsSalaryTx() bool {
 	if tx.GetType() != common.TxRewardType {
 		return false
@@ -480,6 +495,7 @@ func (tx TxBase) IsSalaryTx() bool {
 	return true
 }
 
+// IsPrivacy checks if a TxBase is a private transaction.
 func (tx TxBase) IsPrivacy() bool {
 	// In the case of NonPrivacyNonInput, we do not have proof
 	if tx.Proof == nil {
@@ -487,7 +503,8 @@ func (tx TxBase) IsPrivacy() bool {
 	}
 	return tx.Proof.IsPrivacy()
 }
-// =================== FUNCTIONS THAT VALIDATE STUFFS ===================
+
+// ListOTAHashH returns the hash list of all OTA keys in a TxBase.
 func (tx TxBase) ListOTAHashH() []common.Hash {
 	return []common.Hash{}
 }

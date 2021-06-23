@@ -20,7 +20,7 @@ import "fmt"
 import "testing"
 import "encoding/hex"
 
-// test cases from  litecoin for guranteed compatibility
+// test cases from  lite-coin for guaranteed compatibility
 func Test_Scrypt_1024_1_1_256(t *testing.T) {
 	tests := []struct {
 		data     string
