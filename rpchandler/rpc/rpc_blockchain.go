@@ -39,5 +39,5 @@ func (server *RPCServer) GetBeaconBestState() ([]byte, error) {
 
 // GetRawMemPool returns a list of transactions currently in the pool.
 func (server *RPCServer) GetRawMemPool() ([]byte, error) {
-	return server.SendQuery(getMempoolInfo, nil)
+	return server.SendQuery(getRawMempool, nil)
 }
