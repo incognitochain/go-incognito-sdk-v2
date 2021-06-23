@@ -9,28 +9,23 @@ import (
 	"strconv"
 )
 
-// MetadataBase is the base field for a Metadata.
 type MetadataBase struct {
 	Type int
 }
 
-// Sign does nothing.
-func (mb *MetadataBase) Sign(_ *key.PrivateKey, _ Transaction) error {
+func (mb *MetadataBase) Sign(privateKey *key.PrivateKey, tx Transaction) error {
 	return nil
 }
 
-// MetadataBaseWithSignature is the base field for a Metadata that requires authenticity (i.e, has a signature).
 type MetadataBaseWithSignature struct {
 	MetadataBase
-	Sig []byte `json:"Sig,omitempty"`
+	Sig []byte 		`json:"Sig,omitempty"`
 }
 
-// NewMetadataBaseWithSignature creates a new MetadataBaseWithSignature with the given metadata type.
 func NewMetadataBaseWithSignature(thisType int) *MetadataBaseWithSignature {
 	return &MetadataBaseWithSignature{MetadataBase: MetadataBase{Type: thisType}, Sig: []byte{}}
 }
 
-// Sign signs a Metadata using the provided private key.
 func (mbs *MetadataBaseWithSignature) Sign(privateKey *key.PrivateKey, tx Transaction) error {
 	hashForMd := tx.HashWithoutMetadataSig()
 	if hashForMd == nil {
@@ -58,22 +53,28 @@ func (mbs *MetadataBaseWithSignature) Sign(privateKey *key.PrivateKey, tx Transa
 	return nil
 }
 
-// NewMetadataBase creates a new MetadataBase with the given metadata type.
+
 func NewMetadataBase(thisType int) *MetadataBase {
 	return &MetadataBase{Type: thisType}
 }
 
-// CalculateSize returns the size of a metadata in bytes.
+
 func (mb *MetadataBase) CalculateSize() uint64 {
 	return 0
 }
 
-// GetType returns the type of a metadata.
+func (mb *MetadataBase) Validate() error {
+	return nil
+}
+
+func (mb *MetadataBase) Process() error {
+	return nil
+}
+
 func (mb MetadataBase) GetType() int {
 	return mb.Type
 }
 
-// Hash calculates the hash of a metadata.
 func (mb MetadataBase) Hash() *common.Hash {
 	record := strconv.Itoa(mb.Type)
 	data := []byte(record)
@@ -81,7 +82,6 @@ func (mb MetadataBase) Hash() *common.Hash {
 	return &hash
 }
 
-// HashWithoutSig calculates the hash of a metadata without including its sig.
 func (mb MetadataBase) HashWithoutSig() *common.Hash {
 	return mb.Hash()
 }

@@ -6,15 +6,15 @@ import (
 	"github.com/incognitochain/go-incognito-sdk-v2/common"
 )
 
-// RelayingHeader is a relay request from other public blockchains.
+// RelayingHeader - relaying header chain
+// metadata - create normal tx with this metadata
 type RelayingHeader struct {
 	MetadataBase
-	IncAddressStr string
-	Header        string
-	BlockHeight   uint64
+	IncogAddressStr string
+	Header          string
+	BlockHeight     uint64
 }
 
-// NewRelayingHeader creates a new RelayingHeader.
 func NewRelayingHeader(
 	metaType int,
 	incognitoAddrStr string,
@@ -25,18 +25,17 @@ func NewRelayingHeader(
 		Type: metaType,
 	}
 	relayingHeader := &RelayingHeader{
-		IncAddressStr: incognitoAddrStr,
-		Header:        header,
-		BlockHeight:   blockHeight,
+		IncogAddressStr: incognitoAddrStr,
+		Header:          header,
+		BlockHeight:     blockHeight,
 	}
 	relayingHeader.MetadataBase = metadataBase
 	return relayingHeader, nil
 }
 
-// Hash overrides MetadataBase.Hash().
 func (rh RelayingHeader) Hash() *common.Hash {
 	record := rh.MetadataBase.Hash().String()
-	record += rh.IncAddressStr
+	record += rh.IncogAddressStr
 	record += rh.Header
 	record += strconv.Itoa(int(rh.BlockHeight))
 
@@ -45,7 +44,6 @@ func (rh RelayingHeader) Hash() *common.Hash {
 	return &hash
 }
 
-// CalculateSize overrides MetadataBase.CalculateSize().
 func (rh *RelayingHeader) CalculateSize() uint64 {
 	return calculateSize(rh)
 }

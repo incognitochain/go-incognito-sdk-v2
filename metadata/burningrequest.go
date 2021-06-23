@@ -7,8 +7,6 @@ import (
 	"github.com/incognitochain/go-incognito-sdk-v2/key"
 )
 
-// BurningRequest is a request to burn UTXOs (mostly to un-shield).
-// Anyone can send this request.
 type BurningRequest struct {
 	BurnerAddress key.PaymentAddress
 	BurningAmount uint64 // must be equal to vOut value
@@ -18,7 +16,6 @@ type BurningRequest struct {
 	MetadataBase
 }
 
-// NewBurningRequest creates a new BurningRequest.
 func NewBurningRequest(
 	burnerAddress key.PaymentAddress,
 	burningAmount uint64,
@@ -41,7 +38,6 @@ func NewBurningRequest(
 	return burningReq, nil
 }
 
-// Hash overrides MetadataBase.Hash().
 func (bReq BurningRequest) Hash() *common.Hash {
 	record := bReq.MetadataBase.Hash().String()
 	record += bReq.BurnerAddress.String()
@@ -54,7 +50,6 @@ func (bReq BurningRequest) Hash() *common.Hash {
 	return &hash
 }
 
-// HashWithoutSig overrides MetadataBase.HashWithoutSig().
 func (bReq BurningRequest) HashWithoutSig() *common.Hash {
 	record := bReq.MetadataBase.Hash().String()
 	record += bReq.BurnerAddress.String()
@@ -68,7 +63,6 @@ func (bReq BurningRequest) HashWithoutSig() *common.Hash {
 	return &hash
 }
 
-// CalculateSize overrides MetadataBase.CalculateSize().
 func (bReq *BurningRequest) CalculateSize() uint64 {
 	return calculateSize(bReq)
 }

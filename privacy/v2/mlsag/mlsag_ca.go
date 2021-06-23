@@ -6,8 +6,8 @@ import (
 	"github.com/incognitochain/go-incognito-sdk-v2/crypto"
 )
 
-// SignConfidentialAsset returns a (confidential-asset) signature for the given message.
-func (ml *Mlsag) SignConfidentialAsset(message []byte) (*Sig, error) {
+
+func (ml *Mlsag) SignConfidentialAsset(message []byte) (*MlsagSig, error) {
 	if len(message) != common.HashSize {
 		return nil, fmt.Errorf("cannot mlsag sign the message because its length is not 32, maybe it has not been hashed")
 	}
@@ -20,7 +20,7 @@ func (ml *Mlsag) SignConfidentialAsset(message []byte) (*Sig, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &Sig{
+	return &MlsagSig{
 		c[0], ml.keyImages, r,
 	}, nil
 }
@@ -36,26 +36,26 @@ func calculateNextCCA(digest [common.HashSize]byte, r []*crypto.Scalar, c *crypt
 	// If you are reviewing my code, please refer to paper
 	// rG: r*G
 	// cK: c*R
-	// sum1: rG + cK
+	// rG_cK: rG + cK
 	//
 	// HK: H_p(K_i)
 	// rHK: r_i*H_p(K_i)
 	// cKI: c*R~ (KI as keyImage)
-	// sum2: rHK + cKI
+	// rHK_cKI: rHK + cKI
 
 	// Process columns before the last
 	for i := 0; i < len(K)-2; i += 1 {
 		rG := new(crypto.Point).ScalarMultBase(r[i])
 		cK := new(crypto.Point).ScalarMult(K[i], c)
-		sum1 := new(crypto.Point).Add(rG, cK) // rG + cK
+		rG_cK := new(crypto.Point).Add(rG, cK)
 
 		HK := crypto.HashToPoint(K[i].ToBytesS())
 		rHK := new(crypto.Point).ScalarMult(HK, r[i])
 		cKI := new(crypto.Point).ScalarMult(keyImages[i], c)
-		sum2 := new(crypto.Point).Add(rHK, cKI) // rHK + cKI
+		rHK_cKI := new(crypto.Point).Add(rHK, cKI)
 
-		b = append(b, sum1.ToBytesS()...)
-		b = append(b, sum2.ToBytesS()...)
+		b = append(b, rG_cK.ToBytesS()...)
+		b = append(b, rHK_cKI.ToBytesS()...)
 	}
 
 	// Process last column
@@ -64,16 +64,16 @@ func calculateNextCCA(digest [common.HashSize]byte, r []*crypto.Scalar, c *crypt
 		r[len(K)-2],
 	)
 	cK := new(crypto.Point).ScalarMult(K[len(K)-2], c)
-	sum := new(crypto.Point).Add(rG, cK) // rG + cK
-	b = append(b, sum.ToBytesS()...)
+	rG_cK := new(crypto.Point).Add(rG, cK)
+	b = append(b, rG_cK.ToBytesS()...)
 
 	rG = new(crypto.Point).ScalarMult(
 		crypto.PedCom.G[crypto.PedersenRandomnessIndex],
 		r[len(K)-1],
 	)
 	cK = new(crypto.Point).ScalarMult(K[len(K)-1], c)
-	sum = new(crypto.Point).Add(rG, cK)
-	b = append(b, sum.ToBytesS()...)
+	rG_cK = new(crypto.Point).Add(rG, cK)
+	b = append(b, rG_cK.ToBytesS()...)
 
 	return crypto.HashToScalar(b), nil
 }
@@ -126,7 +126,7 @@ func (ml *Mlsag) calculateCCA(message [common.HashSize]byte, alpha []*crypto.Sca
 		return nil, err
 	}
 
-	var i = (ml.pi + 1) % n
+	var i int = (ml.pi + 1) % n
 	c[i] = firstC
 	for next := (i + 1) % n; i != ml.pi; {
 		nextC, err := calculateNextCCA(
@@ -147,6 +147,7 @@ func (ml *Mlsag) calculateCCA(message [common.HashSize]byte, alpha []*crypto.Sca
 		ck := new(crypto.Scalar).Mul(c[ml.pi], ml.privateKeys[i])
 		r[ml.pi][i] = new(crypto.Scalar).Sub(alpha[i], ck)
 	}
+
 
 	return c, nil
 }

@@ -4,14 +4,12 @@ import (
 	"github.com/incognitochain/go-incognito-sdk-v2/common"
 )
 
-// PDEFeeWithdrawalResponse is the response for a PDEFeeWithdrawalRequest.
 type PDEFeeWithdrawalResponse struct {
 	MetadataBase
 	RequestedTxID common.Hash
-	SharedRandom  []byte `json:"SharedRandom,omitempty"`
+	SharedRandom       []byte `json:"SharedRandom,omitempty"`
 }
 
-// Hash overrides MetadataBase.Hash().
 func (iRes PDEFeeWithdrawalResponse) Hash() *common.Hash {
 	record := iRes.RequestedTxID.String()
 	record += iRes.MetadataBase.Hash().String()
@@ -23,12 +21,10 @@ func (iRes PDEFeeWithdrawalResponse) Hash() *common.Hash {
 	return &hash
 }
 
-// CalculateSize overrides MetadataBase.CalculateSize().
 func (iRes *PDEFeeWithdrawalResponse) CalculateSize() uint64 {
 	return calculateSize(iRes)
 }
 
-// SetSharedRandom sets v as the shared random of a PDEFeeWithdrawalResponse.
-func (iRes *PDEFeeWithdrawalResponse) SetSharedRandom(v []byte) {
-	iRes.SharedRandom = v
+func (iRes *PDEFeeWithdrawalResponse) SetSharedRandom(r []byte) {
+	iRes.SharedRandom = r
 }

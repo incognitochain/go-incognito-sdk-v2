@@ -82,7 +82,7 @@ func parseInfoForSetBytes(coinBytes *[]byte, offset *int) ([]byte, error) {
 	if *offset >= len(b) {
 		return []byte{}, fmt.Errorf("offset is larger than len(bytes), cannot parse info")
 	}
-	var info []byte
+	info := []byte{}
 	lenField := b[*offset]
 	*offset += 1
 	if lenField != 0 {
@@ -136,7 +136,7 @@ func NewCoinFromPaymentInfo(info *key.PaymentInfo) (*CoinV2, error) {
 	for {
 		index += 1
 
-		// Get publicKey
+		// Get publickey
 		hash := crypto.HashToScalar(append(rK.ToBytesS(), common.Uint32ToBytes(index)...))
 		HrKG := new(crypto.Point).ScalarMultBase(hash)
 		publicKey := new(crypto.Point).Add(HrKG, publicSpend)

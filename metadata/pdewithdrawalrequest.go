@@ -5,8 +5,7 @@ import (
 	"strconv"
 )
 
-// PDEWithdrawalRequest is a request to withdraw contribution shares from the pDEX.
-// The user needs to sign this request to make sure he/she is authorized to withdraw the rewards.
+// PDEWithdrawalRequest - privacy dex withdrawal request
 type PDEWithdrawalRequest struct {
 	WithdrawerAddressStr  string
 	WithdrawalToken1IDStr string
@@ -15,7 +14,23 @@ type PDEWithdrawalRequest struct {
 	MetadataBaseWithSignature
 }
 
-// NewPDEWithdrawalRequest creates a new PDEWithdrawalRequest.
+type PDEWithdrawalRequestAction struct {
+	Meta    PDEWithdrawalRequest
+	TxReqID common.Hash
+	ShardID byte
+}
+
+type PDEWithdrawalAcceptedContent struct {
+	WithdrawalTokenIDStr string
+	WithdrawerAddressStr string
+	DeductingPoolValue   uint64
+	DeductingShares      uint64
+	PairToken1IDStr      string
+	PairToken2IDStr      string
+	TxReqID              common.Hash
+	ShardID              byte
+}
+
 func NewPDEWithdrawalRequest(
 	withdrawerAddressStr string,
 	withdrawalToken1IDStr string,
@@ -36,7 +51,7 @@ func NewPDEWithdrawalRequest(
 
 func (*PDEWithdrawalRequest) ShouldSignMetaData() bool { return true }
 
-// Hash overrides MetadataBase.Hash().
+
 func (pc PDEWithdrawalRequest) Hash() *common.Hash {
 	record := pc.MetadataBase.Hash().String()
 	record += pc.WithdrawerAddressStr
@@ -51,7 +66,6 @@ func (pc PDEWithdrawalRequest) Hash() *common.Hash {
 	return &hash
 }
 
-// HashWithoutSig overrides MetadataBase.HashWithoutSig().
 func (pc PDEWithdrawalRequest) HashWithoutSig() *common.Hash {
 	record := pc.MetadataBase.Hash().String()
 	record += pc.WithdrawerAddressStr
@@ -64,7 +78,6 @@ func (pc PDEWithdrawalRequest) HashWithoutSig() *common.Hash {
 	return &hash
 }
 
-// CalculateSize overrides MetadataBase.CalculateSize().
 func (pc *PDEWithdrawalRequest) CalculateSize() uint64 {
 	return calculateSize(pc)
 }

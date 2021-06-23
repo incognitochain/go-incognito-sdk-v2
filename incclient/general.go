@@ -5,7 +5,7 @@ import (
 	"github.com/incognitochain/go-incognito-sdk-v2/rpchandler"
 )
 
-// SubmitKey submits an OTAKey to the full-node.
+// SubmitKey submits an OTAKey to the full node.
 func (client *IncClient) SubmitKey(otaKey string) error {
 	_, err := client.rpcServer.SubmitKey(otaKey)
 	return err

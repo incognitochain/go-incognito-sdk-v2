@@ -1,36 +1,32 @@
 package mlsag
 
 import (
+	"bytes"
 	"fmt"
 	"github.com/incognitochain/go-incognito-sdk-v2/common"
 	"github.com/incognitochain/go-incognito-sdk-v2/crypto"
 	C25519 "github.com/incognitochain/go-incognito-sdk-v2/crypto/curve25519"
 )
 
-var curveOrder = new(crypto.Scalar).SetKeyUnsafe(&C25519.L)
+var CurveOrder = new(crypto.Scalar).SetKeyUnsafe(&C25519.L)
 
-// Ring represents a ring of public keys used in the MLSAG signature scheme.
 type Ring struct {
 	keys [][]*crypto.Point
 }
 
-// GetKeys returns the keys of a Ring.
 func (ring Ring) GetKeys() [][]*crypto.Point {
 	return ring.keys
 }
 
-// NewRing creates a new Ring from the given list of public keys.
 func NewRing(keys [][]*crypto.Point) *Ring {
 	return &Ring{keys}
 }
 
-// ToBytes returns the byte-representation of a Ring.
 func (ring Ring) ToBytes() ([]byte, error) {
 	k := ring.keys
 	if len(k) == 0 {
 		return nil, fmt.Errorf("RingToBytes: Ring is empty")
 	}
-
 	// Make sure that the ring size is a rectangle row*column
 	for i := 1; i < len(k); i += 1 {
 		if len(k[i]) != len(k[0]) {
@@ -43,7 +39,7 @@ func (ring Ring) ToBytes() ([]byte, error) {
 		return nil, fmt.Errorf("RingToBytes: Ring size is too large")
 	}
 	b := make([]byte, 3)
-	b[0] = SigPrefix
+	b[0] = MlsagPrefix
 	b[1] = byte(n)
 	b[2] = byte(m)
 
@@ -56,16 +52,16 @@ func (ring Ring) ToBytes() ([]byte, error) {
 	return b, nil
 }
 
-// FromBytes sets a byte-representation b to a Ring.
 func (ring *Ring) FromBytes(b []byte) (*Ring, error) {
 	if len(b) < 3 {
 		return nil, fmt.Errorf("RingFromBytes: byte length is too short")
 	}
-	if b[0] != SigPrefix {
-		return nil, fmt.Errorf("RingFromBytes: byte[0] is not SigPrefix")
+	if b[0] != MlsagPrefix {
+		return nil, fmt.Errorf("RingFromBytes: byte[0] is not MlsagPrefix")
 	}
 	n := int(b[1])
 	m := int(b[2])
+	// fmt.Println(b[3 : 3+crypto.Ed25519KeySize])
 
 	if len(b) != crypto.Ed25519KeySize*n*m+3 {
 		return nil, fmt.Errorf("RingFromBytes: byte length is not correct")
@@ -85,11 +81,19 @@ func (ring *Ring) FromBytes(b []byte) (*Ring, error) {
 		}
 		key = append(key, curRow)
 	}
-	ring.keys = key
+	ring = NewRing(key)
 	return ring, nil
 }
 
-// NewRandomRing creates a random ring with dimension: (numFake; len(privateKeys)) where we generate fake public keys inside.
+func createFakePublicKeyArray(length int) []*crypto.Point {
+	K := make([]*crypto.Point, length)
+	for i := 0; i < length; i += 1 {
+		K[i] = crypto.RandomPoint()
+	}
+	return K
+}
+
+// Create a random ring with dimension: (numFake; len(privateKeys)) where we generate fake public keys inside
 func NewRandomRing(privateKeys []*crypto.Scalar, numFake, pi int) (K *Ring) {
 	m := len(privateKeys)
 
@@ -108,7 +112,6 @@ func NewRandomRing(privateKeys []*crypto.Scalar, numFake, pi int) (K *Ring) {
 	return
 }
 
-// Mlsag represents the parameters of a MLSAG private key.
 type Mlsag struct {
 	R           *Ring
 	pi          int
@@ -116,36 +119,16 @@ type Mlsag struct {
 	privateKeys []*crypto.Scalar
 }
 
-// NewMlsag creates a new Mlsag from the given private keys, a Ring and the index of the true private keys.
 func NewMlsag(privateKeys []*crypto.Scalar, R *Ring, pi int) *Mlsag {
 	return &Mlsag{
 		R,
 		pi,
-		parseKeyImages(privateKeys),
+		ParseKeyImages(privateKeys),
 		privateKeys,
 	}
 }
 
-// Sign returns a signature for the given message.
-func (ml *Mlsag) Sign(message []byte) (*Sig, error) {
-	if len(message) != common.HashSize {
-		return nil, fmt.Errorf("cannot mlsag sign the message because its length is not 32, maybe it has not been hashed")
-	}
-	message32byte := [32]byte{}
-	copy(message32byte[:], message)
-
-	alpha, r := ml.createRandomChallenges()          // step 2 in paper
-	c, err := ml.calculateC(message32byte, alpha, r) // step 3 and 4 in paper
-
-	if err != nil {
-		return nil, err
-	}
-	return &Sig{
-		c[0], ml.keyImages, r,
-	}, nil
-}
-
-// parsePublicKey parses public key from private key.
+// Parse public key from private key
 func parsePublicKey(privateKey *crypto.Scalar, isLast bool) *crypto.Point {
 	// isLast will commit to random base G
 	if isLast {
@@ -157,7 +140,7 @@ func parsePublicKey(privateKey *crypto.Scalar, isLast bool) *crypto.Point {
 	return new(crypto.Point).ScalarMultBase(privateKey)
 }
 
-func parseKeyImages(privateKeys []*crypto.Scalar) []*crypto.Point {
+func ParseKeyImages(privateKeys []*crypto.Scalar) []*crypto.Point {
 	m := len(privateKeys)
 
 	result := make([]*crypto.Point, m)
@@ -229,26 +212,26 @@ func calculateNextC(digest [common.HashSize]byte, r []*crypto.Scalar, c *crypto.
 	// If you are reviewing my code, please refer to paper
 	// rG: r*G
 	// cK: c*R
-	// sum1: rG + cK
+	// rG_cK: rG + cK
 	//
 	// HK: H_p(K_i)
 	// rHK: r_i*H_p(K_i)
 	// cKI: c*R~ (KI as keyImage)
-	// sum2: rHK + cKI
+	// rHK_cKI: rHK + cKI
 
 	// Process columns before the last
 	for i := 0; i < len(K)-1; i += 1 {
 		rG := new(crypto.Point).ScalarMultBase(r[i])
 		cK := new(crypto.Point).ScalarMult(K[i], c)
-		sum1 := new(crypto.Point).Add(rG, cK) // rG + cK
+		rG_cK := new(crypto.Point).Add(rG, cK)
 
 		HK := crypto.HashToPoint(K[i].ToBytesS())
 		rHK := new(crypto.Point).ScalarMult(HK, r[i])
 		cKI := new(crypto.Point).ScalarMult(keyImages[i], c)
-		sum2 := new(crypto.Point).Add(rHK, cKI) // rHK + cKI
+		rHK_cKI := new(crypto.Point).Add(rHK, cKI)
 
-		b = append(b, sum1.ToBytesS()...)
-		b = append(b, sum2.ToBytesS()...)
+		b = append(b, rG_cK.ToBytesS()...)
+		b = append(b, rHK_cKI.ToBytesS()...)
 	}
 
 	// Process last column
@@ -257,8 +240,8 @@ func calculateNextC(digest [common.HashSize]byte, r []*crypto.Scalar, c *crypto.
 		r[len(K)-1],
 	)
 	cK := new(crypto.Point).ScalarMult(K[len(K)-1], c)
-	sum := new(crypto.Point).Add(rG, cK) // rG + cK
-	b = append(b, sum.ToBytesS()...)
+	rG_cK := new(crypto.Point).Add(rG, cK)
+	b = append(b, rG_cK.ToBytesS()...)
 
 	return crypto.HashToScalar(b), nil
 }
@@ -302,10 +285,94 @@ func (ml *Mlsag) calculateC(message [common.HashSize]byte, alpha []*crypto.Scala
 	return c, nil
 }
 
-func createFakePublicKeyArray(length int) []*crypto.Point {
-	K := make([]*crypto.Point, length)
-	for i := 0; i < length; i += 1 {
-		K[i] = crypto.RandomPoint()
+// check l*KI = 0 by checking KI is a valid point
+func verifyKeyImages(keyImages []*crypto.Point) bool {
+	var check bool = true
+	for i := 0; i < len(keyImages); i += 1 {
+		if keyImages[i]==nil{
+			return false
+		}
+		lKI := new(crypto.Point).ScalarMult(keyImages[i], CurveOrder)
+		check = check && lKI.IsIdentity()
 	}
-	return K
+	return check
+}
+
+func verifyRing(sig *MlsagSig, R *Ring, message [common.HashSize]byte) (bool, error) {
+	c := *sig.c
+	cBefore := *sig.c
+	if len(R.keys) != len(sig.r){
+		return false, fmt.Errorf("MLSAG Error : Malformed Ring")
+	}
+	//fmt.Printf("VERIFY cBefore: %v\n", cBefore.String())
+	for i := 0; i < len(sig.r); i += 1 {
+		nextC, err := calculateNextC(
+			message,
+			sig.r[i], &c,
+			R.keys[i],
+			sig.keyImages,
+		)
+		if err != nil {
+			return false, err
+		}
+		//fmt.Printf("BUGLOG3 r[%v] = %v\n", i, PrintScalar(sig.r[i]))
+		//fmt.Printf("BUGLOG3 key[%v] = %v\n", i, PrintPoint(R.keys[i]))
+		//fmt.Printf("BUGLOG3 keyImages = %v\n", PrintPoint(sig.keyImages))
+		//fmt.Printf("BUGLOG3 c[%v] = %v\n", i, nextC.String())
+		//fmt.Println("BUGLOG3 ===============")
+		c = *nextC
+	}
+	return bytes.Equal(c.ToBytesS(), cBefore.ToBytesS()), nil
+}
+
+func Verify(sig *MlsagSig, K *Ring, message []byte) (bool, error) {
+	if len(message) != common.HashSize {
+		return false, fmt.Errorf("cannot mlsag verify the message because its length is not 32, maybe it has not been hashed")
+	}
+	message32byte := [32]byte{}
+	copy(message32byte[:], message)
+	b1 := verifyKeyImages(sig.keyImages)
+	b2, err := verifyRing(sig, K, message32byte)
+	return (b1 && b2), err
+}
+
+func (ml *Mlsag) Sign(message []byte) (*MlsagSig, error) {
+	if len(message) != common.HashSize {
+		return nil, fmt.Errorf("cannot mlsag sign the message because its length is not 32, maybe it has not been hashed")
+	}
+	message32byte := [32]byte{}
+	copy(message32byte[:], message)
+
+	alpha, r := ml.createRandomChallenges()          // step 2 in paper
+	c, err := ml.calculateC(message32byte, alpha, r) // step 3 and 4 in paper
+
+	if err != nil {
+		return nil, err
+	}
+	return &MlsagSig{
+		c[0], ml.keyImages, r,
+	}, nil
+}
+
+func PrintScalar(sList []*crypto.Scalar) string {
+	toBePrinted := ""
+	for i, element := range sList {
+		toBePrinted += element.String()
+		if i != len(sList) - 1 {
+			toBePrinted += "--"
+		}
+	}
+
+	return toBePrinted
+}
+
+func PrintPoint(sList []*crypto.Point) string {
+	toBePrinted := ""
+	for i, element := range sList {
+		toBePrinted += element.String()
+		if i != len(sList) - 1 {
+			toBePrinted += "--"
+		}
+	}
+	return toBePrinted
 }

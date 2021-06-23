@@ -5,35 +5,31 @@ import (
 	"strconv"
 )
 
-// UnStakingMetadata is a request to un-stake a running validator.
-// The node will un-stake faster when using this metadata compared to the StopAutoStakingMetadata.
+//UnStakingMetadata : unstaking metadata
 type UnStakingMetadata struct {
 	MetadataBaseWithSignature
 	CommitteePublicKey string
 }
 
-// Hash overrides MetadataBase.Hash().
-func (req *UnStakingMetadata) Hash() *common.Hash {
-	record := strconv.Itoa(req.Type)
+func (meta *UnStakingMetadata) Hash() *common.Hash {
+	record := strconv.Itoa(meta.Type)
 	data := []byte(record)
 	hash := common.HashH(data)
 	return &hash
 }
 
-// HashWithoutSig overrides MetadataBase.HashWithoutSig().
-func (req *UnStakingMetadata) HashWithoutSig() *common.Hash {
-	return req.MetadataBaseWithSignature.Hash()
+func (meta *UnStakingMetadata) HashWithoutSig() *common.Hash {
+	return meta.MetadataBaseWithSignature.Hash()
 }
 
-// ShouldSignMetaData returns true.
 func (*UnStakingMetadata) ShouldSignMetaData() bool { return true }
 
-// GetType overrides MetadataBase.GetType().
-func (req UnStakingMetadata) GetType() int {
-	return req.Type
+//GetType :
+func (unStakingMetadata UnStakingMetadata) GetType() int {
+	return unStakingMetadata.Type
 }
 
-// CalculateSize overrides MetadataBase.CalculateSize().
-func (req *UnStakingMetadata) CalculateSize() uint64 {
-	return calculateSize(req)
+//CalculateSize :
+func (unStakingMetadata *UnStakingMetadata) CalculateSize() uint64 {
+	return calculateSize(unStakingMetadata)
 }

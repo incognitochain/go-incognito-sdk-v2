@@ -1,28 +1,25 @@
 package serialnumbernoprivacy
 
 import (
-	"fmt"
+	"errors"
 	"github.com/incognitochain/go-incognito-sdk-v2/crypto"
 	"github.com/incognitochain/go-incognito-sdk-v2/privacy/v1/zkp/utils"
 )
 
-// SerialNumberNoPrivacyStatement represents the statement of an SNNoPrivacyProof.
 type SerialNumberNoPrivacyStatement struct {
-	sn     *crypto.Point
-	pubKey *crypto.Point
-	snd    *crypto.Scalar
+	output *crypto.Point
+	vKey   *crypto.Point
+	input  *crypto.Scalar
 }
 
-// SNNoPrivacyWitness represents the witness of an SNNoPrivacyProof.
+// SNNoPrivacyWitness is a protocol for Zero-knowledge Proof of Knowledge of one out of many commitments containing 0
+// include Witness: CommitedValue, r []byte
 type SNNoPrivacyWitness struct {
 	stmt SerialNumberNoPrivacyStatement
 	seed *crypto.Scalar
 }
 
-// SNNoPrivacyProof represents a zero-knowledge proof for proving the the serial number is correctly generated from the
-// secret key and the SND with the following formula: SN = (sk + snd)^-1 * G[0].
-//
-// It is only used in non-private transactions of version 1, and conversion transactions.
+// serialNumberNNoPrivacyProof contains Proof's value
 type SNNoPrivacyProof struct {
 	// general info
 	stmt SerialNumberNoPrivacyStatement
@@ -33,30 +30,27 @@ type SNNoPrivacyProof struct {
 	zSeed *crypto.Scalar
 }
 
-// GetPubKey returns the public key in the statement of an SNNoPrivacyProof.
-func (proof SNNoPrivacyProof) GetPubKey() *crypto.Point {
-	return proof.stmt.pubKey
+func (proof SNNoPrivacyProof) GetVKey() *crypto.Point {
+	return proof.stmt.vKey
 }
 
-// GetSN returns the serial number in the statement of an SNNoPrivacyProof.
-func (proof SNNoPrivacyProof) GetSN() *crypto.Point {
-	return proof.stmt.sn
+func (proof SNNoPrivacyProof) GetOutput() *crypto.Point{
+	return proof.stmt.output
 }
 
-// GetSND returns the serial number derivator in the statement of an SNNoPrivacyProof.
-func (proof SNNoPrivacyProof) GetSND() *crypto.Scalar {
-	return proof.stmt.snd
+func (proof SNNoPrivacyProof) GetInput() *crypto.Scalar{
+	return proof.stmt.input
 }
 
-// ValidateSanity checks sanity of an ValidateSanity.
+
 func (proof SNNoPrivacyProof) ValidateSanity() bool {
-	if !proof.stmt.sn.PointValid() {
+	if !proof.stmt.output.PointValid() {
 		return false
 	}
-	if !proof.stmt.pubKey.PointValid() {
+	if !proof.stmt.vKey.PointValid() {
 		return false
 	}
-	if !proof.stmt.snd.ScalarValid() {
+	if !proof.stmt.input.ScalarValid() {
 		return false
 	}
 
@@ -69,36 +63,61 @@ func (proof SNNoPrivacyProof) ValidateSanity() bool {
 	return proof.zSeed.ScalarValid()
 }
 
-// Init creates an empty ValidateSanity.
-func (proof *SNNoPrivacyProof) Init() *SNNoPrivacyProof {
-	proof.stmt.sn = new(crypto.Point)
-	proof.stmt.pubKey = new(crypto.Point)
-	proof.stmt.snd = new(crypto.Scalar)
-
-	proof.tSeed = new(crypto.Point)
-	proof.tOutput = new(crypto.Point)
-
-	proof.zSeed = new(crypto.Scalar)
-
-	return proof
+func (pro SNNoPrivacyProof) isNil() bool {
+	if pro.stmt.output == nil {
+		return true
+	}
+	if pro.stmt.vKey == nil {
+		return true
+	}
+	if pro.stmt.input == nil {
+		return true
+	}
+	if pro.tSeed == nil {
+		return true
+	}
+	if pro.tOutput == nil {
+		return true
+	}
+	if pro.zSeed == nil {
+		return true
+	}
+	return false
 }
 
-// Set sets data to an SNNoPrivacyWitness.
+func (pro *SNNoPrivacyProof) Init() *SNNoPrivacyProof {
+	pro.stmt.output = new(crypto.Point)
+	pro.stmt.vKey = new(crypto.Point)
+	pro.stmt.input = new(crypto.Scalar)
+
+	pro.tSeed = new(crypto.Point)
+	pro.tOutput = new(crypto.Point)
+
+	pro.zSeed = new(crypto.Scalar)
+
+	return pro
+}
+
+// Set sets Witness
 func (wit *SNNoPrivacyWitness) Set(
 	output *crypto.Point,
 	vKey *crypto.Point,
 	input *crypto.Scalar,
 	seed *crypto.Scalar) {
 
-	wit.stmt.sn = output
-	wit.stmt.pubKey = vKey
-	wit.stmt.snd = input
+	if wit == nil {
+		wit = new(SNNoPrivacyWitness)
+	}
+
+	wit.stmt.output = output
+	wit.stmt.vKey = vKey
+	wit.stmt.input = input
 
 	wit.seed = seed
 }
 
-// Set sets data to an SNNoPrivacyProof.
-func (proof *SNNoPrivacyProof) Set(
+// Set sets Proof
+func (pro *SNNoPrivacyProof) Set(
 	output *crypto.Point,
 	vKey *crypto.Point,
 	input *crypto.Scalar,
@@ -106,70 +125,77 @@ func (proof *SNNoPrivacyProof) Set(
 	tOutput *crypto.Point,
 	zSeed *crypto.Scalar) {
 
-	proof.stmt.sn = output
-	proof.stmt.pubKey = vKey
-	proof.stmt.snd = input
+	if pro == nil {
+		pro = new(SNNoPrivacyProof)
+	}
 
-	proof.tSeed = tSeed
-	proof.tOutput = tOutput
+	pro.stmt.output = output
+	pro.stmt.vKey = vKey
+	pro.stmt.input = input
 
-	proof.zSeed = zSeed
+	pro.tSeed = tSeed
+	pro.tOutput = tOutput
+
+	pro.zSeed = zSeed
 }
 
-func (proof SNNoPrivacyProof) Bytes() []byte {
+func (pro SNNoPrivacyProof) Bytes() []byte {
 	// if proof is nil, return an empty array
-	if proof.isNil() {
+	if pro.isNil() {
 		return []byte{}
 	}
 
 	var bytes []byte
-	bytes = append(bytes, proof.stmt.sn.ToBytesS()...)
-	bytes = append(bytes, proof.stmt.pubKey.ToBytesS()...)
-	bytes = append(bytes, proof.stmt.snd.ToBytesS()...)
+	bytes = append(bytes, pro.stmt.output.ToBytesS()...)
+	bytes = append(bytes, pro.stmt.vKey.ToBytesS()...)
+	bytes = append(bytes, pro.stmt.input.ToBytesS()...)
 
-	bytes = append(bytes, proof.tSeed.ToBytesS()...)
-	bytes = append(bytes, proof.tOutput.ToBytesS()...)
+	bytes = append(bytes, pro.tSeed.ToBytesS()...)
+	bytes = append(bytes, pro.tOutput.ToBytesS()...)
 
-	bytes = append(bytes, proof.zSeed.ToBytesS()...)
+	bytes = append(bytes, pro.zSeed.ToBytesS()...)
 
 	return bytes
 }
 
-func (proof *SNNoPrivacyProof) SetBytes(bytes []byte) error {
-	if len(bytes) < crypto.Ed25519KeySize*6 {
-		return fmt.Errorf("not enough bytes to unmarshal Serial Number No Privacy Proof")
+func (pro *SNNoPrivacyProof) SetBytes(bytes []byte) error {
+	// if len(bytes) == 0 {
+	// 	return errors.New("Bytes array is empty")
+	// }
+	if len(bytes) < crypto.Ed25519KeySize*6{
+		return errors.New("Not enough bytes to unmarshal Serial Number No Privacy Proof")
 	}
 
 	offset := 0
 	var err error
-	proof.stmt.sn, err = new(crypto.Point).FromBytesS(bytes[offset : offset+crypto.Ed25519KeySize])
+	pro.stmt.output, err = new(crypto.Point).FromBytesS(bytes[offset : offset+crypto.Ed25519KeySize])
 	if err != nil {
 		return err
 	}
 	offset += crypto.Ed25519KeySize
 
-	proof.stmt.pubKey, err = new(crypto.Point).FromBytesS(bytes[offset : offset+crypto.Ed25519KeySize])
+	pro.stmt.vKey, err = new(crypto.Point).FromBytesS(bytes[offset : offset+crypto.Ed25519KeySize])
 	if err != nil {
 		return err
 	}
 	offset += crypto.Ed25519KeySize
 
-	proof.stmt.snd.FromBytesS(bytes[offset : offset+crypto.Ed25519KeySize])
+	pro.stmt.input.FromBytesS(bytes[offset : offset+crypto.Ed25519KeySize])
 	offset += crypto.Ed25519KeySize
 
-	proof.tSeed, err = new(crypto.Point).FromBytesS(bytes[offset : offset+crypto.Ed25519KeySize])
+	pro.tSeed, err = new(crypto.Point).FromBytesS(bytes[offset : offset+crypto.Ed25519KeySize])
 	if err != nil {
 		return err
 	}
 	offset += crypto.Ed25519KeySize
 
-	proof.tOutput, err = new(crypto.Point).FromBytesS(bytes[offset : offset+crypto.Ed25519KeySize])
+	pro.tOutput, err = new(crypto.Point).FromBytesS(bytes[offset : offset+crypto.Ed25519KeySize])
 	if err != nil {
 		return err
 	}
 	offset += crypto.Ed25519KeySize
 
-	proof.zSeed = new(crypto.Scalar).FromBytesS(bytes[offset : offset+crypto.Ed25519KeySize])
+	pro.zSeed = new(crypto.Scalar).FromBytesS(bytes[offset : offset+crypto.Ed25519KeySize])
 
 	return nil
 }
@@ -182,12 +208,13 @@ func (wit SNNoPrivacyWitness) Prove(mess []byte) (*SNNoPrivacyProof, error) {
 	tSK := new(crypto.Point).ScalarMult(crypto.PedCom.G[crypto.PedersenPrivateKeyIndex], eSK)
 
 	// calculate tOutput = sn^eSK
-	tE := new(crypto.Point).ScalarMult(wit.stmt.sn, eSK)
+	tE := new(crypto.Point).ScalarMult(wit.stmt.output, eSK)
 
 	x := new(crypto.Scalar)
 	if mess == nil {
 		// calculate x = hash(tSeed || tInput || tSND2 || tOutput)
-		x = utils.GenerateChallenge([][]byte{wit.stmt.sn.ToBytesS(), wit.stmt.pubKey.ToBytesS(), tSK.ToBytesS(), tE.ToBytesS()})
+		// recheck frombytes is valid scalar
+		x = utils.GenerateChallenge([][]byte{wit.stmt.output.ToBytesS(), wit.stmt.vKey.ToBytesS(), tSK.ToBytesS(), tE.ToBytesS()})
 	} else {
 		x.FromBytesS(mess)
 	}
@@ -197,28 +224,74 @@ func (wit SNNoPrivacyWitness) Prove(mess []byte) (*SNNoPrivacyProof, error) {
 	zSK.Add(zSK, eSK)
 
 	proof := new(SNNoPrivacyProof).Init()
-	proof.Set(wit.stmt.sn, wit.stmt.pubKey, wit.stmt.snd, tSK, tE, zSK)
+	proof.Set(wit.stmt.output, wit.stmt.vKey, wit.stmt.input, tSK, tE, zSK)
 	return proof, nil
 }
 
-func (proof SNNoPrivacyProof) isNil() bool {
-	if proof.stmt.sn == nil {
-		return true
+func (pro SNNoPrivacyProof) Verify(mess []byte) (bool, error) {
+	// re-calculate x = hash(tSeed || tOutput)
+	x := new(crypto.Scalar)
+	if mess == nil {
+		// calculate x = hash(tSeed || tInput || tSND2 || tOutput)
+		x = utils.GenerateChallenge([][]byte{pro.stmt.output.ToBytesS(), pro.stmt.vKey.ToBytesS(), pro.tSeed.ToBytesS(), pro.tOutput.ToBytesS()})
+	} else {
+		x.FromBytesS(mess)
 	}
-	if proof.stmt.pubKey == nil {
-		return true
+
+	// Check gSK^zSeed = vKey^x * tSeed
+	leftPoint1 := new(crypto.Point).ScalarMult(crypto.PedCom.G[crypto.PedersenPrivateKeyIndex], pro.zSeed)
+
+	rightPoint1 := new(crypto.Point).ScalarMult(pro.stmt.vKey, x)
+	rightPoint1 = rightPoint1.Add(rightPoint1, pro.tSeed)
+
+	if !crypto.IsPointEqual(leftPoint1, rightPoint1) {
+		return false, errors.New("verify serial number no privacy proof statement 1 failed")
 	}
-	if proof.stmt.snd == nil {
-		return true
+
+	// Check sn^(zSeed + x*input) = gSK^x * tOutput
+	tmp := new(crypto.Scalar).Add(pro.zSeed, new(crypto.Scalar).Mul(x, pro.stmt.input))
+	leftPoint2 := new(crypto.Point).ScalarMult(pro.stmt.output, tmp)
+
+	rightPoint2 := new(crypto.Point).ScalarMult(crypto.PedCom.G[crypto.PedersenPrivateKeyIndex], x)
+	rightPoint2 = rightPoint2.Add(rightPoint2, pro.tOutput)
+
+	if !crypto.IsPointEqual(leftPoint2, rightPoint2) {
+		return false, errors.New("verify serial number no privacy proof statement 2 failed")
 	}
-	if proof.tSeed == nil {
-		return true
+
+	return true, nil
+}
+
+func (pro SNNoPrivacyProof) VerifyOld(mess []byte) (bool, error) {
+	// re-calculate x = hash(tSeed || tOutput)
+	x := new(crypto.Scalar)
+	if mess == nil {
+		// calculate x = hash(tSeed || tInput || tSND2 || tOutput)
+		x = utils.GenerateChallenge([][]byte{pro.tSeed.ToBytesS(), pro.tOutput.ToBytesS()})
+	} else {
+		x.FromBytesS(mess)
 	}
-	if proof.tOutput == nil {
-		return true
+
+	// Check gSK^zSeed = vKey^x * tSeed
+	leftPoint1 := new(crypto.Point).ScalarMult(crypto.PedCom.G[crypto.PedersenPrivateKeyIndex], pro.zSeed)
+
+	rightPoint1 := new(crypto.Point).ScalarMult(pro.stmt.vKey, x)
+	rightPoint1 = rightPoint1.Add(rightPoint1, pro.tSeed)
+
+	if !crypto.IsPointEqual(leftPoint1, rightPoint1) {
+		return false, errors.New("verifyOld serial number no privacy proof statement 1 failed")
 	}
-	if proof.zSeed == nil {
-		return true
+
+	// Check sn^(zSeed + x*input) = gSK^x * tOutput
+	tmp := new(crypto.Scalar).Add(pro.zSeed, new(crypto.Scalar).Mul(x, pro.stmt.input))
+	leftPoint2 := new(crypto.Point).ScalarMult(pro.stmt.output, tmp)
+
+	rightPoint2 := new(crypto.Point).ScalarMult(crypto.PedCom.G[crypto.PedersenPrivateKeyIndex], x)
+	rightPoint2 = rightPoint2.Add(rightPoint2, pro.tOutput)
+
+	if !crypto.IsPointEqual(leftPoint2, rightPoint2) {
+		return false, errors.New("verifyOld serial number no privacy proof statement 2 failed")
 	}
-	return false
+
+	return true, nil
 }

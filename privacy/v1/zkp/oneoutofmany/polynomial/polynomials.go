@@ -3,28 +3,46 @@ package polynomial
 import (
 	"fmt"
 	"math/big"
+	"math/rand"
+	"time"
 )
 
-// Poly is a data structure representing a polynomial. A Poly is just an array in the reverse order. 
-//
-// For example, f(x) = 3x^3 + 2x + 1 => [1 2 0 3].
+// Data structure for a polynomial
+// Just an array in Reverse
+// f(x) = 3x^3 + 2x + 1 => [1 2 0 3]
 type Poly []*big.Int
 
-// NewPoly returns the polynomial with given integers.
-func NewPoly(coEffs ...int) (p Poly) {
-	p = make([]*big.Int, len(coEffs))
-	for i := 0; i < len(coEffs); i++ {
-		p[i] = big.NewInt(int64(coEffs[i]))
+// Helper function for generating a polynomial with given integers
+func newPoly(coeffs ...int) (p Poly) {
+	p = make([]*big.Int, len(coeffs))
+	for i := 0; i < len(coeffs); i++ {
+		p[i] = big.NewInt(int64(coeffs[i]))
 	}
-	p.Trim()
+	p.trim()
 	return
 }
 
-// Trim makes sure that the highest coefficient never has zero value
-// When we Add or subtract two polynomials, sometimes, the highest coefficient is zero, 
-// if we don't remove the highest and zero coefficient, GetDegree() will return the wrong result. 
-func (p *Poly) Trim() {
-	var last = 0
+// Returns a polynomial with random coefficients
+// You can give the degree of the polynomial
+// A random coefficients have a [0, 2^bits) integer
+func randomPoly(degree, bits int64) (p Poly) {
+	p = make(Poly, degree+1)
+	rr := rand.New(rand.NewSource(time.Now().UnixNano()))
+	exp := big.NewInt(2)
+	exp.Exp(exp, big.NewInt(bits), nil)
+	for i := 0; i <= p.GetDegree(); i++ {
+		p[i] = new(big.Int)
+		p[i].Rand(rr, exp)
+	}
+	p.trim()
+	return
+}
+
+// trim() makes sure that the highest coefficient never has zero value
+// when you add or subtract two polynomials, sometimes the highest coefficient goes zero
+// if you don't remove the highest and zero coefficient, GetDegree() returns the wrong result
+func (p *Poly) trim() {
+	var last int = 0
 	for i := p.GetDegree(); i > 0; i-- { // why i > 0, not i >=0? do not remove the constant
 		if (*p)[i].Sign() != 0 {
 			last = i
@@ -34,22 +52,21 @@ func (p *Poly) Trim() {
 	*p = (*p)[:(last + 1)]
 }
 
-// IsZero checks if p = 0.
-func (p *Poly) IsZero() bool {
+// isZero() checks if P = 0
+func (p *Poly) isZero() bool {
 	if p.GetDegree() == 0 && (*p)[0].Cmp(big.NewInt(0)) == 0 {
 		return true
 	}
 	return false
 }
 
-// GetDegree returns the degree of a Poly.
-// 
-// For example, if p = x^3 + 2x^2 + 5, GetDegree() returns 3.
+// GetDegree returns the degree
+// if p = x^3 + 2x^2 + 5, GetDegree() returns 3
 func (p Poly) GetDegree() int {
 	return len(p) - 1
 }
 
-// String returns a beautified string-representation of a Poly.
+// pretty print
 func (p Poly) String() (s string) {
 	s = "["
 	for i := len(p) - 1; i >= 0; i-- {
@@ -87,8 +104,11 @@ func (p Poly) String() (s string) {
 	return
 }
 
-// Compare returns -1 if p < 1; 0 if p == q; and 1 if p > q.
-func (p *Poly) Compare(q *Poly) int {
+// Compare() compares two polynomials and returns -1, 0, or 1
+// if P == Q, returns 0
+// if P > Q, returns 1
+// if P < Q, returns -1
+func (p *Poly) compare(q *Poly) int {
 	switch {
 	case p.GetDegree() > q.GetDegree():
 		return 1
@@ -106,10 +126,11 @@ func (p *Poly) Compare(q *Poly) int {
 	return 0
 }
 
-// Add returns (p + q) % m.
-func (p Poly) Add(q Poly, m *big.Int) Poly {
-	if p.Compare(&q) < 0 {
-		return q.Add(p, m)
+// Add() adds two polynomials
+// modulo m can be nil
+func (p Poly) add(q Poly, m *big.Int) Poly {
+	if p.compare(&q) < 0 {
+		return q.add(p, m)
 	}
 	var r Poly = make([]*big.Int, len(p))
 	for i := 0; i < len(q); i++ {
@@ -127,12 +148,12 @@ func (p Poly) Add(q Poly, m *big.Int) Poly {
 			r[i].Mod(r[i], m)
 		}
 	}
-	r.Trim()
+	r.trim()
 	return r
 }
 
-// Neg returns -p.
-func (p *Poly) Neg() Poly {
+// Neg() returns a polynomial Q = -P
+func (p *Poly) neg() Poly {
 	var q Poly = make([]*big.Int, len(*p))
 	for i := 0; i < len(*p); i++ {
 		b := new(big.Int)
@@ -142,13 +163,45 @@ func (p *Poly) Neg() Poly {
 	return q
 }
 
-// Sub returns (p - q) % m.
-func (p Poly) Sub(q Poly, m *big.Int) Poly {
-	r := q.Neg()
-	return p.Add(r, m)
+// Clone() does deep-copy
+// adjust increases the degree of copied polynomial
+// adjust cannot have a negative integer
+// for example, P = x + 1 and adjust = 2, Clone() returns x^3 + x^2
+func (p Poly) clone(adjust int) Poly {
+	var q Poly = make([]*big.Int, len(p)+adjust)
+	if adjust < 0 {
+		return newPoly(0)
+	}
+	for i := 0; i < adjust; i++ {
+		q[i] = big.NewInt(0)
+	}
+	for i := adjust; i < len(p)+adjust; i++ {
+		b := new(big.Int)
+		b.Set(p[i-adjust])
+		q[i] = b
+	}
+	return q
 }
 
-// Mul returns (p * q) % m.
+// sanitize() does modular arithmetic with m
+func (p *Poly) sanitize(m *big.Int) {
+	if m == nil {
+		return
+	}
+	for i := 0; i <= (*p).GetDegree(); i++ {
+		(*p)[i].Mod((*p)[i], m)
+	}
+	p.trim()
+}
+
+// Sub() subtracts P from Q
+// Since we already have Add(), Sub() does Add(P, -Q)
+func (p Poly) Sub(q Poly, m *big.Int) Poly {
+	r := q.neg()
+	return p.add(r, m)
+}
+
+// P * Q
 func (p Poly) Mul(q Poly, m *big.Int) Poly {
 	if m != nil {
 		p.sanitize(m)
@@ -169,18 +222,18 @@ func (p Poly) Mul(q Poly, m *big.Int) Poly {
 			r[i+j] = a
 		}
 	}
-	r.Trim()
+	r.trim()
 	return r
 }
 
-// Div returns (p / q, p % q).
-func (p Poly) Div(q Poly, m *big.Int) (quo, rem Poly) {
+// returns (P / Q, P % Q)
+func (p Poly) div(q Poly, m *big.Int) (quo, rem Poly) {
 	if m != nil {
 		p.sanitize(m)
 		q.sanitize(m)
 	}
-	if p.GetDegree() < q.GetDegree() || q.IsZero() {
-		quo = NewPoly(0)
+	if p.GetDegree() < q.GetDegree() || q.isZero() {
+		quo = newPoly(0)
 		rem = p.clone(0)
 		return
 	}
@@ -194,7 +247,7 @@ func (p Poly) Div(q Poly, m *big.Int) (quo, rem Poly) {
 	for {
 		td := t.GetDegree()
 		rd := td - qd
-		if rd < 0 || t.IsZero() {
+		if rd < 0 || t.isZero() {
 			rem = t
 			break
 		}
@@ -209,7 +262,7 @@ func (p Poly) Div(q Poly, m *big.Int) (quo, rem Poly) {
 		// if r == 0, it means that the highest coefficient of the result is not an integer
 		// this polynomial library handles integer coefficients
 		if r.Cmp(big.NewInt(0)) == 0 {
-			quo = NewPoly(0)
+			quo = newPoly(0)
 			rem = p.clone(0)
 			return
 		}
@@ -221,70 +274,40 @@ func (p Poly) Div(q Poly, m *big.Int) (quo, rem Poly) {
 			}
 		}
 		t = t.Sub(u, m)
-		t.Trim()
+		t.trim()
 		quo[rd] = r
 	}
-	quo.Trim()
-	rem.Trim()
+	quo.trim()
+	rem.trim()
 	return
 }
 
-// GCD returns the greatest common divisor(GCD) of p and q (Euclidean algorithm).
-func (p Poly) GCD(q Poly, m *big.Int) Poly {
-	if p.Compare(&q) < 0 {
-		return q.GCD(p, m)
+// returns the greatest common divisor(GCD) of P and Q (Euclidean algorithm)
+func (p Poly) gcd(q Poly, m *big.Int) Poly {
+	if p.compare(&q) < 0 {
+		return q.gcd(p, m)
 	}
-	if q.IsZero() {
+	if q.isZero() {
 		return p
 	} else {
-		_, rem := p.Div(q, m)
-		return q.GCD(rem, m)
+		_, rem := p.div(q, m)
+		return q.gcd(rem, m)
 	}
 }
 
-// Eval returns p(x) % m.
-func (p Poly) Eval(x *big.Int, m *big.Int) (y *big.Int) {
+// Eval() returns p(x) where x is the given big integer
+func (p Poly) eval(x *big.Int, m *big.Int) (y *big.Int) {
 	y = big.NewInt(0)
-	accumulatedX := big.NewInt(1)
+	accx := big.NewInt(1)
 	xd := new(big.Int)
 	for i := 0; i <= p.GetDegree(); i++ {
-		xd.Mul(accumulatedX, p[i])
+		xd.Mul(accx, p[i])
 		y.Add(y, xd)
-		accumulatedX.Mul(accumulatedX, x)
+		accx.Mul(accx, x)
 		if m != nil {
 			y.Mod(y, m)
-			accumulatedX.Mod(accumulatedX, m)
+			accx.Mod(accx, m)
 		}
 	}
 	return y
-}
-
-// clone returns a copy of a Poly whose degree is adjusted by the given value. The adjusted value cannot be negative.
-// 
-// For example, if p = x + 1 and adjust = 2, Clone() will return x^3 + x^2.
-func (p Poly) clone(adjust int) Poly {
-	var q Poly = make([]*big.Int, len(p)+adjust)
-	if adjust < 0 {
-		return NewPoly(0)
-	}
-	for i := 0; i < adjust; i++ {
-		q[i] = big.NewInt(0)
-	}
-	for i := adjust; i < len(p)+adjust; i++ {
-		b := new(big.Int)
-		b.Set(p[i-adjust])
-		q[i] = b
-	}
-	return q
-}
-
-// sanitize does modular arithmetic with m, i.e. p % m.
-func (p *Poly) sanitize(m *big.Int) {
-	if m == nil {
-		return
-	}
-	for i := 0; i <= (*p).GetDegree(); i++ {
-		(*p)[i].Mod((*p)[i], m)
-	}
-	p.Trim()
 }

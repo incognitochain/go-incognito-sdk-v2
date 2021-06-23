@@ -3,8 +3,8 @@ package key
 import (
 	"math/big"
 
-	bn256 "github.com/ethereum/go-ethereum/crypto/bn256/cloudflare"
 	"github.com/incognitochain/go-incognito-sdk-v2/common"
+	bn256 "github.com/ethereum/go-ethereum/crypto/bn256/cloudflare"
 )
 
 // BLSKeyGen takes an input seed and returns a BLS Key.

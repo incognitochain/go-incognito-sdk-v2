@@ -5,8 +5,7 @@ import (
 	"github.com/incognitochain/go-incognito-sdk-v2/key"
 )
 
-// IssuingRequest is a request to shield a centralized token into the Incognito network.
-// Only centralized website can send this metadata, and authorization is required.
+// only centralized website can send this type of tx
 type IssuingRequest struct {
 	ReceiverAddress key.PaymentAddress
 	DepositedAmount uint64
@@ -15,26 +14,20 @@ type IssuingRequest struct {
 	MetadataBaseWithSignature
 }
 
-// NewIssuingRequest creates a new IssuingRequest.
-func NewIssuingRequest(
-	receiverAddress key.PaymentAddress,
-	depositedAmount uint64,
-	tokenID common.Hash,
-	tokenName string,
-	metaType int,
-) (*IssuingRequest, error) {
-	metadataBase := NewMetadataBaseWithSignature(metaType)
-	issuingReq := &IssuingRequest{
-		ReceiverAddress: receiverAddress,
-		DepositedAmount: depositedAmount,
-		TokenID:         tokenID,
-		TokenName:       tokenName,
-	}
-	issuingReq.MetadataBaseWithSignature = *metadataBase
-	return issuingReq, nil
+type IssuingReqAction struct {
+	Meta    IssuingRequest `json:"meta"`
+	TxReqID common.Hash    `json:"txReqId"`
 }
 
-// Hash overrides MetadataBase.Hash().
+type IssuingAcceptedInst struct {
+	ShardID         byte                   `json:"shardId"`
+	DepositedAmount uint64                 `json:"issuingAmount"`
+	ReceiverAddr    key.PaymentAddress `json:"receiverAddrStr"`
+	IncTokenID      common.Hash            `json:"incTokenId"`
+	IncTokenName    string                 `json:"incTokenName"`
+	TxReqID         common.Hash            `json:"txReqId"`
+}
+
 func (iReq IssuingRequest) Hash() *common.Hash {
 	record := iReq.ReceiverAddress.String()
 	record += iReq.TokenID.String()
@@ -50,7 +43,6 @@ func (iReq IssuingRequest) Hash() *common.Hash {
 	return &hash
 }
 
-// HashWithoutSig overrides MetadataBase.HashWithoutSig().
 func (iReq IssuingRequest) HashWithoutSig() *common.Hash {
 	record := iReq.ReceiverAddress.String()
 	record += iReq.TokenID.String()
@@ -63,7 +55,6 @@ func (iReq IssuingRequest) HashWithoutSig() *common.Hash {
 	return &hash
 }
 
-// CalculateSize overrides MetadataBase.CalculateSize().
 func (iReq *IssuingRequest) CalculateSize() uint64 {
 	return calculateSize(iReq)
 }

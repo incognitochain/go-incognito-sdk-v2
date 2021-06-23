@@ -5,16 +5,67 @@ import (
 	"strconv"
 )
 
-// PDEContribution is a request to contribute to a pool of the pDEX.
+// PDEContribution - privacy dex contribution
 type PDEContribution struct {
 	PDEContributionPairID string
 	ContributorAddressStr string
-	ContributedAmount     uint64
+	ContributedAmount     uint64 // must be equal to vout value
 	TokenIDStr            string
 	MetadataBase
 }
 
-// NewPDEContribution creates a new PDEContribution.
+type PDEContributionAction struct {
+	Meta    PDEContribution
+	TxReqID common.Hash
+	ShardID byte
+}
+
+type PDEWaitingContribution struct {
+	PDEContributionPairID string
+	ContributorAddressStr string
+	ContributedAmount     uint64
+	TokenIDStr            string
+	TxReqID               common.Hash
+}
+
+type PDERefundContribution struct {
+	PDEContributionPairID string
+	ContributorAddressStr string
+	ContributedAmount     uint64
+	TokenIDStr            string
+	TxReqID               common.Hash
+	ShardID               byte
+}
+
+type PDEMatchedContribution struct {
+	PDEContributionPairID string
+	ContributorAddressStr string
+	ContributedAmount     uint64
+	TokenIDStr            string
+	TxReqID               common.Hash
+}
+
+type PDEMatchedNReturnedContribution struct {
+	PDEContributionPairID      string
+	ContributorAddressStr      string
+	ActualContributedAmount    uint64
+	ReturnedContributedAmount  uint64
+	TokenIDStr                 string
+	ShardID                    byte
+	TxReqID                    common.Hash
+	ActualWaitingContribAmount uint64
+}
+
+type PDEContributionStatus struct {
+	Status             byte
+	TokenID1Str        string
+	Contributed1Amount uint64
+	Returned1Amount    uint64
+	TokenID2Str        string
+	Contributed2Amount uint64
+	Returned2Amount    uint64
+}
+
 func NewPDEContribution(
 	pdeContributionPairID string,
 	contributorAddressStr string,
@@ -35,7 +86,6 @@ func NewPDEContribution(
 	return pdeContribution, nil
 }
 
-// Hash overrides MetadataBase.Hash().
 func (pc PDEContribution) Hash() *common.Hash {
 	record := pc.MetadataBase.Hash().String()
 	record += pc.PDEContributionPairID
@@ -47,7 +97,6 @@ func (pc PDEContribution) Hash() *common.Hash {
 	return &hash
 }
 
-// CalculateSize overrides MetadataBase.CalculateSize().
 func (pc *PDEContribution) CalculateSize() uint64 {
 	return calculateSize(pc)
 }

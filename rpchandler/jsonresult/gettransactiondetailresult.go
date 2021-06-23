@@ -14,7 +14,6 @@ import (
 	"time"
 )
 
-// TransactionDetail describes the detail of a transaction returned by an RPC response.
 type TransactionDetail struct {
 	BlockHash   string `json:"BlockHash"`
 	BlockHeight uint64 `json:"BlockHeight"`
@@ -33,9 +32,9 @@ type TransactionDetail struct {
 	Proof     string `json:"Proof"`
 	//ProofDetail     ProofDetail   `json:"ProofDetail"`
 	InputCoinPubKey string `json:"InputCoinPubKey"`
-	SigPubKey       string `json:"SigPubKey,omitempty"`    // 64 bytes
+	SigPubKey       string `json:"SigPubKey,omitempty"` // 64 bytes
 	RawSigPubKey    []byte `json:"RawSigPubKey,omitempty"` // 64 bytes
-	Sig             string `json:"Sig,omitempty"`          // 64 bytes
+	Sig             string `json:"Sig,omitempty"`       // 64 bytes
 
 	Metadata                 string `json:"Metadata"`
 	CustomTokenData          string `json:"CustomTokenData"`
@@ -53,7 +52,6 @@ type TransactionDetail struct {
 	Info string `json:"Info"`
 }
 
-// TxNormalRPC describes the detail of a TxNormal returned by an RPC response.
 type TxNormalRPC struct {
 	Version              int8
 	Type                 string
@@ -78,6 +76,7 @@ func ParseTxDetail(txDetail TransactionDetail) (metadata.Transaction, error) {
 	} else {
 		info = []byte(txDetail.Info)
 	}
+
 
 	//Parse lock time
 	lockTime := txDetail.RawLockTime

@@ -39,7 +39,7 @@ const (
 	ParseKeyImageWithPrivateKeyErr
 )
 
-var errCodeMessage = map[int]struct {
+var ErrCodeMessage = map[int]struct {
 	Code    int
 	Message string
 }{
@@ -77,25 +77,28 @@ var errCodeMessage = map[int]struct {
 
 	InvalidPrivateKeyErr:           {-9300, "Invalid private key"},
 	ParseKeyImageWithPrivateKeyErr: {-9301, "Cannot parse key image with private key"},
-}
 
-// PrivacyError represents an error for the privacy package.
+
+	}
+
 type PrivacyError struct {
 	Code    int
 	Message string
 	err     error
 }
 
-// Error returns the string error message of a PrivacyError.
 func (e PrivacyError) Error() string {
 	return fmt.Sprintf("%+v: %+v %+v", e.Code, e.Message, e.err)
 }
 
-// NewPrivacyErr returns a PrivacyError given a key and an error.
+func (e PrivacyError) GetCode() int {
+	return e.Code
+}
+
 func NewPrivacyErr(key int, err error) *PrivacyError {
 	return &PrivacyError{
-		err:     errors.Wrap(err, errCodeMessage[key].Message),
-		Code:    errCodeMessage[key].Code,
-		Message: errCodeMessage[key].Message,
+		err:     errors.Wrap(err, ErrCodeMessage[key].Message),
+		Code:    ErrCodeMessage[key].Code,
+		Message: ErrCodeMessage[key].Message,
 	}
 }

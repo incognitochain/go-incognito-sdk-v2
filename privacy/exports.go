@@ -2,11 +2,11 @@ package privacy
 
 import (
 	"errors"
-	"github.com/incognitochain/go-incognito-sdk-v2/privacy/conversion"
 
 	"github.com/incognitochain/go-incognito-sdk-v2/coin"
 	"github.com/incognitochain/go-incognito-sdk-v2/crypto"
 	"github.com/incognitochain/go-incognito-sdk-v2/key"
+	"github.com/incognitochain/go-incognito-sdk-v2/privacy/conversion"
 	"github.com/incognitochain/go-incognito-sdk-v2/privacy/proof"
 	"github.com/incognitochain/go-incognito-sdk-v2/privacy/proof/range_proof"
 	"github.com/incognitochain/go-incognito-sdk-v2/privacy/utils"
@@ -18,53 +18,63 @@ import (
 	"github.com/incognitochain/go-incognito-sdk-v2/privacy/v2/bulletproofs"
 )
 
+type PrivacyError = utils.PrivacyError
+
+var ErrCodeMessage = utils.ErrCodeMessage
+
+// Public Constants
 const (
-	RingSize = utils.RingSize
+	CStringBurnAddress    = "burningaddress"
+	Ed25519KeySize        = crypto.Ed25519KeySize
+	CStringBulletProof    = crypto.CStringBulletProof
+	CommitmentRingSize    = utils.CommitmentRingSize
+	CommitmentRingSizeExp = utils.CommitmentRingSizeExp
+
+	PedersenSndIndex        = crypto.PedersenSndIndex
+	PedersenValueIndex      = crypto.PedersenValueIndex
+	PedersenShardIDIndex    = crypto.PedersenShardIDIndex
+	PedersenPrivateKeyIndex = crypto.PedersenPrivateKeyIndex
+	PedersenRandomnessIndex = crypto.PedersenRandomnessIndex
+
+	RingSize          = utils.RingSize
+	MaxTriesOta       = coin.MaxTriesOTA
+	TxRandomGroupSize = coin.TxRandomGroupSize
 )
 
-// PedCom represents the parameters for the Pedersen commitment scheme.
 var PedCom = crypto.PedCom
 
-// HybridCipherText represents a ciphertext in the hybrid encryption scheme.
+const (
+	MaxSizeInfoCoin = coin.MaxSizeInfoCoin // byte
+)
+
+// Export as package privacy for other packages easily use it
+
 type HybridCipherText = hybridencryption.HybridCipherText
 
-// SchnorrSignature represents a Schnorr signature.
-type SchnorrSignature = schnorr.SchnSignature
-
-// SchnorrPublicKey is a public key used in the Schnorr signature scheme.
+type SchnSignature = schnorr.SchnSignature
 type SchnorrPublicKey = schnorr.SchnorrPublicKey
-
-// SchnorrPrivateKey is a private key used in the Schnorr signature scheme.
 type SchnorrPrivateKey = schnorr.SchnorrPrivateKey
 
-// Proof represents a payment proof.
 type Proof = proof.Proof
-
-// ProofV1 represents a Proof of version 1 used in transactions v1.
 type ProofV1 = zkp.ProofV1
-
-// ProofV2 represents a Proof of version 2 used in transactions v2.
-type ProofV2 = v2.ProofV2
-
-// ProofForConversion represents a Proof used in conversion transactions. (e.g. to convert UTXOs v1 into UTXOs v2).
-type ProofForConversion = conversion.ConversionProof
-
-// PaymentWitness is a witness used to construct a ProofV1.
-type PaymentWitness = zkp.PaymentWitness
-
-// PaymentWitnessParam is used to initialize a PaymentWitness.
 type PaymentWitnessParam = zkp.PaymentWitnessParam
-
-// RangeProof represents a range proof.
+type PaymentWitness = zkp.PaymentWitness
+type ProofV2 = v2.ProofV2
+type ProofForConversion = conversion.ConversionProofVer1ToVer2
 type RangeProof = range_proof.RangeProof
-
-// RangeProofV1 represents a RangeProof of version 1 used in transactions v1.
 type RangeProofV1 = aggregatedrange.AggregatedRangeProof
-
-// RangeProofV2 represents a RangeProof of version 2 used in transactions v2.
 type RangeProofV2 = bulletproofs.RangeProof
 
-// ArrayScalarToBytes parses a slice of scalars into a flatten slice of bytes.
+func NewProofWithVersion(version int8) Proof {
+	var result Proof
+	if version == 1 {
+		result = &zkp.ProofV1{}
+	} else {
+		result = &v2.ProofV2{}
+	}
+	return result
+}
+
 func ArrayScalarToBytes(arr *[]*crypto.Scalar) ([]byte, error) {
 	scalarArr := *arr
 
@@ -81,8 +91,24 @@ func ArrayScalarToBytes(arr *[]*crypto.Scalar) ([]byte, error) {
 	return b, nil
 }
 
-// ProveV2 returns a ProofV2 based on the given input coins, output coins, shared secrets, etc.
-// It is usually used in constructing a transaction of version 2.
+func ArrayScalarFromBytes(b []byte) (*[]*crypto.Scalar, error) {
+	if len(b) == 0 {
+		return nil, errors.New("ArrayScalarFromBytes error: length of byte is 0")
+	}
+	n := int(b[0])
+	if n*Ed25519KeySize+1 != len(b) {
+		return nil, errors.New("ArrayScalarFromBytes error: length of byte is not correct")
+	}
+	scalarArr := make([]*crypto.Scalar, n)
+	offset := 1
+	for i := 0; i < n; i += 1 {
+		curByte := b[offset : offset+Ed25519KeySize]
+		scalarArr[i] = new(crypto.Scalar).FromBytesS(curByte)
+		offset += Ed25519KeySize
+	}
+	return &scalarArr, nil
+}
+
 func ProveV2(inputCoins []coin.PlainCoin, outputCoins []*coin.CoinV2, sharedSecrets []*crypto.Point, hasPrivacy bool, paymentInfo []*key.PaymentInfo) (*ProofV2, error) {
 	return v2.Prove(inputCoins, outputCoins, sharedSecrets, hasPrivacy, paymentInfo)
 }

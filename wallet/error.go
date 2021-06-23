@@ -55,21 +55,22 @@ var ErrCodeMessage = map[int]struct {
 	InvalidSeserializedKey: {-1016, "Serialized key is invalid"},
 }
 
-// Error represents a wallet error.
-type Error struct {
+type WalletError struct {
 	code    int
 	message string
 	err     error
 }
 
-// Error returns the error message.
-func (e Error) Error() string {
+func (e WalletError) Error() string {
 	return fmt.Sprintf("%+v: %+v", e.code, e.message)
 }
 
-// NewError creates a new wallet-wrapped error given a key and an error.
-func NewError(key int, err error) *Error {
-	return &Error{
+func (e WalletError) GetCode() int {
+	return e.code
+}
+
+func NewWalletError(key int, err error) *WalletError {
+	return &WalletError{
 		err:     errors.Wrap(err, ErrCodeMessage[key].message),
 		code:    ErrCodeMessage[key].code,
 		message: ErrCodeMessage[key].message,

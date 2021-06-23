@@ -13,18 +13,11 @@ import (
 	"github.com/pkg/errors"
 )
 
-// CommitteePublicKey consists of public keys of a user used in the consensus protocol.
-// A CommitteePublicKey has
-//	- IncPubKey: the public key of the user.
-//	- MiningPubKey: a list of keys used in the consensus protocol.
-//		+ BLS: used to sign blocks, create votes inside the Incognito network.
-//		+ ECDSA: used to sign blocks for interacting with outside blockchain networks.
 type CommitteePublicKey struct {
 	IncPubKey    PublicKey
 	MiningPubKey map[string][]byte
 }
 
-// IsEqualMiningPubKey checks if a CommitteePublicKey is equal to another CommitteePublicKey w.r.t the given consensus name.
 func (pubKey *CommitteePublicKey) IsEqualMiningPubKey(consensusName string, k *CommitteePublicKey) bool {
 	u, _ := pubKey.GetMiningKey(consensusName)
 	b, _ := k.GetMiningKey(consensusName)
@@ -38,7 +31,6 @@ func NewCommitteePublicKey() *CommitteePublicKey {
 	}
 }
 
-// CheckSanityData checks sanity of a CommitteePublicKey.
 func (pubKey *CommitteePublicKey) CheckSanityData() bool {
 	if (len(pubKey.IncPubKey) != common.PublicKeySize) ||
 		(len(pubKey.MiningPubKey[common.BlsConsensus]) != common.BLSPublicKeySize) ||
@@ -48,20 +40,18 @@ func (pubKey *CommitteePublicKey) CheckSanityData() bool {
 	return true
 }
 
-// FromString sets a CommitteePublicKey from a string.
 func (pubKey *CommitteePublicKey) FromString(keyString string) error {
 	keyBytes, ver, err := base58.Base58Check{}.Decode(keyString)
 	if (ver != common.ZeroByte) || (err != nil) {
-		return NewError(B58DecodePubKeyErr, errors.New(ErrCodeMessage[B58DecodePubKeyErr].Message))
+		return NewCacheError(B58DecodePubKeyErr, errors.New(ErrCodeMessage[B58DecodePubKeyErr].Message))
 	}
 	err = json.Unmarshal(keyBytes, pubKey)
 	if err != nil {
-		return NewError(JSONError, errors.New(ErrCodeMessage[JSONError].Message))
+		return NewCacheError(JSONError, errors.New(ErrCodeMessage[JSONError].Message))
 	}
 	return nil
 }
 
-// NewCommitteeKeyFromSeed creates a new NewCommitteeKeyFromSeed given a seed and a public key.
 func NewCommitteeKeyFromSeed(seed, incPubKey []byte) (CommitteePublicKey, error) {
 	CommitteePublicKey := new(CommitteePublicKey)
 	CommitteePublicKey.IncPubKey = incPubKey
@@ -75,16 +65,14 @@ func NewCommitteeKeyFromSeed(seed, incPubKey []byte) (CommitteePublicKey, error)
 	return *CommitteePublicKey, nil
 }
 
-// FromBytes sets raw-data to a CommitteePublicKey.
 func (pubKey *CommitteePublicKey) FromBytes(keyBytes []byte) error {
 	err := json.Unmarshal(keyBytes, pubKey)
 	if err != nil {
-		return NewError(JSONError, err)
+		return NewCacheError(JSONError, err)
 	}
 	return nil
 }
 
-// RawBytes returns the raw-byte data of a CommitteePublicKey.
 func (pubKey *CommitteePublicKey) RawBytes() ([]byte, error) {
 	keys := make([]string, 0, len(pubKey.MiningPubKey))
 	for k := range pubKey.MiningPubKey {
@@ -98,21 +86,18 @@ func (pubKey *CommitteePublicKey) RawBytes() ([]byte, error) {
 	return res, nil
 }
 
-// Bytes returns the JSON-marshalled data of a CommitteePublicKey.
 func (pubKey *CommitteePublicKey) Bytes() ([]byte, error) {
 	res, err := json.Marshal(pubKey)
 	if err != nil {
-		return []byte{0}, NewError(JSONError, err)
+		return []byte{0}, NewCacheError(JSONError, err)
 	}
 	return res, nil
 }
 
-// GetNormalKey returns the public key of a CommitteePublicKey.
 func (pubKey *CommitteePublicKey) GetNormalKey() []byte {
 	return pubKey.IncPubKey
 }
 
-// GetMiningKey returns the mining key of a CommitteePublicKey given the consensus scheme.
 func (pubKey *CommitteePublicKey) GetMiningKey(schemeName string) ([]byte, error) {
 	allKey := map[string][]byte{}
 	var ok bool
@@ -131,11 +116,13 @@ func (pubKey *CommitteePublicKey) GetMiningKey(schemeName string) ([]byte, error
 	return result, nil
 }
 
-// GetMiningKeyBase58 returns the base58-encoded mining key of a CommitteePublicKey given the consensus scheme.
+var GetMiningKeyBase58Cache, _ = lru.New(2000)
+var ToBase58Cache, _ = lru.New(2000)
+
 func (pubKey *CommitteePublicKey) GetMiningKeyBase58(schemeName string) string {
 	b, _ := pubKey.RawBytes()
 	key := schemeName + string(b)
-	value, exist := getMiningKeyBase58Cache.Get(key)
+	value, exist := GetMiningKeyBase58Cache.Get(key)
 	if exist {
 		return value.(string)
 	}
@@ -144,16 +131,14 @@ func (pubKey *CommitteePublicKey) GetMiningKeyBase58(schemeName string) string {
 		return ""
 	}
 	encodeData := base58.Base58Check{}.Encode(keyBytes, common.Base58Version)
-	getMiningKeyBase58Cache.Add(key, encodeData)
+	GetMiningKeyBase58Cache.Add(key, encodeData)
 	return encodeData
 }
 
-// GetIncKeyBase58 returns the base58-encoded public key of a CommitteePublicKey.
 func (pubKey *CommitteePublicKey) GetIncKeyBase58() string {
 	return base58.Base58Check{}.Encode(pubKey.IncPubKey, common.Base58Version)
 }
 
-// ToBase58 returns the base58-encoded representation of a CommitteePublicKey
 func (pubKey *CommitteePublicKey) ToBase58() (string, error) {
 	if pubKey == nil {
 		result, err := json.Marshal(pubKey)
@@ -165,7 +150,7 @@ func (pubKey *CommitteePublicKey) ToBase58() (string, error) {
 
 	b, _ := pubKey.RawBytes()
 	key := string(b)
-	value, exist := toBase58Cache.Get(key)
+	value, exist := ToBase58Cache.Get(key)
 	if exist {
 		return value.(string), nil
 	}
@@ -174,11 +159,10 @@ func (pubKey *CommitteePublicKey) ToBase58() (string, error) {
 		return "", err
 	}
 	encodeData := base58.Base58Check{}.Encode(result, common.Base58Version)
-	toBase58Cache.Add(key, encodeData)
+	ToBase58Cache.Add(key, encodeData)
 	return encodeData, nil
 }
 
-// FromBase58 recovers the CommitteePublicKey from its base58-representation.
 func (pubKey *CommitteePublicKey) FromBase58(keyString string) error {
 	keyBytes, ver, err := base58.Base58Check{}.Decode(keyString)
 	if (ver != common.ZeroByte) || (err != nil) {
@@ -187,13 +171,28 @@ func (pubKey *CommitteePublicKey) FromBase58(keyString string) error {
 	return json.Unmarshal(keyBytes, pubKey)
 }
 
-// CommitteeKeyString is the string alternative to a CommitteePublicKey.
 type CommitteeKeyString struct {
 	IncPubKey    string
 	MiningPubKey map[string]string
 }
 
-// IsEqual checks if a CommitteePublicKey is equal to the input CommitteePublicKey.
+func (pubKey *CommitteePublicKey) IsValid(target CommitteePublicKey) bool {
+	if bytes.Compare(pubKey.IncPubKey[:], target.IncPubKey[:]) == 0 {
+		return false
+	}
+	if pubKey.MiningPubKey == nil || target.MiningPubKey == nil {
+		return false
+	}
+	for key, value := range pubKey.MiningPubKey {
+		if targetValue, ok := target.MiningPubKey[key]; ok {
+			if bytes.Compare(targetValue, value) == 0 {
+				return false
+			}
+		}
+	}
+	return true
+}
+
 func (pubKey *CommitteePublicKey) IsEqual(target CommitteePublicKey) bool {
 	if bytes.Compare(pubKey.IncPubKey[:], target.IncPubKey[:]) != 0 {
 		return false
@@ -212,6 +211,3 @@ func (pubKey *CommitteePublicKey) IsEqual(target CommitteePublicKey) bool {
 	}
 	return true
 }
-
-var getMiningKeyBase58Cache, _ = lru.New(2000)
-var toBase58Cache, _ = lru.New(2000)
