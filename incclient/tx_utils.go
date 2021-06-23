@@ -357,6 +357,7 @@ func (client *IncClient) initParams(privateKey string, tokenIDStr string, totalA
 	}
 }
 
+// GetTokenFee returns the token fee per kb.
 func (client *IncClient) GetTokenFee(shardID byte, tokenIDStr string) (uint64, error) {
 	if tokenIDStr == common.PRVIDStr {
 		return DefaultPRVFee, nil
