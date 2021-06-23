@@ -81,7 +81,7 @@ func (client *IncClient) GetListToken() (map[string]CustomToken, error) {
 
 // GetRawMemPool returns a list of transaction hashes currently in the pool.
 func (client *IncClient) GetRawMemPool() ([]string, error) {
-	responseInBytes, err := client.rpcServer.GetRawMempool()
+	responseInBytes, err := client.rpcServer.GetRawMemPool()
 	if err != nil {
 		return nil, err
 	}
