@@ -173,7 +173,7 @@ func (w *KeyWallet) Serialize(keyType byte, isNewCheckSum bool) ([]byte, error) 
 		keyBytes = append(keyBytes, w.KeySet.OTAKey.GetOTASecretKey().ToBytesS()[:]...)
 		buffer.Write(keyBytes)
 	} else {
-		return []byte{}, NewWalletError(InvalidKeyTypeErr, nil)
+		return []byte{}, NewError(InvalidKeyTypeErr, nil)
 	}
 
 	checkSum := base58.ChecksumFirst4Bytes(buffer.Bytes(), isNewCheckSum)
@@ -183,8 +183,8 @@ func (w *KeyWallet) Serialize(keyType byte, isNewCheckSum bool) ([]byte, error) 
 }
 
 // Base58CheckSerialize encodes the key corresponding to keyType in KeySet
-// in the standard Incognito base58 encoding
-// It returns the encoding string of the key
+// in the standard Incognito base58 encoding.
+// It returns the encoding string of the key.
 func (w *KeyWallet) Base58CheckSerialize(keyType byte) string {
 	isNewEncoding := common.AddressVersion == 1
 	serializedKey, err := w.Serialize(keyType, isNewEncoding) //Must use the new checksum from now on
@@ -198,18 +198,18 @@ func (w *KeyWallet) Base58CheckSerialize(keyType byte) string {
 	return base58.Base58Check{}.Encode(serializedKey, 0) //Must use the new encoding algorithm from now on
 }
 
-// Deserialize receives a byte array and deserializes into KeySet
-// because data contains keyType and serialized data of corresponding key
-// it returns KeySet just contain corresponding key
+// deserialize receives a byte array and deserializes into KeySet
+// because data contains keyType and serialized data of corresponding key.
+// it returns KeySet just contain corresponding key.
 func deserialize(data []byte) (*KeyWallet, error) {
 	var k = &KeyWallet{}
 	if len(data) < 2 {
-		return nil, NewWalletError(InvalidKeyTypeErr, nil)
+		return nil, NewError(InvalidKeyTypeErr, nil)
 	}
 	keyType := data[0]
 	if keyType == PrivateKeyType {
 		if len(data) != privateKeySerializedBytesLen {
-			return nil, NewWalletError(InvalidSeserializedKey, nil)
+			return nil, NewError(InvalidSeserializedKey, nil)
 		}
 
 		k.Depth = data[1]
@@ -225,7 +225,7 @@ func deserialize(data []byte) (*KeyWallet, error) {
 	} else if keyType == PaymentAddressType {
 		if !bytes.Equal(burnAddress1BytesDecode, data) {
 			if len(data) != paymentAddrSerializedBytesLen && len(data) != paymentAddrSerializedBytesLen+1+crypto.Ed25519KeySize {
-				return nil, NewWalletError(InvalidSeserializedKey, fmt.Errorf("length ota public k not valid: %v", len(data)))
+				return nil, NewError(InvalidSeserializedKey, fmt.Errorf("length ota public k not valid: %v", len(data)))
 			}
 		}
 		apkKeyLength := int(data[1])
@@ -239,19 +239,19 @@ func deserialize(data []byte) (*KeyWallet, error) {
 		if len(data) > paymentAddrSerializedBytesLen {
 			publicOTALength := int(data[apkKeyLength+publicViewKeyLength+3])
 			if publicOTALength != crypto.Ed25519KeySize {
-				return nil, NewWalletError(InvalidSeserializedKey, fmt.Errorf("length ota public k not valid: %v", publicOTALength))
+				return nil, NewError(InvalidSeserializedKey, fmt.Errorf("length ota public k not valid: %v", publicOTALength))
 			}
 			k.KeySet.PaymentAddress.OTAPublic = append([]byte{}, data[apkKeyLength+publicViewKeyLength+4:apkKeyLength+publicViewKeyLength+publicOTALength+4]...)
 		}
 
 	} else if keyType == ReadonlyKeyType {
 		if len(data) != readOnlyKeySerializedBytesLen {
-			return nil, NewWalletError(InvalidSeserializedKey, nil)
+			return nil, NewError(InvalidSeserializedKey, nil)
 		}
 
 		apkKeyLength := int(data[1])
 		if len(data) < apkKeyLength+3 {
-			return nil, NewWalletError(InvalidKeyTypeErr, nil)
+			return nil, NewError(InvalidKeyTypeErr, nil)
 		}
 
 		publicViewKeyLength := int(data[apkKeyLength+2])
@@ -261,19 +261,19 @@ func deserialize(data []byte) (*KeyWallet, error) {
 		copy(k.KeySet.ReadonlyKey.Rk[:], data[3+apkKeyLength:3+apkKeyLength+publicViewKeyLength])
 	} else if keyType == OTAKeyType {
 		if len(data) != otaKeySerializedBytesLen {
-			return nil, NewWalletError(InvalidSeserializedKey, nil)
+			return nil, NewError(InvalidSeserializedKey, nil)
 		}
 
 		pkKeyLength := int(data[1])
 		if len(data) < pkKeyLength+3 {
-			return nil, NewWalletError(InvalidKeyTypeErr, nil)
+			return nil, NewError(InvalidKeyTypeErr, nil)
 		}
 		skKeyLength := int(data[pkKeyLength+2])
 
 		k.KeySet.OTAKey.SetPublicSpend(data[2 : 2+pkKeyLength])
 		k.KeySet.OTAKey.SetOTASecretKey(data[3+pkKeyLength : 3+pkKeyLength+skKeyLength])
 	} else {
-		return nil, NewWalletError(InvalidKeyTypeErr, fmt.Errorf("cannot detect k type"))
+		return nil, NewError(InvalidKeyTypeErr, fmt.Errorf("cannot detect k type"))
 	}
 
 	// validate checksum: allowing both new- and old-encoded strings
@@ -283,7 +283,7 @@ func deserialize(data []byte) (*KeyWallet, error) {
 	if !bytes.Equal(cs1, cs2) { // try to compare old checksum
 		oldCS1 := base58.ChecksumFirst4Bytes(data[0:len(data)-4], false)
 		if !bytes.Equal(oldCS1, cs2) {
-			return nil, NewWalletError(InvalidChecksumErr, nil)
+			return nil, NewError(InvalidChecksumErr, nil)
 		}
 	}
 
@@ -291,8 +291,8 @@ func deserialize(data []byte) (*KeyWallet, error) {
 }
 
 // Base58CheckDeserialize deserializes the keySet of a KeyWallet encoded in base58
-// because data contains keyType and serialized data of corresponding key
-// it returns KeySet just contain corresponding key
+// because data contains keyType and serialized data of corresponding key.
+// It returns KeySet just contain corresponding key.
 func Base58CheckDeserialize(data string) (*KeyWallet, error) {
 	b, _, err := base58.Base58Check{}.Decode(data)
 	if err != nil {
