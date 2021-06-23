@@ -75,6 +75,7 @@ const (
 	OnetimeAddressAlreadyExists
 )
 
+// ErrCodeMessage represents all error messages of the transaction package.
 var ErrCodeMessage = map[int]struct {
 	Code    int
 	Message string
@@ -151,16 +152,19 @@ var ErrCodeMessage = map[int]struct {
 	InvalidInputCoinVersionErr:       {-6001, "Input coins version is invalid"},
 }
 
+// TransactionError represents a transaction error.
 type TransactionError struct {
 	Code    int
 	Message string
 	err     error
 }
 
+// Error returns the true error message of a TransactionError.
 func (e TransactionError) Error() string {
 	return fmt.Sprintf("%+v: %+v %+v", e.Code, e.Message, e.err)
 }
 
+// NewTransactionErr creates a new TransactionError.
 func NewTransactionErr(key int, err error, params ...interface{}) *TransactionError {
 	e := &TransactionError{
 		err:  errors.Wrap(err, common.EmptyString),

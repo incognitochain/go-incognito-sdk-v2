@@ -7,6 +7,7 @@ import (
 	"github.com/incognitochain/go-incognito-sdk-v2/privacy"
 )
 
+// ParseProof parses a payment proof from an interface data, input version and a transaction type.
 func ParseProof(p interface{}, ver int8, txType string) (privacy.Proof, error) {
 	// If transaction is nonPrivacyNonInput then we do not have proof, so parse it as nil
 	if p == nil {
