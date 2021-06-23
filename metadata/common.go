@@ -14,6 +14,8 @@ func calculateSize(meta Metadata) uint64 {
 	return uint64(len(metaBytes))
 }
 
+// ParseMetadata parses raw-byte data into a proper Metadata.
+// The input raw data is expected to be the JSON-marshalled data of a Metadata. Otherwise, this function will fail.
 func ParseMetadata(metaInBytes []byte) (Metadata, error) {
 	if len(metaInBytes) == 0 {
 		return nil, nil

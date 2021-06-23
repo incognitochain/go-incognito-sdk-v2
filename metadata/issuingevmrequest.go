@@ -2,10 +2,11 @@ package metadata
 
 import (
 	rCommon "github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/incognitochain/go-incognito-sdk-v2/common"
 )
 
+// IssuingEVMRequest is a request to mint an amount of an ETH/BSC token in the Incognito network
+// after the same amount has been locked in the smart contracts.
 type IssuingEVMRequest struct {
 	BlockHash  rCommon.Hash
 	TxIndex    uint
@@ -14,22 +15,7 @@ type IssuingEVMRequest struct {
 	MetadataBase
 }
 
-type IssuingEVMReqAction struct {
-	Meta       IssuingEVMRequest `json:"meta"`
-	TxReqID    common.Hash       `json:"txReqId"`
-	ETHReceipt *types.Receipt    `json:"ethReceipt"`
-}
-
-type IssuingETHAcceptedInst struct {
-	ShardID         byte        `json:"shardId"`
-	IssuingAmount   uint64      `json:"issuingAmount"`
-	ReceiverAddrStr string      `json:"receiverAddrStr"`
-	IncTokenID      common.Hash `json:"incTokenId"`
-	TxReqID         common.Hash `json:"txReqId"`
-	UniqETHTx       []byte      `json:"uniqETHTx"`
-	ExternalTokenID []byte      `json:"externalTokenId"`
-}
-
+// NewIssuingEVMRequest creates a new IssuingEVMRequest.
 func NewIssuingEVMRequest(
 	blockHash rCommon.Hash,
 	txIndex uint,
@@ -50,9 +36,9 @@ func NewIssuingEVMRequest(
 	return issuingETHReq, nil
 }
 
+// Hash overrides MetadataBase.Hash().
 func (iReq IssuingEVMRequest) Hash() *common.Hash {
 	record := iReq.BlockHash.String()
-	// TODO: @hung change to record += fmt.Sprint(iReq.TxIndex)
 	record += string(iReq.TxIndex)
 	proofs := iReq.Proofs
 	for _, proofStr := range proofs {
@@ -66,6 +52,7 @@ func (iReq IssuingEVMRequest) Hash() *common.Hash {
 	return &hash
 }
 
+// CalculateSize overrides MetadataBase.CalculateSize().
 func (iReq *IssuingEVMRequest) CalculateSize() uint64 {
 	return calculateSize(iReq)
 }
