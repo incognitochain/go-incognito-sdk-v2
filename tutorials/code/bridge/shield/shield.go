@@ -23,7 +23,7 @@ func main() {
 	}
 	fmt.Printf("Deposited amount: %v\n", depositAmount)
 
-	txHashStr, err := ic.CreateAndSendIssuingETHRequestTransaction(privateKey, tokenIDStr, *ethProof)
+	txHashStr, err := ic.CreateAndSendIssuingEVMRequestTransaction(privateKey, tokenIDStr, *ethProof)
 	if err != nil {
 		log.Fatal(err)
 	}
