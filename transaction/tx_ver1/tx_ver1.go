@@ -168,9 +168,9 @@ func (tx *Tx) initPaymentWitnessParam(params *tx_generic.TxPrivacyInitParams) (*
 
 	if params.HasPrivacy && len(params.InputCoins) > 0{
 		//Get list of decoy indices.
-		tmp, ok := params.Kvargs[utils.CommitmentIndices]
+		tmp, ok := params.KvArgs[utils.CommitmentIndices]
 		if !ok {
-			return nil, fmt.Errorf("decoy commitment indices not found: %v", params.Kvargs)
+			return nil, fmt.Errorf("decoy commitment indices not found: %v", params.KvArgs)
 		}
 
 		commitmentIndices, ok = tmp.([]uint64)
@@ -179,9 +179,9 @@ func (tx *Tx) initPaymentWitnessParam(params *tx_generic.TxPrivacyInitParams) (*
 		}
 
 		//Get list of decoy commitments.
-		tmp, ok = params.Kvargs[utils.Commitments]
+		tmp, ok = params.KvArgs[utils.Commitments]
 		if !ok {
-			return nil,  fmt.Errorf("decoy commitment list not found: %v", params.Kvargs)
+			return nil,  fmt.Errorf("decoy commitment list not found: %v", params.KvArgs)
 		}
 
 		commitments, ok = tmp.([]*crypto.Point)
@@ -190,9 +190,9 @@ func (tx *Tx) initPaymentWitnessParam(params *tx_generic.TxPrivacyInitParams) (*
 		}
 
 		//Get list of inputcoin indices
-		tmp, ok = params.Kvargs[utils.MyIndices]
+		tmp, ok = params.KvArgs[utils.MyIndices]
 		if !ok {
-			return nil,  fmt.Errorf("inputCoin commitment indices not found: %v", params.Kvargs)
+			return nil,  fmt.Errorf("inputCoin commitment indices not found: %v", params.KvArgs)
 		}
 
 		inputCoinCommitmentIndices, ok = tmp.([]uint64)

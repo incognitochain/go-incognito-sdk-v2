@@ -32,7 +32,7 @@ func (txToken *TxToken) Init(paramsInterface interface{}) error {
 		nil,
 		params.MetaData,
 		params.Info,
-		params.Kvargs)
+		params.KvArgs)
 	txToken.Tx = new(Tx)
 	if err := txToken.Tx.Init(txPrivacyParams); err != nil {
 		return err
@@ -135,7 +135,7 @@ func (txToken *TxToken) Init(paramsInterface interface{}) error {
 			propertyID,
 			nil,
 			nil,
-			params.TokenParams.Kvargs))
+			params.TokenParams.KvArgs))
 		if err != nil {
 			fmt.Printf("Init PRV fee transaction returns an error: %v\n", err)
 			return err

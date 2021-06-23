@@ -134,7 +134,7 @@ func createPrivKeyMlsagCA(inputCoins []coin.PlainCoin, outputCoins []*coin.CoinV
 }
 
 func generateMlsagRingWithIndexesCA(inputCoins []coin.PlainCoin, outputCoins []*coin.CoinV2, params *tx_generic.TxPrivacyInitParams, pi int, shardID byte, ringSize int) (*mlsag.Ring, [][]*big.Int, []*crypto.Point, error) {
-	cmtIndices, myIndices, commitments, publicKeys, assetTags, err := ParseParamsForRing(params.Kvargs, len(inputCoins), ringSize)
+	cmtIndices, myIndices, commitments, publicKeys, assetTags, err := ParseParamsForRing(params.KvArgs, len(inputCoins), ringSize)
 	if err != nil {
 		return nil, nil, nil, utils.NewTransactionErr(utils.UnexpectedError, fmt.Errorf("ParseParamsForRing error: %v", err))
 	}

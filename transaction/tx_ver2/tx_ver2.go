@@ -352,10 +352,10 @@ func ParseParamsForRing(kvArgs map[string]interface{}, lenInput, ringSize int) (
 	return
 }
 
-//Generate an MLSAG ring with input decoy commitments, public keys, and indices (params.Kvargs).
+//Generate an MLSAG ring with input decoy commitments, public keys, and indices (params.KvArgs).
 func generateMLSAGRingWithIndexes(inputCoins []coin.PlainCoin, outputCoins []*coin.CoinV2, params *tx_generic.TxPrivacyInitParams, pi int, ringSize int) (*mlsag.Ring, [][]*big.Int, *crypto.Point, error) {
 	lenInput := len(inputCoins)
-	kvArgs := params.Kvargs
+	kvArgs := params.KvArgs
 
 	//Retrieve decoys' info from kvArgs
 	cmtIndices, myIndices, commitments, publicKeys, _, err := ParseParamsForRing(kvArgs, lenInput, ringSize)

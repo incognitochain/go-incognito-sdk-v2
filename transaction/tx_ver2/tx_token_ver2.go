@@ -211,7 +211,7 @@ func (txToken *TxToken) initToken(txNormal *Tx, params *tx_generic.TxTokenParams
 				propertyID,
 				nil,
 				nil,
-				params.TokenParams.Kvargs)
+				params.TokenParams.KvArgs)
 			isBurning, err := txNormal.proveToken(txParams)
 			if err != nil {
 				return utils.NewTransactionErr(utils.PrivacyTokenInitTokenDataError, err)
@@ -309,7 +309,7 @@ func (txToken *TxToken) Init(paramsInterface interface{}) error {
 		nil,
 		params.MetaData,
 		params.Info,
-		params.Kvargs)
+		params.KvArgs)
 	if err := tx_generic.ValidateTxParams(txPrivacyParams); err != nil {
 		return err
 	}
@@ -427,7 +427,6 @@ func (txToken TxToken) GetTxActualSize() uint64 {
 	return uint64(math.Ceil(float64(len(jsb)) / 1024))
 }
 
-//-- OVERRIDE--
 func (tx TxToken) GetVersion() int8 { return tx.Tx.Version }
 
 func (tx *TxToken) SetVersion(version int8) { tx.Tx.Version = version }
