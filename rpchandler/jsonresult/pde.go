@@ -6,7 +6,6 @@ import (
 	"sort"
 )
 
-// key prefix
 var (
 	// PDE
 	WaitingPDEContributionPrefix = []byte("waitingpdecontribution-")
@@ -20,9 +19,17 @@ var (
 	PDEFeeWithdrawalStatusPrefix = []byte("pdefeewithdrawalstatus-")
 )
 
+// PoolInfo represents a pDEX pool of two tokenIDs.
+type PoolInfo struct {
+	Token1IDStr     string
+	Token1PoolValue uint64
+	Token2IDStr     string
+	Token2PoolValue uint64
+}
+
 type CurrentPDEState struct {
 	WaitingPDEContributions map[string]*PDEContribution `json:"WaitingPDEContributions"`
-	PDEPoolPairs            map[string]*common.PoolInfo  `json:"PDEPoolPairs"`
+	PDEPoolPairs            map[string]*PoolInfo        `json:"PDEPoolPairs"`
 	PDEShares               map[string]uint64           `json:"PDEShares"`
 	PDETradingFees          map[string]uint64           `json:"PDETradingFees"`
 	BeaconTimeStamp         int64                       `json:"BeaconTimeStamp"`

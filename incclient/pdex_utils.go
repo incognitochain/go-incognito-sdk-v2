@@ -12,14 +12,6 @@ import (
 	"github.com/incognitochain/go-incognito-sdk-v2/wallet"
 )
 
-// PoolInfo represents a pDEX pool of two tokenIDs.
-type PoolInfo struct {
-	Token1IDStr     string
-	Token1PoolValue uint64
-	Token2IDStr     string
-	Token2PoolValue uint64
-}
-
 // Share represents a pDEX contribution share.
 type Share struct {
 	TokenID1Str string
@@ -54,7 +46,7 @@ func (client *IncClient) GetPDEState(beaconHeight uint64) (*jsonresult.CurrentPD
 
 // GetAllPDEPoolPairs retrieves all pools in pDEX at the provided beacon height.
 // If the beacon height is set to 0, it returns the latest pDEX pool pairs.
-func (client *IncClient) GetAllPDEPoolPairs(beaconHeight uint64) (map[string]*PoolInfo, error) {
+func (client *IncClient) GetAllPDEPoolPairs(beaconHeight uint64) (map[string]*jsonresult.PoolInfo, error) {
 	pdeState, err := client.GetPDEState(beaconHeight)
 	if err != nil {
 		return nil, err
@@ -65,7 +57,7 @@ func (client *IncClient) GetAllPDEPoolPairs(beaconHeight uint64) (map[string]*Po
 
 // GetPDEPoolPair retrieves the pDEX pool information for pair tokenID1-tokenID2 at the provided beacon height.
 // If the beacon height is set to 0, it returns the latest information.
-func (client *IncClient) GetPDEPoolPair(beaconHeight uint64, tokenID1, tokenID2 string) (*PoolInfo, error) {
+func (client *IncClient) GetPDEPoolPair(beaconHeight uint64, tokenID1, tokenID2 string) (*jsonresult.PoolInfo, error) {
 	if beaconHeight == 0 {
 		bestBlocks, err := client.GetBestBlock()
 		if err != nil {

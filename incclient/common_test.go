@@ -3,6 +3,7 @@ package incclient
 import (
 	"fmt"
 	"github.com/incognitochain/go-incognito-sdk-v2/common"
+	"github.com/incognitochain/go-incognito-sdk-v2/rpchandler/jsonresult"
 	"math/big"
 	"strings"
 	"time"
@@ -26,7 +27,7 @@ func randChars(n int) string {
 	return res
 }
 
-func calculatePoolAmount(pool *common.PoolInfo, totalShare uint64, shareAmount uint64) (uint64, uint64) {
+func calculatePoolAmount(pool *jsonresult.PoolInfo, totalShare uint64, shareAmount uint64) (uint64, uint64) {
 	shareBig := new(big.Int).SetUint64(shareAmount)
 	totalShareBig := new(big.Int).SetUint64(totalShare)
 

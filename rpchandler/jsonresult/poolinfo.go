@@ -1,6 +1,6 @@
 package jsonresult
 
-type PoolInfo struct {
+type NodePoolInfo struct {
 	Info map[int][]BlockInfo `json:"Info"`
 }
 
