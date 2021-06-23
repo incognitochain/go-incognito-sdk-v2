@@ -4,7 +4,7 @@ import (
 	"crypto/subtle"
 	"fmt"
 
-	C25519 "github.com/incognitochain/go-incognito-sdk-v2/crypto/curve25519"
+	C25519 "github.com/incognitochain/incognito-chain/privacy/curve25519"
 )
 
 // Point represents an elliptic curve point. It only needs 32 bytes to represent a point.

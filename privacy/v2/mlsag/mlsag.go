@@ -4,10 +4,7 @@ import (
 	"fmt"
 	"github.com/incognitochain/go-incognito-sdk-v2/common"
 	"github.com/incognitochain/go-incognito-sdk-v2/crypto"
-	C25519 "github.com/incognitochain/go-incognito-sdk-v2/crypto/curve25519"
 )
-
-var curveOrder = new(crypto.Scalar).SetKeyUnsafe(&C25519.L)
 
 // Ring represents a ring of public keys used in the MLSAG signature scheme.
 type Ring struct {

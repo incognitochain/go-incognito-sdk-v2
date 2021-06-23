@@ -3,7 +3,7 @@ package utils
 import (
 	"github.com/incognitochain/go-incognito-sdk-v2/common"
 	"github.com/incognitochain/go-incognito-sdk-v2/crypto"
-	"github.com/incognitochain/go-incognito-sdk-v2/crypto/curve25519"
+	"github.com/incognitochain/incognito-chain/privacy/curve25519"
 	"math/big"
 )
 
