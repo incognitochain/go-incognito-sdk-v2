@@ -3,7 +3,6 @@ package tx_ver1
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"github.com/incognitochain/go-incognito-sdk-v2/coin"
 	"github.com/incognitochain/go-incognito-sdk-v2/common"
@@ -15,57 +14,75 @@ import (
 	"math/big"
 )
 
+// Tx represents a PRV transaction of version 1. It is a embedded TxBase.
 type Tx struct {
 	tx_generic.TxBase
 }
 
-//GETTER FUNCTIONS
+// GetReceiverData returns a list of output coins (not including sent-back coins) of a Tx.
 func (tx *Tx) GetReceiverData() ([]coin.Coin, error) {
-	pubkeys := make([]*crypto.Point, 0)
-	amounts := []uint64{}
+	pubKeys := make([]*crypto.Point, 0)
+	amounts := make([]uint64, 0)
 
 	if tx.Proof != nil && len(tx.Proof.GetOutputCoins()) > 0 {
-		for _, coin := range tx.Proof.GetOutputCoins() {
-			coinPubKey := coin.GetPublicKey()
+		for _, c := range tx.Proof.GetOutputCoins() {
+			coinPubKey := c.GetPublicKey()
 			added := false
-			for i, key := range pubkeys {
-				if bytes.Equal(coinPubKey.ToBytesS(), key.ToBytesS()) {
+			for i, k := range pubKeys {
+				if bytes.Equal(coinPubKey.ToBytesS(), k.ToBytesS()) {
 					added = true
-					amounts[i] += coin.GetValue()
+					amounts[i] += c.GetValue()
 					break
 				}
 			}
 			if !added {
-				pubkeys = append(pubkeys, coinPubKey)
-				amounts = append(amounts, coin.GetValue())
+				pubKeys = append(pubKeys, coinPubKey)
+				amounts = append(amounts, c.GetValue())
 			}
 		}
 	}
 	coins := make([]coin.Coin, 0)
-	for i := 0; i < len(pubkeys); i++ {
-		coin := new(coin.CoinV1).Init()
-		coin.CoinDetails.SetPublicKey(pubkeys[i])
-		coin.CoinDetails.SetValue(amounts[i])
-		coins = append(coins, coin)
+	for i := 0; i < len(pubKeys); i++ {
+		c := new(coin.CoinV1).Init()
+		c.CoinDetails.SetPublicKey(pubKeys[i])
+		c.CoinDetails.SetValue(amounts[i])
+		coins = append(coins, c)
 	}
 	return coins, nil
 }
 
-func (tx Tx) GetTxMintData() (bool, coin.Coin, *common.Hash, error) { return tx_generic.GetTxMintData(&tx, &common.PRVCoinID) }
+// GetTxMintData returns the minting data of a Tx.
+func (tx Tx) GetTxMintData() (bool, coin.Coin, *common.Hash, error) {
+	return tx_generic.GetTxMintData(&tx, &common.PRVCoinID)
+}
 
-func (tx Tx) GetTxBurnData() (bool, coin.Coin, *common.Hash, error) { return tx_generic.GetTxBurnData(&tx) }
+// GetTxBurnData returns the burning data (token only) of a Tx.
+func (tx Tx) GetTxBurnData() (bool, coin.Coin, *common.Hash, error) {
+	return tx_generic.GetTxBurnData(&tx)
+}
 
+// GetTxFullBurnData is the same as GetTxBurnData.
 func (tx Tx) GetTxFullBurnData() (bool, coin.Coin, coin.Coin, *common.Hash, error) {
 	isBurn, burnedCoin, burnedTokenID, err := tx.GetTxBurnData()
 	return isBurn, burnedCoin, nil, burnedTokenID, err
 }
-//END GETTER FUNCTIONS
 
-//INIT FUNCTIONS
-func (tx *Tx) Init(paramsInterface interface{}) error {
-	params, ok := paramsInterface.(*tx_generic.TxPrivacyInitParams)
+// CheckAuthorizedSender checks if the sender of a Tx is authorized w.r.t to a public key.
+func (tx *Tx) CheckAuthorizedSender(publicKey []byte) (bool, error) {
+	sigPubKey := tx.GetSigPubKey()
+	if bytes.Equal(sigPubKey, publicKey) {
+		return true, nil
+	} else {
+		return false, nil
+	}
+}
+
+// Init creates a PRV transaction version 1 from the given parameter.
+// The input parameter should be a *tx_generic.TxPrivacyInitParams.
+func (tx *Tx) Init(txParams interface{}) error {
+	params, ok := txParams.(*tx_generic.TxPrivacyInitParams)
 	if !ok {
-		return errors.New("params of tx Init is not TxPrivacyInitParam")
+		return fmt.Errorf("cannot parse the input as a TxPrivacyInitParams")
 	}
 
 	if err := tx_generic.ValidateTxParams(params); err != nil {
@@ -78,9 +95,6 @@ func (tx *Tx) Init(paramsInterface interface{}) error {
 	}
 	tx.SetVersion(utils.TxVersion1Number)
 
-	// Check if this tx is nonPrivacyNonInput
-	// Case 1: tx ptoken transfer with ptoken fee
-	// Case 2: tx Reward
 	if check, err := tx.IsNonPrivacyNonInput(params); check {
 		return err
 	}
@@ -89,6 +103,14 @@ func (tx *Tx) Init(paramsInterface interface{}) error {
 		return err
 	}
 	return nil
+}
+
+// Sign re-signs a Tx using the given private key.
+func (tx *Tx) Sign(sigPrivateKey []byte) error {
+	if sigPrivateKey != nil {
+		tx.SetPrivateKey(sigPrivateKey)
+	}
+	return tx.sign()
 }
 
 func (tx *Tx) prove(params *tx_generic.TxPrivacyInitParams) error {
@@ -103,12 +125,9 @@ func (tx *Tx) prove(params *tx_generic.TxPrivacyInitParams) error {
 func (tx *Tx) sign() error {
 	//Check input transaction
 	if tx.Sig != nil {
-		return errors.New("input transaction must be an unsigned one")
+		return fmt.Errorf("input transaction must be an unsigned one")
 	}
 
-	/****** using Schnorr signature *******/
-	// sign with sigPrivKey
-	// prepare private key for Schnorr
 	sk := new(crypto.Scalar).FromBytesS(tx.GetPrivateKey()[:common.BigIntSize])
 	r := new(crypto.Scalar).FromBytesS(tx.GetPrivateKey()[common.BigIntSize:])
 	sigKey := new(privacy.SchnorrPrivateKey)
@@ -129,44 +148,12 @@ func (tx *Tx) sign() error {
 	return nil
 }
 
-func (tx *Tx) Sign(sigPrivakey []byte) error {//For testing-purpose only, remove when deploy
-	if sigPrivakey != nil{
-		tx.SetPrivateKey(sigPrivakey)
-	}
-	return tx.sign()
-}
-//END INIT FUNCTIONS
-
-//HELPER FUNCTIONS
-func GenerateOutputCoinV1s(paymentInfo []*key.PaymentInfo) ([]*coin.CoinV1, error) {
-	outputCoins := make([]*coin.CoinV1, len(paymentInfo))
-	for i, pInfo := range paymentInfo {
-		outputCoins[i] = new(coin.CoinV1)
-		outputCoins[i].CoinDetails = new(coin.PlainCoinV1)
-		outputCoins[i].CoinDetails.SetValue(pInfo.Amount)
-		if len(pInfo.Message) > 0 {
-			if len(pInfo.Message) > coin.MaxSizeInfoCoin {
-				return nil, fmt.Errorf("length of message (%v) too large", len(pInfo.Message))
-			}
-		}
-		outputCoins[i].CoinDetails.SetInfo(pInfo.Message)
-
-		PK, err := new(crypto.Point).FromBytesS(pInfo.PaymentAddress.Pk)
-		if err != nil {
-			return nil, fmt.Errorf("can not decompress public key from %v. Error: %v.", pInfo.PaymentAddress, err)
-		}
-		outputCoins[i].CoinDetails.SetPublicKey(PK)
-		outputCoins[i].CoinDetails.SetSNDerivator(crypto.RandomScalar())
-	}
-	return outputCoins, nil
-}
-
 func (tx *Tx) initPaymentWitnessParam(params *tx_generic.TxPrivacyInitParams) (*privacy.PaymentWitnessParam, error) {
 	var commitmentIndices []uint64
 	var inputCoinCommitmentIndices []uint64
 	var commitments []*crypto.Point
 
-	if params.HasPrivacy && len(params.InputCoins) > 0{
+	if params.HasPrivacy && len(params.InputCoins) > 0 {
 		//Get list of decoy indices.
 		tmp, ok := params.KvArgs[utils.CommitmentIndices]
 		if !ok {
@@ -175,33 +162,33 @@ func (tx *Tx) initPaymentWitnessParam(params *tx_generic.TxPrivacyInitParams) (*
 
 		commitmentIndices, ok = tmp.([]uint64)
 		if !ok {
-			return nil,  fmt.Errorf("cannot parse commitment indices: %v", tmp)
+			return nil, fmt.Errorf("cannot parse commitment indices: %v", tmp)
 		}
 
 		//Get list of decoy commitments.
 		tmp, ok = params.KvArgs[utils.Commitments]
 		if !ok {
-			return nil,  fmt.Errorf("decoy commitment list not found: %v", params.KvArgs)
+			return nil, fmt.Errorf("decoy commitment list not found: %v", params.KvArgs)
 		}
 
 		commitments, ok = tmp.([]*crypto.Point)
 		if !ok {
-			return nil,   fmt.Errorf("cannot parse sender commitment indices: %v", tmp)
+			return nil, fmt.Errorf("cannot parse sender commitment indices: %v", tmp)
 		}
 
-		//Get list of inputcoin indices
+		//Get list of input coin indices
 		tmp, ok = params.KvArgs[utils.MyIndices]
 		if !ok {
-			return nil,  fmt.Errorf("inputCoin commitment indices not found: %v", params.KvArgs)
+			return nil, fmt.Errorf("inputCoin commitment indices not found: %v", params.KvArgs)
 		}
 
 		inputCoinCommitmentIndices, ok = tmp.([]uint64)
 		if !ok {
-			return nil,  fmt.Errorf("cannot parse inputCoin commitment indices: %v", tmp)
+			return nil, fmt.Errorf("cannot parse inputCoin commitment indices: %v", tmp)
 		}
 	}
 
-	outputCoins, err := GenerateOutputCoinV1s(params.PaymentInfo)
+	outputCoins, err := generateOutputCoinV1s(params.PaymentInfo)
 	if err != nil {
 		return nil, err
 	}
@@ -255,12 +242,25 @@ func (tx *Tx) proveAndSignCore(params *tx_generic.TxPrivacyInitParams, paymentWi
 	return nil
 }
 
-func (tx *Tx) CheckAuthorizedSender(publicKey []byte) (bool, error) {
-	sigPubKey := tx.GetSigPubKey()
-	if bytes.Equal(sigPubKey, publicKey) {
-		return true, nil
-	} else {
-		return false, nil
+func generateOutputCoinV1s(paymentInfo []*key.PaymentInfo) ([]*coin.CoinV1, error) {
+	outputCoins := make([]*coin.CoinV1, len(paymentInfo))
+	for i, pInfo := range paymentInfo {
+		outputCoins[i] = new(coin.CoinV1)
+		outputCoins[i].CoinDetails = new(coin.PlainCoinV1)
+		outputCoins[i].CoinDetails.SetValue(pInfo.Amount)
+		if len(pInfo.Message) > 0 {
+			if len(pInfo.Message) > coin.MaxSizeInfoCoin {
+				return nil, fmt.Errorf("length of message (%v) too large", len(pInfo.Message))
+			}
+		}
+		outputCoins[i].CoinDetails.SetInfo(pInfo.Message)
+
+		PK, err := new(crypto.Point).FromBytesS(pInfo.PaymentAddress.Pk)
+		if err != nil {
+			return nil, fmt.Errorf("can not decompress public key from %v: %v", pInfo.PaymentAddress, err)
+		}
+		outputCoins[i].CoinDetails.SetPublicKey(PK)
+		outputCoins[i].CoinDetails.SetSNDerivator(crypto.RandomScalar())
 	}
+	return outputCoins, nil
 }
-//END HELPER FUNCTIONS
