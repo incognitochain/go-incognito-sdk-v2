@@ -7,7 +7,7 @@ import (
 	"github.com/incognitochain/go-incognito-sdk-v2/crypto"
 	"github.com/incognitochain/go-incognito-sdk-v2/key"
 	"github.com/incognitochain/go-incognito-sdk-v2/privacy/utils"
-	"github.com/incognitochain/go-incognito-sdk-v2/privacy/v1/zkp/aggregatedrange"
+	"github.com/incognitochain/go-incognito-sdk-v2/privacy/v1/zkp/bulletproofs"
 	"github.com/incognitochain/go-incognito-sdk-v2/privacy/v1/zkp/oneoutofmany"
 	"github.com/incognitochain/go-incognito-sdk-v2/privacy/v1/zkp/serialnumbernoprivacy"
 	"github.com/incognitochain/go-incognito-sdk-v2/privacy/v1/zkp/serialnumberprivacy"
@@ -25,7 +25,7 @@ type PaymentWitness struct {
 	serialNumberWitness          []*serialnumberprivacy.SNPrivacyWitness
 	serialNumberNoPrivacyWitness []*serialnumbernoprivacy.SNNoPrivacyWitness
 
-	aggregatedRangeWitness *aggregatedrange.AggregatedRangeWitness
+	rangeProofWitness *bulletproofs.Witness
 
 	comOutputValue                 []*crypto.Point
 	comOutputSerialNumberDerivator []*crypto.Point
@@ -254,10 +254,10 @@ func (w *PaymentWitness) Init(PaymentWitnessParam PaymentWitnessParam) error {
 			return fmt.Errorf("output coin's value is less than 0")
 		}
 	}
-	if w.aggregatedRangeWitness == nil {
-		w.aggregatedRangeWitness = new(aggregatedrange.AggregatedRangeWitness)
+	if w.rangeProofWitness == nil {
+		w.rangeProofWitness = new(bulletproofs.Witness)
 	}
-	w.aggregatedRangeWitness.Set(outputValue, randOutputValue)
+	w.rangeProofWitness.Set(outputValue, randOutputValue)
 	// ---------------------------------------------------
 
 	// save partial commitments (value, input, shardID)
@@ -324,7 +324,7 @@ func (w *PaymentWitness) Prove(hasPrivacy bool, paymentInfo []*key.PaymentInfo) 
 	var err error
 
 	// Proving that each output values and sum of them does not exceed v_max
-	proof.rangeProof, err = w.aggregatedRangeWitness.Prove()
+	proof.rangeProof, err = w.rangeProofWitness.Prove()
 	if err != nil {
 		return nil, err
 	}

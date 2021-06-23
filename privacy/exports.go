@@ -13,7 +13,7 @@ import (
 	"github.com/incognitochain/go-incognito-sdk-v2/privacy/v1/hybridencryption"
 	"github.com/incognitochain/go-incognito-sdk-v2/privacy/v1/schnorr"
 	"github.com/incognitochain/go-incognito-sdk-v2/privacy/v1/zkp"
-	"github.com/incognitochain/go-incognito-sdk-v2/privacy/v1/zkp/aggregatedrange"
+	bulletProofsV1 "github.com/incognitochain/go-incognito-sdk-v2/privacy/v1/zkp/bulletproofs"
 	v2 "github.com/incognitochain/go-incognito-sdk-v2/privacy/v2"
 	"github.com/incognitochain/go-incognito-sdk-v2/privacy/v2/bulletproofs"
 )
@@ -59,7 +59,7 @@ type PaymentWitnessParam = zkp.PaymentWitnessParam
 type RangeProof = range_proof.RangeProof
 
 // RangeProofV1 represents a RangeProof of version 1 used in transactions v1.
-type RangeProofV1 = aggregatedrange.AggregatedRangeProof
+type RangeProofV1 = bulletProofsV1.RangeProof
 
 // RangeProofV2 represents a RangeProof of version 2 used in transactions v2.
 type RangeProofV2 = bulletproofs.RangeProof

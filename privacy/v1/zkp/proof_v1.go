@@ -9,7 +9,7 @@ import (
 	"github.com/incognitochain/go-incognito-sdk-v2/crypto"
 	"github.com/incognitochain/go-incognito-sdk-v2/privacy/proof/range_proof"
 	privacyUtils "github.com/incognitochain/go-incognito-sdk-v2/privacy/utils"
-	"github.com/incognitochain/go-incognito-sdk-v2/privacy/v1/zkp/aggregatedrange"
+	"github.com/incognitochain/go-incognito-sdk-v2/privacy/v1/zkp/bulletproofs"
 	"github.com/incognitochain/go-incognito-sdk-v2/privacy/v1/zkp/oneoutofmany"
 	"github.com/incognitochain/go-incognito-sdk-v2/privacy/v1/zkp/serialnumbernoprivacy"
 	"github.com/incognitochain/go-incognito-sdk-v2/privacy/v1/zkp/serialnumberprivacy"
@@ -30,7 +30,7 @@ var FixedRandomnessShardID = new(crypto.Scalar).FromBytesS([]byte{0x60, 0xa2, 0x
 // 	- serialNumberProof: a sigma protocol for proving that the serial numbers are derived from the real input coins.
 //	It is used to avoid double-spending (used in private transactions only).
 //	- serialNumberNoPrivacyProof: same as serialNumberProof but used in non-private transaction.
-//	- rangeProof: a proof proving each output coin's value lies in a specific range (i.e, [0, 2^64-1]) without
+//	- rangeProofWitness: a proof proving each output coin's value lies in a specific range (i.e, [0, 2^64-1]) without
 //	revealing the output coin's value.
 type ProofV1 struct {
 	// for input coins
@@ -41,7 +41,7 @@ type ProofV1 struct {
 
 	// for output coins
 	// for proving each value and sum of them are less than a threshold value
-	rangeProof *aggregatedrange.AggregatedRangeProof
+	rangeProof *bulletproofs.RangeProof
 
 	inputCoins  []coin.PlainCoin
 	outputCoins []*coin.CoinV1
@@ -140,7 +140,7 @@ func (proof *ProofV1) SetCommitmentInputSND(v []*crypto.Point) {
 }
 
 // SetAggregatedRangeProof sets v as the range proof of a ProofV1.
-func (proof *ProofV1) SetAggregatedRangeProof(v *aggregatedrange.AggregatedRangeProof) {
+func (proof *ProofV1) SetAggregatedRangeProof(v *bulletproofs.RangeProof) {
 	proof.rangeProof = v
 }
 
@@ -193,11 +193,11 @@ func (proof *ProofV1) SetOutputCoins(v []coin.Coin) error {
 
 // Init creates an empty ProofV1.
 func (proof *ProofV1) Init() {
-	aggregatedRangeProof := &aggregatedrange.AggregatedRangeProof{}
-	aggregatedRangeProof.Init()
+	rangeProof := &bulletproofs.RangeProof{}
+	rangeProof.Init()
 	proof.oneOfManyProof = []*oneoutofmany.OneOutOfManyProof{}
 	proof.serialNumberProof = []*serialnumberprivacy.SNPrivacyProof{}
-	proof.rangeProof = aggregatedRangeProof
+	proof.rangeProof = rangeProof
 	proof.inputCoins = []coin.PlainCoin{}
 	proof.outputCoins = []*coin.CoinV1{}
 
@@ -454,16 +454,16 @@ func (proof *ProofV1) SetBytes(proofBytes []byte) error {
 		offset += lenSNNoPrivacyProof
 	}
 
-	//ComOutputMultiRangeProofSize *rangeProof
+	//ComOutputMultiRangeProofSize *rangeProofWitness
 	if offset+2 > len(proofBytes) {
 		return fmt.Errorf("out of range aggregated range proof")
 	}
 	lenComOutputMultiRangeProof := common.BytesToInt(proofBytes[offset : offset+2])
 	offset += 2
 	if lenComOutputMultiRangeProof > 0 {
-		aggregatedRangeProof := &aggregatedrange.AggregatedRangeProof{}
-		aggregatedRangeProof.Init()
-		proof.rangeProof = aggregatedRangeProof
+		rangeProof := &bulletproofs.RangeProof{}
+		rangeProof.Init()
+		proof.rangeProof = rangeProof
 		if offset+lenComOutputMultiRangeProof > len(proofBytes) {
 			return fmt.Errorf("out of range aggregated range proof")
 		}

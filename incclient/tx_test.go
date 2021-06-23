@@ -8,18 +8,18 @@ import (
 )
 
 func TestIncClient_CreateRawTransaction(t *testing.T) {
-	ic, err := NewTestNetClient()
+	ic, err := NewTestNet1Client()
 	if err != nil {
 		panic(err)
 	}
 
-	privateKey := "112t8roafGgHL1rhAP9632Yef3sx5k8xgp8cwK4MCJsCL1UWcxXvpzg97N4dwvcD735iKf31Q2ZgrAvKfVjeSUEvnzKJyyJD3GqqSZdxN4or"
+	privateKey := "112t8rnzyZWHhboZMZYMmeMGj1nDuVNkXB3FzwpPbhnNbWcSrbytAeYjDdNLfLSJhauvzYLWM2DQkWW2hJ14BGvmFfH1iDFAxgc4ywU6qMqW"
 	paymentAddress := PrivateKeyToPaymentAddress("112t8rnzyZWHhboZMZYMmeMGj1nDuVNkXB3FzwpPbhnNbWcSrbytAeYjDdNLfLSJhauvzYLWM2DQkWW2hJ14BGvmFfH1iDFAxgc4ywU6qMqW", -1)
 
 	receiverList := []string{paymentAddress}
 	amountList := []uint64{1000000}
 
-	txHash, err := ic.CreateAndSendRawTransaction(privateKey, receiverList, amountList, -1, nil)
+	txHash, err := ic.CreateAndSendRawTransaction(privateKey, receiverList, amountList, 2, nil)
 	if err != nil {
 		panic(err)
 	}

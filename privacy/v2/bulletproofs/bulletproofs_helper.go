@@ -88,12 +88,12 @@ func vectorAdd(a []*crypto.Scalar, b []*crypto.Scalar) ([]*crypto.Scalar, error)
 }
 
 func setAggregateParams(N int) *bulletproofParams {
-	aggParam := new(bulletproofParams)
-	aggParam.g = aggParam.g[0:N]
-	aggParam.h = aggParam.h[0:N]
-	aggParam.u = aggParam.u
-	aggParam.cs = aggParam.cs
-	return aggParam
+	tmpParam := new(bulletproofParams)
+	tmpParam.g = aggParam.g[0:N]
+	tmpParam.h = aggParam.h[0:N]
+	tmpParam.u = aggParam.u
+	tmpParam.cs = aggParam.cs
+	return tmpParam
 }
 
 func roundUpPowTwo(v int) int {
