@@ -2,7 +2,6 @@ package tx_ver2
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"github.com/incognitochain/go-incognito-sdk-v2/coin"
 	"github.com/incognitochain/go-incognito-sdk-v2/common"
@@ -21,30 +20,29 @@ import (
 	"time"
 )
 
-// TxSigPubKey of ver2 is array of Indexes in database
+// SigPubKey represents the sigPubKey of a Tx.
+// Unlike a transaction v1, a SigPubKey of a transaction v2 is the list of indices of input coins and the decoys
+// used in the transaction.
 type SigPubKey struct {
 	Indexes [][]*big.Int
 }
 
-type Tx struct {
-	tx_generic.TxBase
-}
-
+// Bytes returns the byte-representation of a SigPubKey.
 func (sigPub SigPubKey) Bytes() ([]byte, error) {
 	n := len(sigPub.Indexes)
 	if n == 0 {
-		return nil, errors.New("TxSigPublicKeyVer2.ToBytes: Indexes is empty")
+		return nil, fmt.Errorf("TxSigPublicKeyVer2.ToBytes: Indexes is empty")
 	}
 	if n > utils.MaxSizeByte {
-		return nil, errors.New("TxSigPublicKeyVer2.ToBytes: Indexes is too large, too many rows")
+		return nil, fmt.Errorf("TxSigPublicKeyVer2.ToBytes: Indexes is too large, too many rows")
 	}
 	m := len(sigPub.Indexes[0])
 	if m > utils.MaxSizeByte {
-		return nil, errors.New("TxSigPublicKeyVer2.ToBytes: Indexes is too large, too many columns")
+		return nil, fmt.Errorf("TxSigPublicKeyVer2.ToBytes: Indexes is too large, too many columns")
 	}
 	for i := 1; i < n; i += 1 {
 		if len(sigPub.Indexes[i]) != m {
-			return nil, errors.New("TxSigPublicKeyVer2.ToBytes: Indexes is not a rectangle array")
+			return nil, fmt.Errorf("TxSigPublicKeyVer2.ToBytes: Indexes is not a rectangle array")
 		}
 	}
 
@@ -56,7 +54,7 @@ func (sigPub SigPubKey) Bytes() ([]byte, error) {
 			currentByte := sigPub.Indexes[i][j].Bytes()
 			lengthByte := len(currentByte)
 			if lengthByte > utils.MaxSizeByte {
-				return nil, errors.New("TxSigPublicKeyVer2.ToBytes: IndexesByte is too large")
+				return nil, fmt.Errorf("TxSigPublicKeyVer2.ToBytes: IndexesByte is too large")
 			}
 			b = append(b, byte(lengthByte))
 			b = append(b, currentByte...)
@@ -65,9 +63,10 @@ func (sigPub SigPubKey) Bytes() ([]byte, error) {
 	return b, nil
 }
 
+// SetBytes recovers a SigPubKey from its byte data.
 func (sigPub *SigPubKey) SetBytes(b []byte) error {
 	if len(b) < 2 {
-		return errors.New("txSigPubKeyFromBytes: cannot parse length of Indexes, length of input byte is too small")
+		return fmt.Errorf("txSigPubKeyFromBytes: cannot parse length of Indexes, length of input byte is too small")
 	}
 	n := int(b[0])
 	m := int(b[1])
@@ -77,12 +76,12 @@ func (sigPub *SigPubKey) SetBytes(b []byte) error {
 		row := make([]*big.Int, m)
 		for j := 0; j < m; j += 1 {
 			if offset >= len(b) {
-				return errors.New("txSigPubKeyFromBytes: cannot parse byte length of index[i][j], length of input byte is too small")
+				return fmt.Errorf("txSigPubKeyFromBytes: cannot parse byte length of index[i][j], length of input byte is too small")
 			}
 			byteLength := int(b[offset])
 			offset += 1
 			if offset+byteLength > len(b) {
-				return errors.New("txSigPubKeyFromBytes: cannot parse big int index[i][j], length of input byte is too small")
+				return fmt.Errorf("txSigPubKeyFromBytes: cannot parse big int index[i][j], length of input byte is too small")
 			}
 			currentByte := b[offset : offset+byteLength]
 			offset += byteLength
@@ -90,15 +89,24 @@ func (sigPub *SigPubKey) SetBytes(b []byte) error {
 		}
 		indexes[i] = row
 	}
-	if sigPub == nil {
-		sigPub = new(SigPubKey)
-	}
+
 	sigPub.Indexes = indexes
 	return nil
 }
 
-// ========== GET FUNCTION ===========
+// Tx implements a PRV transaction v2. It is a embedded TxBase with some overridden functions.
+// A transaction v2 is mainly composed of
+//	- OTA: different output coins have different public key, even if they belong to the same user.
+//	- MLSAG: a ring signature scheme used to anonymize the true sender.
+//	- BulletProofs: a range proof used to prove that a value lies within an interval without revealing it.
+// By default, a transaction v2 is private, meaning that most of the stuff is hidden to public observers.
+type Tx struct {
+	tx_generic.TxBase
+}
 
+// GetReceiverData returns a list of output coins of a Tx.
+// Unlike the case of a transaction v1, we do not know which coins are the sent-back coins, therefore, we return all
+// of them.
 func (tx *Tx) GetReceiverData() ([]coin.Coin, error) {
 	if tx.Proof != nil && len(tx.Proof.GetOutputCoins()) > 0 {
 		return tx.Proof.GetOutputCoins(), nil
@@ -106,38 +114,85 @@ func (tx *Tx) GetReceiverData() ([]coin.Coin, error) {
 	return nil, nil
 }
 
-// ========== NORMAL INIT FUNCTIONS ==========
-
-func createPrivKeyMlsag(inputCoins []coin.PlainCoin, outputCoins []*coin.CoinV2, senderSK *key.PrivateKey, commitmentToZero *crypto.Point) ([]*crypto.Scalar, error) {
-	sumRand := new(crypto.Scalar).FromUint64(0)
-	for _, in := range inputCoins {
-		sumRand.Add(sumRand, in.GetRandomness())
-	}
-	for _, out := range outputCoins {
-		sumRand.Sub(sumRand, out.GetRandomness())
-	}
-
-	privKeyMlsag := make([]*crypto.Scalar, len(inputCoins)+1)
-	for i := 0; i < len(inputCoins); i += 1 {
-		var err error
-		privKeyMlsag[i], err = inputCoins[i].ParsePrivateKeyOfCoin(*senderSK)
-		if err != nil {
-			return nil, err
-		}
-	}
-	commitmentToZeroRecomputed := new(crypto.Point).ScalarMult(crypto.PedCom.G[crypto.PedersenRandomnessIndex], sumRand)
-	match := crypto.IsPointEqual(commitmentToZeroRecomputed, commitmentToZero)
-	if !match {
-		return nil, utils.NewTransactionErr(utils.SignTxError, errors.New("Error : asset tag sum or commitment sum mismatch"))
-	}
-	privKeyMlsag[len(inputCoins)] = sumRand
-	return privKeyMlsag, nil
+// GetTxMintData returns the minting data of a Tx.
+func (tx Tx) GetTxMintData() (bool, coin.Coin, *common.Hash, error) {
+	return tx_generic.GetTxMintData(&tx, &common.PRVCoinID)
 }
 
-func (tx *Tx) Init(paramsInterface interface{}) error {
-	params, ok := paramsInterface.(*tx_generic.TxPrivacyInitParams)
+// GetTxBurnData returns the burning data (token only) of a Tx.
+func (tx Tx) GetTxBurnData() (bool, coin.Coin, *common.Hash, error) {
+	return tx_generic.GetTxBurnData(&tx)
+}
+
+// GetTxFullBurnData is the same as GetTxBurnData.
+func (tx Tx) GetTxFullBurnData() (bool, coin.Coin, coin.Coin, *common.Hash, error) {
+	isBurn, burnedCoin, burnedToken, err := tx.GetTxBurnData()
+	return isBurn, burnedCoin, nil, burnedToken, err
+}
+
+// GetTxActualSize returns the size of a Tx in kb.
+func (tx Tx) GetTxActualSize() uint64 {
+	jsb, err := json.Marshal(tx)
+	if err != nil {
+		return 0
+	}
+	return uint64(math.Ceil(float64(len(jsb)) / 1024))
+}
+
+// ListOTAHashH returns the hash list of all OTA keys in a Tx.
+func (tx Tx) ListOTAHashH() []common.Hash {
+	result := make([]common.Hash, 0)
+	if tx.Proof != nil {
+		for _, outputCoin := range tx.Proof.GetOutputCoins() {
+			//Discard coins sent to the burning address
+			if wallet.IsPublicKeyBurningAddress(outputCoin.GetPublicKey().ToBytesS()) {
+				continue
+			}
+			hash := common.HashH(outputCoin.GetPublicKey().ToBytesS())
+			result = append(result, hash)
+		}
+	}
+	sort.SliceStable(result, func(i, j int) bool {
+		return result[i].String() < result[j].String()
+	})
+	return result
+}
+
+// Hash calculates the hash of a Tx.
+func (tx Tx) Hash() *common.Hash {
+	// leave out signature & its public key when hashing tx
+	tx.Sig = []byte{}
+	tx.SigPubKey = []byte{}
+	inBytes, err := json.Marshal(tx)
+	if err != nil {
+		return nil
+	}
+	hash := common.HashH(inBytes)
+	// after this returns, tx is restored since the receiver is not a pointer
+	return &hash
+}
+
+// HashWithoutMetadataSig calculates the hash of a Tx with out adding the signature of its metadata.
+func (tx Tx) HashWithoutMetadataSig() *common.Hash {
+	md := tx.GetMetadata()
+	mdHash := md.HashWithoutSig()
+	tx.SetMetadata(nil)
+	txHash := tx.Hash()
+	if mdHash == nil || txHash == nil {
+		return nil
+	}
+	// tx.SetMetadata(md)
+	inBytes := append(mdHash[:], txHash[:]...)
+	hash := common.HashH(inBytes)
+	return &hash
+}
+
+// Init creates a PRV transaction version 2 from the given parameter.
+// The input parameter should be a *tx_generic.TxPrivacyInitParams.
+func (tx *Tx) Init(txParams interface{}) error {
+	params, ok := txParams.(*tx_generic.TxPrivacyInitParams)
 	if !ok {
-		return errors.New("params of tx Init is not TxPrivacyInitParam")
+		return fmt.Errorf("cannot parse the input as a TxPrivacyInitParams")
 	}
 
 	jsb, _ := json.Marshal(params)
@@ -150,16 +205,14 @@ func (tx *Tx) Init(paramsInterface interface{}) error {
 		return err
 	}
 
-	// Check if this tx is nonPrivacyNonInput
-	// Case 1: tx ptoken transfer with ptoken fee
-	// Case 2: tx Reward
-	// If it is non privacy non input then return
 	if check, err := tx.IsNonPrivacyNonInput(params); check {
 		return err
 	}
 	if err := tx.prove(params); err != nil {
 		return err
 	}
+
+	// checking if the json data of tx is correct
 	jsb, err := json.Marshal(tx)
 	if err != nil {
 		return fmt.Errorf("marshal tx error: %v", err)
@@ -186,9 +239,44 @@ func (tx *Tx) Init(paramsInterface interface{}) error {
 	return nil
 }
 
+// InitTxSalary creates a PRV salary transaction to an OTA address.
+func (tx *Tx) InitTxSalary(otaCoin *coin.CoinV2, privateKey *key.PrivateKey, metaData metadata.Metadata) error {
+	tokenID := &common.Hash{}
+	if err := tokenID.SetBytes(common.PRVCoinID[:]); err != nil {
+		return utils.NewTransactionErr(utils.TokenIDInvalidError, err, tokenID.String())
+	}
+
+	tx.Version = utils.TxVersion2Number
+	tx.Type = common.TxRewardType
+	if tx.LockTime == 0 {
+		tx.LockTime = time.Now().Unix()
+	}
+
+	tempOutputCoin := []coin.Coin{otaCoin}
+	proof := new(privacy.ProofV2)
+	proof.Init()
+	err := proof.SetOutputCoins(tempOutputCoin)
+	if err != nil {
+		return err
+	}
+	tx.Proof = proof
+
+	publicKeyBytes := otaCoin.GetPublicKey().ToBytesS()
+	tx.PubKeyLastByteSender = common.GetShardIDFromLastByte(publicKeyBytes[len(publicKeyBytes)-1])
+
+	// signOnMessage Tx using ver1 schnorr
+	tx.SetPrivateKey(*privateKey)
+	tx.SetMetadata(metaData)
+
+	if tx.Sig, tx.SigPubKey, err = tx_generic.SignNoPrivacy(privateKey, tx.Hash()[:]); err != nil {
+		return utils.NewTransactionErr(utils.SignTxError, err)
+	}
+	return nil
+}
+
 func (tx *Tx) signOnMessage(inp []coin.PlainCoin, out []*coin.CoinV2, params *tx_generic.TxPrivacyInitParams, hashedMessage []byte) error {
 	if tx.Sig != nil {
-		return utils.NewTransactionErr(utils.UnexpectedError, errors.New("input transaction must be an unsigned one"))
+		return utils.NewTransactionErr(utils.UnexpectedError, fmt.Errorf("input transaction must be an unsigned one"))
 	}
 	ringSize := privacy.RingSize
 
@@ -213,14 +301,13 @@ func (tx *Tx) signOnMessage(inp []coin.PlainCoin, out []*coin.CoinV2, params *tx
 		return err
 	}
 
-	// Set sigPrivKey
-	privKeysMlsag, err := createPrivKeyMlsag(inp, out, params.SenderSK, commitmentToZero)
+	privateKeysMlsag, err := createPrivateKeyMlsag(inp, out, params.SenderSK, commitmentToZero)
 	if err != nil {
 		fmt.Printf("Cannot create private key of mlsag: %v", err)
 		return err
 	}
-	sag := mlsag.NewMlsag(privKeysMlsag, ring, pi)
-	sk, err := privacy.ArrayScalarToBytes(&privKeysMlsag)
+	sag := mlsag.NewMlsag(privateKeysMlsag, ring, pi)
+	sk, err := privacy.ArrayScalarToBytes(&privateKeysMlsag)
 	if err != nil {
 		fmt.Printf("tx.SigPrivKey cannot parse arrayScalar to Bytes, error %v ", err)
 		return err
@@ -270,13 +357,10 @@ func (tx *Tx) prove(params *tx_generic.TxPrivacyInitParams) error {
 	return err
 }
 
-// ========== NORMAL VERIFY FUNCTIONS ==========
-
-//Parse params and check their validity for generating a MLSAG ring.
-func ParseParamsForRing(kvArgs map[string]interface{}, lenInput, ringSize int) (cmtIndices []uint64, myIndices []uint64, commitments []*crypto.Point, publicKeys []*crypto.Point, assetTags []*crypto.Point, err error) {
+func parseParamsForRing(kvArgs map[string]interface{}, lenInput, ringSize int) (cmtIndices []uint64, myIndices []uint64, commitments []*crypto.Point, publicKeys []*crypto.Point, assetTags []*crypto.Point, err error) {
 	if kvArgs == nil {
-		fmt.Println("kvargs is nil: need more params to proceed")
-		return nil, nil, nil, nil, nil, errors.New("kvargs is nil: need more params to proceed")
+		fmt.Println("kvArgs is nil: need more params to proceed")
+		return nil, nil, nil, nil, nil, fmt.Errorf("kvArgs is nil: need more params to proceed")
 	}
 
 	//Get list of decoy indices.
@@ -331,11 +415,7 @@ func ParseParamsForRing(kvArgs map[string]interface{}, lenInput, ringSize int) (
 	if !ok {
 		return nil, nil, nil, nil, nil, fmt.Errorf("cannot parse decoy asset tags: %v", tmp)
 	}
-	//if len(assetTags) < lenInput*(ringSize-1) {
-	//	return nil, nil, nil, nil, nil, fmt.Errorf("not enough decoy asset tags: have %v, need at least %v (%v input coins).", len(assetTags), lenInput*(ringSize-1), lenInput))
-	//}
 
-	//Get list of inputcoin indices
 	tmp, ok = kvArgs[utils.MyIndices]
 	if !ok {
 		return nil, nil, nil, nil, nil, fmt.Errorf("inputCoin commitment indices not found: %v", kvArgs)
@@ -346,19 +426,18 @@ func ParseParamsForRing(kvArgs map[string]interface{}, lenInput, ringSize int) (
 		return nil, nil, nil, nil, nil, fmt.Errorf("cannot parse inputCoin commitment indices: %v", tmp)
 	}
 	if len(myIndices) != lenInput {
-		return nil, nil, nil, nil, nil, fmt.Errorf("not enough indices for input coins: have %v, want %v.", len(myIndices), lenInput)
+		return nil, nil, nil, nil, nil, fmt.Errorf("not enough indices for input coins: have %v, want %v", len(myIndices), lenInput)
 	}
 
 	return
 }
 
-//Generate an MLSAG ring with input decoy commitments, public keys, and indices (params.KvArgs).
 func generateMLSAGRingWithIndexes(inputCoins []coin.PlainCoin, outputCoins []*coin.CoinV2, params *tx_generic.TxPrivacyInitParams, pi int, ringSize int) (*mlsag.Ring, [][]*big.Int, *crypto.Point, error) {
 	lenInput := len(inputCoins)
 	kvArgs := params.KvArgs
 
 	//Retrieve decoys' info from kvArgs
-	cmtIndices, myIndices, commitments, publicKeys, _, err := ParseParamsForRing(kvArgs, lenInput, ringSize)
+	cmtIndices, myIndices, commitments, publicKeys, _, err := parseParamsForRing(kvArgs, lenInput, ringSize)
 	if err != nil {
 		return nil, nil, nil, err
 	}
@@ -404,106 +483,28 @@ func generateMLSAGRingWithIndexes(inputCoins []coin.PlainCoin, outputCoins []*co
 	return mlsag.NewRing(ring), indices, commitmentToZero, nil
 }
 
-
-// ========== SALARY FUNCTIONS: INIT AND VALIDATE  ==========
-
-func (tx *Tx) InitTxSalary(otaCoin *coin.CoinV2, privateKey *key.PrivateKey, metaData metadata.Metadata) error {
-	tokenID := &common.Hash{}
-	if err := tokenID.SetBytes(common.PRVCoinID[:]); err != nil {
-		return utils.NewTransactionErr(utils.TokenIDInvalidError, err, tokenID.String())
+func createPrivateKeyMlsag(inputCoins []coin.PlainCoin, outputCoins []*coin.CoinV2, senderSK *key.PrivateKey, commitmentToZero *crypto.Point) ([]*crypto.Scalar, error) {
+	sumRand := new(crypto.Scalar).FromUint64(0)
+	for _, in := range inputCoins {
+		sumRand.Add(sumRand, in.GetRandomness())
+	}
+	for _, out := range outputCoins {
+		sumRand.Sub(sumRand, out.GetRandomness())
 	}
 
-	tx.Version = utils.TxVersion2Number
-	tx.Type = common.TxRewardType
-	if tx.LockTime == 0 {
-		tx.LockTime = time.Now().Unix()
-	}
-
-	tempOutputCoin := []coin.Coin{otaCoin}
-	proof := new(privacy.ProofV2)
-	proof.Init()
-	proof.SetOutputCoins(tempOutputCoin)
-	tx.Proof = proof
-
-	publicKeyBytes := otaCoin.GetPublicKey().ToBytesS()
-	tx.PubKeyLastByteSender = common.GetShardIDFromLastByte(publicKeyBytes[len(publicKeyBytes)-1])
-
-	// signOnMessage Tx using ver1 schnorr
-	tx.SetPrivateKey(*privateKey)
-	tx.SetMetadata(metaData)
-
-	var err error
-	if tx.Sig, tx.SigPubKey, err = tx_generic.SignNoPrivacy(privateKey, tx.Hash()[:]); err != nil {
-		return utils.NewTransactionErr(utils.SignTxError, err)
-	}
-	return nil
-}
-
-func (tx Tx) Hash() *common.Hash {
-	// leave out signature & its public key when hashing tx
-	tx.Sig = []byte{}
-	tx.SigPubKey = []byte{}
-	inBytes, err := json.Marshal(tx)
-	if err != nil {
-		return nil
-	}
-	hash := common.HashH(inBytes)
-	// after this returns, tx is restored since the receiver is not a pointer
-	return &hash
-}
-
-// HashWithoutMetadataSig returns the hash of this transaction, but it leaves out the metadata's own signature field. It is used to verify that metadata signature.
-func (tx Tx) HashWithoutMetadataSig() *common.Hash {
-	md := tx.GetMetadata()
-	mdHash := md.HashWithoutSig()
-	tx.SetMetadata(nil)
-	txHash := tx.Hash()
-	if mdHash==nil || txHash==nil{
-		return nil
-	}
-	// tx.SetMetadata(md)
-	inBytes := append(mdHash[:], txHash[:]...)
-	hash := common.HashH(inBytes)
-	return &hash
-}
-
-// ========== SHARED FUNCTIONS ============
-
-func (tx Tx) GetTxMintData() (bool, coin.Coin, *common.Hash, error) {
-	return tx_generic.GetTxMintData(&tx, &common.PRVCoinID)
-}
-
-func (tx Tx) GetTxBurnData() (bool, coin.Coin, *common.Hash, error) {
-	return tx_generic.GetTxBurnData(&tx)
-}
-
-func (tx Tx) GetTxFullBurnData() (bool, coin.Coin, coin.Coin, *common.Hash, error) {
-	isBurn, burnedCoin, burnedToken, err := tx.GetTxBurnData()
-	return isBurn, burnedCoin, nil, burnedToken, err
-}
-
-func (tx Tx) GetTxActualSize() uint64 {
-	jsb, err := json.Marshal(tx)
-	if err != nil {
-		return 0
-	}
-	return uint64(math.Ceil(float64(len(jsb)) / 1024))
-}
-
-func (tx Tx) ListOTAHashH() []common.Hash {
-	result := make([]common.Hash, 0)
-	if tx.Proof != nil {
-		for _, outputCoin := range tx.Proof.GetOutputCoins() {
-			//Discard coins sent to the burning address
-			if wallet.IsPublicKeyBurningAddress(outputCoin.GetPublicKey().ToBytesS()) {
-				continue
-			}
-			hash := common.HashH(outputCoin.GetPublicKey().ToBytesS())
-			result = append(result, hash)
+	privateKeyMlsag := make([]*crypto.Scalar, len(inputCoins)+1)
+	for i := 0; i < len(inputCoins); i += 1 {
+		var err error
+		privateKeyMlsag[i], err = inputCoins[i].ParsePrivateKeyOfCoin(*senderSK)
+		if err != nil {
+			return nil, err
 		}
 	}
-	sort.SliceStable(result, func(i, j int) bool {
-		return result[i].String() < result[j].String()
-	})
-	return result
+	commitmentToZeroRecomputed := new(crypto.Point).ScalarMult(crypto.PedCom.G[crypto.PedersenRandomnessIndex], sumRand)
+	match := crypto.IsPointEqual(commitmentToZeroRecomputed, commitmentToZero)
+	if !match {
+		return nil, utils.NewTransactionErr(utils.SignTxError, fmt.Errorf("asset tag sum or commitment sum mismatch"))
+	}
+	privateKeyMlsag[len(inputCoins)] = sumRand
+	return privateKeyMlsag, nil
 }

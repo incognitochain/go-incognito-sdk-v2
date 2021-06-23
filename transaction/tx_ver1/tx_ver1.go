@@ -14,7 +14,13 @@ import (
 	"math/big"
 )
 
-// Tx represents a PRV transaction of version 1. It is a embedded TxBase.
+// Tx represents a PRV transaction of version 1. It is a embedded TxBase with some overridden functions.
+// A transaction version is mainly composed of
+//	- Schnorr signature: to sign the transaction.
+//	- One-of-many proof: to anonymize the true sender.
+//	- BulletProofs: a range proof used to prove that a value lies within an interval without revealing it.
+//	- SerialNumberProof: to prove the correctness of serial numbers.
+//	- SerialNumberProof (no privacy): to prove the correctness of serial numbers used in non-private transactions.
 type Tx struct {
 	tx_generic.TxBase
 }

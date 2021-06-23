@@ -13,6 +13,9 @@ import (
 )
 
 // TxToken represents a token transaction of version 1. It is a embedded TxTokenBase.
+// A token transaction v1 consists of 2 sub-transactions
+//	- TxBase: PRV sub-transaction for paying the transaction fee (if have).
+//	- TxNormal: the token sub-transaction to transfer token.
 type TxToken struct {
 	tx_generic.TxTokenBase
 }

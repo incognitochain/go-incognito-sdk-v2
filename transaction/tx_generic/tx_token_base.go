@@ -213,7 +213,7 @@ func (txToken TxTokenBase) CheckAuthorizedSender(publicKey []byte) (bool, error)
 	}
 }
 
-// MarshalJSON does the JSON-marshalling operation for a TxBase.
+// MarshalJSON does the JSON-marshalling operation for a TxTokenBase.
 func (txToken TxTokenBase) MarshalJSON() ([]byte, error) {
 	type TemporaryTxToken struct {
 		TxBase
