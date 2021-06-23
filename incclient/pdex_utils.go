@@ -200,9 +200,9 @@ func (client *IncClient) GetTotalSharesAmount(beaconHeight uint64, tokenID1, tok
 
 // CheckTradeStatus checks the status of a trading transaction.
 // It returns
-//		* -1: if an error occurred;
-//		* 1: if the trade is accepted;
-//		* 2: if the trade is not accepted.
+//	- -1: if an error occurred;
+//	- 1: if the trade is accepted;
+//	- 2: if the trade is not accepted.
 func (client *IncClient) CheckTradeStatus(txHash string) (int, error) {
 	responseInBytes, err := client.rpcServer.CheckTradeStatus(txHash)
 	if err != nil {
