@@ -568,7 +568,7 @@ func TestIncClient_ShieldETH(t *testing.T) {
 	}
 
 	//Incognito keys
-	privateKey := "112t8rnZDRztVgPjbYQiXS7mJgaTzn66NvHD7Vus2SrhSAY611AzADsPFzKjKQCKWTgbkgYrCPo9atvSMoCf9KT23Sc7Js9RKhzbNJkxpJU6"
+	privateKey := ""
 	incAddr := PrivateKeyToPaymentAddress(privateKey, 1)
 
 	//incognito vault contract address
@@ -669,7 +669,7 @@ func TestIncClient_ShieldERC20(t *testing.T) {
 	fmt.Printf("Remote account: %v, tokenAddress: %v, balance %v, eth %v\n", acc.address.String(), TOKEN_ADDRESS, oldTokenBalance, oldETHBalance)
 
 	//Incognito keys
-	privateKey := "112t8rnZDRztVgPjbYQiXS7mJgaTzn66NvHD7Vus2SrhSAY611AzADsPFzKjKQCKWTgbkgYrCPo9atvSMoCf9KT23Sc7Js9RKhzbNJkxpJU6"
+	privateKey := ""
 	incAddr := PrivateKeyToPaymentAddress(privateKey, 1)
 
 	//incognito vault contract address
@@ -780,7 +780,7 @@ func TestIncClient_UnShieldETH(t *testing.T) {
 		panic(err)
 	}
 
-	privateKey := "112t8rnZDRztVgPjbYQiXS7mJgaTzn66NvHD7Vus2SrhSAY611AzADsPFzKjKQCKWTgbkgYrCPo9atvSMoCf9KT23Sc7Js9RKhzbNJkxpJU6"
+	privateKey := ""
 	remoteAddr := acc.address.String()
 	burnedAmount := uint64(50000000)
 
@@ -897,7 +897,7 @@ func TestIncClient_UnShieldERC20(t *testing.T) {
 		panic(err)
 	}
 
-	privateKey := "112t8rnZDRztVgPjbYQiXS7mJgaTzn66NvHD7Vus2SrhSAY611AzADsPFzKjKQCKWTgbkgYrCPo9atvSMoCf9KT23Sc7Js9RKhzbNJkxpJU6"
+	privateKey := ""
 	tokenIDStr := "c7545459764224a000a9b323850648acf271186238210ce474b505cd17cc93a0" //incognito tokenID for pDAI
 	remoteAddr := acc.address.String()
 	burnedAmount := uint64(10000000)

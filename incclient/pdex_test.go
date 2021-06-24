@@ -31,7 +31,7 @@ func TestIncClient_CreateAndSendPDETradeTransaction(t *testing.T) {
 		panic(err)
 	}
 
-	privateKey := "112t8rneWAhErTC8YUFTnfcKHvB1x6uAVdehy1S8GP2psgqDxK3RHouUcd69fz88oAL9XuMyQ8mBY5FmmGJdcyrpwXjWBXRpoWwgJXjsxi4j"
+	privateKey := ""
 
 	//Trade PRV to tokens
 	tokenToSell := common.PRVIDStr
@@ -57,7 +57,7 @@ func TestIncClient_CreateAndSendCrossPDETradeTransaction(t *testing.T) {
 		panic(err)
 	}
 
-	privateKey := "112t8rneWAhErTC8YUFTnfcKHvB1x6uAVdehy1S8GP2psgqDxK3RHouUcd69fz88oAL9XuMyQ8mBY5FmmGJdcyrpwXjWBXRpoWwgJXjsxi4j"
+	privateKey := ""
 
 	//Trade token to token
 	tokenToBuy := "0795495cb9eb84ae7bd8c8494420663b9a1642c7bbc99e57b04d536db9001d0e"
@@ -85,7 +85,7 @@ func TestIncClient_CreateAndSendPDEContributeTransaction(t *testing.T) {
 	}
 
 	// init params
-	privateKey := "112t8rneWAhErTC8YUFTnfcKHvB1x6uAVdehy1S8GP2psgqDxK3RHouUcd69fz88oAL9XuMyQ8mBY5FmmGJdcyrpwXjWBXRpoWwgJXjsxi4j"
+	privateKey := ""
 	addr := PrivateKeyToPaymentAddress(privateKey, -1)
 	tokenID1 := common.PRVIDStr
 	tokenID2 := "00000000000000000000000000000000000000000000000000000000000000ff"
@@ -212,7 +212,7 @@ func TestIncClient_CreateAndSendPDEWithdrawalTransaction(t *testing.T) {
 	}
 
 	// init params
-	privateKey := "112t8rneWAhErTC8YUFTnfcKHvB1x6uAVdehy1S8GP2psgqDxK3RHouUcd69fz88oAL9XuMyQ8mBY5FmmGJdcyrpwXjWBXRpoWwgJXjsxi4j"
+	privateKey := ""
 	addr := PrivateKeyToPaymentAddress(privateKey, -1)
 	tokenID1 := common.PRVIDStr
 	tokenID2 := "00000000000000000000000000000000000000000000000000000000000000ff"

@@ -14,7 +14,7 @@ func TestIncClient_GetOutputCoins(t *testing.T) {
 		panic(err)
 	}
 
-	privateKey := "112t8rneWAhErTC8YUFTnfcKHvB1x6uAVdehy1S8GP2psgqDxK3RHouUcd69fz88oAL9XuMyQ8mBY5FmmGJdcyrpwXjWBXRpoWwgJXjsxi4j" // input the private key
+	privateKey := "" // input the private key
 	tokenID := common.PRVIDStr
 
 	outCoinKey, err := NewOutCoinKeyFromPrivateKey(privateKey)
@@ -42,7 +42,7 @@ func TestIncClient_GetListDecryptedOutCoin(t *testing.T) {
 		panic(err)
 	}
 
-	privateKey := "112t8rneWAhErTC8YUFTnfcKHvB1x6uAVdehy1S8GP2psgqDxK3RHouUcd69fz88oAL9XuMyQ8mBY5FmmGJdcyrpwXjWBXRpoWwgJXjsxi4j" // input the private key
+	privateKey := "" // input the private key
 	tokenID := common.PRVIDStr
 
 	utxoList, err := ic.GetListDecryptedOutCoin(privateKey, tokenID, 0)
@@ -65,7 +65,7 @@ func TestIncClient_GetUnspentOutputCoins(t *testing.T) {
 		panic(err)
 	}
 
-	privateKey := "112t8rneWAhErTC8YUFTnfcKHvB1x6uAVdehy1S8GP2psgqDxK3RHouUcd69fz88oAL9XuMyQ8mBY5FmmGJdcyrpwXjWBXRpoWwgJXjsxi4j" // input the private key
+	privateKey := "" // input the private key
 	tokenID := common.PRVIDStr
 
 	utxoList, idxList, err := ic.GetUnspentOutputCoins(privateKey, tokenID, 0)
@@ -78,5 +78,28 @@ func TestIncClient_GetUnspentOutputCoins(t *testing.T) {
 			base58.Base58Check{}.Encode(utxo.GetPublicKey().ToBytesS(), common.ZeroByte),
 			base58.Base58Check{}.Encode(utxo.GetCommitment().ToBytesS(), common.ZeroByte),
 			utxo.GetValue())
+	}
+}
+
+func TestIncClient_GetSpentOutputCoins(t *testing.T) {
+	var err error
+	ic, err = NewTestNet1Client()
+	if err != nil {
+		panic(err)
+	}
+
+	privateKey := "" // input the private key
+	tokenID := common.PRVIDStr
+
+	spentCoins, idxList, err := ic.GetSpentOutputCoins(privateKey, tokenID, 0)
+	if err != nil {
+		panic(err)
+	}
+
+	for i, spentCoin := range spentCoins{
+		fmt.Printf("ver: %v, idx: %v, pubKey: %v, cmt: %v, value: %v\n", spentCoin.GetVersion(), idxList[i],
+			base58.Base58Check{}.Encode(spentCoin.GetPublicKey().ToBytesS(), common.ZeroByte),
+			base58.Base58Check{}.Encode(spentCoin.GetCommitment().ToBytesS(), common.ZeroByte),
+			spentCoin.GetValue())
 	}
 }
