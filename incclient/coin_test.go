@@ -96,7 +96,7 @@ func TestIncClient_GetSpentOutputCoins(t *testing.T) {
 		panic(err)
 	}
 
-	for i, spentCoin := range spentCoins{
+	for i, spentCoin := range spentCoins {
 		fmt.Printf("ver: %v, idx: %v, pubKey: %v, cmt: %v, value: %v\n", spentCoin.GetVersion(), idxList[i],
 			base58.Base58Check{}.Encode(spentCoin.GetPublicKey().ToBytesS(), common.ZeroByte),
 			base58.Base58Check{}.Encode(spentCoin.GetCommitment().ToBytesS(), common.ZeroByte),

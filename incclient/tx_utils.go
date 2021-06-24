@@ -2,8 +2,10 @@ package incclient
 
 import (
 	"fmt"
+	"log"
 	"math/big"
 	"sort"
+	"time"
 
 	"github.com/incognitochain/go-incognito-sdk-v2/coin"
 	"github.com/incognitochain/go-incognito-sdk-v2/common"
@@ -435,6 +437,8 @@ func (client *IncClient) GetTransactionsByReceiver(paymentAddress string) (map[s
 
 	fmt.Printf("#Txs: %v\n", len(txList))
 
+	count := 0
+	start := time.Now()
 	res := make(map[string]metadata.Transaction)
 	for _, txHash := range txList {
 		tx, err := client.GetTx(txHash)
@@ -442,6 +446,10 @@ func (client *IncClient) GetTransactionsByReceiver(paymentAddress string) (map[s
 			return nil, fmt.Errorf("cannot retrieve tx %v: %v", txHash, err)
 		}
 		res[txHash] = tx
+		count += 1
+		if count%5 == 0 {
+			log.Printf("count %v, timeElapsed: %v\n", count, time.Since(start).Seconds())
+		}
 	}
 
 	return res, nil
