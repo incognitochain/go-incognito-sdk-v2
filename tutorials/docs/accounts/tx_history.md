@@ -110,23 +110,12 @@ if err != nil {
 ```
 If you want to get only the in-coming (out-going) history, consider using `GetTxsIn` (`GetTxsOut`).	
 
-### Print the result
+### Save the result to a file
 ```go
-totalIn := uint64(0)
-	log.Printf("TxsIn\n")
-	for _, txIn := range h.TxInList {
-		totalIn += txIn.Amount
-		log.Printf("%v\n", txIn.String())
-	}
-	log.Printf("Finished TxsIn\n\n")
-
-	totalOut := uint64(0)
-	log.Printf("TxsOut\n")
-	for _, txOut := range h.TxOutList {
-		totalOut += txOut.Amount
-		log.Printf("%v\n", txOut.String())
-	}
-	log.Printf("Finished TxsOut\n\n")
+err = incclient.SaveTxHistory(h, "history.csv")
+if err != nil {
+    log.Fatal(err)
+}
 ```
 An example result looks like this.
 ```
@@ -167,7 +156,7 @@ func GetHistory() {
 		log.Fatal(err)
 	}
 
-	tokenIDStr := common.PRVIDStr // input the tokenID in which you want to retrieve the history of.
+	tokenIDStr := common.PRVIDStr    // input the tokenID in which you want to retrieve the history of.
 	privateKey := "YOUR_PRIVATE_KEY" // input your private key here
 
 	// get the history in a normal way.
@@ -176,13 +165,9 @@ func GetHistory() {
 		log.Fatal(err)
 	}
 
-	log.Printf("#TxIns: %v\n", len(h.TxInList))
-	for _, txIn := range h.TxInList {
-		log.Printf("%v\n", txIn.String())
-	}
-	log.Printf("\n#TxOuts: %v\n", len(h.TxOutList))
-	for _, txOut := range h.TxOutList {
-		log.Printf("%v\n", txOut.String())
+	err = incclient.SaveTxHistory(h, "history.csv")
+	if err != nil {
+		log.Fatal(err)
 	}
 }
 
@@ -194,7 +179,7 @@ func GetHistoryFaster() {
 		log.Fatal(err)
 	}
 
-	tokenIDStr := common.PRVIDStr // input the tokenID in which you want to retrieve the history of.
+	tokenIDStr := common.PRVIDStr                                                                                               // input the tokenID in which you want to retrieve the history of.
 	privateKey := "YOUR_PRIVATE_KEY" // input your private key here
 
 	numWorkers := 15
@@ -207,26 +192,15 @@ func GetHistoryFaster() {
 
 	log.Printf("#TxIns: %v, #TxsOut: %v\n", len(h.TxInList), len(h.TxOutList))
 
-	totalIn := uint64(0)
-	log.Printf("TxsIn\n")
-	for _, txIn := range h.TxInList {
-		totalIn += txIn.Amount
-		log.Printf("%v\n", txIn.String())
+	err = incclient.SaveTxHistory(h, "history.csv")
+	if err != nil {
+		log.Fatal(err)
 	}
-	log.Printf("Finished TxsIn\n\n")
-
-	totalOut := uint64(0)
-	log.Printf("TxsOut\n")
-	for _, txOut := range h.TxOutList {
-		totalOut += txOut.Amount
-		log.Printf("%v\n", txOut.String())
-	}
-	log.Printf("Finished TxsOut\n\n")
 }
 
 func main() {
 	// comment one of these functions.
-	GetHistory()
+	//GetHistory()
 	GetHistoryFaster()
 }
 ```

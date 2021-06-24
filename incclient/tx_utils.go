@@ -2,6 +2,7 @@ package incclient
 
 import (
 	"fmt"
+	"github.com/incognitochain/go-incognito-sdk-v2/transaction"
 	"log"
 	"math/big"
 	"sort"
@@ -20,6 +21,8 @@ import (
 	"github.com/incognitochain/go-incognito-sdk-v2/transaction/utils"
 	"github.com/incognitochain/go-incognito-sdk-v2/wallet"
 )
+
+var pageSize = 100
 
 // createPaymentInfos creates a list of key.PaymentInfo based on the provided address list and corresponding amount list.
 func createPaymentInfos(addrList []string, amountList []uint64) ([]*key.PaymentInfo, error) {
@@ -405,6 +408,44 @@ func (client *IncClient) GetTx(txHash string) (metadata.Transaction, error) {
 	return jsonresult.ParseTxDetail(*txDetail)
 }
 
+// GetTxs retrieves transactions and parses them to transaction objects given their hashes.
+func (client *IncClient) GetTxs(txHashList []string) (map[string]metadata.Transaction, error) {
+	responseInBytes, err := client.rpcServer.GetEncodedTransactionsByHashes(txHashList)
+	if err != nil {
+		return nil, err
+	}
+
+	mapRes := make(map[string]string)
+	err = rpchandler.ParseResponse(responseInBytes, &mapRes)
+	if err != nil {
+		panic(err)
+	}
+
+	res := make(map[string]metadata.Transaction)
+	for txHash, encodedTx := range mapRes {
+		txBytes, _, err := base58.Base58Check{}.Decode(encodedTx)
+		if err != nil {
+			log.Printf("base58-decode failed: %v\n", string(txBytes))
+			return nil, err
+		}
+
+		txChoice, err := transaction.DeserializeTransactionJSON(txBytes)
+		if err != nil {
+			log.Printf("unMarshal failed: %v\n", string(txBytes))
+			return nil, err
+		}
+		tx := txChoice.ToTx()
+
+		if tx.Hash().String() != txHash {
+			log.Printf("txParseFail: %v\n", string(txBytes))
+			return nil, fmt.Errorf("txHash changes after unmarshalling, expect %v, got %v", txHash, tx.Hash().String())
+		}
+		res[txHash] = tx
+	}
+
+	return res, nil
+}
+
 // GetTransactionHashesByReceiver retrieves the list of all transactions received by a payment address.
 func (client *IncClient) GetTransactionHashesByReceiver(paymentAddress string) ([]string, error) {
 	responseInBytes, err := client.rpcServer.GetTxHashByReceiver(paymentAddress)
@@ -492,13 +533,22 @@ func (client *IncClient) GetTransactionsByPublicKeys(publicKeys []string) (map[s
 	res := make(map[string]map[string]metadata.Transaction)
 	for publicKeyStr, txList := range txMap {
 		tmpRes := make(map[string]metadata.Transaction)
-		for _, txHash := range txList {
-			tx, err := client.GetTx(txHash)
-			if err != nil {
-				return nil, fmt.Errorf("cannot retrieve tx %v: %v", txHash, err)
+		for current := 0; current < len(txList); current += pageSize {
+			next := current + pageSize
+			if next > len(txList) {
+				next = len(txList)
 			}
-			tmpRes[txHash] = tx
+
+			mapRes, err := client.GetTxs(txList[current:next])
+			if err != nil {
+				return nil, err
+			}
+
+			for txHash, tx := range mapRes {
+				tmpRes[txHash] = tx
+			}
 		}
+
 		res[publicKeyStr] = tmpRes
 	}
 
