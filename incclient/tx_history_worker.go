@@ -223,15 +223,19 @@ func (p *TxHistoryProcessor) GetTxsOut(privateKey string, tokenIDStr string, ver
 
 // GetTokenHistory returns the history of a private key w.r.t a tokenID in a parallel manner.
 func (p *TxHistoryProcessor) GetTokenHistory(privateKey string, tokenIDStr string) (*TxHistory, error) {
+	log.Printf("GETTING in-coming txs\n")
 	txsIn, err := p.GetTxsIn(privateKey, tokenIDStr, 1)
 	if err != nil {
 		return nil, err
 	}
+	log.Printf("FINISHED in-coming txs\n\n")
 
+	log.Printf("GETTING out-going txs\n")
 	txsOut, err := p.GetTxsOut(privateKey, tokenIDStr, 1)
 	if err != nil {
 		return nil, err
 	}
+	log.Printf("FINISHED out-going txs\n\n")
 
 	return &TxHistory{
 		TxInList:  txsIn,
@@ -257,26 +261,26 @@ func NewTxHistoryWorker(id int, client *IncClient) *TxHistoryWorker {
 
 // getListTxs returns a list of transactions (in object) on input a list of transaction hashes.
 func (worker TxHistoryWorker) getListTxs(txList []string) (map[string]metadata.Transaction, error) {
-	var err error
-	var ok bool
 	count := 0
 	start := time.Now()
 
 	res := make(map[string]metadata.Transaction)
-	for _, txHash := range txList {
-		var tx metadata.Transaction
-		if tx, ok = worker.cachedTxs[txHash]; !ok {
-			tx, err = worker.client.GetTx(txHash)
-			if err != nil {
-				return nil, fmt.Errorf("cannot retrieve tx %v: %v", txHash, err)
-			}
+	for current := 0; current < len(txList); current += pageSize {
+		next := current + pageSize
+		if next > len(txList) {
+			next = len(txList)
 		}
-		res[txHash] = tx
 
-		count += 1
-		if count%5 == 0 {
-			log.Printf("[WORKER %v], count %v, timeElapsed %v\n", worker.id, count, time.Since(start).Seconds())
+		txMap, err := worker.client.GetTxs(txList[current:next])
+		if err != nil {
+			return nil, err
 		}
+
+		for txHash, tx := range txMap {
+			res[txHash] = tx
+		}
+		count += len(txMap)
+		log.Printf("[WORKER %v], count %v, timeElapsed %v\n", worker.id, count, time.Since(start).Seconds())
 	}
 
 	return res, nil
@@ -422,6 +426,17 @@ func (worker TxHistoryWorker) getTxsOutV1(keySet *key.KeySet, mapSpentCoins map[
 		errChan <- err
 	}
 
+	// Create a list of txs
+	txHashList := make([]string, 0)
+	for _, txHash := range mapSpentTxs {
+		txHashList = append(txHashList, txHash)
+	}
+	// Get txs from hashes
+	txs, err := worker.getListTxs(txHashList)
+	if err != nil {
+		errChan <- err
+	}
+
 	mapRes := make(map[string]TxOut)
 	res := make([]TxOut, 0)
 
@@ -433,11 +448,9 @@ func (worker TxHistoryWorker) getTxsOutV1(keySet *key.KeySet, mapSpentCoins map[
 		}
 
 		var tx metadata.Transaction
-		if tx, ok = worker.cachedTxs[txHash]; !ok {
-			tx, err = worker.client.GetTx(txHash)
-			if err != nil {
-				errChan <- err
-			}
+		tx, ok = txs[txHash]
+		if !ok {
+			errChan <- fmt.Errorf("tx %v not found", txHash)
 		}
 
 		//get transaction fee
