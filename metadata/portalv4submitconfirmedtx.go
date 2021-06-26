@@ -2,7 +2,6 @@ package metadata
 
 import "github.com/incognitochain/go-incognito-sdk-v2/common"
 
-// PortalSubmitConfirmedTxRequest is a request to submit a confirmed transaction in the PortalV4 protocol.
 type PortalSubmitConfirmedTxRequest struct {
 	MetadataBase
 	TokenID       string // pTokenID in incognito chain
@@ -10,7 +9,6 @@ type PortalSubmitConfirmedTxRequest struct {
 	BatchID       string
 }
 
-// NewPortalSubmitConfirmedTxRequest creates a new PortalSubmitConfirmedTxRequest.
 func NewPortalSubmitConfirmedTxRequest(metaType int, unshieldProof, tokenID, batchID string) (*PortalSubmitConfirmedTxRequest, error) {
 	metadataBase := MetadataBase{
 		Type: metaType,
@@ -27,7 +25,6 @@ func NewPortalSubmitConfirmedTxRequest(metaType int, unshieldProof, tokenID, bat
 	return portalUnshieldReq, nil
 }
 
-// Hash overrides MetadataBase.Hash().
 func (r PortalSubmitConfirmedTxRequest) Hash() *common.Hash {
 	record := r.MetadataBase.Hash().String()
 	record += r.TokenID
@@ -39,7 +36,6 @@ func (r PortalSubmitConfirmedTxRequest) Hash() *common.Hash {
 	return &hash
 }
 
-// CalculateSize overrides MetadataBase.CalculateSize().
 func (r *PortalSubmitConfirmedTxRequest) CalculateSize() uint64 {
 	return calculateSize(r)
 }

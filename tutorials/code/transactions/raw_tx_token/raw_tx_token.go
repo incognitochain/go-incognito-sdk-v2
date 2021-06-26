@@ -34,5 +34,5 @@ func main() {
 		log.Fatal(err)
 	}
 
-	fmt.Printf("Create and send tx token successfully, txhash: %v\n", txHash)
+	fmt.Printf("Create and send tx token successfull, txhash: %v\n", txHash)
 }

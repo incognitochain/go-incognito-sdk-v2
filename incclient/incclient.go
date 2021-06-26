@@ -1,5 +1,3 @@
-// Package incclient provides access to almost all functions needed to create transactions, become a node validator,
-// retrieve information from full-nodes, shield or un-shield access, etc. It is the main focus of this sdk.
 package incclient
 
 import (
@@ -8,14 +6,12 @@ import (
 	"github.com/incognitochain/go-incognito-sdk-v2/rpchandler/rpc"
 )
 
-// IncClient defines the environment with which users want to interact.
 type IncClient struct {
 	rpcServer *rpc.RPCServer
 	ethServer *rpc.RPCServer
 	version   int
 }
 
-// NewTestNetClient creates a new IncClient with the test-net environment.
 func NewTestNetClient() (*IncClient, error) {
 	rpcServer := rpc.NewRPCServer(TestNetFullNode)
 	ethServer := rpc.NewRPCServer(TestNetETHHost)
@@ -38,8 +34,6 @@ func NewTestNetClient() (*IncClient, error) {
 
 	return &incClient, nil
 }
-
-// NewTestNet1Client creates a new IncClient with the test-net 1 environment.
 func NewTestNet1Client() (*IncClient, error) {
 	rpcServer := rpc.NewRPCServer(TestNet1FullNode)
 	ethServer := rpc.NewRPCServer(TestNet1ETHHost)
@@ -62,8 +56,6 @@ func NewTestNet1Client() (*IncClient, error) {
 
 	return &incClient, nil
 }
-
-// NewMainNetClient creates a new IncClient with the main-net environment.
 func NewMainNetClient() (*IncClient, error) {
 	rpcServer := rpc.NewRPCServer(MainNetFullNode)
 	ethServer := rpc.NewRPCServer(MainNetETHHost)
@@ -86,8 +78,6 @@ func NewMainNetClient() (*IncClient, error) {
 
 	return &incClient, nil
 }
-
-// NewLocalClient creates a new IncClient with the local environment.
 func NewLocalClient(port string) (*IncClient, error) {
 	rpcServer := rpc.NewRPCServer(LocalFullNode)
 	ethServer := rpc.NewRPCServer(LocalETHHost)
@@ -113,8 +103,6 @@ func NewLocalClient(port string) (*IncClient, error) {
 
 	return &incClient, nil
 }
-
-// NewDevNetClient creates a new IncClient with the dev-net environment.
 func NewDevNetClient() (*IncClient, error) {
 	rpcServer := rpc.NewRPCServer(DevNetFullNode)
 	ethServer := rpc.NewRPCServer(DevNetETHHost)
@@ -138,7 +126,6 @@ func NewDevNetClient() (*IncClient, error) {
 	return &incClient, nil
 }
 
-// NewIncClient creates a new IncClient from given parameters.
 func NewIncClient(fullNode, ethNode string, version int) (*IncClient, error) {
 	rpcServer := rpc.NewRPCServer(fullNode)
 	ethServer := rpc.NewRPCServer(ethNode)

@@ -14,10 +14,7 @@ import (
 	"github.com/incognitochain/go-incognito-sdk-v2/wallet"
 )
 
-// GetOutputCoins calls the remote server to get all the output tokens for an output coin key.
-// The returned result consists of
-//	- A list of output coins
-//	- A list of corresponding indices. For an output coin v1, its index is -1.
+//GetOutputCoins calls the remote server to get all the output tokens for an output coin key.
 func (client *IncClient) GetOutputCoins(outCoinKey *rpc.OutCoinKey, tokenID string, height uint64) ([]jsonresult.ICoinInfo, []*big.Int, error) {
 	if client.version == 1 {
 		return client.GetOutputCoinsV1(outCoinKey, tokenID, height)
@@ -37,8 +34,6 @@ func (client *IncClient) GetOutputCoinsV1(outCoinKey *rpc.OutCoinKey, tokenID st
 }
 
 // GetOutputCoinsV2 calls the remote server to get all the output tokens for an output coin key using the new RPC.
-//
-// For this function, it is required that the caller has submitted the OTA key to the remote full-node.
 func (client *IncClient) GetOutputCoinsV2(outCoinKey *rpc.OutCoinKey, tokenID string, upToHeight uint64) ([]jsonresult.ICoinInfo, []*big.Int, error) {
 	b, err := client.rpcServer.GetListOutputCoinsByRPCV2(outCoinKey, tokenID, upToHeight)
 	if err != nil {
@@ -51,43 +46,44 @@ func (client *IncClient) GetOutputCoinsV2(outCoinKey *rpc.OutCoinKey, tokenID st
 // GetListDecryptedOutCoin retrieves and decrypts all the output tokens for a private key.
 // It returns
 //	- a map from the serial number to the output coin;
+//	- a list of corresponding indices;
 //	- error (if any).
-func (client *IncClient) GetListDecryptedOutCoin(privateKey string, tokenID string, height uint64) (map[string]coin.PlainCoin, error) {
+func (client *IncClient) GetListDecryptedOutCoin(privateKey string, tokenID string, height uint64) (map[string]coin.PlainCoin, []*big.Int, error) {
 	outCoinKey, err := NewOutCoinKeyFromPrivateKey(privateKey)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-	outCoinKey.SetReadonlyKey("") // call this if you do not want the remote full-node to decrypt your coin
+	outCoinKey.SetReadonlyKey("") // call this if you do not want the remote full node to decrypt your coin
 
-	listOutputCoins, _, err := client.GetOutputCoins(outCoinKey, tokenID, height)
+	listOutputCoins, listIndices, err := client.GetOutputCoins(outCoinKey, tokenID, height)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	if len(listOutputCoins) == 0 {
-		return nil, nil
+		return nil, nil, nil
 	}
 
 	listDecryptedOutCoins, listKeyImages, err := GetListDecryptedCoins(privateKey, listOutputCoins)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	mapOutCoin := make(map[string]coin.PlainCoin)
 	if len(listDecryptedOutCoins) != len(listKeyImages) {
-		return nil, fmt.Errorf("have %v output coins but %v serial numbers", len(listDecryptedOutCoins), len(listKeyImages))
+		return nil, nil, fmt.Errorf("have %v output coins but %v serial numbers", len(listDecryptedOutCoins), len(listKeyImages))
 	}
 
 	for i, outCoin := range listDecryptedOutCoins {
 		mapOutCoin[listKeyImages[i]] = outCoin
 	}
 
-	return mapOutCoin, nil
+	return mapOutCoin, listIndices, nil
 }
 
-// CheckCoinsSpent checks if the provided serial numbers have been spent or not.
+//CheckCoinsSpent checks if the provided serial numbers have been spent or not.
 //
-// Returned result in boolean list.
+//Returned result in boolean list.
 func (client *IncClient) CheckCoinsSpent(shardID byte, tokenID string, snList []string) ([]bool, error) {
 	b, err := client.rpcServer.HasSerialNumberByRPC(shardID, tokenID, snList)
 	if err != nil {
@@ -107,7 +103,7 @@ func (client *IncClient) CheckCoinsSpent(shardID byte, tokenID string, snList []
 	return tmp, nil
 }
 
-// GetUnspentOutputCoins retrieves all unspent coins of a private key, without sending the private key to the remote full-node.
+//GetUnspentOutputCoins retrieves all unspent coins of a private key, without sending the private key to the remote full node.
 func (client *IncClient) GetUnspentOutputCoins(privateKey, tokenID string, height uint64) ([]coin.PlainCoin, []*big.Int, error) {
 	keyWallet, err := wallet.Base58CheckDeserialize(privateKey)
 	if err != nil {
@@ -118,7 +114,7 @@ func (client *IncClient) GetUnspentOutputCoins(privateKey, tokenID string, heigh
 	if err != nil {
 		return nil, nil, err
 	}
-	outCoinKey.SetReadonlyKey("") // call this if you do not want the remote full-node to decrypt your coin
+	outCoinKey.SetReadonlyKey("") // call this if you do not want the remote full node to decrypt your coin
 
 	listOutputCoins, listIndices, err := client.GetOutputCoins(outCoinKey, tokenID, height)
 	if err != nil {
@@ -152,12 +148,11 @@ func (client *IncClient) GetUnspentOutputCoins(privateKey, tokenID string, heigh
 	return listUnspentOutputCoins, listUnspentIndices, nil
 }
 
-// GetUnspentOutputCoinsFromCache retrieves all unspent coins of a private key, without sending the private key to the remote full-node.
+// GetUnspentOutputCoinsFromCache retrieves all unspent coins of a private key, without sending the private key to the remote full node.
 func (client *IncClient) GetUnspentOutputCoinsFromCache(privateKey, tokenID string, height uint64) ([]coin.PlainCoin, []*big.Int, error) {
 	return client.GetUnspentOutputCoins(privateKey, tokenID, height)
 }
 
-// NewOutCoinKeyFromPrivateKey creates a new rpc.OutCoinKey given the private key.
 func NewOutCoinKeyFromPrivateKey(privateKey string) (*rpc.OutCoinKey, error) {
 	keyWallet, err := wallet.Base58CheckDeserialize(privateKey)
 	if err != nil {
@@ -175,7 +170,6 @@ func NewOutCoinKeyFromPrivateKey(privateKey string) (*rpc.OutCoinKey, error) {
 	return rpc.NewOutCoinKey(paymentAddStr, otaSecretKey, viewingKeyStr), err
 }
 
-// ParseCoinFromJsonResponse parses raw coin data returned from an RPC request into a list of ICoinInfo.
 func ParseCoinFromJsonResponse(b []byte) ([]jsonresult.ICoinInfo, []*big.Int, error) {
 	var tmp jsonresult.ListOutputCoins
 	err := rpchandler.ParseResponse(b, &tmp)
@@ -201,7 +195,6 @@ func ParseCoinFromJsonResponse(b []byte) ([]jsonresult.ICoinInfo, []*big.Int, er
 	return resultOutCoins, listIndices, nil
 }
 
-// GetListDecryptedCoins decrypts a list of ICoinInfo's using the given private key.
 func GetListDecryptedCoins(privateKey string, listOutputCoins []jsonresult.ICoinInfo) ([]coin.PlainCoin, []string, error) {
 	keyWallet, err := wallet.Base58CheckDeserialize(privateKey)
 	if err != nil {
@@ -270,7 +263,6 @@ func GetListDecryptedCoins(privateKey string, listOutputCoins []jsonresult.ICoin
 	return listDecryptedOutCoins, listKeyImages, nil
 }
 
-// GenerateOTAFromPaymentAddress generates a random one-time address, and TxRandom from a payment address.
 func GenerateOTAFromPaymentAddress(paymentAddressStr string) (string, string, error) {
 	keyWallet, err := wallet.Base58CheckDeserialize(paymentAddressStr)
 	if err != nil {

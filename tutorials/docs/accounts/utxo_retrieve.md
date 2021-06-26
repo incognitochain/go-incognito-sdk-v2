@@ -43,7 +43,7 @@ outCoinKey, err := incclient.NewOutCoinKeyFromPrivateKey(privateKey)
 if err != nil {
 	log.Fatal(err)
 }
-outCoinKey.SetReadonlyKey("") // call this if you do not want the remote full-node to decrypt your coin
+outCoinKey.SetReadonlyKey("") // call this if you do not want the remote full node to decrypt your coin
 ```
 
 ## Example
@@ -75,7 +75,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	outCoinKey.SetReadonlyKey("") // call this if you do not want the remote full-node to decrypt your coin
+	outCoinKey.SetReadonlyKey("") // call this if you do not want the remote full node to decrypt your coin
 
 	outCoinsV1, idxList, err := client.GetOutputCoins(outCoinKey, tokenID, 0)
 	for i, outCoin := range outCoinsV1 {

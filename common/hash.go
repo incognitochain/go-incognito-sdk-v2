@@ -3,44 +3,59 @@ package common
 import (
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/ethereum/go-ethereum/crypto"
 	"golang.org/x/crypto/sha3"
 )
 
-var invalidMaxHashSizeErr = fmt.Errorf("invalid max hash size")
-var invalidHashSizeErr = fmt.Errorf("invalid hash size")
-var nilHashErr = fmt.Errorf("input hash is nil")
+var InvalidMaxHashSizeErr = errors.New("invalid max hash size")
+var InvalidHashSizeErr = errors.New("invalid hash size")
+var NilHashErr = errors.New("input hash is nil")
 
-// Hash is a 32-byte long array wrapping a hashed value.
 type Hash [HashSize]byte
 
-// MarshalText converts hashObj string to bytes array.
+// MarshalText converts hashObj string to bytes array
 func (hashObj Hash) MarshalText() ([]byte, error) {
 	return []byte(hashObj.String()), nil
 }
 
-// UnmarshalText reverts bytes array to hashObj.
+// UnmarshalText reverts bytes array to hashObj
 func (hashObj Hash) UnmarshalText(text []byte) error {
 	copy(hashObj[:], text)
 	return nil
 }
 
-// UnmarshalJSON unmarshal json data to hashObj.
+// UnmarshalJSON unmarshal json data to hashObj
 func (hashObj *Hash) UnmarshalJSON(data []byte) error {
 	hashString := ""
-	err := json.Unmarshal(data, &hashString)
-	if err != nil {
-		return err
+	_ = json.Unmarshal(data, &hashString)
+	hashObj.Decode(hashObj, hashString)
+	return nil
+}
+
+// Format writes first few bytes of hash for debugging
+func (hashObj *Hash) Format(f fmt.State, c rune) {
+	if c == 'h' {
+		t := hashObj.String()
+		f.Write([]byte(t[:8]))
+	} else {
+		m := "%"
+		for i := 0; i < 128; i++ {
+			if f.Flag(i) {
+				m += string(i)
+			}
+		}
+		m += string(c)
+		fmt.Fprintf(f, m, hashObj[:])
 	}
-	return hashObj.Decode(hashObj, hashString)
 }
 
 // SetBytes sets the bytes array which represent the hash.
 func (hashObj *Hash) SetBytes(newHash []byte) error {
-	l := len(newHash)
-	if l != HashSize {
-		return invalidHashSizeErr
+	nhlen := len(newHash)
+	if nhlen != HashSize {
+		return InvalidHashSizeErr
 	}
 	copy(hashObj[:], newHash)
 
@@ -49,7 +64,7 @@ func (hashObj *Hash) SetBytes(newHash []byte) error {
 
 // GetBytes returns bytes array of hashObj
 func (hashObj *Hash) GetBytes() []byte {
-	newBytes := make([]byte, 0)
+	newBytes := []byte{}
 	newBytes = make([]byte, len(hashObj))
 	copy(newBytes, hashObj[:])
 	return newBytes
@@ -99,7 +114,7 @@ func (hashObj Hash) NewHashFromStr(hash string) (*Hash, error) {
 func (hashObj *Hash) Decode(dst *Hash, src string) error {
 	// Return error if hash string is too long.
 	if len(src) > MaxHashStringSize {
-		return invalidMaxHashSizeErr
+		return InvalidMaxHashSizeErr
 	}
 
 	// Hex decoder expects the hash to be a multiple of two.  When not, pad
@@ -129,13 +144,13 @@ func (hashObj *Hash) Decode(dst *Hash, src string) error {
 	return nil
 }
 
-// Cmp compare two hashes, if
-// - hash = target: return 0.
-// - hash > target: return 1.
-// - hash < target: return -1.
+// Cmp compare two hashes
+// hash = target : return 0
+// hash > target : return 1
+// hash < target : return -1
 func (hashObj *Hash) Cmp(target *Hash) (int, error) {
 	if hashObj == nil || target == nil {
-		return 0, nilHashErr
+		return 0, NilHashErr
 	}
 	for i := 0; i < HashSize; i++ {
 		if hashObj[i] > target[i] {
@@ -148,13 +163,32 @@ func (hashObj *Hash) Cmp(target *Hash) (int, error) {
 	return 0, nil
 }
 
-// Keccak256 returns Keccak256 hash as a Hash object for storing and comparing.
+// Keccak256 returns Keccak256 hash as a Hash object for storing and comparing
 func Keccak256(data ...[]byte) Hash {
 	h := crypto.Keccak256(data...)
 	r := Hash{}
 	copy(r[:], h)
 	return r
 }
+
+func HashArrayOfHashArray(target []Hash) Hash {
+	temp := []byte{0}
+	for _, hash := range target {
+		temp = append(temp, hash[:]...)
+	}
+	return HashH(temp)
+}
+
+func BytesToHash(b []byte) Hash {
+	var h Hash
+	_ = h.SetBytes(b)
+	//if err != nil {
+	//	panic(err)
+	//}
+	return h
+}
+
+func (h Hash) Bytes() []byte { return h[:] }
 
 // Keccak256Hash calculates and returns the Keccak256 hash of the input data,
 // converting it to an internal Hash data structure.
