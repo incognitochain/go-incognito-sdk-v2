@@ -57,6 +57,22 @@ type OutCoin struct {
 	AssetTag             string `json:"AssetTag"`
 }
 
+// Conceal removes all fields of an OutCoin leaving only the version, commitment and public key.
+// It is usually used to enhance privacy before being sent to the remote server.
+func (outCoin *OutCoin) Conceal() {
+	outCoin.Index = ""
+	outCoin.SNDerivator = ""
+	outCoin.KeyImage = ""
+	outCoin.Randomness = ""
+	outCoin.Value = ""
+	outCoin.Info = ""
+	outCoin.SharedRandom = ""
+	outCoin.SharedConcealRandom = ""
+	outCoin.TxRandom = ""
+	outCoin.CoinDetailsEncrypted = ""
+	outCoin.AssetTag = ""
+}
+
 // NewOutCoin creates a new OutCoin from the given ICoinInfo.
 func NewOutCoin(outCoin ICoinInfo) OutCoin {
 	keyImage := ""
