@@ -404,6 +404,7 @@ func generateMLSAGRingWithIndexes(inputCoins []coin.PlainCoin, outputCoins []*co
 	return mlsag.NewRing(ring), indices, commitmentToZero, nil
 }
 
+
 // ========== SALARY FUNCTIONS: INIT AND VALIDATE  ==========
 
 func (tx *Tx) InitTxSalary(otaCoin *coin.CoinV2, privateKey *key.PrivateKey, metaData metadata.Metadata) error {
@@ -457,7 +458,7 @@ func (tx Tx) HashWithoutMetadataSig() *common.Hash {
 	mdHash := md.HashWithoutSig()
 	tx.SetMetadata(nil)
 	txHash := tx.Hash()
-	if mdHash == nil || txHash == nil {
+	if mdHash==nil || txHash==nil{
 		return nil
 	}
 	// tx.SetMetadata(md)

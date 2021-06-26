@@ -5,8 +5,8 @@ import (
 	"encoding/hex"
 	"fmt"
 
-	ethCrypto "github.com/ethereum/go-ethereum/crypto"
 	"github.com/incognitochain/go-incognito-sdk-v2/common"
+	ethCrypto "github.com/ethereum/go-ethereum/crypto"
 )
 
 const (

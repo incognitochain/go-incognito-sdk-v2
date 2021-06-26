@@ -18,7 +18,7 @@ func (server *RPCServer) PDEContributePRV(privKeyStr string, amount string) ([]b
 	if server == nil || len(server.url) == 0 {
 		return nil, fmt.Errorf("rpc server not set")
 	}
-
+	
 	keyWallet, _ := wallet.Base58CheckDeserialize(privKeyStr)
 	keyWallet.KeySet.InitFromPrivateKey(&keyWallet.KeySet.PrivateKey)
 	paymentAddStr := keyWallet.Base58CheckSerialize(wallet.PaymentAddressType)
@@ -51,7 +51,7 @@ func (server *RPCServer) PDEContributeToken(privKeyStr, tokenID, amount string) 
 	if server == nil || len(server.url) == 0 {
 		return nil, fmt.Errorf("rpc server not set")
 	}
-
+	
 	keyWallet, _ := wallet.Base58CheckDeserialize(privKeyStr)
 	keyWallet.KeySet.InitFromPrivateKey(&keyWallet.KeySet.PrivateKey)
 	paymentAddStr := keyWallet.Base58CheckSerialize(wallet.PaymentAddressType)
@@ -94,7 +94,7 @@ func (server *RPCServer) PDEWithdrawContribution(privKeyStr, tokenID1, tokenID2,
 	if server == nil || len(server.url) == 0 {
 		return nil, fmt.Errorf("rpc server not set")
 	}
-
+	
 	keyWallet, _ := wallet.Base58CheckDeserialize(privKeyStr)
 	keyWallet.KeySet.InitFromPrivateKey(&keyWallet.KeySet.PrivateKey)
 	paymentAddStr := keyWallet.Base58CheckSerialize(wallet.PaymentAddressType) //Attempt to withdraw contribution using new a payment address
@@ -127,7 +127,7 @@ func (server *RPCServer) PDEFeeWithdraw(privKeyStr, tokenID1, tokenID2, amountSh
 	if server == nil || len(server.url) == 0 {
 		return nil, fmt.Errorf("rpc server not set")
 	}
-
+	
 	keyWallet, _ := wallet.Base58CheckDeserialize(privKeyStr)
 	keyWallet.KeySet.InitFromPrivateKey(&keyWallet.KeySet.PrivateKey)
 	paymentAddStr := keyWallet.Base58CheckSerialize(wallet.PaymentAddressType) //Attempt to withdraw contribution using new a payment address
@@ -157,7 +157,7 @@ func (server *RPCServer) PDETradePRV(privKeyStr, receiverToken, amount string) (
 	if server == nil || len(server.url) == 0 {
 		return nil, fmt.Errorf("rpc server not set")
 	}
-
+	
 	keyWallet, _ := wallet.Base58CheckDeserialize(privKeyStr)
 	keyWallet.KeySet.InitFromPrivateKey(&keyWallet.KeySet.PrivateKey)
 	paymentAddStr := keyWallet.Base58CheckSerialize(wallet.PaymentAddressType)
@@ -189,7 +189,7 @@ func (server *RPCServer) PDETradeToken(privKeyStr, sellToken, amount string) ([]
 	if server == nil || len(server.url) == 0 {
 		return nil, fmt.Errorf("rpc server not set")
 	}
-
+	
 	keyWallet, _ := wallet.Base58CheckDeserialize(privKeyStr)
 	keyWallet.KeySet.InitFromPrivateKey(&keyWallet.KeySet.PrivateKey)
 	paymentAddStr := keyWallet.Base58CheckSerialize(wallet.PaymentAddressType)
@@ -231,7 +231,7 @@ func (server *RPCServer) CheckTradeStatus(txHash string) ([]byte, error) {
 	if server == nil || len(server.url) == 0 {
 		return nil, fmt.Errorf("rpc server not set")
 	}
-
+	
 	method := getPDETradeStatus
 	mapParam := make(map[string]interface{})
 	mapParam["TxRequestIDStr"] = txHash
@@ -248,11 +248,11 @@ func (server *RPCServer) CheckTradeStatus(txHash string) ([]byte, error) {
 	return server.SendPostRequestWithQuery(string(query))
 }
 
-func (server *RPCServer) GetPDEState(beaconHeight uint64) ([]byte, error) {
+func (server *RPCServer) GetPDEState(beaconHeight uint64) ([]byte, error){
 	if server == nil || len(server.url) == 0 {
 		return nil, fmt.Errorf("rpc server not set")
 	}
-
+	
 	query := fmt.Sprintf(`{
     "id": 1,
     "jsonrpc": "1.0",
@@ -272,7 +272,7 @@ func (server *RPCServer) ConvertPDEPrice(tokenToSell, tokenToBuy string, amount 
 	if server == nil || len(server.url) == 0 {
 		return nil, fmt.Errorf("rpc server not set")
 	}
-
+	
 	method := convertPDEPrices
 	mapParam := make(map[string]interface{})
 	mapParam["FromTokenIDStr"] = tokenToSell
@@ -295,7 +295,7 @@ func (server *RPCServer) GetAllTradesInMempool() ([]byte, error) {
 	if server == nil || len(server.url) == 0 {
 		return nil, fmt.Errorf("rpc server not set")
 	}
-
+	
 	method := getAllTradesInMempool
 
 	params := make([]interface{}, 0)

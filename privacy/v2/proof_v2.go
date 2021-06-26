@@ -336,7 +336,7 @@ func Prove(inputCoins []coin.PlainCoin, outputCoins []*coin.CoinV2, sharedSecret
 	wit.Set(outputValues, outputRands)
 	if hasConfidentialAsset {
 		blinders := make([]*crypto.Scalar, len(sharedSecrets))
-		for i := range sharedSecrets {
+		for i, _ := range sharedSecrets {
 			if sharedSecrets[i] == nil {
 				blinders[i] = new(crypto.Scalar).FromUint64(0)
 			} else {

@@ -3,12 +3,12 @@ package jsonresult
 import (
 	"encoding/json"
 	"errors"
-	"github.com/ethereum/go-ethereum/common/math"
 	"github.com/incognitochain/go-incognito-sdk-v2/coin"
 	"github.com/incognitochain/go-incognito-sdk-v2/common"
 	"github.com/incognitochain/go-incognito-sdk-v2/common/base58"
 	"github.com/incognitochain/go-incognito-sdk-v2/crypto"
 	"github.com/incognitochain/go-incognito-sdk-v2/privacy"
+	"github.com/ethereum/go-ethereum/common/math"
 	"log"
 	"math/big"
 	"strconv"

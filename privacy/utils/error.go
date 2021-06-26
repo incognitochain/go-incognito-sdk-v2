@@ -77,7 +77,9 @@ var ErrCodeMessage = map[int]struct {
 
 	InvalidPrivateKeyErr:           {-9300, "Invalid private key"},
 	ParseKeyImageWithPrivateKeyErr: {-9301, "Cannot parse key image with private key"},
-}
+
+
+	}
 
 type PrivacyError struct {
 	Code    int

@@ -287,7 +287,7 @@ func (ml *Mlsag) calculateC(message [common.HashSize]byte, alpha []*crypto.Scala
 func verifyKeyImages(keyImages []*crypto.Point) bool {
 	var check bool = true
 	for i := 0; i < len(keyImages); i += 1 {
-		if keyImages[i] == nil {
+		if keyImages[i]==nil{
 			return false
 		}
 		lKI := new(crypto.Point).ScalarMult(keyImages[i], CurveOrder)
@@ -299,7 +299,7 @@ func verifyKeyImages(keyImages []*crypto.Point) bool {
 func verifyRing(sig *MlsagSig, R *Ring, message [common.HashSize]byte) (bool, error) {
 	c := *sig.c
 	cBefore := *sig.c
-	if len(R.keys) != len(sig.r) {
+	if len(R.keys) != len(sig.r){
 		return false, fmt.Errorf("MLSAG Error : Malformed Ring")
 	}
 	//fmt.Printf("VERIFY cBefore: %v\n", cBefore.String())
@@ -356,7 +356,7 @@ func PrintScalar(sList []*crypto.Scalar) string {
 	toBePrinted := ""
 	for i, element := range sList {
 		toBePrinted += element.String()
-		if i != len(sList)-1 {
+		if i != len(sList) - 1 {
 			toBePrinted += "--"
 		}
 	}
@@ -368,7 +368,7 @@ func PrintPoint(sList []*crypto.Point) string {
 	toBePrinted := ""
 	for i, element := range sList {
 		toBePrinted += element.String()
-		if i != len(sList)-1 {
+		if i != len(sList) - 1 {
 			toBePrinted += "--"
 		}
 	}

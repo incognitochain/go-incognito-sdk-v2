@@ -65,3 +65,4 @@ func TestIncClient_GetBeaconBestState(t *testing.T) {
 
 	fmt.Println(string(jsb))
 }
+

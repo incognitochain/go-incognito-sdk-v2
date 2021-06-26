@@ -39,5 +39,6 @@ func (server *RPCServer) ConvertPaymentAddress(addr string) ([]byte, error) {
 		return nil, err
 	}
 
+
 	return server.SendPostRequestWithQuery(string(query))
 }

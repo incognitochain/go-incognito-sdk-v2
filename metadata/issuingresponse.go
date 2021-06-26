@@ -7,7 +7,7 @@ import (
 type IssuingResponse struct {
 	MetadataBase
 	RequestedTxID common.Hash
-	SharedRandom  []byte `json:"SharedRandom,omitempty"`
+	SharedRandom       []byte `json:"SharedRandom,omitempty"`
 }
 
 func (iRes IssuingResponse) Hash() *common.Hash {

@@ -51,6 +51,7 @@ func NewPDEWithdrawalRequest(
 
 func (*PDEWithdrawalRequest) ShouldSignMetaData() bool { return true }
 
+
 func (pc PDEWithdrawalRequest) Hash() *common.Hash {
 	record := pc.MetadataBase.Hash().String()
 	record += pc.WithdrawerAddressStr

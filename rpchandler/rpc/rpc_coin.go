@@ -8,6 +8,8 @@ import (
 	"github.com/incognitochain/go-incognito-sdk-v2/rpchandler/jsonresult"
 )
 
+
+
 //===================== OUTPUT COINS RPC =====================//
 //These RPCs return raw JSON bytes.
 
@@ -200,6 +202,7 @@ func (server *RPCServer) HasSerialNumberInMemPool(snList []string) ([]byte, erro
 		snQueryList = append(snQueryList, fmt.Sprintf(`"%s"`, sn))
 	}
 
+
 	method := hasSerialNumbersInMempool
 
 	params := make([]interface{}, 0)
@@ -272,7 +275,7 @@ func (server *RPCServer) AuthorizedSubmitKey(otaStr string, accessToken string, 
 	return server.SendPostRequestWithQuery(string(query))
 }
 
-func (server *RPCServer) RandomCommitments(shardID byte, inputCoins []jsonresult.OutCoin, tokenID string) ([]byte, error) {
+func (server *RPCServer) RandomCommitments (shardID byte, inputCoins []jsonresult.OutCoin, tokenID string) ([]byte, error) {
 	if server == nil || len(server.url) == 0 {
 		return nil, fmt.Errorf("rpc server not set")
 	}
@@ -296,7 +299,7 @@ func (server *RPCServer) RandomCommitments(shardID byte, inputCoins []jsonresult
 	return server.SendPostRequestWithQuery(string(query))
 }
 
-func (server *RPCServer) RandomCommitmentsAndPublicKeys(shardID byte, tokenID string, lenDecoy int) ([]byte, error) {
+func (server *RPCServer) RandomCommitmentsAndPublicKeys (shardID byte, tokenID string, lenDecoy int) ([]byte, error) {
 	if server == nil || len(server.url) == 0 {
 		return nil, fmt.Errorf("rpc server not set")
 	}
@@ -317,5 +320,4 @@ func (server *RPCServer) RandomCommitmentsAndPublicKeys(shardID byte, tokenID st
 
 	return server.SendPostRequestWithQuery(string(query))
 }
-
 //===================== END OF OUTPUT COINS RPC =====================//

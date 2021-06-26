@@ -9,7 +9,7 @@ type ReturnStakingMetadata struct {
 	MetadataBase
 	TxID          string
 	StakerAddress key.PaymentAddress
-	SharedRandom  []byte `json:"SharedRandom,omitempty"`
+	SharedRandom []byte `json:"SharedRandom,omitempty"`
 }
 
 func (sbsRes ReturnStakingMetadata) Hash() *common.Hash {
@@ -27,3 +27,4 @@ func (sbsRes ReturnStakingMetadata) Hash() *common.Hash {
 func (sbsRes *ReturnStakingMetadata) SetSharedRandom(r []byte) {
 	sbsRes.SharedRandom = r
 }
+

@@ -61,7 +61,7 @@ func makeTxToken(txPRV *Tx, pubkey, sig []byte, proof privacy.Proof) *Tx {
 		copy(clonedInfo, txPRV.Info)
 	}
 	var clonedProof privacy.Proof = nil
-	// feed the type to parse proof
+	// feed the type to parse proof 
 	proofType := txPRV.Type
 	if proofType == common.TxTokenConversionType {
 		proofType = common.TxConversionType
@@ -108,9 +108,7 @@ func (tx *TxToken) Hash() *common.Hash {
 	result := common.HashH(append(firstHash[:], secondHash[:]...))
 	return &result
 }
-func (txToken TxToken) HashWithoutMetadataSig() *common.Hash {
-	return txToken.Tx.HashWithoutMetadataSig()
-}
+func (txToken TxToken) HashWithoutMetadataSig() *common.Hash { return txToken.Tx.HashWithoutMetadataSig() }
 func (td TxTokenDataVersion2) ToCompatTokenData(ttx metadata.Transaction) tx_generic.TxTokenData {
 	return tx_generic.TxTokenData{
 		TxNormal:       ttx,
@@ -587,6 +585,7 @@ func (tx TxToken) IsPrivacy() bool {
 	}
 	return tx.Tx.Proof.IsPrivacy()
 }
+
 
 func (tx *TxToken) GetReceiverData() ([]coin.Coin, error) {
 	if tx.Tx.Proof != nil && len(tx.Tx.Proof.GetOutputCoins()) > 0 {

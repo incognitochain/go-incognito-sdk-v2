@@ -20,12 +20,12 @@ type IssuingReqAction struct {
 }
 
 type IssuingAcceptedInst struct {
-	ShardID         byte               `json:"shardId"`
-	DepositedAmount uint64             `json:"issuingAmount"`
+	ShardID         byte                   `json:"shardId"`
+	DepositedAmount uint64                 `json:"issuingAmount"`
 	ReceiverAddr    key.PaymentAddress `json:"receiverAddrStr"`
-	IncTokenID      common.Hash        `json:"incTokenId"`
-	IncTokenName    string             `json:"incTokenName"`
-	TxReqID         common.Hash        `json:"txReqId"`
+	IncTokenID      common.Hash            `json:"incTokenId"`
+	IncTokenName    string                 `json:"incTokenName"`
+	TxReqID         common.Hash            `json:"txReqId"`
 }
 
 func (iReq IssuingRequest) Hash() *common.Hash {

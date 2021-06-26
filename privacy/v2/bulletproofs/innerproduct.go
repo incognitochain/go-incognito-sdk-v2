@@ -79,7 +79,7 @@ func (proof *InnerProductProof) SetBytes(bytes []byte) error {
 
 	proof.l = make([]*crypto.Point, lenLArray)
 	for i := 0; i < lenLArray; i++ {
-		if offset+crypto.Ed25519KeySize > len(bytes) {
+		if offset+crypto.Ed25519KeySize > len(bytes){
 			return errors.New("Inner Product Proof byte unmarshaling failed")
 		}
 		proof.l[i], err = new(crypto.Point).FromBytesS(bytes[offset : offset+crypto.Ed25519KeySize])
@@ -91,7 +91,7 @@ func (proof *InnerProductProof) SetBytes(bytes []byte) error {
 
 	proof.r = make([]*crypto.Point, lenLArray)
 	for i := 0; i < lenLArray; i++ {
-		if offset+crypto.Ed25519KeySize > len(bytes) {
+		if offset+crypto.Ed25519KeySize > len(bytes){
 			return errors.New("Inner Product Proof byte unmarshaling failed")
 		}
 		proof.r[i], err = new(crypto.Point).FromBytesS(bytes[offset : offset+crypto.Ed25519KeySize])
@@ -101,19 +101,19 @@ func (proof *InnerProductProof) SetBytes(bytes []byte) error {
 		offset += crypto.Ed25519KeySize
 	}
 
-	if offset+crypto.Ed25519KeySize > len(bytes) {
+	if offset+crypto.Ed25519KeySize > len(bytes){
 		return errors.New("Inner Product Proof byte unmarshaling failed")
 	}
 	proof.a = new(crypto.Scalar).FromBytesS(bytes[offset : offset+crypto.Ed25519KeySize])
 	offset += crypto.Ed25519KeySize
 
-	if offset+crypto.Ed25519KeySize > len(bytes) {
+	if offset+crypto.Ed25519KeySize > len(bytes){
 		return errors.New("Inner Product Proof byte unmarshaling failed")
 	}
 	proof.b = new(crypto.Scalar).FromBytesS(bytes[offset : offset+crypto.Ed25519KeySize])
 	offset += crypto.Ed25519KeySize
 
-	if offset+crypto.Ed25519KeySize > len(bytes) {
+	if offset+crypto.Ed25519KeySize > len(bytes){
 		return errors.New("Inner Product Proof byte unmarshaling failed")
 	}
 	proof.p, err = new(crypto.Point).FromBytesS(bytes[offset : offset+crypto.Ed25519KeySize])

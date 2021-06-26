@@ -206,7 +206,7 @@ func (tx *TxBase) UnmarshalJSON(data []byte) error {
 	}
 
 	proofType := tx.Type
-	if proofType == common.TxTokenConversionType {
+	if proofType == common.TxTokenConversionType{
 		proofType = common.TxNormalType
 	}
 
@@ -275,27 +275,27 @@ func (tx TxBase) GetMetadata() metadata.Metadata { return tx.Metadata }
 
 func (tx *TxBase) SetMetadata(meta metadata.Metadata) { tx.Metadata = meta }
 
-func (tx TxBase) GetPrivateKey() []byte {
+func (tx TxBase) GetPrivateKey() []byte{
 	return tx.sigPrivKey
 }
 
-func (tx *TxBase) SetPrivateKey(sk []byte) {
+func (tx *TxBase) SetPrivateKey(sk []byte){
 	tx.sigPrivKey = sk
 }
 
-func (tx TxBase) GetCachedActualSize() *uint64 {
+func (tx TxBase) GetCachedActualSize() *uint64{
 	return tx.cachedActualSize
 }
 
-func (tx *TxBase) SetCachedActualSize(sz *uint64) {
+func (tx *TxBase) SetCachedActualSize(sz *uint64){
 	tx.cachedActualSize = sz
 }
 
-func (tx TxBase) GetCachedHash() *common.Hash {
+func (tx TxBase) GetCachedHash() *common.Hash{
 	return tx.cachedHash
 }
 
-func (tx *TxBase) SetCachedHash(h *common.Hash) {
+func (tx *TxBase) SetCachedHash(h *common.Hash){
 	tx.cachedHash = h
 }
 
@@ -487,7 +487,6 @@ func (tx TxBase) IsPrivacy() bool {
 	}
 	return tx.Proof.IsPrivacy()
 }
-
 // =================== FUNCTIONS THAT VALIDATE STUFFS ===================
 func (tx TxBase) ListOTAHashH() []common.Hash {
 	return []common.Hash{}

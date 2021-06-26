@@ -24,3 +24,4 @@ type Proof interface {
 
 	IsPrivacy() bool
 }
+

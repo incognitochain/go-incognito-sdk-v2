@@ -28,3 +28,4 @@ func (iRes PDEContributionResponse) Hash() *common.Hash {
 func (iRes *PDEContributionResponse) CalculateSize() uint64 {
 	return calculateSize(iRes)
 }
+

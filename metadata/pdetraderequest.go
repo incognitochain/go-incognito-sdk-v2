@@ -67,6 +67,7 @@ func NewPDETradeRequest(
 	return pdeTradeRequest, nil
 }
 
+
 func (pc PDETradeRequest) Hash() *common.Hash {
 	record := pc.MetadataBase.Hash().String()
 	record += pc.TokenIDToBuyStr

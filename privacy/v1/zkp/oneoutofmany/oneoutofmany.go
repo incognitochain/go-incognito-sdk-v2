@@ -197,7 +197,7 @@ func (proof *OneOutOfManyProof) SetBytes(bytes []byte) error {
 	// get cl array
 	proof.cl = make([]*crypto.Point, n)
 	for i := 0; i < n; i++ {
-		if offset+crypto.Ed25519KeySize > len(bytes) {
+		if offset+crypto.Ed25519KeySize > len(bytes){
 			return errors.New("One-out-of-many Proof byte unmarshaling failed")
 		}
 		proof.cl[i], err = new(crypto.Point).FromBytesS(bytes[offset : offset+crypto.Ed25519KeySize])
@@ -210,7 +210,7 @@ func (proof *OneOutOfManyProof) SetBytes(bytes []byte) error {
 	// get ca array
 	proof.ca = make([]*crypto.Point, n)
 	for i := 0; i < n; i++ {
-		if offset+crypto.Ed25519KeySize > len(bytes) {
+		if offset+crypto.Ed25519KeySize > len(bytes){
 			return errors.New("One-out-of-many Proof byte unmarshaling failed")
 		}
 		proof.ca[i], err = new(crypto.Point).FromBytesS(bytes[offset : offset+crypto.Ed25519KeySize])
@@ -223,7 +223,7 @@ func (proof *OneOutOfManyProof) SetBytes(bytes []byte) error {
 	// get cb array
 	proof.cb = make([]*crypto.Point, n)
 	for i := 0; i < n; i++ {
-		if offset+crypto.Ed25519KeySize > len(bytes) {
+		if offset+crypto.Ed25519KeySize > len(bytes){
 			return errors.New("One-out-of-many Proof byte unmarshaling failed")
 		}
 		proof.cb[i], err = new(crypto.Point).FromBytesS(bytes[offset : offset+crypto.Ed25519KeySize])
@@ -236,7 +236,7 @@ func (proof *OneOutOfManyProof) SetBytes(bytes []byte) error {
 	// get cd array
 	proof.cd = make([]*crypto.Point, n)
 	for i := 0; i < n; i++ {
-		if offset+crypto.Ed25519KeySize > len(bytes) {
+		if offset+crypto.Ed25519KeySize > len(bytes){
 			return errors.New("One-out-of-many Proof byte unmarshaling failed")
 		}
 		proof.cd[i], err = new(crypto.Point).FromBytesS(bytes[offset : offset+crypto.Ed25519KeySize])
@@ -249,7 +249,7 @@ func (proof *OneOutOfManyProof) SetBytes(bytes []byte) error {
 	// get f array
 	proof.f = make([]*crypto.Scalar, n)
 	for i := 0; i < n; i++ {
-		if offset+crypto.Ed25519KeySize > len(bytes) {
+		if offset+crypto.Ed25519KeySize > len(bytes){
 			return errors.New("One-out-of-many Proof byte unmarshaling failed")
 		}
 		proof.f[i] = new(crypto.Scalar).FromBytesS(bytes[offset : offset+crypto.Ed25519KeySize])
@@ -259,7 +259,7 @@ func (proof *OneOutOfManyProof) SetBytes(bytes []byte) error {
 	// get za array
 	proof.za = make([]*crypto.Scalar, n)
 	for i := 0; i < n; i++ {
-		if offset+crypto.Ed25519KeySize > len(bytes) {
+		if offset+crypto.Ed25519KeySize > len(bytes){
 			return errors.New("One-out-of-many Proof byte unmarshaling failed")
 		}
 		proof.za[i] = new(crypto.Scalar).FromBytesS(bytes[offset : offset+crypto.Ed25519KeySize])
@@ -269,7 +269,7 @@ func (proof *OneOutOfManyProof) SetBytes(bytes []byte) error {
 	// get zb array
 	proof.zb = make([]*crypto.Scalar, n)
 	for i := 0; i < n; i++ {
-		if offset+crypto.Ed25519KeySize > len(bytes) {
+		if offset+crypto.Ed25519KeySize > len(bytes){
 			return errors.New("One-out-of-many Proof byte unmarshaling failed")
 		}
 		proof.zb[i] = new(crypto.Scalar).FromBytesS(bytes[offset : offset+crypto.Ed25519KeySize])
@@ -277,7 +277,7 @@ func (proof *OneOutOfManyProof) SetBytes(bytes []byte) error {
 	}
 
 	// get zd
-	if offset+crypto.Ed25519KeySize > len(bytes) {
+	if offset+crypto.Ed25519KeySize > len(bytes){
 		return errors.New("One-out-of-many Proof byte unmarshaling failed")
 	}
 	proof.zd = new(crypto.Scalar).FromBytesS(bytes[offset : offset+crypto.Ed25519KeySize])
@@ -355,7 +355,7 @@ func (wit OneOutOfManyWitness) Prove() (*OneOutOfManyProof, error) {
 
 	// Calculate x
 	cmtsInBytes := make([][]byte, 0)
-	for _, cmts := range wit.stmt.Commitments {
+	for _, cmts := range wit.stmt.Commitments{
 		cmtsInBytes = append(cmtsInBytes, cmts.ToBytesS())
 	}
 	x := utils.GenerateChallenge(cmtsInBytes)
@@ -419,7 +419,7 @@ func (proof OneOutOfManyProof) Verify() (bool, error) {
 
 	//Calculate x
 	cmtsInBytes := make([][]byte, 0)
-	for _, cmts := range proof.Statement.Commitments {
+	for _, cmts := range proof.Statement.Commitments{
 		cmtsInBytes = append(cmtsInBytes, cmts.ToBytesS())
 	}
 	x := utils.GenerateChallenge(cmtsInBytes)

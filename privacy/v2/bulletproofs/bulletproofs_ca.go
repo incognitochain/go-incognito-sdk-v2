@@ -10,22 +10,22 @@ import (
 
 var CACommitmentScheme crypto.PedersenCommitment = CopyPedersenCommitmentScheme(crypto.PedCom)
 
-func CopyPedersenCommitmentScheme(sch crypto.PedersenCommitment) crypto.PedersenCommitment {
+func CopyPedersenCommitmentScheme(sch crypto.PedersenCommitment) crypto.PedersenCommitment{
 	var result crypto.PedersenCommitment
 	var generators []*crypto.Point
-	for _, gen := range sch.G {
+	for _, gen := range sch.G{
 		generators = append(generators, new(crypto.Point).Set(gen))
 	}
 	result.G = generators
 	return result
 }
 
-func GetFirstAssetTag(coins []*coin.CoinV2) (*crypto.Point, error) {
-	if coins == nil || len(coins) == 0 {
+func GetFirstAssetTag(coins []*coin.CoinV2) (*crypto.Point,error){
+	if coins==nil || len(coins)==0{
 		return nil, errors.New("Cannot get asset tag from empty input")
 	}
 	result := coins[0].GetAssetTag()
-	if result == nil {
+	if result==nil{
 		return nil, errors.New("The coin does not have an asset tag")
 	}
 	return result, nil
@@ -535,13 +535,13 @@ func (proof RangeProof) VerifyFasterUsingBase(anAssetTag *crypto.Point) (bool, e
 // 	return true, nil, -1
 // }
 
-func TransformWitnessToCAWitness(wit *Witness, assetTagBlinders []*crypto.Scalar) (*Witness, error) {
-	if len(assetTagBlinders) != len(wit.values) || len(assetTagBlinders) != len(wit.rands) {
+func TransformWitnessToCAWitness(wit *Witness, assetTagBlinders []*crypto.Scalar) (*Witness,error){
+	if len(assetTagBlinders)!=len(wit.values) || len(assetTagBlinders)!=len(wit.rands){
 		return nil, errors.New("Cannot transform witness. Parameter lengths mismatch")
 	}
 	newRands := make([]*crypto.Scalar, len(wit.values))
 
-	for i := range wit.values {
+	for i,_ := range wit.values{
 		temp := new(crypto.Scalar).Sub(assetTagBlinders[i], assetTagBlinders[0])
 		temp.Mul(temp, new(crypto.Scalar).FromUint64(wit.values[i]))
 		temp.Add(temp, wit.rands[i])

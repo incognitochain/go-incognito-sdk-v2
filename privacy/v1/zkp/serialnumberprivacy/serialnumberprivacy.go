@@ -129,6 +129,8 @@ func (proof SNPrivacyProof) GetComInput() *crypto.Point {
 	return proof.stmt.comInput
 }
 
+
+
 // Set sets Statement
 func (stmt *SerialNumberPrivacyStatement) Set(
 	SN *crypto.Point,
@@ -415,7 +417,8 @@ func (proof SNPrivacyProof) VerifyOld(mess []byte) (bool, error) {
 	return true, nil
 }
 
-func Copy(proof SNPrivacyProof) *SNPrivacyProof {
+
+func Copy(proof SNPrivacyProof) *SNPrivacyProof{
 	tmpProof := new(SNPrivacyProof)
 	tmpProof.tInput = new(crypto.Point).Set(proof.tInput)
 	tmpProof.tSK = new(crypto.Point).Set(proof.tSK)

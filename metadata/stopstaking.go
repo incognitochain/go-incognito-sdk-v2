@@ -31,8 +31,8 @@ func NewStopAutoStakingMetadata(stopStakingType int, committeePublicKey string) 
 	}
 	metadataBase := NewMetadataBaseWithSignature(stopStakingType)
 	return &StopAutoStakingMetadata{
-		MetadataBaseWithSignature: *metadataBase,
-		CommitteePublicKey:        committeePublicKey,
+		MetadataBaseWithSignature:       *metadataBase,
+		CommitteePublicKey: committeePublicKey,
 	}, nil
 }
 

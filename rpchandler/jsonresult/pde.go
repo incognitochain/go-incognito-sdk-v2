@@ -22,7 +22,7 @@ var (
 
 type CurrentPDEState struct {
 	WaitingPDEContributions map[string]*PDEContribution `json:"WaitingPDEContributions"`
-	PDEPoolPairs            map[string]*common.PoolInfo `json:"PDEPoolPairs"`
+	PDEPoolPairs            map[string]*common.PoolInfo  `json:"PDEPoolPairs"`
 	PDEShares               map[string]uint64           `json:"PDEShares"`
 	PDETradingFees          map[string]uint64           `json:"PDETradingFees"`
 	BeaconTimeStamp         int64                       `json:"BeaconTimeStamp"`

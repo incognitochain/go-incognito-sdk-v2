@@ -9,7 +9,7 @@ type IssuingETHResponse struct {
 	RequestedTxID   common.Hash
 	UniqETHTx       []byte
 	ExternalTokenID []byte
-	SharedRandom    []byte `json:"SharedRandom,omitempty"`
+	SharedRandom       []byte `json:"SharedRandom,omitempty"`
 }
 
 func (iRes IssuingETHResponse) Hash() *common.Hash {

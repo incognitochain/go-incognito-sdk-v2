@@ -9,6 +9,7 @@ import (
 	"github.com/incognitochain/go-incognito-sdk-v2/rpchandler/rpc"
 )
 
+
 // GetActiveShard returns the number of active shards on the Incognito network.
 func (client *IncClient) GetActiveShard() (int, error) {
 	responseInBytes, err := client.rpcServer.GetActiveShards()

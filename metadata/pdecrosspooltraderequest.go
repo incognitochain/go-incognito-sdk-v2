@@ -15,7 +15,7 @@ type PDECrossPoolTradeRequest struct {
 	TraderAddressStr    string
 	TxRandomStr         string `json:"TxRandomStr,omitempty"`
 	SubTraderAddressStr string `json:"SubTraderAddressStr,omitempty"`
-	SubTxRandomStr      string `json:"SubTxRandomStr,omitempty"`
+	SubTxRandomStr		string `json:"SubTxRandomStr,omitempty"`
 	MetadataBase
 }
 
@@ -72,7 +72,7 @@ func NewPDECrossPoolTradeRequest(
 		TraderAddressStr:    traderAddressStr,
 		TxRandomStr:         txRandomStr,
 		SubTraderAddressStr: subTraderAddressStr,
-		SubTxRandomStr:      subTxRandomStr,
+		SubTxRandomStr: subTxRandomStr,
 	}
 	pdeCrossPoolTradeRequest.MetadataBase = metadataBase
 	return pdeCrossPoolTradeRequest, nil

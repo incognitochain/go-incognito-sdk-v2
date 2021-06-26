@@ -7,8 +7,8 @@ package base58
 import (
 	"bytes"
 	"errors"
-	lru "github.com/hashicorp/golang-lru"
 	"github.com/incognitochain/go-incognito-sdk-v2/common"
+	lru "github.com/hashicorp/golang-lru"
 )
 
 // ErrChecksum indicates that the checksum of a check-encoded string does not verify against
@@ -17,6 +17,7 @@ var ErrChecksum = errors.New("checksum error")
 
 // ErrInvalidFormat indicates that the check-encoded string has an invalid format.
 var ErrInvalidFormat = errors.New("invalid format: version and/or checksum bytes missing")
+
 
 // ChecksumFirst4Bytes receives data in bytes array
 // and returns a checksum which is 4 first bytes of hashing of data.
