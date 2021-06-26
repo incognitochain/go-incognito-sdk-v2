@@ -57,17 +57,19 @@ func (server *RPCServer) SendPostRequestWithQuery(query string) ([]byte, error) 
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
+		log.Printf("DoReq %v\n", err)
 		return []byte{}, err
 	} else {
 		defer func() {
 			err := resp.Body.Close()
 			if err != nil {
-				log.Printf("%v\n", err)
+				log.Printf("BodyClose %v\n", err)
 			}
 		}()
 
 		body, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
+			log.Printf("ReadAll %v\n", err)
 			return []byte{}, err
 		}
 		return body, nil

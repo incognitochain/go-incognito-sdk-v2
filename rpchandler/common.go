@@ -6,6 +6,7 @@ import (
 	"github.com/incognitochain/go-incognito-sdk-v2/common"
 	"github.com/incognitochain/go-incognito-sdk-v2/key"
 	"github.com/incognitochain/go-incognito-sdk-v2/wallet"
+	"log"
 )
 
 // RPCError represents an error that is used as a part of a JSON-RPC JsonResponse
@@ -57,7 +58,11 @@ func ParseResponse(respondInBytes []byte, val interface{}) error {
 	var respond JsonResponse
 	err := json.Unmarshal(respondInBytes, &respond)
 	if err != nil {
-		return err
+		if len(respondInBytes) == 0 {
+			return fmt.Errorf("RPC response is empty")
+		}
+		log.Printf("%v, %v\n", len(respondInBytes), string(respondInBytes))
+		return fmt.Errorf("un-marshal RPC-response error: %v", err)
 	}
 
 	if respond.Error != nil {
