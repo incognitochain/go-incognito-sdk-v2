@@ -2,45 +2,42 @@ package metadata
 
 import "github.com/incognitochain/go-incognito-sdk-v2/common"
 
-// PortalShieldingRequest is a Metadata that a portal user requests to mint pToken (after sending public tokens to a multi-sig wallet)
-// This Metadata should ONLY be enclosed with a normal (PRV) transaction.
+// PortalShieldingRequest - portal user requests ptoken (after sending pubToken to multisig wallet)
+// metadata - portal user sends shielding request - create normal tx with this metadata
 type PortalShieldingRequest struct {
 	MetadataBase
-	TokenID        string // pTokenID in incognito chain
-	IncAddressStr  string
-	ShieldingProof string
+	TokenID         string // pTokenID in incognito chain
+	IncogAddressStr string
+	ShieldingProof  string
 }
 
-// NewPortalShieldingRequest creates a new PortalShieldingRequest.
 func NewPortalShieldingRequest(
 	metaType int,
 	tokenID string,
-	incAddressStr string,
+	incogAddressStr string,
 	shieldingProof string) (*PortalShieldingRequest, error) {
 	metadataBase := MetadataBase{
 		Type: metaType,
 	}
 	shieldingRequestMeta := &PortalShieldingRequest{
-		TokenID:        tokenID,
-		IncAddressStr:  incAddressStr,
-		ShieldingProof: shieldingProof,
+		TokenID:         tokenID,
+		IncogAddressStr: incogAddressStr,
+		ShieldingProof:  shieldingProof,
 	}
 	shieldingRequestMeta.MetadataBase = metadataBase
 	return shieldingRequestMeta, nil
 }
 
-// Hash overrides MetadataBase.Hash().
 func (shieldingReq PortalShieldingRequest) Hash() *common.Hash {
 	record := shieldingReq.MetadataBase.Hash().String()
 	record += shieldingReq.TokenID
-	record += shieldingReq.IncAddressStr
+	record += shieldingReq.IncogAddressStr
 	record += shieldingReq.ShieldingProof
 	// final hash
 	hash := common.HashH([]byte(record))
 	return &hash
 }
 
-// CalculateSize overrides MetadataBase.CalculateSize().
 func (shieldingReq *PortalShieldingRequest) CalculateSize() uint64 {
 	return calculateSize(shieldingReq)
 }

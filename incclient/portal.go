@@ -7,9 +7,6 @@ import (
 	"github.com/incognitochain/go-incognito-sdk-v2/wallet"
 )
 
-// CreatePortalShieldTransaction creates a Portal V4 shielding transaction.
-//
-// It returns the base58-encoded transaction, the transaction's hash, and an error (if any).
 func (client *IncClient) CreatePortalShieldTransaction(
 	privateKey, tokenID, paymentAddr, shieldingProof string, inputCoins []coin.PlainCoin, coinIndices []uint64,
 ) ([]byte, string, error) {
@@ -30,10 +27,6 @@ func (client *IncClient) CreatePortalShieldTransaction(
 	return client.CreateRawTransaction(txParam, 2)
 }
 
-// CreateAndSendPortalShieldTransaction creates a Portal V4 shielding transaction,
-// and submits it to the Incognito network.
-//
-// It returns the transaction's hash, and an error (if any).
 func (client *IncClient) CreateAndSendPortalShieldTransaction(
 	privateKey, tokenID, paymentAddr, shieldingProof string, inputCoins []coin.PlainCoin, coinIndices []uint64,
 ) (string, error) {
@@ -48,9 +41,6 @@ func (client *IncClient) CreateAndSendPortalShieldTransaction(
 	return txHash, nil
 }
 
-// CreatePortalReplaceByFeeTransaction creates a Portal V4 replace-by-fee transaction.
-//
-// It returns the base58-encoded transaction, the transaction's hash, and an error (if any).
 func (client *IncClient) CreatePortalReplaceByFeeTransaction(
 	privateKey, tokenID, batchID string, fee uint, inputCoins []coin.PlainCoin, coinIndices []uint64,
 ) ([]byte, string, error) {
@@ -71,10 +61,6 @@ func (client *IncClient) CreatePortalReplaceByFeeTransaction(
 	return client.CreateRawTransaction(txParam, 2)
 }
 
-// CreateAndSendPortalReplaceByFeeTransaction creates a Portal V4 replace-by-fee transaction,
-// and submits it to the Incognito network.
-//
-// It returns the transaction's hash, and an error (if any).
 func (client *IncClient) CreateAndSendPortalReplaceByFeeTransaction(
 	privateKey, tokenID, batchID string, fee uint, inputCoins []coin.PlainCoin, coinIndices []uint64,
 ) (string, error) {
@@ -89,9 +75,6 @@ func (client *IncClient) CreateAndSendPortalReplaceByFeeTransaction(
 	return txHash, nil
 }
 
-// CreatePortalSubmitConfirmationTransaction creates a Portal V4 confirmation submission transaction.
-//
-// It returns the base58-encoded transaction, the transaction's hash, and an error (if any).
 func (client *IncClient) CreatePortalSubmitConfirmationTransaction(
 	privateKey, tokenID, unShieldProof, batchID string, inputCoins []coin.PlainCoin, coinIndices []uint64,
 ) ([]byte, string, error) {
@@ -112,10 +95,6 @@ func (client *IncClient) CreatePortalSubmitConfirmationTransaction(
 	return client.CreateRawTransaction(txParam, 2)
 }
 
-// CreateAndSendPortalSubmitConfirmationTransaction creates a Portal V4 confirmation submission transaction,
-// and submits it to the Incognito network.
-//
-// It returns the transaction's hash, and an error (if any).
 func (client *IncClient) CreateAndSendPortalSubmitConfirmationTransaction(
 	privateKey, tokenID, unShieldProof, batchID string, inputCoins []coin.PlainCoin, coinIndices []uint64,
 ) (string, error) {
@@ -130,10 +109,6 @@ func (client *IncClient) CreateAndSendPortalSubmitConfirmationTransaction(
 	return txHash, nil
 }
 
-// CreatePortalConvertVaultTransaction creates a Portal V4 vault conversion transaction.
-// This transaction SHOULD only be created only one time when migrating centralized bridge to portal v4.
-//
-// It returns the base58-encoded transaction, the transaction's hash, and an error (if any).
 func (client *IncClient) CreatePortalConvertVaultTransaction(
 	privateKey, tokenID, paymentAddr, convertingProof string, inputCoins []coin.PlainCoin, coinIndices []uint64,
 ) ([]byte, string, error) {
@@ -154,11 +129,6 @@ func (client *IncClient) CreatePortalConvertVaultTransaction(
 	return client.CreateRawTransaction(txParam, 2)
 }
 
-// CreateAndSendPortalConvertVaultTransaction creates a Portal V4 vault conversion transaction,
-// and submits it to the Incognito network. This transaction SHOULD only be created only one time
-// when migrating centralized bridge to portal v4.
-//
-// It returns the transaction's hash, and an error (if any).
 func (client *IncClient) CreateAndSendPortalConvertVaultTransaction(
 	privateKey, tokenID, paymentAddr, convertingProof string, inputCoins []coin.PlainCoin, coinIndices []uint64,
 ) (string, error) {
@@ -173,9 +143,6 @@ func (client *IncClient) CreateAndSendPortalConvertVaultTransaction(
 	return txHash, nil
 }
 
-// CreatePortalUnShieldTransaction creates a Portal V4 un-shielding transaction.
-//
-// It returns the base58-encoded transaction, the transaction's hash, and an error (if any).
 func (client *IncClient) CreatePortalUnShieldTransaction(
 	privateKey, tokenID, remoteAddr string, unShieldingAmount uint64, inputCoins []coin.PlainCoin, coinIndices []uint64,
 ) ([]byte, string, error) {
@@ -191,7 +158,7 @@ func (client *IncClient) CreatePortalUnShieldTransaction(
 	}
 
 	portalUnShieldingMetadata, err := metadata.NewPortalUnshieldRequest(
-		metadata.PortalV4UnShieldingRequestMeta,
+		metadata.PortalV4UnshieldingRequestMeta,
 		pubKeyStr,
 		txRandomStr,
 		tokenID,
@@ -210,10 +177,6 @@ func (client *IncClient) CreatePortalUnShieldTransaction(
 	return client.CreateRawTokenTransaction(txParam, 2)
 }
 
-// CreateAndSendPortalUnShieldTransaction creates a Portal V4 un-shielding transaction,
-// and submits it to the Incognito network.
-//
-// It returns the transaction's hash, and an error (if any).
 func (client *IncClient) CreateAndSendPortalUnShieldTransaction(
 	privateKey, tokenID, remoteAddr string, unShieldingAmount uint64, inputCoins []coin.PlainCoin, coinIndices []uint64,
 ) (string, error) {
@@ -228,9 +191,6 @@ func (client *IncClient) CreateAndSendPortalUnShieldTransaction(
 	return txHash, nil
 }
 
-// CreatePortalRelayHeaderTransaction creates block header-relaying transaction used in the Portal V4 protocol.
-//
-// It returns the base58-encoded transaction, the transaction's hash, and an error (if any).
 func (client *IncClient) CreatePortalRelayHeaderTransaction(
 	privateKey, paymentAddr, header string, blockHeight uint64, inputCoins []coin.PlainCoin, coinIndices []uint64,
 ) ([]byte, string, error) {
@@ -251,10 +211,6 @@ func (client *IncClient) CreatePortalRelayHeaderTransaction(
 	return client.CreateRawTransaction(txParam, 2)
 }
 
-// CreateAndSendPortalRelayHeaderTransaction creates block header-relaying transaction used in the Portal V4 protocol,
-// and submits it to the Incognito network.
-//
-// It returns the transaction's hash, and an error (if any).
 func (client *IncClient) CreateAndSendPortalRelayHeaderTransaction(
 	privateKey, paymentAddr, header string, blockHeight uint64, inputCoins []coin.PlainCoin, coinIndices []uint64,
 ) (string, error) {

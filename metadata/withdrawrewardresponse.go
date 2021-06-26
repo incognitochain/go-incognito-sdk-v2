@@ -5,7 +5,6 @@ import (
 	"strconv"
 )
 
-// WithDrawRewardResponse is the response for a WithDrawRewardRequest.
 type WithDrawRewardResponse struct {
 	MetadataBase
 	TxRequest       *common.Hash
@@ -15,25 +14,24 @@ type WithDrawRewardResponse struct {
 	Version         int
 }
 
-// Hash overrides MetadataBase.Hash().
-func (resp WithDrawRewardResponse) Hash() *common.Hash {
-	if resp.Version == common.SalaryVerFixHash {
-		if resp.TxRequest == nil {
+func (withDrawRewardResponse WithDrawRewardResponse) Hash() *common.Hash {
+	if withDrawRewardResponse.Version == common.SALARY_VER_FIX_HASH {
+		if withDrawRewardResponse.TxRequest == nil {
 			return &common.Hash{}
 		}
-		bArr := append(resp.TxRequest.GetBytes(), resp.TokenID.GetBytes()...)
-		version := strconv.Itoa(resp.Version)
-		if len(resp.SharedRandom) != 0 {
-			bArr = append(bArr, resp.SharedRandom...)
+		bArr := append(withDrawRewardResponse.TxRequest.GetBytes(), withDrawRewardResponse.TokenID.GetBytes()...)
+		version := strconv.Itoa(withDrawRewardResponse.Version)
+		if len(withDrawRewardResponse.SharedRandom) != 0 {
+			bArr = append(bArr, withDrawRewardResponse.SharedRandom...)
 		}
-		if len(resp.RewardPublicKey) != 0 {
-			bArr = append(bArr, resp.RewardPublicKey...)
+		if len(withDrawRewardResponse.RewardPublicKey) != 0 {
+			bArr = append(bArr, withDrawRewardResponse.RewardPublicKey...)
 		}
 
 		bArr = append(bArr, []byte(version)...)
 		txResHash := common.HashH(bArr)
 		return &txResHash
 	} else {
-		return resp.TxRequest
+		return withDrawRewardResponse.TxRequest
 	}
 }

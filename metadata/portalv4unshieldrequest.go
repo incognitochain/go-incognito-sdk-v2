@@ -6,17 +6,15 @@ import (
 	"github.com/incognitochain/go-incognito-sdk-v2/common"
 )
 
-// PortalUnshieldRequest is a request to un-shield tokens using the PortalV4 protocol.
 type PortalUnshieldRequest struct {
 	MetadataBase
-	OTAPubKeyStr   string
+	OTAPubKeyStr   string // OTA
 	TxRandomStr    string
 	RemoteAddress  string
 	TokenID        string
 	UnshieldAmount uint64
 }
 
-// NewPortalUnshieldRequest creates a new PortalUnshieldRequest.
 func NewPortalUnshieldRequest(metaType int, otaPubKeyStr, txRandomStr string, tokenID, remoteAddress string, burnAmount uint64) (*PortalUnshieldRequest, error) {
 	portalUnshieldReq := &PortalUnshieldRequest{
 		OTAPubKeyStr:   otaPubKeyStr,
@@ -33,7 +31,6 @@ func NewPortalUnshieldRequest(metaType int, otaPubKeyStr, txRandomStr string, to
 	return portalUnshieldReq, nil
 }
 
-// Hash overrides MetadataBase.Hash().
 func (uReq PortalUnshieldRequest) Hash() *common.Hash {
 	record := uReq.MetadataBase.Hash().String()
 	record += uReq.OTAPubKeyStr
@@ -47,7 +44,6 @@ func (uReq PortalUnshieldRequest) Hash() *common.Hash {
 	return &hash
 }
 
-// CalculateSize overrides MetadataBase.CalculateSize().
 func (uReq *PortalUnshieldRequest) CalculateSize() uint64 {
 	return calculateSize(uReq)
 }

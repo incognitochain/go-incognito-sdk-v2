@@ -5,13 +5,11 @@ import (
 	"strconv"
 )
 
-// PDETradeRequest is a request to place a trade on the pDEX.
-//
-// deprecated: use PDECrossPoolTradeRequest instead.
+// PDETradeRequest - privacy dex trade
 type PDETradeRequest struct {
 	TokenIDToBuyStr     string
 	TokenIDToSellStr    string
-	SellAmount          uint64 // must be equal to vOut value
+	SellAmount          uint64 // must be equal to vout value
 	MinAcceptableAmount uint64
 	TradingFee          uint64
 	TraderAddressStr    string
@@ -19,7 +17,30 @@ type PDETradeRequest struct {
 	MetadataBase
 }
 
-// NewPDETradeRequest creates a new PDETradeRequest.
+type PDETradeRequestAction struct {
+	Meta    PDETradeRequest
+	TxReqID common.Hash
+	ShardID byte
+}
+
+type TokenPoolValueOperation struct {
+	Operator string
+	Value    uint64
+}
+
+type PDETradeAcceptedContent struct {
+	TraderAddressStr         string
+	TxRandomStr              string
+	TokenIDToBuyStr          string
+	ReceiveAmount            uint64
+	Token1IDStr              string
+	Token2IDStr              string
+	Token1PoolValueOperation TokenPoolValueOperation
+	Token2PoolValueOperation TokenPoolValueOperation
+	ShardID                  byte
+	RequestedTxID            common.Hash
+}
+
 func NewPDETradeRequest(
 	tokenIDToBuyStr string,
 	tokenIDToSellStr string,
@@ -46,7 +67,6 @@ func NewPDETradeRequest(
 	return pdeTradeRequest, nil
 }
 
-// Hash overrides MetadataBase.Hash().
 func (pc PDETradeRequest) Hash() *common.Hash {
 	record := pc.MetadataBase.Hash().String()
 	record += pc.TokenIDToBuyStr
@@ -63,7 +83,6 @@ func (pc PDETradeRequest) Hash() *common.Hash {
 	return &hash
 }
 
-// CalculateSize overrides MetadataBase.CalculateSize().
 func (pc *PDETradeRequest) CalculateSize() uint64 {
 	return calculateSize(pc)
 }

@@ -2,6 +2,7 @@ package tx_ver1
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/incognitochain/go-incognito-sdk-v2/coin"
 	"github.com/incognitochain/go-incognito-sdk-v2/common"
@@ -12,20 +13,14 @@ import (
 	"math"
 )
 
-// TxToken represents a token transaction of version 1. It is a embedded TxTokenBase.
-// A token transaction v1 consists of 2 sub-transactions
-//	- TxBase: PRV sub-transaction for paying the transaction fee (if have).
-//	- TxNormal: the token sub-transaction to transfer token.
 type TxToken struct {
 	tx_generic.TxTokenBase
 }
 
-// Init creates a token transaction version 1 from the given parameter.
-// The input parameter should be a *tx_generic.TxTokenParams.
-func (txToken *TxToken) Init(txTokenParams interface{}) error {
-	params, ok := txTokenParams.(*tx_generic.TxTokenParams)
+func (txToken *TxToken) Init(paramsInterface interface{}) error {
+	params, ok := paramsInterface.(*tx_generic.TxTokenParams)
 	if !ok {
-		return fmt.Errorf("cannot parse the input as a TxTokenParam")
+		return errors.New("Cannot init TxTokenBase because params is not correct")
 	}
 	// init data for tx PRV for fee
 	txPrivacyParams := tx_generic.NewTxPrivacyInitParams(
@@ -37,7 +32,7 @@ func (txToken *TxToken) Init(txTokenParams interface{}) error {
 		nil,
 		params.MetaData,
 		params.Info,
-		params.KvArgs)
+		params.Kvargs)
 	txToken.Tx = new(Tx)
 	if err := txToken.Tx.Init(txPrivacyParams); err != nil {
 		return err
@@ -76,7 +71,7 @@ func (txToken *TxToken) Init(txTokenParams interface{}) error {
 
 			// set info coin for output coin
 			if len(params.TokenParams.Receiver[0].Message) > 0 {
-				if len(params.TokenParams.Receiver[0].Message) > coin.MaxSizeInfoCoin {
+				if len(params.TokenParams.Receiver[0].Message) > privacy.MaxSizeInfoCoin {
 					return fmt.Errorf("len of message (%v) too large", len(params.TokenParams.Receiver[0].Message))
 				}
 				tempOutputCoin[0].CoinDetails.SetInfo(params.TokenParams.Receiver[0].Message)
@@ -90,10 +85,7 @@ func (txToken *TxToken) Init(txTokenParams interface{}) error {
 			for i := 0; i < len(tempOutputCoin); i += 1 {
 				outputCoinsAsGeneric[i] = tempOutputCoin[i]
 			}
-			err = temp.Proof.SetOutputCoins(outputCoinsAsGeneric)
-			if err != nil {
-				return err
-			}
+			temp.Proof.SetOutputCoins(outputCoinsAsGeneric)
 
 			// get last byte
 			lastBytes := params.TokenParams.Receiver[0].PaymentAddress.Pk[len(params.TokenParams.Receiver[0].PaymentAddress.Pk)-1]
@@ -121,6 +113,7 @@ func (txToken *TxToken) Init(txTokenParams interface{}) error {
 				txToken.TxTokenData.PropertyID = *propertyID
 				txToken.TxTokenData.Mintable = true
 			} else {
+				//NOTICE: @merman update PropertyID calculated from hash of tokendata and shardID
 				newHashInitToken := common.HashH(append(hashInitToken.GetBytes(), params.ShardID))
 				txToken.TxTokenData.PropertyID = newHashInitToken
 			}
@@ -128,7 +121,7 @@ func (txToken *TxToken) Init(txTokenParams interface{}) error {
 	case utils.CustomTokenTransfer:
 		{
 			handled = true
-			// make a transfer for privacy custom token
+			// make a transfering for privacy custom token
 			// fee always 0 and reuse function of normal tx for custom token ID
 			propertyID, _ := common.Hash{}.NewHashFromStr(params.TokenParams.PropertyID)
 
@@ -144,7 +137,7 @@ func (txToken *TxToken) Init(txTokenParams interface{}) error {
 				propertyID,
 				nil,
 				nil,
-				params.TokenParams.KvArgs))
+				params.TokenParams.Kvargs))
 			if err != nil {
 				fmt.Printf("Init PRV fee transaction returns an error: %v\n", err)
 				return err
@@ -152,12 +145,11 @@ func (txToken *TxToken) Init(txTokenParams interface{}) error {
 		}
 	}
 	if !handled {
-		return fmt.Errorf("can't handle this TokenTxType")
+		return errors.New("can't handle this TokenTxType")
 	}
 	return nil
 }
 
-// GetTxActualSize returns the size of a TxBase in kb.
 func (txToken TxToken) GetTxActualSize() uint64 {
 	normalTxSize := txToken.Tx.GetTxActualSize()
 	tokenDataSize := uint64(0)
@@ -174,7 +166,6 @@ func (txToken TxToken) GetTxActualSize() uint64 {
 	return normalTxSize + uint64(math.Ceil(float64(tokenDataSize)/1024))
 }
 
-// UnmarshalJSON does the JSON-unmarshalling operation for a TxToken.
 func (txToken *TxToken) UnmarshalJSON(data []byte) error {
 	var err error
 	txToken.Tx = &Tx{}
@@ -198,8 +189,6 @@ func (txToken *TxToken) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-// ListOTAHashH returns the hash list of all OTA keys in a TxToken.
-// This is a transaction of version 1, so the result is empty.
 func (txToken TxToken) ListOTAHashH() []common.Hash {
 	return []common.Hash{}
 }

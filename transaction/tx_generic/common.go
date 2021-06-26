@@ -1,6 +1,7 @@
 package tx_generic
 
 import (
+	"errors"
 	"fmt"
 	"github.com/incognitochain/go-incognito-sdk-v2/coin"
 	"github.com/incognitochain/go-incognito-sdk-v2/common"
@@ -11,51 +12,51 @@ import (
 	"github.com/incognitochain/go-incognito-sdk-v2/wallet"
 )
 
-// GetTxMintData returns the minting data of a transaction w.r.t a given tokenID.
 func GetTxMintData(tx metadata.Transaction, tokenID *common.Hash) (bool, coin.Coin, *common.Hash, error) {
 	outputCoins, err := tx.GetReceiverData()
 	if err != nil {
 		return false, nil, nil, err
 	}
 	if len(outputCoins) != 1 {
-		return false, nil, nil, fmt.Errorf("tx mint has more than one receiver")
+		return false, nil, nil, errors.New("Error Tx mint has more than one receiver")
 	}
 	if inputCoins := tx.GetProof().GetInputCoins(); len(inputCoins) > 0 {
-		return false, nil, nil, fmt.Errorf("this is not a tx mint")
+		return false, nil, nil, errors.New("Error this is not Tx mint")
 	}
 	return true, outputCoins[0], tokenID, nil
 }
 
-// GetTxBurnData returns the burning data of a transaction.
 func GetTxBurnData(tx metadata.Transaction) (bool, coin.Coin, *common.Hash, error) {
 	outputCoins, err := tx.GetReceiverData()
 	if err != nil {
 		return false, nil, nil, err
 	}
-
-	for _, c := range outputCoins {
-		if wallet.IsPublicKeyBurningAddress(c.GetPublicKey().ToBytesS()) {
-			return true, c, &common.PRVCoinID, nil
+	// remove rule only accept maximum 2 outputs in tx burn
+	//if len(outputCoins) > 2 {
+	//	utils.Logger.Log.Error("GetAndCheckBurning receiver: More than 2 receivers")
+	//	return false, nil, nil, err
+	//}
+	for _, coin := range outputCoins {
+		if wallet.IsPublicKeyBurningAddress(coin.GetPublicKey().ToBytesS()) {
+			return true, coin, &common.PRVCoinID, nil
 		}
 	}
 	return false, nil, nil, nil
 }
 
-// CalculateSumOutputsWithFee returns a sum of given output coins' commitments plus the commitment of the given fee.
 func CalculateSumOutputsWithFee(outputCoins []coin.Coin, fee uint64) *crypto.Point {
 	sumOutputsWithFee := new(crypto.Point).Identity()
 	for i := 0; i < len(outputCoins); i += 1 {
 		sumOutputsWithFee.Add(sumOutputsWithFee, outputCoins[i].GetCommitment())
 	}
 	feeCommitment := new(crypto.Point).ScalarMult(
-		crypto.PedCom.G[crypto.PedersenValueIndex],
+		privacy.PedCom.G[privacy.PedersenValueIndex],
 		new(crypto.Scalar).FromUint64(fee),
 	)
 	sumOutputsWithFee.Add(sumOutputsWithFee, feeCommitment)
 	return sumOutputsWithFee
 }
 
-// ValidateTxParams checks sanity of a TxPrivacyInitParams.
 func ValidateTxParams(params *TxPrivacyInitParams) error {
 	if len(params.InputCoins) > 255 {
 		return fmt.Errorf("number of inputs (%v) is too large", len(params.InputCoins))
@@ -74,9 +75,23 @@ func ValidateTxParams(params *TxPrivacyInitParams) error {
 	return nil
 }
 
-// SignNoPrivacy signs a message in a non-private manner using the Schnorr signature scheme.
-func SignNoPrivacy(privateKey *key.PrivateKey, hashedMessage []byte) (signatureBytes []byte, sigPubKey []byte, err error) {
-	sk := new(crypto.Scalar).FromBytesS(*privateKey)
+func ParseTokenID(tokenID *common.Hash) (*common.Hash, error) {
+	if tokenID == nil {
+		result := new(common.Hash)
+		err := result.SetBytes(common.PRVCoinID[:])
+		if err != nil {
+			return nil, fmt.Errorf("cannot parse tokenID %v: %v", tokenID.String(), err)
+		}
+		return result, nil
+	}
+	return tokenID, nil
+}
+
+func SignNoPrivacy(privKey *key.PrivateKey, hashedMessage []byte) (signatureBytes []byte, sigPubKey []byte, err error) {
+	/****** using Schnorr signature *******/
+	// sign with sigPrivKey
+	// prepare private key for Schnorr
+	sk := new(crypto.Scalar).FromBytesS(*privKey)
 	r := new(crypto.Scalar).FromUint64(0)
 	sigKey := new(privacy.SchnorrPrivateKey)
 	sigKey.Set(sk, r)

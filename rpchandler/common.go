@@ -17,7 +17,6 @@ type RPCError struct {
 	Err        error  `json:"Err"`
 }
 
-// JsonRequest represents a JSON-RPC request.
 type JsonRequest struct {
 	JsonRPC string      `json:"Jsonrpc"`
 	Method  string      `json:"Method"`
@@ -25,7 +24,6 @@ type JsonRequest struct {
 	Id      interface{} `json:"Id"`
 }
 
-// JsonResponse represents a JSON-RPC response.
 type JsonResponse struct {
 	Id      *interface{}    `json:"Id"`
 	Result  json.RawMessage `json:"Result"`
@@ -34,6 +32,8 @@ type JsonResponse struct {
 	Method  string          `json:"Method"`
 	JsonRPC string          `json:"Jsonrpc"`
 }
+
+var Server = new(RPCServer)
 
 // OldParseResponse parses a raw JSON-RPC response into a JsonResponse.
 //

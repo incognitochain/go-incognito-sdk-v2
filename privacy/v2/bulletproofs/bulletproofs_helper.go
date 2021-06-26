@@ -1,12 +1,12 @@
 package bulletproofs
 
 import (
-	"fmt"
 	"github.com/incognitochain/go-incognito-sdk-v2/crypto"
 	"github.com/incognitochain/go-incognito-sdk-v2/privacy/utils"
+	"github.com/pkg/errors"
 )
 
-// ConvertUint64ToBinary represents a integer number in binary.
+// ConvertIntToBinary represents a integer number in binary
 func ConvertUint64ToBinary(number uint64, n int) []*crypto.Scalar {
 	if number == 0 {
 		res := make([]*crypto.Scalar, n)
@@ -28,10 +28,10 @@ func ConvertUint64ToBinary(number uint64, n int) []*crypto.Scalar {
 func computeHPrime(y *crypto.Scalar, N int, H []*crypto.Point) []*crypto.Point {
 	yInverse := new(crypto.Scalar).Invert(y)
 	HPrime := make([]*crypto.Point, N)
-	expYInverse := new(crypto.Scalar).FromUint64(1)
+	expyInverse := new(crypto.Scalar).FromUint64(1)
 	for i := 0; i < N; i++ {
-		HPrime[i] = new(crypto.Point).ScalarMult(H[i], expYInverse)
-		expYInverse.Mul(expYInverse, yInverse)
+		HPrime[i] = new(crypto.Point).ScalarMult(H[i], expyInverse)
+		expyInverse.Mul(expyInverse, yInverse)
 	}
 	return HPrime
 }
@@ -55,7 +55,7 @@ func computeDeltaYZ(z, zSquare *crypto.Scalar, yVector []*crypto.Scalar, N int) 
 		deltaYZ.Mul(deltaYZ, ip1)
 		sum := new(crypto.Scalar).FromUint64(0)
 		zTmp := new(crypto.Scalar).Set(zSquare)
-		for j := 0; j < N/utils.MaxExp; j++ {
+		for j := 0; j < int(N/utils.MaxExp); j++ {
 			zTmp.Mul(zTmp, z)
 			sum.Add(sum, zTmp)
 		}
@@ -67,10 +67,11 @@ func computeDeltaYZ(z, zSquare *crypto.Scalar, yVector []*crypto.Scalar, N int) 
 
 func innerProduct(a []*crypto.Scalar, b []*crypto.Scalar) (*crypto.Scalar, error) {
 	if len(a) != len(b) {
-		return nil, fmt.Errorf("incompatible sizes of a and b")
+		return nil, errors.New("Incompatible sizes of a and b")
 	}
 	result := new(crypto.Scalar).FromUint64(uint64(0))
 	for i := range a {
+		//res = a[i]*b[i] + res % l
 		result.MulAdd(a[i], b[i], result)
 	}
 	return result, nil
@@ -78,7 +79,7 @@ func innerProduct(a []*crypto.Scalar, b []*crypto.Scalar) (*crypto.Scalar, error
 
 func vectorAdd(a []*crypto.Scalar, b []*crypto.Scalar) ([]*crypto.Scalar, error) {
 	if len(a) != len(b) {
-		return nil, fmt.Errorf("incompatible sizes of a and b")
+		return nil, errors.New("Incompatible sizes of a and b")
 	}
 	result := make([]*crypto.Scalar, len(a))
 	for i := range a {
@@ -111,10 +112,9 @@ func roundUpPowTwo(v int) int {
 	}
 }
 
-// hadamardProduct returns the Hadamard product of a and b.
 func hadamardProduct(a []*crypto.Scalar, b []*crypto.Scalar) ([]*crypto.Scalar, error) {
 	if len(a) != len(b) {
-		return nil, fmt.Errorf("invalid input")
+		return nil, errors.New("Invalid input")
 	}
 	result := make([]*crypto.Scalar, len(a))
 	for i := 0; i < len(result); i++ {
@@ -157,7 +157,7 @@ func vectorMulScalar(v []*crypto.Scalar, s *crypto.Scalar) []*crypto.Scalar {
 // CommitAll commits a list of PCM_CAPACITY value(s)
 func encodeVectors(l []*crypto.Scalar, r []*crypto.Scalar, g []*crypto.Point, h []*crypto.Point) (*crypto.Point, error) {
 	if len(l) != len(r) || len(g) != len(l) || len(h) != len(g) {
-		return nil, fmt.Errorf("invalid input")
+		return nil, errors.New("Invalid input")
 	}
 	tmp1 := new(crypto.Point).MultiScalarMult(l, g)
 	tmp2 := new(crypto.Point).MultiScalarMult(r, h)
@@ -174,7 +174,7 @@ func newBulletproofParams(m int) *bulletproofParams {
 	param := new(bulletproofParams)
 	param.g = make([]*crypto.Point, capacity)
 	param.h = make([]*crypto.Point, capacity)
-	csByte := make([]byte, 0)
+	csByte := []byte{}
 
 	for i := 0; i < capacity; i++ {
 		param.g[i] = crypto.HashToPointFromIndex(int64(numCommitValue+i), crypto.CStringBulletProof)
@@ -192,7 +192,7 @@ func newBulletproofParams(m int) *bulletproofParams {
 }
 
 func generateChallenge(hashCache []byte, values []*crypto.Point) *crypto.Scalar {
-	bytes := make([]byte, 0)
+	bytes := []byte{}
 	bytes = append(bytes, hashCache...)
 	for i := 0; i < len(values); i++ {
 		bytes = append(bytes, values[i].ToBytesS()...)

@@ -6,7 +6,9 @@ import (
 	"sort"
 )
 
+// key prefix
 var (
+	// PDE
 	WaitingPDEContributionPrefix = []byte("waitingpdecontribution-")
 	PDEPoolPrefix                = []byte("pdepool-")
 	PDESharePrefix               = []byte("pdeshare-")
@@ -18,24 +20,14 @@ var (
 	PDEFeeWithdrawalStatusPrefix = []byte("pdefeewithdrawalstatus-")
 )
 
-// PoolInfo represents a pDEX pool of two tokenIDs.
-type PoolInfo struct {
-	Token1IDStr     string
-	Token1PoolValue uint64
-	Token2IDStr     string
-	Token2PoolValue uint64
-}
-
-// CurrentPDEState describes the state of the pDEX at a specific beacon height.
 type CurrentPDEState struct {
 	WaitingPDEContributions map[string]*PDEContribution `json:"WaitingPDEContributions"`
-	PDEPoolPairs            map[string]*PoolInfo        `json:"PDEPoolPairs"`
+	PDEPoolPairs            map[string]*common.PoolInfo `json:"PDEPoolPairs"`
 	PDEShares               map[string]uint64           `json:"PDEShares"`
 	PDETradingFees          map[string]uint64           `json:"PDETradingFees"`
 	BeaconTimeStamp         int64                       `json:"BeaconTimeStamp"`
 }
 
-// PDEContribution describes a contribution on the pDEX.
 type PDEContribution struct {
 	ContributorAddressStr string
 	TokenIDStr            string
@@ -43,7 +35,6 @@ type PDEContribution struct {
 	TxReqID               common.Hash
 }
 
-// BuildPDEPoolForPairKey builds a pDEX pool-key for a pair of tokenIDs at the given beacon height.
 func BuildPDEPoolForPairKey(
 	beaconHeight uint64,
 	token1IDStr string,
@@ -51,7 +42,7 @@ func BuildPDEPoolForPairKey(
 ) []byte {
 	beaconHeightBytes := []byte(fmt.Sprintf("%d-", beaconHeight))
 	pdePoolForPairByBCHeightPrefix := append(PDEPoolPrefix, beaconHeightBytes...)
-	tokenIDStrings := []string{token1IDStr, token2IDStr}
-	sort.Strings(tokenIDStrings)
-	return append(pdePoolForPairByBCHeightPrefix, []byte(tokenIDStrings[0]+"-"+tokenIDStrings[1])...)
+	tokenIDStrs := []string{token1IDStr, token2IDStr}
+	sort.Strings(tokenIDStrs)
+	return append(pdePoolForPairByBCHeightPrefix, []byte(tokenIDStrs[0]+"-"+tokenIDStrs[1])...)
 }

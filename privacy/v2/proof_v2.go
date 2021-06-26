@@ -13,7 +13,6 @@ import (
 	"github.com/incognitochain/go-incognito-sdk-v2/wallet"
 )
 
-// ProofV2 represents a payment proof for transactions of version 2.
 type ProofV2 struct {
 	Version     uint8
 	rangeProof  *bulletproofs.RangeProof
@@ -21,14 +20,10 @@ type ProofV2 struct {
 	outputCoins []*coin.CoinV2
 }
 
-// GetVersion returns the version of a ProofV2.
-// All ProofV2's have version 2.
+func (proof *ProofV2) SetVersion()       { proof.Version = 2 }
 func (proof *ProofV2) GetVersion() uint8 { return 2 }
 
-// GetInputCoins returns the input coins of a ProofV2.
 func (proof ProofV2) GetInputCoins() []coin.PlainCoin { return proof.inputCoins }
-
-// GetOutputCoins returns the output coins of a ProofV2.
 func (proof ProofV2) GetOutputCoins() []coin.Coin {
 	res := make([]coin.Coin, len(proof.outputCoins))
 	for i := 0; i < len(proof.outputCoins); i += 1 {
@@ -36,16 +31,10 @@ func (proof ProofV2) GetOutputCoins() []coin.Coin {
 	}
 	return res
 }
-
-// GetRangeProof returns the range proof of a ProofV2.
 func (proof ProofV2) GetRangeProof() range_proof.RangeProof {
 	return proof.rangeProof
 }
 
-// SetVersion sets the version of a ProofV2 to 2.
-func (proof *ProofV2) SetVersion() { proof.Version = 2 }
-
-// SetInputCoins sets v as the input coins of a ProofV2.
 func (proof *ProofV2) SetInputCoins(v []coin.PlainCoin) error {
 	var err error
 	proof.inputCoins = make([]coin.PlainCoin, len(v))
@@ -58,7 +47,6 @@ func (proof *ProofV2) SetInputCoins(v []coin.PlainCoin) error {
 	return nil
 }
 
-// SetOutputCoinsV2 sets v as the output coins of a ProofV2.
 func (proof *ProofV2) SetOutputCoinsV2(v []*coin.CoinV2) error {
 	var err error
 	proof.outputCoins = make([]*coin.CoinV2, len(v))
@@ -72,9 +60,7 @@ func (proof *ProofV2) SetOutputCoinsV2(v []*coin.CoinV2) error {
 	return nil
 }
 
-// SetOutputCoins sets v as the output coins of a ProofV2.
-//
-// v should be a list of all CoinV2's or else it would crash.
+// v should be all coinv2 or else it would crash
 func (proof *ProofV2) SetOutputCoins(v []coin.Coin) error {
 	var err error
 	proof.outputCoins = make([]*coin.CoinV2, len(v))
@@ -88,12 +74,10 @@ func (proof *ProofV2) SetOutputCoins(v []coin.Coin) error {
 	return nil
 }
 
-// SetRangeProof sets v as the RangProof of a ProofV2.
-func (proof *ProofV2) SetRangeProof(v *bulletproofs.RangeProof) {
-	proof.rangeProof = v
+func (proof *ProofV2) SetRangeProof(aggregatedRangeProof *bulletproofs.RangeProof) {
+	proof.rangeProof = aggregatedRangeProof
 }
 
-// Init returns an empty ProofV2.
 func (proof *ProofV2) Init() {
 	aggregatedRangeProof := &bulletproofs.RangeProof{}
 	aggregatedRangeProof.Init()
@@ -103,7 +87,6 @@ func (proof *ProofV2) Init() {
 	proof.outputCoins = []*coin.CoinV2{}
 }
 
-// MarshalJSON returns the JSON-marshalled form of a ProofV2.
 func (proof ProofV2) MarshalJSON() ([]byte, error) {
 	data := proof.Bytes()
 	//temp := base58.Base58Check{}.Encode(data, common.ZeroByte)
@@ -111,7 +94,6 @@ func (proof ProofV2) MarshalJSON() ([]byte, error) {
 	return json.Marshal(temp)
 }
 
-// UnmarshalJSON parses a raw-byte data into a ProofV2.
 func (proof *ProofV2) UnmarshalJSON(data []byte) error {
 	dataStr := common.EmptyString
 	errJson := json.Unmarshal(data, &dataStr)
@@ -130,13 +112,12 @@ func (proof *ProofV2) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-// Bytes returns a slice of bytes from the proof.
 func (proof ProofV2) Bytes() []byte {
 	var bytes []byte
 	bytes = append(bytes, proof.GetVersion())
 
 	comOutputMultiRangeProof := proof.rangeProof.Bytes()
-	var rangeProofLength = uint32(len(comOutputMultiRangeProof))
+	var rangeProofLength uint32 = uint32(len(comOutputMultiRangeProof))
 	bytes = append(bytes, common.Uint32ToBytes(rangeProofLength)...)
 	bytes = append(bytes, comOutputMultiRangeProof...)
 
@@ -145,7 +126,7 @@ func (proof ProofV2) Bytes() []byte {
 	for i := 0; i < len(proof.inputCoins); i++ {
 		inputCoins := proof.inputCoins[i].Bytes()
 		lenInputCoins := len(inputCoins)
-		lenInputCoinsBytes := make([]byte, 0)
+		lenInputCoinsBytes := []byte{}
 		if lenInputCoins < 256 {
 			lenInputCoinsBytes = []byte{byte(lenInputCoins)}
 		} else {
@@ -161,7 +142,7 @@ func (proof ProofV2) Bytes() []byte {
 	for i := 0; i < len(proof.outputCoins); i++ {
 		outputCoins := proof.outputCoins[i].Bytes()
 		lenOutputCoins := len(outputCoins)
-		lenOutputCoinsBytes := make([]byte, 0)
+		lenOutputCoinsBytes := []byte{}
 		if lenOutputCoins < 256 {
 			lenOutputCoinsBytes = []byte{byte(lenOutputCoins)}
 		} else {
@@ -175,33 +156,32 @@ func (proof ProofV2) Bytes() []byte {
 	return bytes
 }
 
-// SetBytes tries to parse the proof from a slice of raw bytes v.
-func (proof *ProofV2) SetBytes(v []byte) error {
-	if len(v) == 0 {
+func (proof *ProofV2) SetBytes(proofBytes []byte) error {
+	if len(proofBytes) == 0 {
 		return fmt.Errorf("proof bytes is zero")
 	}
-	if v[0] != proof.GetVersion() {
+	if proofBytes[0] != proof.GetVersion() {
 		return fmt.Errorf("proof bytes version is incorrect")
 	}
 	proof.SetVersion()
 	offset := 1
 
 	//ComOutputMultiRangeProofSize *rangeProof
-	if offset+common.Uint32Size >= len(v) {
+	if offset+common.Uint32Size >= len(proofBytes) {
 		return fmt.Errorf("out of range aggregated range proof")
 	}
-	lenComOutputMultiRangeUint32, _ := common.BytesToUint32(v[offset : offset+common.Uint32Size])
+	lenComOutputMultiRangeUint32, _ := common.BytesToUint32(proofBytes[offset : offset+common.Uint32Size])
 	lenComOutputMultiRangeProof := int(lenComOutputMultiRangeUint32)
 	offset += common.Uint32Size
 
-	if offset+lenComOutputMultiRangeProof > len(v) {
+	if offset+lenComOutputMultiRangeProof > len(proofBytes) {
 		return fmt.Errorf("out of range aggregated range proof")
 	}
 	if lenComOutputMultiRangeProof > 0 {
 		bulletproof := &bulletproofs.RangeProof{}
 		bulletproof.Init()
 		proof.rangeProof = bulletproof
-		err := proof.rangeProof.SetBytes(v[offset : offset+lenComOutputMultiRangeProof])
+		err := proof.rangeProof.SetBytes(proofBytes[offset : offset+lenComOutputMultiRangeProof])
 		if err != nil {
 			return err
 		}
@@ -209,38 +189,38 @@ func (proof *ProofV2) SetBytes(v []byte) error {
 	}
 
 	//InputCoins  []*coin.PlainCoinV1
-	if offset >= len(v) {
+	if offset >= len(proofBytes) {
 		return fmt.Errorf("out of range input coins")
 	}
-	lenInputCoinsArray := int(v[offset])
+	lenInputCoinsArray := int(proofBytes[offset])
 	offset += 1
 	proof.inputCoins = make([]coin.PlainCoin, lenInputCoinsArray)
 	var err error
 	for i := 0; i < lenInputCoinsArray; i++ {
 		// try get 1-byte for len
-		if offset >= len(v) {
+		if offset >= len(proofBytes) {
 			return fmt.Errorf("out of range input coins")
 		}
-		lenInputCoin := int(v[offset])
+		lenInputCoin := int(proofBytes[offset])
 		offset += 1
 
-		if offset+lenInputCoin > len(v) {
+		if offset+lenInputCoin > len(proofBytes) {
 			return fmt.Errorf("out of range input coins")
 		}
-		proof.inputCoins[i], err = coin.NewPlainCoinFromByte(v[offset : offset+lenInputCoin])
+		proof.inputCoins[i], err = coin.NewPlainCoinFromByte(proofBytes[offset : offset+lenInputCoin])
 		if err != nil {
 			// 1-byte is wrong
 			// try get 2-byte for len
-			if offset+1 > len(v) {
+			if offset+1 > len(proofBytes) {
 				return fmt.Errorf("out of range input coins")
 			}
-			lenInputCoin = common.BytesToInt(v[offset-1 : offset+1])
+			lenInputCoin = common.BytesToInt(proofBytes[offset-1 : offset+1])
 			offset += 1
 
-			if offset+lenInputCoin > len(v) {
+			if offset+lenInputCoin > len(proofBytes) {
 				return fmt.Errorf("out of range input coins")
 			}
-			proof.inputCoins[i], err = coin.NewPlainCoinFromByte(v[offset : offset+lenInputCoin])
+			proof.inputCoins[i], err = coin.NewPlainCoinFromByte(proofBytes[offset : offset+lenInputCoin])
 			if err != nil {
 				return err
 			}
@@ -249,38 +229,38 @@ func (proof *ProofV2) SetBytes(v []byte) error {
 	}
 
 	//OutputCoins []*privacy.OutputCoin
-	if offset >= len(v) {
+	if offset >= len(proofBytes) {
 		return fmt.Errorf("out of range output coins")
 	}
-	lenOutputCoinsArray := int(v[offset])
+	lenOutputCoinsArray := int(proofBytes[offset])
 	offset += 1
 	proof.outputCoins = make([]*coin.CoinV2, lenOutputCoinsArray)
 	for i := 0; i < lenOutputCoinsArray; i++ {
 		proof.outputCoins[i] = new(coin.CoinV2)
 		// try get 1-byte for len
-		if offset >= len(v) {
+		if offset >= len(proofBytes) {
 			return fmt.Errorf("out of range output coins")
 		}
-		lenOutputCoin := int(v[offset])
+		lenOutputCoin := int(proofBytes[offset])
 		offset += 1
 
-		if offset+lenOutputCoin > len(v) {
+		if offset+lenOutputCoin > len(proofBytes) {
 			return fmt.Errorf("out of range output coins")
 		}
-		err := proof.outputCoins[i].SetBytes(v[offset : offset+lenOutputCoin])
+		err := proof.outputCoins[i].SetBytes(proofBytes[offset : offset+lenOutputCoin])
 		if err != nil {
 			// 1-byte is wrong
 			// try get 2-byte for len
-			if offset+1 > len(v) {
+			if offset+1 > len(proofBytes) {
 				return fmt.Errorf("out of range output coins")
 			}
-			lenOutputCoin = common.BytesToInt(v[offset-1 : offset+1])
+			lenOutputCoin = common.BytesToInt(proofBytes[offset-1 : offset+1])
 			offset += 1
 
-			if offset+lenOutputCoin > len(v) {
+			if offset+lenOutputCoin > len(proofBytes) {
 				return fmt.Errorf("out of range output coins")
 			}
-			err1 := proof.outputCoins[i].SetBytes(v[offset : offset+lenOutputCoin])
+			err1 := proof.outputCoins[i].SetBytes(proofBytes[offset : offset+lenOutputCoin])
 			if err1 != nil {
 				return err1
 			}
@@ -291,34 +271,31 @@ func (proof *ProofV2) SetBytes(v []byte) error {
 	return nil
 }
 
-// IsPrivacy checks if the proof has privacy or not.
 func (proof *ProofV2) IsPrivacy() bool {
 	return proof.GetOutputCoins()[0].IsEncrypted()
 }
 
-// IsConfidentialAsset checks if the proof is a proof for confidential asset tokens.
-//
-// An error means the proof is invalid altogether. After this function returns, we will need to check error first.
+// error means the proof is invalid altogether. After this function returns, we will need to check error first
 func (proof *ProofV2) IsConfidentialAsset() (bool, error) {
 	// asset tag consistency check
 	assetTagCount := 0
 	inputCoins := proof.GetInputCoins()
 	for _, c := range inputCoins {
-		tmpCoin, ok := c.(*coin.CoinV2)
+		coin_specific, ok := c.(*coin.CoinV2)
 		if !ok {
 			return false, fmt.Errorf("casting error : CoinV2")
 		}
-		if tmpCoin.GetAssetTag() != nil {
+		if coin_specific.GetAssetTag() != nil {
 			assetTagCount += 1
 		}
 	}
 	outputCoins := proof.GetOutputCoins()
 	for _, c := range outputCoins {
-		tmpCoin, ok := c.(*coin.CoinV2)
+		coin_specific, ok := c.(*coin.CoinV2)
 		if !ok {
 			return false, fmt.Errorf("casting error : CoinV2")
 		}
-		if tmpCoin.GetAssetTag() != nil {
+		if coin_specific.GetAssetTag() != nil {
 			assetTagCount += 1
 		}
 	}
@@ -331,12 +308,14 @@ func (proof *ProofV2) IsConfidentialAsset() (bool, error) {
 	return false, fmt.Errorf("error : TX contains both confidential asset & non-CA coins")
 }
 
-// Prove returns a ProofV2 based on the given input coins, output coins, shared secrets, etc.
 func Prove(inputCoins []coin.PlainCoin, outputCoins []*coin.CoinV2, sharedSecrets []*crypto.Point, hasConfidentialAsset bool, paymentInfo []*key.PaymentInfo) (*ProofV2, error) {
 	var err error
 
 	proof := new(ProofV2)
 	proof.SetVersion()
+	// aggregateproof := new(bulletproofs.RangeProof)
+	// aggregateproof.Init()
+	// proof.rangeProof = aggregateproof
 	if err = proof.SetInputCoins(inputCoins); err != nil {
 		return nil, err
 	}

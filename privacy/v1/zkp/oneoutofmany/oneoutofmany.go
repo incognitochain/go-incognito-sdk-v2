@@ -1,30 +1,30 @@
 package oneoutofmany
 
 import (
-	"fmt"
 	"github.com/incognitochain/go-incognito-sdk-v2/crypto"
-	privacyUtils "github.com/incognitochain/go-incognito-sdk-v2/privacy/utils"
+	putils "github.com/incognitochain/go-incognito-sdk-v2/privacy/utils"
 	"github.com/incognitochain/go-incognito-sdk-v2/privacy/v1/zkp/oneoutofmany/polynomial"
 	"github.com/incognitochain/go-incognito-sdk-v2/privacy/v1/zkp/utils"
 	"math/big"
+
+	"github.com/pkg/errors"
 )
 
 // This protocol proves in zero-knowledge that one-out-of-N commitments contains 0
 
-// OneOutOfManyStatement represents the statement of an OneOutOfManyProof.
+// Statement to be proved
 type OneOutOfManyStatement struct {
 	Commitments []*crypto.Point
 }
 
-// OneOutOfManyWitness represents a witness to an OneOutOfManyProof.
+// Statement's witness
 type OneOutOfManyWitness struct {
 	stmt        *OneOutOfManyStatement
 	rand        *crypto.Scalar
 	indexIsZero uint64
 }
 
-// OneOutOfManyProof represents an one-of-many proof proving that among a list of commitments, there exists one
-// commitment that commits to 0. It is used to hide the real input coin among a list of input coins.
+// Statement's proof
 type OneOutOfManyProof struct {
 	Statement      *OneOutOfManyStatement
 	cl, ca, cb, cd []*crypto.Point
@@ -32,12 +32,11 @@ type OneOutOfManyProof struct {
 	zd             *crypto.Scalar
 }
 
-// ValidateSanity checks sanity of an OneOutOfManyProof.
 func (proof OneOutOfManyProof) ValidateSanity() bool {
-	if len(proof.cl) != privacyUtils.CommitmentRingSizeExp || len(proof.ca) != privacyUtils.CommitmentRingSizeExp ||
-		len(proof.cb) != privacyUtils.CommitmentRingSizeExp || len(proof.cd) != privacyUtils.CommitmentRingSizeExp ||
-		len(proof.f) != privacyUtils.CommitmentRingSizeExp || len(proof.za) != privacyUtils.CommitmentRingSizeExp ||
-		len(proof.zb) != privacyUtils.CommitmentRingSizeExp {
+	if len(proof.cl) != putils.CommitmentRingSizeExp || len(proof.ca) != putils.CommitmentRingSizeExp ||
+		len(proof.cb) != putils.CommitmentRingSizeExp || len(proof.cd) != putils.CommitmentRingSizeExp ||
+		len(proof.f) != putils.CommitmentRingSizeExp || len(proof.za) != putils.CommitmentRingSizeExp ||
+		len(proof.zb) != putils.CommitmentRingSizeExp {
 		return false
 	}
 
@@ -69,7 +68,31 @@ func (proof OneOutOfManyProof) ValidateSanity() bool {
 	return proof.zd.ScalarValid()
 }
 
-// Init creates an empty OneOutOfManyProof.
+func (proof OneOutOfManyProof) isNil() bool {
+	if proof.cl == nil {
+		return true
+	}
+	if proof.ca == nil {
+		return true
+	}
+	if proof.cb == nil {
+		return true
+	}
+	if proof.cd == nil {
+		return true
+	}
+	if proof.f == nil {
+		return true
+	}
+	if proof.za == nil {
+		return true
+	}
+	if proof.zb == nil {
+		return true
+	}
+	return proof.zd == nil
+}
+
 func (proof *OneOutOfManyProof) Init() *OneOutOfManyProof {
 	proof.zd = new(crypto.Scalar)
 	proof.Statement = new(OneOutOfManyStatement)
@@ -77,12 +100,12 @@ func (proof *OneOutOfManyProof) Init() *OneOutOfManyProof {
 	return proof
 }
 
-// Set sets data to an OneOutOfManyStatement.
-func (stmt *OneOutOfManyStatement) Set(v []*crypto.Point) {
-	stmt.Commitments = v
+// Set sets Statement
+func (stmt *OneOutOfManyStatement) Set(commitments []*crypto.Point) {
+	stmt.Commitments = commitments
 }
 
-// Set sets data to an OneOutOfManyWitness.
+// Set sets Witness
 func (wit *OneOutOfManyWitness) Set(commitments []*crypto.Point, rand *crypto.Scalar, indexIsZero uint64) {
 	wit.stmt = new(OneOutOfManyStatement)
 	wit.stmt.Set(commitments)
@@ -91,7 +114,7 @@ func (wit *OneOutOfManyWitness) Set(commitments []*crypto.Point, rand *crypto.Sc
 	wit.rand = rand
 }
 
-// Set sets data to an OneOutOfManyProof.
+// Set sets Proof
 func (proof *OneOutOfManyProof) Set(
 	commitments []*crypto.Point,
 	cl, ca, cb, cd []*crypto.Point,
@@ -106,7 +129,7 @@ func (proof *OneOutOfManyProof) Set(
 	proof.zd = zd
 }
 
-// Bytes returns the byte-representation of an OneOutOfManyProof.
+// Bytes converts one of many proof to bytes array
 func (proof OneOutOfManyProof) Bytes() []byte {
 	// if proof is nil, return an empty array
 	if proof.isNil() {
@@ -114,7 +137,7 @@ func (proof OneOutOfManyProof) Bytes() []byte {
 	}
 
 	// N = 2^n
-	n := privacyUtils.CommitmentRingSizeExp
+	n := putils.CommitmentRingSizeExp
 
 	var bytes []byte
 
@@ -160,13 +183,13 @@ func (proof OneOutOfManyProof) Bytes() []byte {
 	return bytes
 }
 
-// SetBytes set raw-data to an OneOutOfManyProof.
+// SetBytes converts an array of bytes to an object of OneOutOfManyProof
 func (proof *OneOutOfManyProof) SetBytes(bytes []byte) error {
 	if len(bytes) == 0 {
 		return nil
 	}
 
-	n := privacyUtils.CommitmentRingSizeExp
+	n := putils.CommitmentRingSizeExp
 
 	offset := 0
 	var err error
@@ -175,7 +198,7 @@ func (proof *OneOutOfManyProof) SetBytes(bytes []byte) error {
 	proof.cl = make([]*crypto.Point, n)
 	for i := 0; i < n; i++ {
 		if offset+crypto.Ed25519KeySize > len(bytes) {
-			return fmt.Errorf("one-of-many proof byte unmarshalling failed")
+			return errors.New("One-out-of-many Proof byte unmarshaling failed")
 		}
 		proof.cl[i], err = new(crypto.Point).FromBytesS(bytes[offset : offset+crypto.Ed25519KeySize])
 		if err != nil {
@@ -188,7 +211,7 @@ func (proof *OneOutOfManyProof) SetBytes(bytes []byte) error {
 	proof.ca = make([]*crypto.Point, n)
 	for i := 0; i < n; i++ {
 		if offset+crypto.Ed25519KeySize > len(bytes) {
-			return fmt.Errorf("one-of-many proof byte unmarshalling failed")
+			return errors.New("One-out-of-many Proof byte unmarshaling failed")
 		}
 		proof.ca[i], err = new(crypto.Point).FromBytesS(bytes[offset : offset+crypto.Ed25519KeySize])
 		if err != nil {
@@ -201,7 +224,7 @@ func (proof *OneOutOfManyProof) SetBytes(bytes []byte) error {
 	proof.cb = make([]*crypto.Point, n)
 	for i := 0; i < n; i++ {
 		if offset+crypto.Ed25519KeySize > len(bytes) {
-			return fmt.Errorf("one-of-many proof byte unmarshalling failed")
+			return errors.New("One-out-of-many Proof byte unmarshaling failed")
 		}
 		proof.cb[i], err = new(crypto.Point).FromBytesS(bytes[offset : offset+crypto.Ed25519KeySize])
 		if err != nil {
@@ -214,7 +237,7 @@ func (proof *OneOutOfManyProof) SetBytes(bytes []byte) error {
 	proof.cd = make([]*crypto.Point, n)
 	for i := 0; i < n; i++ {
 		if offset+crypto.Ed25519KeySize > len(bytes) {
-			return fmt.Errorf("one-of-many proof byte unmarshalling failed")
+			return errors.New("One-out-of-many Proof byte unmarshaling failed")
 		}
 		proof.cd[i], err = new(crypto.Point).FromBytesS(bytes[offset : offset+crypto.Ed25519KeySize])
 		if err != nil {
@@ -227,7 +250,7 @@ func (proof *OneOutOfManyProof) SetBytes(bytes []byte) error {
 	proof.f = make([]*crypto.Scalar, n)
 	for i := 0; i < n; i++ {
 		if offset+crypto.Ed25519KeySize > len(bytes) {
-			return fmt.Errorf("one-of-many proof byte unmarshalling failed")
+			return errors.New("One-out-of-many Proof byte unmarshaling failed")
 		}
 		proof.f[i] = new(crypto.Scalar).FromBytesS(bytes[offset : offset+crypto.Ed25519KeySize])
 		offset = offset + crypto.Ed25519KeySize
@@ -237,7 +260,7 @@ func (proof *OneOutOfManyProof) SetBytes(bytes []byte) error {
 	proof.za = make([]*crypto.Scalar, n)
 	for i := 0; i < n; i++ {
 		if offset+crypto.Ed25519KeySize > len(bytes) {
-			return fmt.Errorf("one-of-many proof byte unmarshalling failed")
+			return errors.New("One-out-of-many Proof byte unmarshaling failed")
 		}
 		proof.za[i] = new(crypto.Scalar).FromBytesS(bytes[offset : offset+crypto.Ed25519KeySize])
 		offset = offset + crypto.Ed25519KeySize
@@ -247,7 +270,7 @@ func (proof *OneOutOfManyProof) SetBytes(bytes []byte) error {
 	proof.zb = make([]*crypto.Scalar, n)
 	for i := 0; i < n; i++ {
 		if offset+crypto.Ed25519KeySize > len(bytes) {
-			return fmt.Errorf("one-of-many proof byte unmarshalling failed")
+			return errors.New("One-out-of-many Proof byte unmarshaling failed")
 		}
 		proof.zb[i] = new(crypto.Scalar).FromBytesS(bytes[offset : offset+crypto.Ed25519KeySize])
 		offset = offset + crypto.Ed25519KeySize
@@ -255,30 +278,30 @@ func (proof *OneOutOfManyProof) SetBytes(bytes []byte) error {
 
 	// get zd
 	if offset+crypto.Ed25519KeySize > len(bytes) {
-		return fmt.Errorf("one-of-many proof byte unmarshalling failed")
+		return errors.New("One-out-of-many Proof byte unmarshaling failed")
 	}
 	proof.zd = new(crypto.Scalar).FromBytesS(bytes[offset : offset+crypto.Ed25519KeySize])
 
 	return nil
 }
 
-// Prove produces an OneOutOfManyProof from an OneOutOfManyWitness.
+// Prove produces a proof for the statement
 func (wit OneOutOfManyWitness) Prove() (*OneOutOfManyProof, error) {
 	// Check the number of Commitment list's elements
 	N := len(wit.stmt.Commitments)
-	if N != privacyUtils.CommitmentRingSize {
-		return nil, fmt.Errorf("the number of Commitment list's elements must be equal to CMRingSize")
+	if N != putils.CommitmentRingSize {
+		return nil, errors.New("the number of Commitment list's elements must be equal to CMRingSize")
 	}
 
-	n := privacyUtils.CommitmentRingSizeExp
+	n := putils.CommitmentRingSizeExp
 
 	// Check indexIsZero
 	if wit.indexIsZero > uint64(N) {
-		return nil, fmt.Errorf("index is zero must be Index in list of commitments")
+		return nil, errors.New("Index is zero must be Index in list of commitments")
 	}
 
 	// represent indexIsZero in binary
-	indexIsZeroBinary := privacyUtils.ConvertIntToBinary(int(wit.indexIsZero), n)
+	indexIsZeroBinary := putils.ConvertIntToBinary(int(wit.indexIsZero), n)
 
 	//
 	r := make([]*crypto.Scalar, n)
@@ -322,7 +345,7 @@ func (wit OneOutOfManyWitness) Prove() (*OneOutOfManyProof, error) {
 		cd[k] = new(crypto.Point).Identity()
 
 		for i := 0; i < N; i++ {
-			iBinary := privacyUtils.ConvertIntToBinary(i, n)
+			iBinary := putils.ConvertIntToBinary(i, n)
 			pik := getCoefficient(iBinary, k, n, a, indexIsZeroBinary)
 			cd[k].Add(cd[k], new(crypto.Point).ScalarMult(wit.stmt.Commitments[i], pik))
 		}
@@ -331,11 +354,11 @@ func (wit OneOutOfManyWitness) Prove() (*OneOutOfManyProof, error) {
 	}
 
 	// Calculate x
-	commitmentsInBytes := make([][]byte, 0)
-	for _, commitment := range wit.stmt.Commitments {
-		commitmentsInBytes = append(commitmentsInBytes, commitment.ToBytesS())
+	cmtsInBytes := make([][]byte, 0)
+	for _, cmts := range wit.stmt.Commitments {
+		cmtsInBytes = append(cmtsInBytes, cmts.ToBytesS())
 	}
-	x := utils.GenerateChallenge(commitmentsInBytes)
+	x := utils.GenerateChallenge(cmtsInBytes)
 	for j := 0; j < n; j++ {
 		x = utils.GenerateChallenge([][]byte{
 			x.ToBytesS(),
@@ -384,37 +407,173 @@ func (wit OneOutOfManyWitness) Prove() (*OneOutOfManyProof, error) {
 	return proof, nil
 }
 
-func (proof OneOutOfManyProof) isNil() bool {
-	if proof.cl == nil {
-		return true
+// Verify verifies a proof output by Prove
+func (proof OneOutOfManyProof) Verify() (bool, error) {
+	N := len(proof.Statement.Commitments)
+
+	// the number of Commitment list's elements must be equal to CMRingSize
+	if N != putils.CommitmentRingSize {
+		return false, errors.New("Invalid length of commitments list in one out of many proof")
 	}
-	if proof.ca == nil {
-		return true
+	n := putils.CommitmentRingSizeExp
+
+	//Calculate x
+	cmtsInBytes := make([][]byte, 0)
+	for _, cmts := range proof.Statement.Commitments {
+		cmtsInBytes = append(cmtsInBytes, cmts.ToBytesS())
 	}
-	if proof.cb == nil {
-		return true
+	x := utils.GenerateChallenge(cmtsInBytes)
+	for j := 0; j < n; j++ {
+		x = utils.GenerateChallenge([][]byte{x.ToBytesS(), proof.cl[j].ToBytesS(), proof.ca[j].ToBytesS(), proof.cb[j].ToBytesS(), proof.cd[j].ToBytesS()})
 	}
-	if proof.cd == nil {
-		return true
+
+	for i := 0; i < n; i++ {
+		//Check cl^x * ca = Com(f, za)
+		leftPoint1 := new(crypto.Point).ScalarMult(proof.cl[i], x)
+		leftPoint1.Add(leftPoint1, proof.ca[i])
+
+		rightPoint1 := crypto.PedCom.CommitAtIndex(proof.f[i], proof.za[i], crypto.PedersenPrivateKeyIndex)
+
+		if !crypto.IsPointEqual(leftPoint1, rightPoint1) {
+			return false, errors.New("verify one out of many proof statement 1 failed")
+		}
+
+		//Check cl^(x-f) * cb = Com(0, zb)
+		xSubF := new(crypto.Scalar).Sub(x, proof.f[i])
+
+		leftPoint2 := new(crypto.Point).ScalarMult(proof.cl[i], xSubF)
+		leftPoint2.Add(leftPoint2, proof.cb[i])
+		rightPoint2 := crypto.PedCom.CommitAtIndex(new(crypto.Scalar).FromUint64(0), proof.zb[i], crypto.PedersenPrivateKeyIndex)
+
+		if !crypto.IsPointEqual(leftPoint2, rightPoint2) {
+			return false, errors.New("verify one out of many proof statement 2 failed")
+		}
 	}
-	if proof.f == nil {
-		return true
+
+	leftPoint3 := new(crypto.Point).Identity()
+	leftPoint32 := new(crypto.Point).Identity()
+
+	for i := 0; i < N; i++ {
+		iBinary := putils.ConvertIntToBinary(i, n)
+
+		exp := new(crypto.Scalar).FromUint64(1)
+		fji := new(crypto.Scalar).FromUint64(1)
+		for j := 0; j < n; j++ {
+			if iBinary[j] == 1 {
+				fji.Set(proof.f[j])
+			} else {
+				fji.Sub(x, proof.f[j])
+			}
+
+			exp.Mul(exp, fji)
+		}
+
+		leftPoint3.Add(leftPoint3, new(crypto.Point).ScalarMult(proof.Statement.Commitments[i], exp))
 	}
-	if proof.za == nil {
-		return true
+
+	tmp2 := new(crypto.Scalar).FromUint64(1)
+	for k := 0; k < n; k++ {
+		xk := new(crypto.Scalar).Sub(new(crypto.Scalar).FromUint64(0), tmp2)
+		leftPoint32.Add(leftPoint32, new(crypto.Point).ScalarMult(proof.cd[k], xk))
+		tmp2.Mul(tmp2, x)
 	}
-	if proof.zb == nil {
-		return true
+
+	leftPoint3.Add(leftPoint3, leftPoint32)
+
+	rightPoint3 := crypto.PedCom.CommitAtIndex(new(crypto.Scalar).FromUint64(0), proof.zd, crypto.PedersenPrivateKeyIndex)
+
+	if !crypto.IsPointEqual(leftPoint3, rightPoint3) {
+		return false, errors.New("verify one out of many proof statement 3 failed")
 	}
-	return proof.zd == nil
+
+	return true, nil
 }
 
-// getCoefficient gets the coefficients of x^k in the polynomial p_i(x).
+// Verify verifies a proof output by Prove
+func (proof OneOutOfManyProof) VerifyOld() (bool, error) {
+	N := len(proof.Statement.Commitments)
+
+	// the number of Commitment list's elements must be equal to CMRingSize
+	if N != putils.CommitmentRingSize {
+		return false, errors.New("Invalid length of commitments list in one out of many proof")
+	}
+	n := putils.CommitmentRingSizeExp
+
+	//Calculate x
+	x := new(crypto.Scalar).FromUint64(0)
+
+	for j := 0; j < n; j++ {
+		x = utils.GenerateChallenge([][]byte{x.ToBytesS(), proof.cl[j].ToBytesS(), proof.ca[j].ToBytesS(), proof.cb[j].ToBytesS(), proof.cd[j].ToBytesS()})
+	}
+
+	for i := 0; i < n; i++ {
+		//Check cl^x * ca = Com(f, za)
+		leftPoint1 := new(crypto.Point).ScalarMult(proof.cl[i], x)
+		leftPoint1.Add(leftPoint1, proof.ca[i])
+
+		rightPoint1 := crypto.PedCom.CommitAtIndex(proof.f[i], proof.za[i], crypto.PedersenPrivateKeyIndex)
+
+		if !crypto.IsPointEqual(leftPoint1, rightPoint1) {
+			return false, errors.New("verifyOld one out of many proof statement 1 failed")
+		}
+
+		//Check cl^(x-f) * cb = Com(0, zb)
+		xSubF := new(crypto.Scalar).Sub(x, proof.f[i])
+
+		leftPoint2 := new(crypto.Point).ScalarMult(proof.cl[i], xSubF)
+		leftPoint2.Add(leftPoint2, proof.cb[i])
+		rightPoint2 := crypto.PedCom.CommitAtIndex(new(crypto.Scalar).FromUint64(0), proof.zb[i], crypto.PedersenPrivateKeyIndex)
+
+		if !crypto.IsPointEqual(leftPoint2, rightPoint2) {
+			return false, errors.New("verifyOld one out of many proof statement 2 failed")
+		}
+	}
+
+	leftPoint3 := new(crypto.Point).Identity()
+	leftPoint32 := new(crypto.Point).Identity()
+
+	for i := 0; i < N; i++ {
+		iBinary := putils.ConvertIntToBinary(i, n)
+
+		exp := new(crypto.Scalar).FromUint64(1)
+		fji := new(crypto.Scalar).FromUint64(1)
+		for j := 0; j < n; j++ {
+			if iBinary[j] == 1 {
+				fji.Set(proof.f[j])
+			} else {
+				fji.Sub(x, proof.f[j])
+			}
+
+			exp.Mul(exp, fji)
+		}
+
+		leftPoint3.Add(leftPoint3, new(crypto.Point).ScalarMult(proof.Statement.Commitments[i], exp))
+	}
+
+	tmp2 := new(crypto.Scalar).FromUint64(1)
+	for k := 0; k < n; k++ {
+		xk := new(crypto.Scalar).Sub(new(crypto.Scalar).FromUint64(0), tmp2)
+		leftPoint32.Add(leftPoint32, new(crypto.Point).ScalarMult(proof.cd[k], xk))
+		tmp2.Mul(tmp2, x)
+	}
+
+	leftPoint3.Add(leftPoint3, leftPoint32)
+
+	rightPoint3 := crypto.PedCom.CommitAtIndex(new(crypto.Scalar).FromUint64(0), proof.zd, crypto.PedersenPrivateKeyIndex)
+
+	if !crypto.IsPointEqual(leftPoint3, rightPoint3) {
+		return false, errors.New("verifyOld one out of many proof statement 3 failed")
+	}
+
+	return true, nil
+}
+
+// Get coefficient of x^k in the polynomial p_i(x)
 func getCoefficient(iBinary []byte, k int, n int, scLs []*crypto.Scalar, l []byte) *crypto.Scalar {
 
 	a := make([]*big.Int, len(scLs))
 	for i := 0; i < len(scLs); i++ {
-		a[i] = privacyUtils.ScalarToBigInt(scLs[i])
+		a[i] = putils.ScalarToBigInt(scLs[i])
 	}
 
 	//AP2
@@ -435,7 +594,28 @@ func getCoefficient(iBinary []byte, k int, n int, scLs []*crypto.Scalar, l []byt
 	if res.GetDegree() < k {
 		sc2 = new(crypto.Scalar).FromUint64(0)
 	} else {
-		sc2 = privacyUtils.BigIntToScalar(res[k])
+		sc2 = putils.BigIntToScalar(res[k])
 	}
 	return sc2
+}
+
+func getCoefficientInt(iBinary []byte, k int, n int, a []*big.Int, l []byte) *big.Int {
+	res := polynomial.Poly{big.NewInt(1)}
+	var fji polynomial.Poly
+
+	for j := n - 1; j >= 0; j-- {
+		fj := polynomial.Poly{a[j], big.NewInt(int64(l[j]))}
+		if iBinary[j] == 0 {
+			fji = polynomial.Poly{big.NewInt(0), big.NewInt(1)}.Sub(fj, polynomial.LInt)
+		} else {
+			fji = fj
+		}
+
+		res = res.Mul(fji, polynomial.LInt)
+	}
+
+	if res.GetDegree() < k {
+		return big.NewInt(0)
+	}
+	return res[k]
 }

@@ -5,8 +5,6 @@ import (
 	"strconv"
 )
 
-// InitTokenRequest represents a request to create a freshly new token.
-// This metadata only comes with a PRV transaction v2.
 type InitTokenRequest struct {
 	OTAStr      string
 	TxRandomStr string
@@ -16,7 +14,24 @@ type InitTokenRequest struct {
 	MetadataBase
 }
 
-// NewInitTokenRequest creates a new InitTokenRequest.
+type InitTokenReqAction struct {
+	Meta    InitTokenRequest `json:"meta"`
+	TxReqID common.Hash      `json:"txReqID"`
+	TokenID common.Hash      `json:"tokenID"`
+}
+
+type InitTokenAcceptedInst struct {
+	OTAStr        string      `json:"OTAStr"`
+	TxRandomStr   string      `json:"TxRandomStr"`
+	Amount        uint64      `json:"Amount"`
+	TokenID       common.Hash `json:"TokenID"`
+	TokenName     string      `json:"TokenName"`
+	TokenSymbol   string      `json:"TokenSymbol"`
+	TokenType     int         `json:"TokenType"`
+	ShardID       byte        `json:"ShardID"`
+	RequestedTxID common.Hash `json:"txReqID"`
+}
+
 func NewInitTokenRequest(otaStr string, txRandomStr string, amount uint64, tokenName, tokenSymbol string, metaType int) (*InitTokenRequest, error) {
 	metadataBase := MetadataBase{
 		Type: metaType,
@@ -32,7 +47,7 @@ func NewInitTokenRequest(otaStr string, txRandomStr string, amount uint64, token
 	return initPTokenMeta, nil
 }
 
-// Hash overrides MetadataBase.Hash().
+//Hash returns the hash of all components in the request.
 func (iReq InitTokenRequest) Hash() *common.Hash {
 	record := iReq.MetadataBase.Hash().String()
 	record += iReq.OTAStr
@@ -46,9 +61,9 @@ func (iReq InitTokenRequest) Hash() *common.Hash {
 	return &hash
 }
 
-// genTokenID generates a (deterministically) random tokenID for the request transaction.
-// From now on, users cannot generate their own tokenID.
-// The generated tokenID is calculated as the hash of the following components:
+//genTokenID generates a (deterministically) random tokenID for the request transaction.
+//From now on, users cannot generate their own tokenID.
+//The generated tokenID is calculated as the hash of the following components:
 //	- The Tx hash
 //	- The shardID at which the request is sent
 func (iReq *InitTokenRequest) genTokenID(tx Transaction, shardID byte) *common.Hash {
@@ -59,7 +74,7 @@ func (iReq *InitTokenRequest) genTokenID(tx Transaction, shardID byte) *common.H
 	return &tokenID
 }
 
-// CalculateSize overrides MetadataBase.CalculateSize().
+//CalculateSize returns the size of the request.
 func (iReq *InitTokenRequest) CalculateSize() uint64 {
 	return calculateSize(iReq)
 }

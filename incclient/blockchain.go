@@ -32,7 +32,7 @@ func (client *IncClient) GetBestBlock() (map[int]uint64, error) {
 		return nil, err
 	}
 
-	var bestBlocksResult jsonresult.BestBlockResult
+	var bestBlocksResult jsonresult.GetBestBlockResult
 	err = rpchandler.ParseResponse(responseInBytes, &bestBlocksResult)
 	if err != nil {
 		return nil, err
@@ -80,7 +80,7 @@ func (client *IncClient) GetListToken() (map[string]CustomToken, error) {
 
 // GetRawMemPool returns a list of transaction hashes currently in the pool.
 func (client *IncClient) GetRawMemPool() ([]string, error) {
-	responseInBytes, err := client.rpcServer.GetRawMemPool()
+	responseInBytes, err := client.rpcServer.GetRawMempool()
 	if err != nil {
 		return nil, err
 	}
@@ -117,7 +117,7 @@ func (client *IncClient) GetCommitteeStateByShard(shardID int, shardRootHash str
 }
 
 // GetShardBestState returns the latest state of a shard chain.
-func (client *IncClient) GetShardBestState(shardID int) (*jsonresult.ShardBestState, error) {
+func (client *IncClient) GetShardBestState(shardID int) (*jsonresult.GetShardBestState, error) {
 	if shardID < 0 || shardID >= common.MaxShardNumber {
 		return nil, fmt.Errorf("shardID out of range")
 	}
@@ -127,7 +127,7 @@ func (client *IncClient) GetShardBestState(shardID int) (*jsonresult.ShardBestSt
 		return nil, err
 	}
 
-	var res jsonresult.ShardBestState
+	var res jsonresult.GetShardBestState
 	err = rpchandler.ParseResponse(responseInBytes, &res)
 	if err != nil {
 		return nil, err
@@ -137,7 +137,7 @@ func (client *IncClient) GetShardBestState(shardID int) (*jsonresult.ShardBestSt
 }
 
 // GetBeaconBestState returns the latest state of the beacon chain.
-func (client *IncClient) GetBeaconBestState(shardID int) (*jsonresult.BeaconBestState, error) {
+func (client *IncClient) GetBeaconBestState(shardID int) (*jsonresult.GetBeaconBestState, error) {
 	if shardID < 0 || shardID >= common.MaxShardNumber {
 		return nil, fmt.Errorf("shardID out of range")
 	}
@@ -147,7 +147,7 @@ func (client *IncClient) GetBeaconBestState(shardID int) (*jsonresult.BeaconBest
 		return nil, err
 	}
 
-	var res jsonresult.BeaconBestState
+	var res jsonresult.GetBeaconBestState
 	err = rpchandler.ParseResponse(responseInBytes, &res)
 	if err != nil {
 		return nil, err

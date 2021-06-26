@@ -7,28 +7,18 @@ import (
 	"github.com/incognitochain/go-incognito-sdk-v2/privacy"
 )
 
-// Metadata is an interface describing all common methods of a metadata.
-// A Metadata is a special piece of information enclosed with a transaction to indicate additional purpose of
-// the transaction.
+// Interface for all types of metadata in tx
 type Metadata interface {
-	// GetType returns the type of a Metadata
 	GetType() int
-
-	// Sign signs the metadata with the provided private key.
 	Sign(*key.PrivateKey, Transaction) error
-
-	// Hash calculates the hash of a metadata.
 	Hash() *common.Hash
-
-	// HashWithoutSig calculates the hash of a metadata without including its sig.
 	HashWithoutSig() *common.Hash
-
-	// CalculateSize returns the size of a metadata in bytes.
 	CalculateSize() uint64
 }
 
-// Transaction is an interface describing all common methods of a transaction.
+// Interface for all type of transaction
 type Transaction interface {
+	// GET/SET FUNCTION
 	GetVersion() int8
 	SetVersion(int8)
 	GetMetadataType() int
@@ -53,6 +43,7 @@ type Transaction interface {
 	GetMetadata() Metadata
 	SetMetadata(Metadata)
 
+	// =================== FUNCTIONS THAT GET STUFF AND REQUIRE SOME CODING ===================
 	GetTxActualSize() uint64
 	GetReceivers() ([][]byte, []uint64)
 	GetTransferData() (bool, []byte, uint64, *common.Hash)
@@ -67,9 +58,11 @@ type Transaction interface {
 	HashWithoutMetadataSig() *common.Hash
 	CalculateTxValue() uint64
 
+	// =================== FUNCTION THAT CHECK STUFFS  ===================
 	CheckTxVersion(int8) bool
 	IsSalaryTx() bool
 	IsPrivacy() bool
 
+	// Init Transaction, the input should be params such as: TxPrivacyInitParams
 	Init(interface{}) error
 }
