@@ -50,11 +50,11 @@ type OutCoin struct {
 	Randomness           string `json:"Randomness"`
 	Value                string `json:"Value"`
 	Info                 string `json:"Info"`
-	SharedRandom         string `json:"SharedRandom"`
-	SharedConcealRandom  string `json:"SharedConcealRandom"`
-	TxRandom             string `json:"TxRandom"`
-	CoinDetailsEncrypted string `json:"CoinDetailsEncrypted"`
-	AssetTag             string `json:"AssetTag"`
+	SharedRandom         string `json:"SharedRandom,omitempty"`
+	SharedConcealRandom  string `json:"SharedConcealRandom,omitempty"`
+	TxRandom             string `json:"TxRandom,omitempty"`
+	CoinDetailsEncrypted string `json:"CoinDetailsEncrypted,omitempty"`
+	AssetTag             string `json:"AssetTag,omitempty"`
 }
 
 // Conceal removes all fields of an OutCoin leaving only the version, commitment and public key.
