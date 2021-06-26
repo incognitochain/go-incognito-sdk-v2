@@ -15,7 +15,6 @@ func main() {
 	privateKey := "112t8rneWAhErTC8YUFTnfcKHvB1x6uAVdehy1S8GP2psgqDxK3RHouUcd69fz88oAL9XuMyQ8mBY5FmmGJdcyrpwXjWBXRpoWwgJXjsxi4j"
 	rewardAddress := incclient.PrivateKeyToPaymentAddress(privateKey, -1)
 
-
 	txHash, err := client.CreateAndSendWithDrawRewardTransaction(privateKey, rewardAddress)
 	if err != nil {
 		log.Fatal(err)

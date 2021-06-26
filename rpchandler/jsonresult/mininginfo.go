@@ -1,5 +1,6 @@
 package jsonresult
 
+// MiningInfoResult describes the mining info of a node.
 type MiningInfoResult struct {
 	ShardHeight         uint64 `json:"ShardHeight"`
 	BeaconHeight        uint64 `json:"BeaconHeight"`
@@ -9,6 +10,6 @@ type MiningInfoResult struct {
 	ShardID             int    `json:"ShardID"`
 	Layer               string `json:"Layer"`
 	Role                string `json:"Role"`
-	MiningPublickey     string `json:"MiningPublickey"`
+	MiningPublicKey     string `json:"MiningPublickey"`
 	IsEnableMining      bool   `json:"IsEnableMining"`
 }

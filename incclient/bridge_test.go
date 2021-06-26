@@ -6,16 +6,16 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"github.com/incognitochain/go-incognito-sdk-v2/eth_bridge/erc20"
-	"github.com/incognitochain/go-incognito-sdk-v2/eth_bridge/vault"
-	"github.com/incognitochain/go-incognito-sdk-v2/key"
-	"github.com/incognitochain/go-incognito-sdk-v2/rpchandler/jsonresult"
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
+	"github.com/incognitochain/go-incognito-sdk-v2/eth_bridge/erc20"
+	"github.com/incognitochain/go-incognito-sdk-v2/eth_bridge/vault"
+	"github.com/incognitochain/go-incognito-sdk-v2/key"
+	"github.com/incognitochain/go-incognito-sdk-v2/rpchandler/jsonresult"
 	"math/big"
 	"testing"
 	"time"
@@ -37,7 +37,7 @@ const (
 var ETHClient *ethclient.Client
 var ic *IncClient
 
-func InitClients() error {
+func initClients() error {
 	var err error
 
 	ETHClient, err = ethclient.Dial(DEFAULT_ETH_CLIENT)
@@ -94,7 +94,7 @@ func NewETHAccount(hexPrivateKey string) (*Account, error) {
 func (acc Account) DepositETH(vaultAddress common.Address, incPaymentAddrStr string, gasLimit, gasPrice, depositedAmount uint64) (*common.Hash, error) {
 	var err error
 	if ETHClient == nil {
-		err = InitClients()
+		err = initClients()
 		if err != nil {
 			return nil, err
 		}
@@ -152,7 +152,7 @@ func (acc Account) DepositETH(vaultAddress common.Address, incPaymentAddrStr str
 func (acc Account) UnShield(vaultAddress common.Address, proof *BurnProof, gasLimit, gasPrice uint64) (*common.Hash, error) {
 	var err error
 	if ETHClient == nil {
-		err = InitClients()
+		err = initClients()
 		if err != nil {
 			return nil, err
 		}
@@ -186,7 +186,7 @@ func (acc Account) UnShield(vaultAddress common.Address, proof *BurnProof, gasLi
 func (acc Account) DepositERC20(vaultAddress, tokenAddress common.Address, incPaymentAddrStr string, gasLimit, gasPrice, depositedAmount uint64) (*common.Hash, error) {
 	var err error
 	if ETHClient == nil {
-		err = InitClients()
+		err = initClients()
 		if err != nil {
 			return nil, err
 		}
@@ -204,7 +204,7 @@ func (acc Account) DepositERC20(vaultAddress, tokenAddress common.Address, incPa
 	fmt.Printf("Waiting for the approval tx to be confirmed...\n")
 	time.Sleep(20 * time.Second)
 
-	status, err := ic.GetETHTransactionStatus(approvedTx.Hash().String())
+	status, err := ic.GetEVMTransactionStatus(approvedTx.Hash().String())
 	if err != nil {
 		return nil, err
 	}
@@ -270,7 +270,7 @@ func (acc Account) DepositERC20(vaultAddress, tokenAddress common.Address, incPa
 func (acc Account) ApproveERC20(vaultAddress, tokenAddress common.Address, approvedAmount, gasLimit, gasPrice uint64) (*types.Transaction, error) {
 	var err error
 	if ETHClient == nil {
-		err = InitClients()
+		err = initClients()
 		if err != nil {
 			return nil, err
 		}
@@ -319,7 +319,7 @@ func (acc Account) ApproveERC20(vaultAddress, tokenAddress common.Address, appro
 func (acc Account) NewTransactionOpts(destAddr common.Address, gasPrice, gasLimit, amount uint64, data []byte) (*bind.TransactOpts, error) {
 	var err error
 	if ETHClient == nil {
-		err = InitClients()
+		err = initClients()
 		if err != nil {
 			return nil, err
 		}
@@ -352,7 +352,7 @@ func (acc Account) NewTransactionOpts(destAddr common.Address, gasPrice, gasLimi
 func GetETHBalance(address common.Address) (uint64, error) {
 	var err error
 	if ETHClient == nil {
-		err = InitClients()
+		err = initClients()
 		if err != nil {
 			return 0, err
 		}
@@ -377,7 +377,7 @@ func GetETHBalance(address common.Address) (uint64, error) {
 func GetTokenBalance(address common.Address, scAddress common.Address) (uint64, error) {
 	var err error
 	if ETHClient == nil {
-		err = InitClients()
+		err = initClients()
 		if err != nil {
 			return 0, err
 		}
@@ -399,7 +399,7 @@ func GetTokenBalance(address common.Address, scAddress common.Address) (uint64, 
 //func GetEthTxStatus(txHash common.Hash) {
 //	var err error
 //	if ETHClient == nil {
-//		err = InitClients()
+//		err = initClients()
 //		if err != nil {
 //			return 0, err
 //		}
@@ -422,7 +422,7 @@ type BurnProof struct {
 	SigSs           [2][][32]byte
 }
 
-func DecodeBurnProof(r *jsonresult.GetInstructionProof) (*BurnProof, error) {
+func DecodeBurnProof(r *jsonresult.InstructionProof) (*BurnProof, error) {
 	inst := decode(r.Instruction)
 
 	// Block heights
@@ -447,7 +447,7 @@ func DecodeBurnProof(r *jsonresult.GetInstructionProof) (*BurnProof, error) {
 	}
 
 	beaconSigIdxs := []*big.Int{}
-	for _, sIdx := range r.BeaconSigIdxs {
+	for _, sIdx := range r.BeaconSigIndices {
 		beaconSigIdxs = append(beaconSigIdxs, big.NewInt(int64(sIdx)))
 	}
 
@@ -468,7 +468,7 @@ func DecodeBurnProof(r *jsonresult.GetInstructionProof) (*BurnProof, error) {
 	}
 
 	bridgeSigIdxs := []*big.Int{}
-	for _, sIdx := range r.BridgeSigIdxs {
+	for _, sIdx := range r.BridgeSigIndices {
 		bridgeSigIdxs = append(bridgeSigIdxs, big.NewInt(int64(sIdx)))
 		// fmt.Printf("bridgeSigIdxs[%d]: %d\n", i, j)
 	}
@@ -533,7 +533,7 @@ func keccak256(b ...[]byte) [32]byte {
 
 func Wait(tx common.Hash) error {
 	if ETHClient == nil {
-		err := InitClients()
+		err := initClients()
 		if err != nil {
 			return err
 		}
@@ -556,7 +556,7 @@ func Wait(tx common.Hash) error {
 
 //TEST FUNCTIONS
 func TestIncClient_ShieldETH(t *testing.T) {
-	err := InitClients()
+	err := initClients()
 	if err != nil {
 		panic(err)
 	}
@@ -568,7 +568,7 @@ func TestIncClient_ShieldETH(t *testing.T) {
 	}
 
 	//Incognito keys
-	privateKey := "112t8rnZDRztVgPjbYQiXS7mJgaTzn66NvHD7Vus2SrhSAY611AzADsPFzKjKQCKWTgbkgYrCPo9atvSMoCf9KT23Sc7Js9RKhzbNJkxpJU6"
+	privateKey := ""
 	incAddr := PrivateKeyToPaymentAddress(privateKey, 1)
 
 	//incognito vault contract address
@@ -594,12 +594,12 @@ func TestIncClient_ShieldETH(t *testing.T) {
 
 	fmt.Printf("Start shielding eth...")
 
-	ethProof, pETHAmount, err := ic.GetETHDepositProof(ethTxHash.String())
+	ethProof, pETHAmount, err := ic.GetEVMDepositProof(ethTxHash.String())
 	if err != nil {
 		panic(err)
 	}
 
-	txHashStr, err := ic.CreateAndSendIssuingETHRequestTransaction(privateKey, P_ETH_ID, *ethProof)
+	txHashStr, err := ic.CreateAndSendIssuingEVMRequestTransaction(privateKey, P_ETH_ID, *ethProof)
 	if err != nil {
 		panic(err)
 	}
@@ -644,7 +644,7 @@ func TestIncClient_ShieldETH(t *testing.T) {
 }
 
 func TestIncClient_ShieldERC20(t *testing.T) {
-	err := InitClients()
+	err := initClients()
 	if err != nil {
 		panic(err)
 	}
@@ -669,7 +669,7 @@ func TestIncClient_ShieldERC20(t *testing.T) {
 	fmt.Printf("Remote account: %v, tokenAddress: %v, balance %v, eth %v\n", acc.address.String(), TOKEN_ADDRESS, oldTokenBalance, oldETHBalance)
 
 	//Incognito keys
-	privateKey := "112t8rnZDRztVgPjbYQiXS7mJgaTzn66NvHD7Vus2SrhSAY611AzADsPFzKjKQCKWTgbkgYrCPo9atvSMoCf9KT23Sc7Js9RKhzbNJkxpJU6"
+	privateKey := ""
 	incAddr := PrivateKeyToPaymentAddress(privateKey, 1)
 
 	//incognito vault contract address
@@ -695,7 +695,7 @@ func TestIncClient_ShieldERC20(t *testing.T) {
 	fmt.Printf("Waiting for 15 confirmations...\n")
 	time.Sleep(90 * time.Second)
 
-	status, err := ic.GetETHTransactionStatus(ethTxHash.String())
+	status, err := ic.GetEVMTransactionStatus(ethTxHash.String())
 	if err != nil {
 		panic(err)
 	}
@@ -707,12 +707,12 @@ func TestIncClient_ShieldERC20(t *testing.T) {
 
 	//ethTxHash := common.HexToHash("0x75807ac2052d7a612d857aa4e5e3fea3e0a07007543c9fb7b5bea1d6cba069f4")
 
-	ethProof, _, err := ic.GetETHDepositProof(ethTxHash.String())
+	ethProof, _, err := ic.GetEVMDepositProof(ethTxHash.String())
 	if err != nil {
 		panic(err)
 	}
 
-	txHashStr, err := ic.CreateAndSendIssuingETHRequestTransaction(privateKey, P_TOKEN_ID, *ethProof)
+	txHashStr, err := ic.CreateAndSendIssuingEVMRequestTransaction(privateKey, P_TOKEN_ID, *ethProof)
 	if err != nil {
 		panic(err)
 	}
@@ -764,7 +764,7 @@ func TestIncClient_ShieldERC20(t *testing.T) {
 }
 
 func TestIncClient_UnShieldETH(t *testing.T) {
-	err := InitClients()
+	err := initClients()
 	if err != nil {
 		panic(err)
 	}
@@ -780,7 +780,7 @@ func TestIncClient_UnShieldETH(t *testing.T) {
 		panic(err)
 	}
 
-	privateKey := "112t8rnZDRztVgPjbYQiXS7mJgaTzn66NvHD7Vus2SrhSAY611AzADsPFzKjKQCKWTgbkgYrCPo9atvSMoCf9KT23Sc7Js9RKhzbNJkxpJU6"
+	privateKey := ""
 	remoteAddr := acc.address.String()
 	burnedAmount := uint64(50000000)
 
@@ -843,7 +843,7 @@ func TestIncClient_UnShieldETH(t *testing.T) {
 	fmt.Printf("Unshield tx: %v\n", txHash.String())
 
 	fmt.Printf("Check unshield tx status...\n")
-	receipt, err := ic.GetETHTxReceipt(txHash.String())
+	receipt, err := ic.GetEVMTxReceipt(txHash.String())
 	if err != nil {
 		panic(err)
 	}
@@ -874,7 +874,7 @@ func TestIncClient_UnShieldETH(t *testing.T) {
 }
 
 func TestIncClient_UnShieldERC20(t *testing.T) {
-	err := InitClients()
+	err := initClients()
 	if err != nil {
 		panic(err)
 	}
@@ -897,7 +897,7 @@ func TestIncClient_UnShieldERC20(t *testing.T) {
 		panic(err)
 	}
 
-	privateKey := "112t8rnZDRztVgPjbYQiXS7mJgaTzn66NvHD7Vus2SrhSAY611AzADsPFzKjKQCKWTgbkgYrCPo9atvSMoCf9KT23Sc7Js9RKhzbNJkxpJU6"
+	privateKey := ""
 	tokenIDStr := "c7545459764224a000a9b323850648acf271186238210ce474b505cd17cc93a0" //incognito tokenID for pDAI
 	remoteAddr := acc.address.String()
 	burnedAmount := uint64(10000000)
@@ -961,7 +961,7 @@ func TestIncClient_UnShieldERC20(t *testing.T) {
 	fmt.Printf("Unshield tx: %v\n", txHash.String())
 
 	fmt.Printf("Check unshield tx status...\n")
-	receipt, err := ic.GetETHTxReceipt(txHash.String())
+	receipt, err := ic.GetEVMTxReceipt(txHash.String())
 	if err != nil {
 		panic(err)
 	}
@@ -1001,14 +1001,14 @@ func TestIncClient_UnShieldERC20(t *testing.T) {
 }
 
 func TestIncClient_GetETHTxReceipt(t *testing.T) {
-	err := InitClients()
+	err := initClients()
 	if err != nil {
 		panic(err)
 	}
 
 	txHash := "0xc400656111f353ef021f3f65711461679e4e1227071411c2789cac762e8948bb"
 
-	receipt, err := ic.GetETHTxReceipt(txHash)
+	receipt, err := ic.GetEVMTxReceipt(txHash)
 	if err != nil {
 		panic(err)
 	}
@@ -1022,12 +1022,12 @@ func TestIncClient_GetETHTxReceipt(t *testing.T) {
 }
 
 func TestIncClient_GetMostRecentETHBlockNumber(t *testing.T) {
-	err := InitClients()
+	err := initClients()
 	if err != nil {
 		panic(err)
 	}
 
-	blockNum, err := ic.GetMostRecentETHBlockNumber()
+	blockNum, err := ic.GetMostRecentEVMBlockNumber()
 	if err != nil {
 		panic(err)
 	}

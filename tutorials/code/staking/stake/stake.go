@@ -13,7 +13,7 @@ func main() {
 	}
 
 	privateKey := "112t8rneWAhErTC8YUFTnfcKHvB1x6uAVdehy1S8GP2psgqDxK3RHouUcd69fz88oAL9XuMyQ8mBY5FmmGJdcyrpwXjWBXRpoWwgJXjsxi4j"
-	privateSeed :=  incclient.PrivateKeyToMiningKey(privateKey) //NOTE: the private seed (a.k.a the mining key) can be randomly generated and not be dependent on the private key
+	privateSeed := incclient.PrivateKeyToMiningKey(privateKey) //NOTE: the private seed (a.k.a the mining key) can be randomly generated and not be dependent on the private key
 	candidateAddress := incclient.PrivateKeyToPaymentAddress(privateKey, -1)
 	rewardAddress := candidateAddress //NOTE: the reward receiver can either be the same as the candidate address or be different
 	autoReStake := true

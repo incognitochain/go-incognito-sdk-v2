@@ -16,12 +16,12 @@ func TestIncClient_GetTransactionsByReceiver(t *testing.T) {
 	privateKey := "112t8rnzyZWHhboZMZYMmeMGj1nDuVNkXB3FzwpPbhnNbWcSrbytAeYjDdNLfLSJhauvzYLWM2DQkWW2hJ14BGvmFfH1iDFAxgc4ywU6qMqW"
 	paymentAddress := PrivateKeyToPaymentAddress(privateKey, -1)
 
-	txRecv, err := ic.GetTransactionsByReceiver(paymentAddress)
+	txsReceived, err := ic.GetTransactionsByReceiver(paymentAddress)
 	if err != nil {
 		panic(err)
 	}
 
-	for txHash, tx := range txRecv {
+	for txHash, tx := range txsReceived {
 		jsb, err := json.Marshal(tx)
 		if err != nil {
 			panic(err)
@@ -45,12 +45,12 @@ func TestIncClient_GetTxHashByPublicKeys(t *testing.T) {
 		"12G9MyAF8eenfor27NHJp9jrZ7zvMa3YDzFrJ8BPCkxBLZqgzgY",
 	}
 
-	txRecv, err := ic.GetTxHashByPublicKeys(publicKeys)
+	txsByPubKeys, err := ic.GetTxHashByPublicKeys(publicKeys)
 	if err != nil {
 		panic(err)
 	}
 
-	jsb, err := json.MarshalIndent(txRecv, "", "\t")
+	jsb, err := json.MarshalIndent(txsByPubKeys, "", "\t")
 	if err != nil {
 		panic(err)
 	}
@@ -105,15 +105,43 @@ func TestIncClient_GetTxHashBySerialNumbers(t *testing.T) {
 		"126jy6yW5NSfzpYEGUtgmuzps3ey8DRmKbJbAm77KHEEnzUW6oP",
 	}
 
-	txRecv, err := ic.GetTxHashBySerialNumbers(serialNumbers, common.PRVIDStr, 255)
+	outTxs, err := ic.GetTxHashBySerialNumbers(serialNumbers, common.PRVIDStr, 255)
 	if err != nil {
 		panic(err)
 	}
 
-	jsb, err := json.MarshalIndent(txRecv, "", "\t")
+	jsb, err := json.MarshalIndent(outTxs, "", "\t")
 	if err != nil {
 		panic(err)
 	}
 
 	fmt.Printf("res: %v\n", string(jsb))
+}
+
+func TestIncClient_GetTxs(t *testing.T) {
+	var err error
+	ic, err = NewIncClient("https://beta-fullnode.incognito.org/fullnode", "", 1)
+	if err != nil {
+		panic(err)
+	}
+
+	txHashList := []string{
+		"83834123d04d2d2ceec8970a627f8557ee7737f2e037094bd3ace07e35d160dc",
+		"86fd368c7550c61620493f220d60d73e00278d2f129b13f33867ba246654c37c",
+	}
+
+	txs, err := ic.GetTxs(txHashList)
+	if err != nil {
+		panic(err)
+	}
+
+	for txHash, tx := range txs {
+		txBytes, err := json.Marshal(tx)
+		if err != nil {
+			panic(err)
+		}
+
+		fmt.Printf("txHash %v: %v\n", txHash, string(txBytes))
+
+	}
 }

@@ -10,9 +10,8 @@ import (
 	"strconv"
 )
 
-// Interface for Transaction Transfer Token
+// TransactionToken describes all functions of a token transaction.
 type TransactionToken interface {
-	// GET/SET FUNCTION
 	GetVersion() int8
 	SetVersion(int8)
 	GetMetadataType() int
@@ -44,7 +43,6 @@ type TransactionToken interface {
 	GetTxNormal() metadata.Transaction
 	SetTxNormal(metadata.Transaction) error
 
-	// =================== FUNCTIONS THAT GET STUFF AND REQUIRE SOME CODING ===================
 	GetTxActualSize() uint64
 	GetReceivers() ([][]byte, []uint64)
 	GetTransferData() (bool, []byte, uint64, *common.Hash)
@@ -59,20 +57,17 @@ type TransactionToken interface {
 	HashWithoutMetadataSig() *common.Hash
 	CalculateTxValue() uint64
 
-	// =================== FUNCTION THAT CHECK STUFFS  ===================
 	CheckTxVersion(int8) bool
 	IsSalaryTx() bool
 	IsPrivacy() bool
 
-	// Init Transaction, the input should be params such as: TxPrivacyInitParams
 	Init(interface{}) error
 }
 
-
+// TxTokenData represents all data of a token transaction.
 type TxTokenData struct {
-	// TxNormal is the normal transaction, it will never be token transaction
-	TxNormal       metadata.Transaction
-	PropertyID     common.Hash // = hash of TxCustomTokenprivacy data
+	TxNormal       metadata.Transaction // TxNormal is the PRV transaction, it will never be token transaction
+	PropertyID     common.Hash          // = hash of TxCustomTokenPrivacy data
 	PropertyName   string
 	PropertySymbol string
 
@@ -81,21 +76,45 @@ type TxTokenData struct {
 	Amount   uint64 // init amount
 }
 
+// GetPropertyID returns the tokenID of a TxTokenData.
 func (txData TxTokenData) GetPropertyID() common.Hash { return txData.PropertyID }
+
+// GetPropertyName returns the token name of a TxTokenData.
 func (txData TxTokenData) GetPropertyName() string { return txData.PropertyName }
+
+// GetPropertySymbol returns the token symbol of a TxTokenData.
 func (txData TxTokenData) GetPropertySymbol() string { return txData.PropertySymbol }
+
+// GetType returns the type of a TxTokenData.
 func (txData TxTokenData) GetType() int { return txData.Type }
+
+// IsMintable checks if a TxTokenData is mintable.
 func (txData TxTokenData) IsMintable() bool { return txData.Mintable }
+
+// GetAmount returns the amount of a TxTokenData.
 func (txData TxTokenData) GetAmount() uint64 { return txData.Amount }
 
+// SetPropertyID sets v as the tokenID of a TxTokenData.
+func (txData *TxTokenData) SetPropertyID(v common.Hash) { txData.PropertyID = v }
 
-func (txData *TxTokenData) SetPropertyID(propID common.Hash) { txData.PropertyID = propID }
-func (txData *TxTokenData) SetPropertyName(propertyName string) { txData.PropertyName = propertyName }
-func (txData *TxTokenData) SetPropertySymbol(propertySymbol string) { txData.PropertySymbol = propertySymbol }
-func (txData *TxTokenData) SetType(t int) { txData.Type = t }
-func (txData *TxTokenData) SetMintable(mintable bool) { txData.Mintable = mintable }
-func (txData *TxTokenData) SetAmount(amount uint64) { txData.Amount = amount }
+// SetPropertyName sets v as the token name of a TxTokenData.
+func (txData *TxTokenData) SetPropertyName(v string) { txData.PropertyName = v }
 
+// SetPropertySymbol sets v as the token symbol of a TxTokenData.
+func (txData *TxTokenData) SetPropertySymbol(v string) {
+	txData.PropertySymbol = v
+}
+
+// SetType sets v as the type of a TxTokenData.
+func (txData *TxTokenData) SetType(v int) { txData.Type = v }
+
+// SetMintable sets v as the mintable flag of a TxTokenData.
+func (txData *TxTokenData) SetMintable(v bool) { txData.Mintable = v }
+
+// SetAmount sets v as the amount of a TxTokenData.
+func (txData *TxTokenData) SetAmount(v uint64) { txData.Amount = v }
+
+// String returns the string-representation of a TxTokenData.
 func (txData TxTokenData) String() string {
 	record := txData.PropertyName
 	record += txData.PropertySymbol
@@ -104,7 +123,7 @@ func (txData TxTokenData) String() string {
 		inputCoins := txData.TxNormal.GetProof().GetInputCoins()
 		outputCoins := txData.TxNormal.GetProof().GetOutputCoins()
 		for _, out := range outputCoins {
-			publicKeyBytes := []byte{}
+			publicKeyBytes := make([]byte, 0)
 			if out.GetPublicKey() != nil {
 				publicKeyBytes = out.GetPublicKey().ToBytesS()
 			}
@@ -112,7 +131,7 @@ func (txData TxTokenData) String() string {
 			record += strconv.FormatUint(out.GetValue(), 10)
 		}
 		for _, in := range inputCoins {
-			publicKeyBytes := []byte{}
+			publicKeyBytes := make([]byte, 0)
 			if in.GetPublicKey() != nil {
 				publicKeyBytes = in.GetPublicKey().ToBytesS()
 			}
@@ -125,6 +144,7 @@ func (txData TxTokenData) String() string {
 	return record
 }
 
+// Hash calculates the hash of a TxTokenData.
 func (txData TxTokenData) Hash() (*common.Hash, error) {
 	point := crypto.HashToPoint([]byte(txData.String()))
 	hash := new(common.Hash)

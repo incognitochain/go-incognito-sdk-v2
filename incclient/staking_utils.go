@@ -84,7 +84,7 @@ func (client *IncClient) ListReward() (map[string]map[common.Hash]uint64, error)
 // GetMiningInfo returns the mining information of a node.
 //
 // Create an IncClient instance pointing to your node and call this function to gather the node's mining information.
-func (client *IncClient) GetMiningInfo() (*jsonresult.MiningInfoResult, error){
+func (client *IncClient) GetMiningInfo() (*jsonresult.MiningInfoResult, error) {
 	responseInBytes, err := client.rpcServer.GetMiningInfo()
 	if err != nil {
 		return nil, err
@@ -102,7 +102,7 @@ func (client *IncClient) GetMiningInfo() (*jsonresult.MiningInfoResult, error){
 // GetSyncStats returns the statistics of data-synchronizing status.
 //
 // Create an IncClient instance pointing to your node and call this function to get the statistics.
-func (client *IncClient) GetSyncStats() (*jsonresult.SyncStats, error){
+func (client *IncClient) GetSyncStats() (*jsonresult.SyncStats, error) {
 	responseInBytes, err := client.rpcServer.GetSyncStats()
 	if err != nil {
 		return nil, err

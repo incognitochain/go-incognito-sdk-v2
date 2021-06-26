@@ -1,19 +1,18 @@
 package jsonresult
 
 import (
-	"encoding/json"
 	"errors"
+	"github.com/ethereum/go-ethereum/common/math"
 	"github.com/incognitochain/go-incognito-sdk-v2/coin"
 	"github.com/incognitochain/go-incognito-sdk-v2/common"
 	"github.com/incognitochain/go-incognito-sdk-v2/common/base58"
 	"github.com/incognitochain/go-incognito-sdk-v2/crypto"
 	"github.com/incognitochain/go-incognito-sdk-v2/privacy"
-	"github.com/ethereum/go-ethereum/common/math"
-	"log"
 	"math/big"
 	"strconv"
 )
 
+// ICoinInfo describes all methods of an RPC output coin.
 type ICoinInfo interface {
 	GetVersion() uint8
 	GetCommitment() *crypto.Point
@@ -32,12 +31,14 @@ type ICoinInfo interface {
 	GetAssetTag() *crypto.Point
 }
 
+// ListOutputCoins is a list of output coins returned by an RPC response.
 type ListOutputCoins struct {
 	FromHeight uint64               `json:"FromHeight"`
 	ToHeight   uint64               `json:"ToHeight"`
 	Outputs    map[string][]OutCoin `json:"Outputs"`
 }
 
+// OutCoin is a struct to parse raw-data returned by an RPC response into an output coin.
 type OutCoin struct {
 	Version              string `json:"Version"`
 	Index                string `json:"Index"`
@@ -56,22 +57,7 @@ type OutCoin struct {
 	AssetTag             string `json:"AssetTag"`
 }
 
-func NewOutcoinFromInterface(data interface{}) (*OutCoin, error) {
-	outcoin := OutCoin{}
-	temp, err := json.Marshal(data)
-	if err != nil {
-		log.Print(err)
-		return nil, err
-	}
-
-	err = json.Unmarshal(temp, &outcoin)
-	if err != nil {
-		log.Print(err)
-		return nil, err
-	}
-	return &outcoin, nil
-}
-
+// NewOutCoin creates a new OutCoin from the given ICoinInfo.
 func NewOutCoin(outCoin ICoinInfo) OutCoin {
 	keyImage := ""
 	if outCoin.GetKeyImage() != nil && !outCoin.GetKeyImage().IsIdentity() {
@@ -137,6 +123,7 @@ func NewOutCoin(outCoin ICoinInfo) OutCoin {
 	return result
 }
 
+// NewCoinFromJsonOutCoin returns an ICoinInfo, and an index from an OutCoin.
 func NewCoinFromJsonOutCoin(jsonOutCoin OutCoin) (ICoinInfo, *big.Int, error) {
 	var keyImage, pubkey, cm *crypto.Point
 	var snd, randomness *crypto.Scalar

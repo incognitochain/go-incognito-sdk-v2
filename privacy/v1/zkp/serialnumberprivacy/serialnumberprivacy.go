@@ -1,18 +1,20 @@
 package serialnumberprivacy
 
 import (
-	"errors"
+	"fmt"
 	"github.com/incognitochain/go-incognito-sdk-v2/common"
 	"github.com/incognitochain/go-incognito-sdk-v2/crypto"
 	"github.com/incognitochain/go-incognito-sdk-v2/privacy/v1/zkp/utils"
 )
 
+// SerialNumberPrivacyStatement represents a statement of a SNPrivacyProof.
 type SerialNumberPrivacyStatement struct {
 	sn       *crypto.Point // serial number
 	comSK    *crypto.Point // commitment to private key
 	comInput *crypto.Point // commitment to input of the pseudo-random function
 }
 
+// SNPrivacyWitness represents the witness of an SNPrivacyProof.
 type SNPrivacyWitness struct {
 	stmt *SerialNumberPrivacyStatement // statement to be proved
 
@@ -22,6 +24,8 @@ type SNPrivacyWitness struct {
 	rInput *crypto.Scalar // blinding factor in the commitment to input
 }
 
+// SNPrivacyProof represents a zero-knowledge proof for proving the the serial number is correctly generated from the
+// secret key and the SND with the following formula: SN = (sk + snd)^-1 * G[0].
 type SNPrivacyProof struct {
 	stmt *SerialNumberPrivacyStatement // statement to be proved
 
@@ -101,7 +105,7 @@ func (proof SNPrivacyProof) isNil() bool {
 	return proof.zRInput == nil
 }
 
-// Init inits Proof
+// Init creates an empty SNPrivacyProof.
 func (proof *SNPrivacyProof) Init() *SNPrivacyProof {
 	proof.stmt = new(SerialNumberPrivacyStatement)
 
@@ -117,21 +121,22 @@ func (proof *SNPrivacyProof) Init() *SNPrivacyProof {
 	return proof
 }
 
+// GetComSK returns the secret key commitment of an SNPrivacyProof.
 func (proof SNPrivacyProof) GetComSK() *crypto.Point {
 	return proof.stmt.comSK
 }
 
+// GetSN returns the serial number of an SNPrivacyProof.
 func (proof SNPrivacyProof) GetSN() *crypto.Point {
 	return proof.stmt.sn
 }
 
+// GetComInput returns the input commitment of an SNPrivacyProof.
 func (proof SNPrivacyProof) GetComInput() *crypto.Point {
 	return proof.stmt.comInput
 }
 
-
-
-// Set sets Statement
+// Set sets data to a SerialNumberPrivacyStatement.
 func (stmt *SerialNumberPrivacyStatement) Set(
 	SN *crypto.Point,
 	comSK *crypto.Point,
@@ -141,7 +146,7 @@ func (stmt *SerialNumberPrivacyStatement) Set(
 	stmt.comInput = comInput
 }
 
-// Set sets Witness
+// Set sets data to an SNPrivacyWitness.
 func (wit *SNPrivacyWitness) Set(
 	stmt *SerialNumberPrivacyStatement,
 	SK *crypto.Scalar,
@@ -156,7 +161,7 @@ func (wit *SNPrivacyWitness) Set(
 	wit.rInput = rInput
 }
 
-// Set sets Proof
+// Set sets data to an SNPrivacyProof.
 func (proof *SNPrivacyProof) Set(
 	stmt *SerialNumberPrivacyStatement,
 	tSK *crypto.Point,
@@ -177,6 +182,7 @@ func (proof *SNPrivacyProof) Set(
 	proof.zRInput = zRInput
 }
 
+// Bytes returns the byte-representation of an SNPrivacyProof.
 func (proof SNPrivacyProof) Bytes() []byte {
 	// if proof is nil, return an empty array
 	if proof.isNil() {
@@ -200,12 +206,13 @@ func (proof SNPrivacyProof) Bytes() []byte {
 	return bytes
 }
 
+// SetBytes sets raw-byte data into an SNPrivacyProof.
 func (proof *SNPrivacyProof) SetBytes(bytes []byte) error {
 	if len(bytes) == 0 {
-		return errors.New("Bytes array is empty")
+		return fmt.Errorf("bytes array is empty")
 	}
-	if len(bytes) < 9*crypto.Ed25519KeySize{
-		return errors.New("Not enough bytes to unmarshal Serial Number Proof")
+	if len(bytes) < 9*crypto.Ed25519KeySize {
+		return fmt.Errorf("not enough bytes to unmarshal Serial Number Proof")
 	}
 
 	offset := 0
@@ -267,6 +274,7 @@ func (proof *SNPrivacyProof) SetBytes(bytes []byte) error {
 	return nil
 }
 
+// Prove returns an SNPrivacyProof given its witness.
 func (wit SNPrivacyWitness) Prove(mess []byte) (*SNPrivacyProof, error) {
 
 	eSK := crypto.RandomScalar()
@@ -319,120 +327,4 @@ func (wit SNPrivacyWitness) Prove(mess []byte) (*SNPrivacyProof, error) {
 	proof := new(SNPrivacyProof).Init()
 	proof.Set(wit.stmt, tSeed, tInput, tOutput, zSeed, zRSeed, zInput, zRInput)
 	return proof, nil
-}
-
-func (proof SNPrivacyProof) Verify(mess []byte) (bool, error) {
-	// re-calculate x = hash(tSeed || tInput || tSND2 || tOutput)
-	x := new(crypto.Scalar)
-	if mess == nil {
-		x = utils.GenerateChallenge([][]byte{
-			proof.stmt.sn.ToBytesS(),
-			proof.stmt.comSK.ToBytesS(),
-			proof.tSK.ToBytesS(),
-			proof.tInput.ToBytesS(),
-			proof.tSN.ToBytesS()})
-	} else {
-		x.FromBytesS(mess)
-	}
-
-	// Check gSND^zInput * h^zRInput = input^x * tInput
-	leftPoint1 := crypto.PedCom.CommitAtIndex(proof.zInput, proof.zRInput, crypto.PedersenSndIndex)
-
-	rightPoint1 := new(crypto.Point).ScalarMult(proof.stmt.comInput, x)
-	rightPoint1.Add(rightPoint1, proof.tInput)
-
-	if !crypto.IsPointEqual(leftPoint1, rightPoint1) {
-		//Logger.Log.Errorf("verify serial number privacy proof statement 1 failed")
-		return false, errors.New("verify serial number privacy proof statement 1 failed")
-	}
-
-	// Check gSK^zSeed * h^zRSeed = vKey^x * tSeed
-	leftPoint2 := crypto.PedCom.CommitAtIndex(proof.zSK, proof.zRSK, crypto.PedersenPrivateKeyIndex)
-
-	rightPoint2 := new(crypto.Point).ScalarMult(proof.stmt.comSK, x)
-	rightPoint2.Add(rightPoint2, proof.tSK)
-
-	if !crypto.IsPointEqual(leftPoint2, rightPoint2) {
-		return false, errors.New("verify serial number privacy proof statement 2 failed")
-	}
-
-	// Check sn^(zSeed + zInput) = gSK^x * tOutput
-	leftPoint3 := new(crypto.Point).ScalarMult(proof.stmt.sn, new(crypto.Scalar).Add(proof.zSK, proof.zInput))
-
-	rightPoint3 := new(crypto.Point).ScalarMult(crypto.PedCom.G[crypto.PedersenPrivateKeyIndex], x)
-	rightPoint3.Add(rightPoint3, proof.tSN)
-
-	if !crypto.IsPointEqual(leftPoint3, rightPoint3) {
-		//privacy.Logger.Log.Errorf("verify serial number privacy proof statement 3 failed")
-		return false, errors.New("verify serial number privacy proof statement 3 failed")
-	}
-
-	return true, nil
-}
-
-func (proof SNPrivacyProof) VerifyOld(mess []byte) (bool, error) {
-	// re-calculate x = hash(tSeed || tInput || tSND2 || tOutput)
-	x := new(crypto.Scalar)
-	if mess == nil {
-		x = utils.GenerateChallenge([][]byte{
-			proof.tSK.ToBytesS(),
-			proof.tInput.ToBytesS(),
-			proof.tSN.ToBytesS()})
-	} else {
-		x.FromBytesS(mess)
-	}
-
-	// Check gSND^zInput * h^zRInput = input^x * tInput
-	leftPoint1 := crypto.PedCom.CommitAtIndex(proof.zInput, proof.zRInput, crypto.PedersenSndIndex)
-
-	rightPoint1 := new(crypto.Point).ScalarMult(proof.stmt.comInput, x)
-	rightPoint1.Add(rightPoint1, proof.tInput)
-
-	if !crypto.IsPointEqual(leftPoint1, rightPoint1) {
-		//Logger.Log.Errorf("verify serial number privacy proof statement 1 failed")
-		return false, errors.New("verifyOld serial number privacy proof statement 1 failed")
-	}
-
-	// Check gSK^zSeed * h^zRSeed = vKey^x * tSeed
-	leftPoint2 := crypto.PedCom.CommitAtIndex(proof.zSK, proof.zRSK, crypto.PedersenPrivateKeyIndex)
-
-	rightPoint2 := new(crypto.Point).ScalarMult(proof.stmt.comSK, x)
-	rightPoint2.Add(rightPoint2, proof.tSK)
-
-	if !crypto.IsPointEqual(leftPoint2, rightPoint2) {
-		return false, errors.New("verifyOld serial number privacy proof statement 2 failed")
-	}
-
-	// Check sn^(zSeed + zInput) = gSK^x * tOutput
-	leftPoint3 := new(crypto.Point).ScalarMult(proof.stmt.sn, new(crypto.Scalar).Add(proof.zSK, proof.zInput))
-
-	rightPoint3 := new(crypto.Point).ScalarMult(crypto.PedCom.G[crypto.PedersenPrivateKeyIndex], x)
-	rightPoint3.Add(rightPoint3, proof.tSN)
-
-	if !crypto.IsPointEqual(leftPoint3, rightPoint3) {
-		//privacy.Logger.Log.Errorf("verify serial number privacy proof statement 3 failed")
-		return false, errors.New("verifyOld serial number privacy proof statement 3 failed")
-	}
-
-	return true, nil
-}
-
-
-func Copy(proof SNPrivacyProof) *SNPrivacyProof{
-	tmpProof := new(SNPrivacyProof)
-	tmpProof.tInput = new(crypto.Point).Set(proof.tInput)
-	tmpProof.tSK = new(crypto.Point).Set(proof.tSK)
-	tmpProof.tSN = new(crypto.Point).Set(proof.tSN)
-	tmpProof.zInput = new(crypto.Scalar).Set(proof.zInput)
-	tmpProof.zRInput = new(crypto.Scalar).Set(proof.zRInput)
-	tmpProof.zSK = new(crypto.Scalar).Set(proof.zSK)
-	tmpProof.zRSK = new(crypto.Scalar).Set(proof.zRSK)
-
-	sn := new(crypto.Point).Set(proof.stmt.sn)
-	comSK := new(crypto.Point).Set(proof.stmt.comSK)
-	comInput := new(crypto.Point).Set(proof.stmt.comInput)
-	tmpProof.stmt = new(SerialNumberPrivacyStatement)
-	tmpProof.stmt.Set(sn, comSK, comInput)
-
-	return tmpProof
 }
