@@ -59,6 +59,8 @@ func (server *RPCServer) SendPostRequestWithQuery(query string) ([]byte, error) 
 	if err != nil {
 		log.Printf("DoReq %v\n", err)
 		return []byte{}, err
+	} else if resp.StatusCode != 200 {
+		return nil, fmt.Errorf("%v", resp.Status)
 	} else {
 		defer func() {
 			err := resp.Body.Close()
