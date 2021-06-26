@@ -11,7 +11,11 @@ import (
 	"github.com/incognitochain/go-incognito-sdk-v2/wallet"
 )
 
-const DefaultPRVFee = uint64(100)
+const (
+	DefaultPRVFee = uint64(100)
+	MaxInputSize  = 30
+	MaxOutputSize = 30
+)
 
 // TxParam describes the parameters needed to create a transaction in general.
 //
