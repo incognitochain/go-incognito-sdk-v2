@@ -157,6 +157,55 @@ func (client *IncClient) GetUnspentOutputCoinsFromCache(privateKey, tokenID stri
 	return client.GetUnspentOutputCoins(privateKey, tokenID, height)
 }
 
+// GetSpentOutputCoins retrieves all spent coins of a private key, without sending the private key to the remote full node.
+func (client *IncClient) GetSpentOutputCoins(privateKey, tokenID string, height uint64) ([]coin.PlainCoin, []*big.Int, error) {
+	keyWallet, err := wallet.Base58CheckDeserialize(privateKey)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	outCoinKey, err := NewOutCoinKeyFromPrivateKey(privateKey)
+	if err != nil {
+		return nil, nil, err
+	}
+	outCoinKey.SetReadonlyKey("") // call this if you do not want the remote full node to decrypt your coin
+
+	listOutputCoins, listIndices, err := client.GetOutputCoins(outCoinKey, tokenID, height)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	fmt.Printf("Len(OutputCoins) = %v\n", len(listOutputCoins))
+
+	if len(listOutputCoins) == 0 {
+		return nil, nil, nil
+	}
+
+	listDecryptedOutCoins, listKeyImages, err := GetListDecryptedCoins(privateKey, listOutputCoins)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	shardID := common.GetShardIDFromLastByte(keyWallet.KeySet.PaymentAddress.Pk[len(keyWallet.KeySet.PaymentAddress.Pk)-1])
+	checkSpentList, err := client.CheckCoinsSpent(shardID, tokenID, listKeyImages)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	listSpentOutputCoins := make([]coin.PlainCoin, 0)
+	listSpentIndices := make([]*big.Int, 0)
+	for i, decryptedCoin := range listDecryptedOutCoins {
+		if checkSpentList[i] && decryptedCoin.GetValue() != 0 {
+			listSpentOutputCoins = append(listSpentOutputCoins, decryptedCoin)
+			listSpentIndices = append(listSpentIndices, listIndices[i])
+		}
+	}
+
+	fmt.Printf("Len(spentCoins) = %v\n", len(listSpentOutputCoins))
+
+	return listSpentOutputCoins, listSpentIndices, nil
+}
+
 // NewOutCoinKeyFromPrivateKey creates a new rpc.OutCoinKey given the private key.
 func NewOutCoinKeyFromPrivateKey(privateKey string) (*rpc.OutCoinKey, error) {
 	keyWallet, err := wallet.Base58CheckDeserialize(privateKey)

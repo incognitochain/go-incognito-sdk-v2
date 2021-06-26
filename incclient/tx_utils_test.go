@@ -117,3 +117,31 @@ func TestIncClient_GetTxHashBySerialNumbers(t *testing.T) {
 
 	fmt.Printf("res: %v\n", string(jsb))
 }
+
+func TestIncClient_GetTxs(t *testing.T) {
+	var err error
+	ic, err = NewIncClient("https://beta-fullnode.incognito.org/fullnode", "", 1)
+	if err != nil {
+		panic(err)
+	}
+
+	txHashList := []string{
+		"83834123d04d2d2ceec8970a627f8557ee7737f2e037094bd3ace07e35d160dc",
+		"86fd368c7550c61620493f220d60d73e00278d2f129b13f33867ba246654c37c",
+	}
+
+	txs, err := ic.GetTxs(txHashList)
+	if err != nil {
+		panic(err)
+	}
+
+	for txHash, tx := range txs {
+		txBytes, err := json.Marshal(tx)
+		if err != nil {
+			panic(err)
+		}
+
+		fmt.Printf("txHash %v: %v\n", txHash, string(txBytes))
+
+	}
+}

@@ -8,6 +8,17 @@ func (server *RPCServer) GetTransactionByHash(txHash string) ([]byte, error) {
 	return server.SendQuery(getTransactionByHash, params)
 }
 
+// GetEncodedTransactionsByHashes retrieves base58-encoded transactions given their hashes.
+func (server *RPCServer) GetEncodedTransactionsByHashes(txHashList []string) ([]byte, error) {
+	mapParams := make(map[string][]string)
+	mapParams["TxHashList"] = txHashList
+
+	params := make([]interface{}, 0)
+	params = append(params, mapParams)
+
+	return server.SendQuery(getEncodedTransactionsByHashes, params)
+}
+
 // SendRawTx broadcasts a base58-encoded PRV transaction to the network.
 func (server *RPCServer) SendRawTx(encodedTx string) ([]byte, error) {
 	params := make([]interface{}, 0)

@@ -12,7 +12,7 @@ func TestIncClient_CreateAndSendShardStakingTransaction(t *testing.T) {
 		panic(err)
 	}
 
-	privateKey := "112t8rneWAhErTC8YUFTnfcKHvB1x6uAVdehy1S8GP2psgqDxK3RHouUcd69fz88oAL9XuMyQ8mBY5FmmGJdcyrpwXjWBXRpoWwgJXjsxi4j"
+	privateKey := ""
 	privateSeed := PrivateKeyToMiningKey(privateKey) //NOTE: the private seed (a.k.a the mining key) can be randomly generated and not be dependent on the private key
 	candidateAddress := PrivateKeyToPaymentAddress(privateKey, -1)
 	rewardAddress := candidateAddress //NOTE: the reward receiver can either be the same as the candidate address or be different
@@ -33,7 +33,7 @@ func TestIncClient_CreateAndSendUnStakingTransaction(t *testing.T) {
 		panic(err)
 	}
 
-	privateKey := "112t8rneWAhErTC8YUFTnfcKHvB1x6uAVdehy1S8GP2psgqDxK3RHouUcd69fz88oAL9XuMyQ8mBY5FmmGJdcyrpwXjWBXRpoWwgJXjsxi4j"
+	privateKey := ""
 	privateSeed := PrivateKeyToMiningKey(privateKey) //NOTE: the private seed (a.k.a the mining key) can be randomly generated and not be dependent on the private key
 	candidateAddress := PrivateKeyToPaymentAddress(privateKey, -1)
 
@@ -52,7 +52,7 @@ func TestIncClient_CreateAndSendWithDrawRewardTransaction(t *testing.T) {
 		panic(err)
 	}
 
-	privateKey := "112t8rneWAhErTC8YUFTnfcKHvB1x6uAVdehy1S8GP2psgqDxK3RHouUcd69fz88oAL9XuMyQ8mBY5FmmGJdcyrpwXjWBXRpoWwgJXjsxi4j"
+	privateKey := ""
 	rewardAddress := PrivateKeyToPaymentAddress(privateKey, -1)
 
 	txHash, err := ic.CreateAndSendWithDrawRewardTransaction(privateKey, rewardAddress)

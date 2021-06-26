@@ -132,7 +132,6 @@ func PrivateKeyToPrivateOTAKey(privateKey string) string {
 		return ""
 	}
 
-	err = keyWallet.KeySet.InitFromPrivateKey(&keyWallet.KeySet.PrivateKey)
 	return keyWallet.Base58CheckSerialize(wallet.OTAKeyType)
 }
 
