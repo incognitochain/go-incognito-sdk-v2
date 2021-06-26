@@ -22,6 +22,9 @@ import (
 //
 // It returns the base58-encoded transaction, the transaction's hash, and an error (if any).
 func (client *IncClient) CreateRawTokenTransaction(txParam *TxParam, version int8) ([]byte, string, error) {
+	if txParam.txTokenParam == nil {
+		return nil, "", fmt.Errorf("TxTokenParam must not be nil")
+	}
 	if version == -1 { //Try either one of the version, if possible
 		encodedTx, txHash, err := client.CreateRawTokenTransactionVer1(txParam)
 		if err != nil {

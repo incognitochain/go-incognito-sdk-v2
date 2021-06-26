@@ -23,6 +23,9 @@ import (
 //
 // It returns the base58-encoded transaction, the transaction's hash, and an error (if any).
 func (client *IncClient) CreateRawTransaction(param *TxParam, version int8) ([]byte, string, error) {
+	if param.txTokenParam != nil {
+		return nil, "", fmt.Errorf("method supports PRV transaction only")
+	}
 	if version == -1 { //Try either one of the version, if possible
 		encodedTx, txHash, err := client.CreateRawTransactionVer1(param)
 		if err != nil {
