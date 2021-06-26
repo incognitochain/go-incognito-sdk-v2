@@ -2,7 +2,8 @@ package jsonresult
 
 import "github.com/incognitochain/go-incognito-sdk-v2/common"
 
-type GetShardBestState struct {
+// ShardBestState describes the best state result of a shard.
+type ShardBestState struct {
 	BestBlockHash          common.Hash       `json:"BestBlockHash"` // hash of block.
 	BestBeaconHash         common.Hash       `json:"BestBeaconHash"`
 	BeaconHeight           uint64            `json:"BeaconHeight"`

@@ -46,7 +46,7 @@ func (client *IncClient) CreateShardStakingTransaction(privateKey, privateSeed, 
 
 	committeePKBytes, err := committeePK.Bytes()
 	if err != nil {
-		return nil, "", fmt.Errorf("committe to bytes error: %v", err)
+		return nil, "", fmt.Errorf("committee to bytes error: %v", err)
 	}
 
 	stakingAmount := uint64(1750000000000)
@@ -108,7 +108,7 @@ func (client *IncClient) CreateUnStakingTransaction(privateKey, privateSeed, can
 
 	committeePKBytes, err := committeePK.Bytes()
 	if err != nil {
-		return nil, "", fmt.Errorf("committe to bytes error: %v", err)
+		return nil, "", fmt.Errorf("committee to bytes error: %v", err)
 	}
 
 	unStakingMetadata, err := metadata.NewStopAutoStakingMetadata(metadata.StopAutoStakingMeta, base58.Base58Check{}.Encode(committeePKBytes, common.ZeroByte))

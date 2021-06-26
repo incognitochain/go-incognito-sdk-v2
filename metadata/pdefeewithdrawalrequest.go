@@ -5,7 +5,8 @@ import (
 	"strconv"
 )
 
-// PDEFeeWithdrawalRequest - privacy dex withdrawal request
+// PDEFeeWithdrawalRequest is a request to withdraw trading fee rewards from the pDEX.
+// The user needs to sign this request to make sure he/she is authorized to withdraw the rewards.
 type PDEFeeWithdrawalRequest struct {
 	WithdrawerAddressStr  string
 	WithdrawalToken1IDStr string
@@ -14,6 +15,7 @@ type PDEFeeWithdrawalRequest struct {
 	MetadataBaseWithSignature
 }
 
+// Hash overrides MetadataBase.Hash().
 func (pc PDEFeeWithdrawalRequest) Hash() *common.Hash {
 	record := pc.MetadataBase.Hash().String()
 	record += pc.WithdrawerAddressStr
@@ -28,6 +30,7 @@ func (pc PDEFeeWithdrawalRequest) Hash() *common.Hash {
 	return &hash
 }
 
+// HashWithoutSig overrides MetadataBase.HashWithoutSig().
 func (pc PDEFeeWithdrawalRequest) HashWithoutSig() *common.Hash {
 	record := pc.MetadataBase.Hash().String()
 	record += pc.WithdrawerAddressStr
@@ -39,6 +42,7 @@ func (pc PDEFeeWithdrawalRequest) HashWithoutSig() *common.Hash {
 	return &hash
 }
 
+// CalculateSize overrides MetadataBase.CalculateSize().
 func (pc *PDEFeeWithdrawalRequest) CalculateSize() uint64 {
 	return calculateSize(pc)
 }

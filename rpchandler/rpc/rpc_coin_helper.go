@@ -1,38 +1,46 @@
 package rpc
 
-//OutCoinKey is used to retrieve output coins via RPC.
+// OutCoinKey is used to retrieve output coins via RPC.
 //
-//Payment address must always be present. Other fields are optional
+// The payment addresses is required in all cases. For retrieving output coins V2, the ota key is required.
+// Readonly keys are optional.
 type OutCoinKey struct {
 	paymentAddress string
 	otaKey         string
 	readonlyKey    string
 }
 
+// PaymentAddress returns the payment address of an OutCoinKey.
 func (outCoinKey OutCoinKey) PaymentAddress() string {
 	return outCoinKey.paymentAddress
 }
 
+// OtaKey returns the ota key of an OutCoinKey.
 func (outCoinKey OutCoinKey) OtaKey() string {
 	return outCoinKey.otaKey
 }
 
+// ReadonlyKey returns the read-only of an OutCoinKey.
 func (outCoinKey OutCoinKey) ReadonlyKey() string {
 	return outCoinKey.readonlyKey
 }
 
-func (outCoinKey *OutCoinKey) SetOTAKey(otaKey string) {
-	outCoinKey.otaKey = otaKey
+// SetOTAKey sets v as the ota key of an OutCoinKey.
+func (outCoinKey *OutCoinKey) SetOTAKey(v string) {
+	outCoinKey.otaKey = v
 }
 
-func (outCoinKey *OutCoinKey) SetPaymentAddress(paymentAddress string) {
-	outCoinKey.paymentAddress = paymentAddress
+// SetPaymentAddress sets v as the payment address of an OutCoinKey.
+func (outCoinKey *OutCoinKey) SetPaymentAddress(v string) {
+	outCoinKey.paymentAddress = v
 }
 
-func (outCoinKey *OutCoinKey) SetReadonlyKey(readonlyKey string) {
-	outCoinKey.readonlyKey = readonlyKey
+// SetReadonlyKey sets v as the read-only key of an OutCoinKey.
+func (outCoinKey *OutCoinKey) SetReadonlyKey(v string) {
+	outCoinKey.readonlyKey = v
 }
 
+// NewOutCoinKey create a new OutCoinKey with the given parameters.
 func NewOutCoinKey(paymentAddress, otaKey, readonlyKey string) *OutCoinKey {
 	return &OutCoinKey{paymentAddress: paymentAddress, otaKey: otaKey, readonlyKey: readonlyKey}
 }

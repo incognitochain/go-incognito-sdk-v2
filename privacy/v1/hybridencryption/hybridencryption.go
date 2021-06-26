@@ -9,81 +9,85 @@ import (
 	"github.com/incognitochain/go-incognito-sdk-v2/privacy/utils"
 )
 
-// hybridCipherText_Old represents to hybridCipherText_Old for Hybrid encryption
-// Hybrid encryption uses AES scheme to encrypt message with arbitrary size
-// and uses Elgamal encryption to encrypt AES key
+// HybridCipherText represents a cipher text for the hybrid encryption scheme.
+// The hybrid encryption schemes uses the AES scheme to encrypt a message with arbitrary size,
+// and uses Elgamal encryption to encrypt the AES key.
 type HybridCipherText struct {
 	msgEncrypted    []byte
 	symKeyEncrypted []byte
 }
 
-func (ciphertext HybridCipherText) GetMsgEncrypted() []byte {
-	return ciphertext.msgEncrypted
+// GetMsgEncrypted returns the encrypted message of a HybridCipherText.
+func (c HybridCipherText) GetMsgEncrypted() []byte {
+	return c.msgEncrypted
 }
 
-func (ciphertext HybridCipherText) GetSymKeyEncrypted() []byte {
-	return ciphertext.symKeyEncrypted
+// GetSymKeyEncrypted returns the encrypted key of a HybridCipherText.
+func (c HybridCipherText) GetSymKeyEncrypted() []byte {
+	return c.symKeyEncrypted
 }
 
-// isNil check whether ciphertext is nil or not
-func (ciphertext HybridCipherText) IsNil() bool {
-	if len(ciphertext.msgEncrypted) == 0 {
+// IsNil checks if a HybridCipherText is empty.
+func (c HybridCipherText) IsNil() bool {
+	if len(c.msgEncrypted) == 0 {
 		return true
 	}
 
-	return len(ciphertext.symKeyEncrypted) == 0
+	return len(c.symKeyEncrypted) == 0
 }
 
-func (hybridCipherText HybridCipherText) MarshalJSON() ([]byte, error) {
-	data := hybridCipherText.Bytes()
+// MarshalJSON returns the JSON-marshalled data of a HybridCipherText.
+func (c HybridCipherText) MarshalJSON() ([]byte, error) {
+	data := c.Bytes()
 	temp := base58.Base58Check{}.Encode(data, common.ZeroByte)
 	return json.Marshal(temp)
 }
 
-func (hybridCipherText *HybridCipherText) UnmarshalJSON(data []byte) error {
+// UnmarshalJSON un-marshals raw-data into a HybridCipherText.
+func (c *HybridCipherText) UnmarshalJSON(data []byte) error {
 	dataStr := ""
 	_ = json.Unmarshal(data, &dataStr)
 	temp, _, err := base58.Base58Check{}.Decode(dataStr)
 	if err != nil {
 		return err
 	}
-	hybridCipherText.SetBytes(temp)
+	c.SetBytes(temp)
 	return nil
 }
 
-// Bytes converts ciphertext to bytes array
-// if ciphertext is nil, return empty byte array
-func (ciphertext HybridCipherText) Bytes() []byte {
-	if ciphertext.IsNil() {
+// Bytes converts ciphertext to bytes array.
+// If ciphertext is nil, return empty byte array.
+func (c HybridCipherText) Bytes() []byte {
+	if c.IsNil() {
 		return []byte{}
 	}
 
 	res := make([]byte, 0)
-	res = append(res, ciphertext.symKeyEncrypted...)
-	res = append(res, ciphertext.msgEncrypted...)
+	res = append(res, c.symKeyEncrypted...)
+	res = append(res, c.msgEncrypted...)
 
 	return res
 }
 
-// SetBytes reverts bytes array to hybridCipherText_Old
-func (ciphertext *HybridCipherText) SetBytes(bytes []byte) error {
+// SetBytes sets byte-representation data into a HybridCipherText.
+func (c *HybridCipherText) SetBytes(bytes []byte) error {
 	if len(bytes) == 0 {
 		return utils.NewPrivacyErr(utils.InvalidInputToSetBytesErr, nil)
 	}
 
 	if len(bytes) < elGamalCiphertextSize {
 		// out of range
-		return errors.New("out of range Parse ciphertext")
+		return errors.New("out of range Parse c")
 	}
-	ciphertext.symKeyEncrypted = bytes[0:elGamalCiphertextSize]
-	ciphertext.msgEncrypted = bytes[elGamalCiphertextSize:]
+	c.symKeyEncrypted = bytes[0:elGamalCiphertextSize]
+	c.msgEncrypted = bytes[elGamalCiphertextSize:]
 	return nil
 }
 
-// hybridEncrypt_Old encrypts message with any size, using Publickey to encrypt
-// hybridEncrypt_Old generates AES key by randomize an elliptic point aesKeyPoint and get X-coordinate
-// using AES key to encrypt message
-// After that, using ElGamal encryption encrypt aesKeyPoint using publicKey
+// HybridEncrypt encrypts a message with arbitrary size, and returns a HybridCipherText.
+// HybridEncrypt generates an AES key by getting the X-coordinate of a randomized elliptic point.
+// It then uses this AES key to encrypt the message. The key is then encrypted using the ElGamal encryption scheme
+// with the given publicKey.
 func HybridEncrypt(msg []byte, publicKey *crypto.Point) (ciphertext *HybridCipherText, err error) {
 	ciphertext = new(HybridCipherText)
 
@@ -109,9 +113,7 @@ func HybridEncrypt(msg []byte, publicKey *crypto.Point) (ciphertext *HybridCiphe
 	return ciphertext, nil
 }
 
-// hybridDecrypt_Old receives a ciphertext and privateKey
-// it decrypts aesKeyPoint, using ElGamal encryption with privateKey
-// Using X-coordinate of aesKeyPoint to decrypts message
+// HybridDecrypt returns the message by decrypting the given HybridCipherText using the given privateKey.
 func HybridDecrypt(ciphertext *HybridCipherText, privateKey *crypto.Scalar) (msg []byte, err error) {
 	// Validate ciphertext
 	if ciphertext.IsNil() {
