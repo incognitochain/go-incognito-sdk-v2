@@ -12,7 +12,6 @@ import (
 	"github.com/incognitochain/go-incognito-sdk-v2/transaction/tx_generic"
 	"github.com/incognitochain/go-incognito-sdk-v2/transaction/utils"
 	"math/big"
-
 	// "github.com/incognitochain/incognito-chain/wallet"
 )
 

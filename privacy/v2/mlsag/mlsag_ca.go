@@ -6,7 +6,6 @@ import (
 	"github.com/incognitochain/go-incognito-sdk-v2/crypto"
 )
 
-
 func (ml *Mlsag) SignConfidentialAsset(message []byte) (*MlsagSig, error) {
 	if len(message) != common.HashSize {
 		return nil, fmt.Errorf("cannot mlsag sign the message because its length is not 32, maybe it has not been hashed")
@@ -147,7 +146,6 @@ func (ml *Mlsag) calculateCCA(message [common.HashSize]byte, alpha []*crypto.Sca
 		ck := new(crypto.Scalar).Mul(c[ml.pi], ml.privateKeys[i])
 		r[ml.pi][i] = new(crypto.Scalar).Sub(alpha[i], ck)
 	}
-
 
 	return c, nil
 }

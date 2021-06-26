@@ -337,7 +337,7 @@ var ALPHABET = "abcdefghijklmnopqrstvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 
 func RandChars(length int) string {
 	res := ""
-	for i:=0; i<length; i++ {
+	for i := 0; i < length; i++ {
 		r := RandInt() % len(ALPHABET)
 		res += string(ALPHABET[r])
 	}

@@ -6,7 +6,7 @@ import (
 	"github.com/incognitochain/go-incognito-sdk-v2/rpchandler"
 )
 
-func (server *RPCServer) GetListRewardAmount() ([]byte, error){
+func (server *RPCServer) GetListRewardAmount() ([]byte, error) {
 	if server == nil || len(server.url) == 0 {
 		return nil, fmt.Errorf("rpc server not set")
 	}

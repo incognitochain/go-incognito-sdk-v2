@@ -19,7 +19,7 @@ func (mb *MetadataBase) Sign(privateKey *key.PrivateKey, tx Transaction) error {
 
 type MetadataBaseWithSignature struct {
 	MetadataBase
-	Sig []byte 		`json:"Sig,omitempty"`
+	Sig []byte `json:"Sig,omitempty"`
 }
 
 func NewMetadataBaseWithSignature(thisType int) *MetadataBaseWithSignature {
@@ -53,11 +53,9 @@ func (mbs *MetadataBaseWithSignature) Sign(privateKey *key.PrivateKey, tx Transa
 	return nil
 }
 
-
 func NewMetadataBase(thisType int) *MetadataBase {
 	return &MetadataBase{Type: thisType}
 }
-
 
 func (mb *MetadataBase) CalculateSize() uint64 {
 	return 0

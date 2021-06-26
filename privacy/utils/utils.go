@@ -57,7 +57,6 @@ func ConvertUint64ToBinary(number uint64, n int) []*crypto.Scalar {
 	return binary
 }
 
-
 func SliceToArray(slice []byte) [crypto.Ed25519KeySize]byte {
 	var array [crypto.Ed25519KeySize]byte
 	copy(array[:], slice)

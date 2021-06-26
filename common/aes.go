@@ -17,7 +17,7 @@ type AES struct {
 }
 
 func (aesObj *AES) Encrypt(plaintext []byte) ([]byte, error) {
-	if len(plaintext) == 0{
+	if len(plaintext) == 0 {
 		return []byte{}, PlainTextIsEmptyErr
 	}
 

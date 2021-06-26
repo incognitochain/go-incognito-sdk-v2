@@ -102,13 +102,27 @@ func (proof ProofV1) GetOutputCoins() []coin.Coin {
 	return res
 }
 
-func (proof *ProofV1) SetCommitmentShardID(commitmentShardID *crypto.Point){proof.commitmentInputShardID = commitmentShardID}
-func (proof *ProofV1) SetCommitmentInputSND(commitmentInputSND []*crypto.Point){proof.commitmentInputSND = commitmentInputSND}
-func (proof *ProofV1) SetAggregatedRangeProof(aggregatedRangeProof *aggregatedrange.AggregatedRangeProof) {proof.rangeProof = aggregatedRangeProof}
-func (proof *ProofV1) SetSerialNumberProof(serialNumberProof []*serialnumberprivacy.SNPrivacyProof) {proof.serialNumberProof = serialNumberProof}
-func (proof *ProofV1) SetOneOfManyProof(oneOfManyProof []*oneoutofmany.OneOutOfManyProof) {proof.oneOfManyProof = oneOfManyProof}
-func (proof *ProofV1) SetSerialNumberNoPrivacyProof(serialNumberNoPrivacyProof []*serialnumbernoprivacy.SNNoPrivacyProof) {proof.serialNumberNoPrivacyProof = serialNumberNoPrivacyProof}
-func (proof *ProofV1) SetCommitmentInputValue(commitmentInputValue []*crypto.Point) {proof.commitmentInputValue = commitmentInputValue}
+func (proof *ProofV1) SetCommitmentShardID(commitmentShardID *crypto.Point) {
+	proof.commitmentInputShardID = commitmentShardID
+}
+func (proof *ProofV1) SetCommitmentInputSND(commitmentInputSND []*crypto.Point) {
+	proof.commitmentInputSND = commitmentInputSND
+}
+func (proof *ProofV1) SetAggregatedRangeProof(aggregatedRangeProof *aggregatedrange.AggregatedRangeProof) {
+	proof.rangeProof = aggregatedRangeProof
+}
+func (proof *ProofV1) SetSerialNumberProof(serialNumberProof []*serialnumberprivacy.SNPrivacyProof) {
+	proof.serialNumberProof = serialNumberProof
+}
+func (proof *ProofV1) SetOneOfManyProof(oneOfManyProof []*oneoutofmany.OneOutOfManyProof) {
+	proof.oneOfManyProof = oneOfManyProof
+}
+func (proof *ProofV1) SetSerialNumberNoPrivacyProof(serialNumberNoPrivacyProof []*serialnumbernoprivacy.SNNoPrivacyProof) {
+	proof.serialNumberNoPrivacyProof = serialNumberNoPrivacyProof
+}
+func (proof *ProofV1) SetCommitmentInputValue(commitmentInputValue []*crypto.Point) {
+	proof.commitmentInputValue = commitmentInputValue
+}
 
 // SetCommitmentInputSND sets v as the inputSND commitments of a ProofV1.
 func (proof *ProofV1) SetCommitmentInputSND(v []*crypto.Point) {

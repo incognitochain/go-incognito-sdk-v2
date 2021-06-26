@@ -24,7 +24,7 @@ const (
 	getMaxShardsNumber = "getmaxshardsnumber"
 
 	getMiningInfo                 = "getmininginfo"
-	getSyncStats          		  = "getsyncstats"
+	getSyncStats                  = "getsyncstats"
 	getRawMempool                 = "getrawmempool"
 	getNumberOfTxsInMempool       = "getnumberoftxsinmempool"
 	getMempoolEntry               = "getmempoolentry"

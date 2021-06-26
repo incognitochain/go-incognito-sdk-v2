@@ -51,14 +51,19 @@ func (tx *Tx) GetReceiverData() ([]coin.Coin, error) {
 	return coins, nil
 }
 
-func (tx Tx) GetTxMintData() (bool, coin.Coin, *common.Hash, error) { return tx_generic.GetTxMintData(&tx, &common.PRVCoinID) }
+func (tx Tx) GetTxMintData() (bool, coin.Coin, *common.Hash, error) {
+	return tx_generic.GetTxMintData(&tx, &common.PRVCoinID)
+}
 
-func (tx Tx) GetTxBurnData() (bool, coin.Coin, *common.Hash, error) { return tx_generic.GetTxBurnData(&tx) }
+func (tx Tx) GetTxBurnData() (bool, coin.Coin, *common.Hash, error) {
+	return tx_generic.GetTxBurnData(&tx)
+}
 
 func (tx Tx) GetTxFullBurnData() (bool, coin.Coin, coin.Coin, *common.Hash, error) {
 	isBurn, burnedCoin, burnedTokenID, err := tx.GetTxBurnData()
 	return isBurn, burnedCoin, nil, burnedTokenID, err
 }
+
 //END GETTER FUNCTIONS
 
 //INIT FUNCTIONS
@@ -129,12 +134,13 @@ func (tx *Tx) sign() error {
 	return nil
 }
 
-func (tx *Tx) Sign(sigPrivakey []byte) error {//For testing-purpose only, remove when deploy
-	if sigPrivakey != nil{
+func (tx *Tx) Sign(sigPrivakey []byte) error { //For testing-purpose only, remove when deploy
+	if sigPrivakey != nil {
 		tx.SetPrivateKey(sigPrivakey)
 	}
 	return tx.sign()
 }
+
 //END INIT FUNCTIONS
 
 //HELPER FUNCTIONS
@@ -166,7 +172,7 @@ func (tx *Tx) initPaymentWitnessParam(params *tx_generic.TxPrivacyInitParams) (*
 	var inputCoinCommitmentIndices []uint64
 	var commitments []*crypto.Point
 
-	if params.HasPrivacy && len(params.InputCoins) > 0{
+	if params.HasPrivacy && len(params.InputCoins) > 0 {
 		//Get list of decoy indices.
 		tmp, ok := params.Kvargs[utils.CommitmentIndices]
 		if !ok {
@@ -175,29 +181,29 @@ func (tx *Tx) initPaymentWitnessParam(params *tx_generic.TxPrivacyInitParams) (*
 
 		commitmentIndices, ok = tmp.([]uint64)
 		if !ok {
-			return nil,  fmt.Errorf("cannot parse commitment indices: %v", tmp)
+			return nil, fmt.Errorf("cannot parse commitment indices: %v", tmp)
 		}
 
 		//Get list of decoy commitments.
 		tmp, ok = params.Kvargs[utils.Commitments]
 		if !ok {
-			return nil,  fmt.Errorf("decoy commitment list not found: %v", params.Kvargs)
+			return nil, fmt.Errorf("decoy commitment list not found: %v", params.Kvargs)
 		}
 
 		commitments, ok = tmp.([]*crypto.Point)
 		if !ok {
-			return nil,   fmt.Errorf("cannot parse sender commitment indices: %v", tmp)
+			return nil, fmt.Errorf("cannot parse sender commitment indices: %v", tmp)
 		}
 
 		//Get list of inputcoin indices
 		tmp, ok = params.Kvargs[utils.MyIndices]
 		if !ok {
-			return nil,  fmt.Errorf("inputCoin commitment indices not found: %v", params.Kvargs)
+			return nil, fmt.Errorf("inputCoin commitment indices not found: %v", params.Kvargs)
 		}
 
 		inputCoinCommitmentIndices, ok = tmp.([]uint64)
 		if !ok {
-			return nil,  fmt.Errorf("cannot parse inputCoin commitment indices: %v", tmp)
+			return nil, fmt.Errorf("cannot parse inputCoin commitment indices: %v", tmp)
 		}
 	}
 
@@ -263,4 +269,5 @@ func (tx *Tx) CheckAuthorizedSender(publicKey []byte) (bool, error) {
 		return false, nil
 	}
 }
+
 //END HELPER FUNCTIONS

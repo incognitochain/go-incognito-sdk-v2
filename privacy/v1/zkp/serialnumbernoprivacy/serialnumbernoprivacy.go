@@ -34,14 +34,13 @@ func (proof SNNoPrivacyProof) GetVKey() *crypto.Point {
 	return proof.stmt.vKey
 }
 
-func (proof SNNoPrivacyProof) GetOutput() *crypto.Point{
+func (proof SNNoPrivacyProof) GetOutput() *crypto.Point {
 	return proof.stmt.output
 }
 
-func (proof SNNoPrivacyProof) GetInput() *crypto.Scalar{
+func (proof SNNoPrivacyProof) GetInput() *crypto.Scalar {
 	return proof.stmt.input
 }
-
 
 func (proof SNNoPrivacyProof) ValidateSanity() bool {
 	if !proof.stmt.output.PointValid() {
@@ -162,7 +161,7 @@ func (pro *SNNoPrivacyProof) SetBytes(bytes []byte) error {
 	// if len(bytes) == 0 {
 	// 	return errors.New("Bytes array is empty")
 	// }
-	if len(bytes) < crypto.Ed25519KeySize*6{
+	if len(bytes) < crypto.Ed25519KeySize*6 {
 		return errors.New("Not enough bytes to unmarshal Serial Number No Privacy Proof")
 	}
 

@@ -96,7 +96,7 @@ func (proof RangeProof) Bytes() []byte {
 	return res
 }
 
-func (proof RangeProof) GetCommitments() []*crypto.Point {return proof.cmsValue}
+func (proof RangeProof) GetCommitments() []*crypto.Point { return proof.cmsValue }
 
 func (proof *RangeProof) SetCommitments(cmsValue []*crypto.Point) {
 	proof.cmsValue = cmsValue
@@ -113,7 +113,7 @@ func (proof *RangeProof) SetBytes(bytes []byte) error {
 
 	proof.cmsValue = make([]*crypto.Point, lenValues)
 	for i := 0; i < lenValues; i++ {
-		if offset+crypto.Ed25519KeySize > len(bytes){
+		if offset+crypto.Ed25519KeySize > len(bytes) {
 			return errors.New("Range Proof unmarshaling from bytes failed")
 		}
 		proof.cmsValue[i], err = new(crypto.Point).FromBytesS(bytes[offset : offset+crypto.Ed25519KeySize])
@@ -123,7 +123,7 @@ func (proof *RangeProof) SetBytes(bytes []byte) error {
 		offset += crypto.Ed25519KeySize
 	}
 
-	if offset+crypto.Ed25519KeySize > len(bytes){
+	if offset+crypto.Ed25519KeySize > len(bytes) {
 		return errors.New("Range Proof unmarshaling from bytes failed")
 	}
 	proof.a, err = new(crypto.Point).FromBytesS(bytes[offset : offset+crypto.Ed25519KeySize])
@@ -132,7 +132,7 @@ func (proof *RangeProof) SetBytes(bytes []byte) error {
 	}
 	offset += crypto.Ed25519KeySize
 
-	if offset+crypto.Ed25519KeySize > len(bytes){
+	if offset+crypto.Ed25519KeySize > len(bytes) {
 		return errors.New("Range Proof unmarshaling from bytes failed")
 	}
 	proof.s, err = new(crypto.Point).FromBytesS(bytes[offset : offset+crypto.Ed25519KeySize])
@@ -141,7 +141,7 @@ func (proof *RangeProof) SetBytes(bytes []byte) error {
 	}
 	offset += crypto.Ed25519KeySize
 
-	if offset+crypto.Ed25519KeySize > len(bytes){
+	if offset+crypto.Ed25519KeySize > len(bytes) {
 		return errors.New("Range Proof unmarshaling from bytes failed")
 	}
 	proof.t1, err = new(crypto.Point).FromBytesS(bytes[offset : offset+crypto.Ed25519KeySize])
@@ -150,7 +150,7 @@ func (proof *RangeProof) SetBytes(bytes []byte) error {
 	}
 	offset += crypto.Ed25519KeySize
 
-	if offset+crypto.Ed25519KeySize > len(bytes){
+	if offset+crypto.Ed25519KeySize > len(bytes) {
 		return errors.New("Range Proof unmarshaling from bytes failed")
 	}
 	proof.t2, err = new(crypto.Point).FromBytesS(bytes[offset : offset+crypto.Ed25519KeySize])
@@ -159,25 +159,25 @@ func (proof *RangeProof) SetBytes(bytes []byte) error {
 	}
 	offset += crypto.Ed25519KeySize
 
-	if offset+crypto.Ed25519KeySize > len(bytes){
+	if offset+crypto.Ed25519KeySize > len(bytes) {
 		return errors.New("Range Proof unmarshaling from bytes failed")
 	}
 	proof.tauX = new(crypto.Scalar).FromBytesS(bytes[offset : offset+crypto.Ed25519KeySize])
 	offset += crypto.Ed25519KeySize
 
-	if offset+crypto.Ed25519KeySize > len(bytes){
+	if offset+crypto.Ed25519KeySize > len(bytes) {
 		return errors.New("Range Proof unmarshaling from bytes failed")
 	}
 	proof.tHat = new(crypto.Scalar).FromBytesS(bytes[offset : offset+crypto.Ed25519KeySize])
 	offset += crypto.Ed25519KeySize
 
-	if offset+crypto.Ed25519KeySize > len(bytes){
+	if offset+crypto.Ed25519KeySize > len(bytes) {
 		return errors.New("Range Proof unmarshaling from bytes failed")
 	}
 	proof.mu = new(crypto.Scalar).FromBytesS(bytes[offset : offset+crypto.Ed25519KeySize])
 	offset += crypto.Ed25519KeySize
-	
-	if offset >= len(bytes){
+
+	if offset >= len(bytes) {
 		return errors.New("Range Proof unmarshaling from bytes failed")
 	}
 
@@ -434,14 +434,14 @@ func (proof RangeProof) Verify() (bool, error) {
 	}
 	tmpHPrime := new(crypto.Point).MultiScalarMult(vectorSum, HPrime)
 	tmpG := new(crypto.Point).Set(aggParam.g[0])
-	for i:= 1; i < N; i++ {
+	for i := 1; i < N; i++ {
 		tmpG.Add(tmpG, aggParam.g[i])
 	}
 	ASx := new(crypto.Point).Add(proof.a, new(crypto.Point).ScalarMult(proof.s, x))
 	P := new(crypto.Point).Add(new(crypto.Point).ScalarMult(tmpG, zNeg), tmpHPrime)
 	P.Add(P, ASx)
 	P.Add(P, new(crypto.Point).ScalarMult(uPrime, proof.tHat))
-	PPrime := new(crypto.Point).Add(proof.innerProductProof.p, new(crypto.Point).ScalarMult(crypto.HBase, proof.mu) )
+	PPrime := new(crypto.Point).Add(proof.innerProductProof.p, new(crypto.Point).ScalarMult(crypto.HBase, proof.mu))
 
 	if !crypto.IsPointEqual(P, PPrime) {
 		return false, errors.New("verify aggregated range proof statement 2-1 failed")
@@ -491,7 +491,6 @@ func (proof RangeProof) VerifyFaster() (bool, error) {
 	HPrime := computeHPrime(y, N, aggParam.h)
 	uPrime := new(crypto.Point).ScalarMult(aggParam.u, crypto.HashToScalar(x.ToBytesS()))
 
-
 	// Verify eq (65)
 	LHS := crypto.PedCom.CommitAtIndex(proof.tHat, proof.tauX, crypto.PedersenValueIndex)
 	RHS := new(crypto.Point).ScalarMult(proof.t2, xSquare)
@@ -514,14 +513,14 @@ func (proof RangeProof) VerifyFaster() (bool, error) {
 	}
 	tmpHPrime := new(crypto.Point).MultiScalarMult(vectorSum, HPrime)
 	tmpG := new(crypto.Point).Set(aggParam.g[0])
-	for i:= 1; i < N; i++ {
+	for i := 1; i < N; i++ {
 		tmpG.Add(tmpG, aggParam.g[i])
 	}
 	ASx := new(crypto.Point).Add(proof.a, new(crypto.Point).ScalarMult(proof.s, x))
 	P := new(crypto.Point).Add(new(crypto.Point).ScalarMult(tmpG, zNeg), tmpHPrime)
 	P.Add(P, ASx)
 	P.Add(P, new(crypto.Point).ScalarMult(uPrime, proof.tHat))
-	PPrime := new(crypto.Point).Add(proof.innerProductProof.p, new(crypto.Point).ScalarMult(crypto.HBase, proof.mu) )
+	PPrime := new(crypto.Point).Add(proof.innerProductProof.p, new(crypto.Point).ScalarMult(crypto.HBase, proof.mu))
 
 	if !crypto.IsPointEqual(P, PPrime) {
 		return false, errors.New("verify aggregated range proof statement 2-1 failed")

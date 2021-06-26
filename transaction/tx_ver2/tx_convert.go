@@ -204,14 +204,14 @@ type CustomTokenConversionParams struct {
 }
 
 type TxTokenConvertVer1ToVer2InitParams struct {
-	senderSK      *key.PrivateKey
-	feeInputs     []coin.PlainCoin
-	feePayments   []*key.PaymentInfo
-	fee           uint64
-	tokenParams   *CustomTokenConversionParams
-	metaData      metadata.Metadata
-	info          []byte // 512 bytes
-	kvargs		  map[string]interface{}
+	senderSK    *key.PrivateKey
+	feeInputs   []coin.PlainCoin
+	feePayments []*key.PaymentInfo
+	fee         uint64
+	tokenParams *CustomTokenConversionParams
+	metaData    metadata.Metadata
+	info        []byte // 512 bytes
+	kvargs      map[string]interface{}
 }
 
 func NewTxTokenConvertVer1ToVer2InitParams(senderSK *key.PrivateKey,
@@ -225,17 +225,16 @@ func NewTxTokenConvertVer1ToVer2InitParams(senderSK *key.PrivateKey,
 	info []byte,
 	kvargs map[string]interface{}) *TxTokenConvertVer1ToVer2InitParams {
 
-	if info == nil{
+	if info == nil {
 		info = []byte{}
 	}
-
 
 	tokenParams := &CustomTokenConversionParams{
 		tokenID:       tokenID,
 		tokenPayments: tokenPayments,
 		tokenInputs:   tokenInputs,
 	}
-	return  &TxTokenConvertVer1ToVer2InitParams{
+	return &TxTokenConvertVer1ToVer2InitParams{
 		feeInputs:   feeInputs,
 		fee:         fee,
 		tokenParams: tokenParams,
@@ -243,11 +242,11 @@ func NewTxTokenConvertVer1ToVer2InitParams(senderSK *key.PrivateKey,
 		feePayments: feePayments,
 		senderSK:    senderSK,
 		info:        info,
-		kvargs: 	 kvargs,
+		kvargs:      kvargs,
 	}
 }
 
-func validateTxTokenConvertVer1ToVer2Params (params *TxTokenConvertVer1ToVer2InitParams) error {
+func validateTxTokenConvertVer1ToVer2Params(params *TxTokenConvertVer1ToVer2InitParams) error {
 	if len(params.feeInputs) > 255 {
 		return errors.New("FeeInput is too large, feeInputs length = " + strconv.Itoa(len(params.feeInputs)))
 	}
@@ -286,7 +285,6 @@ func (txToken *TxToken) initTokenConversion(txNormal *Tx, params *TxTokenConvert
 	txToken.TokenData.PropertySymbol = ""
 	txToken.TokenData.Mintable = false
 	txToken.TokenData.PropertyID = *params.tokenParams.tokenID
-
 
 	txConvertParams := NewTxConvertVer1ToVer2InitParams(
 		params.senderSK,
@@ -363,16 +361,16 @@ func InitTokenConversion(txToken *TxToken, params *TxTokenConvertVer1ToVer2InitP
 		return err
 	}
 	tdh, err := txToken.TokenData.Hash()
-	if err!=nil{
+	if err != nil {
 		return err
 	}
 	message := common.HashH(append(tx.Hash()[:], tdh[:]...))
 	err = tx.signOnMessage(inps, outs, txPrivacyParams, message[:])
-	if err!=nil{
+	if err != nil {
 		return err
 	}
 	err = txToken.SetTxBase(tx)
-	if err!=nil{
+	if err != nil {
 		return err
 	}
 	txSize := txToken.GetTxActualSize()
@@ -381,5 +379,3 @@ func InitTokenConversion(txToken *TxToken, params *TxTokenConvertVer1ToVer2InitP
 	}
 	return nil
 }
-
-

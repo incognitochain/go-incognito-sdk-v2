@@ -11,7 +11,7 @@ func (server *RPCServer) GetBlockchainInfo() ([]byte, error) {
 	if server == nil || len(server.url) == 0 {
 		return nil, fmt.Errorf("rpc server not set")
 	}
-	
+
 	query := `{
 		"jsonrpc":"1.0",
 		"method":"getblockchaininfo",
@@ -25,7 +25,7 @@ func (server *RPCServer) GetBestBlock() ([]byte, error) {
 	if server == nil || len(server.url) == 0 {
 		return nil, fmt.Errorf("rpc server not set")
 	}
-	
+
 	if len(server.GetURL()) == 0 {
 		return []byte{}, errors.New("Server has not set mainnet or testnet")
 	}
@@ -42,7 +42,7 @@ func (server *RPCServer) GetBestBlockHash() ([]byte, error) {
 	if server == nil || len(server.url) == 0 {
 		return nil, fmt.Errorf("rpc server not set")
 	}
-	
+
 	query := `{
 		"jsonrpc":"1.0",
 		"method":"getbestblockhash",
@@ -56,7 +56,7 @@ func (server *RPCServer) RetrieveBlock(blockHash string, verbosity string) ([]by
 	if server == nil || len(server.url) == 0 {
 		return nil, fmt.Errorf("rpc server not set")
 	}
-	
+
 	method := retrieveBlock
 
 	params := make([]interface{}, 0)
@@ -107,8 +107,6 @@ func (server *RPCServer) GetBeaconBestState() ([]byte, error) {
 
 	return server.SendPostRequestWithQuery(string(query))
 }
-
-
 
 func (server *RPCServer) GetRawMempool() ([]byte, error) {
 	if server == nil || len(server.url) == 0 {

@@ -68,7 +68,6 @@ type TransactionToken interface {
 	Init(interface{}) error
 }
 
-
 type TxTokenData struct {
 	// TxNormal is the normal transaction, it will never be token transaction
 	TxNormal       metadata.Transaction
@@ -82,19 +81,20 @@ type TxTokenData struct {
 }
 
 func (txData TxTokenData) GetPropertyID() common.Hash { return txData.PropertyID }
-func (txData TxTokenData) GetPropertyName() string { return txData.PropertyName }
-func (txData TxTokenData) GetPropertySymbol() string { return txData.PropertySymbol }
-func (txData TxTokenData) GetType() int { return txData.Type }
-func (txData TxTokenData) IsMintable() bool { return txData.Mintable }
-func (txData TxTokenData) GetAmount() uint64 { return txData.Amount }
+func (txData TxTokenData) GetPropertyName() string    { return txData.PropertyName }
+func (txData TxTokenData) GetPropertySymbol() string  { return txData.PropertySymbol }
+func (txData TxTokenData) GetType() int               { return txData.Type }
+func (txData TxTokenData) IsMintable() bool           { return txData.Mintable }
+func (txData TxTokenData) GetAmount() uint64          { return txData.Amount }
 
-
-func (txData *TxTokenData) SetPropertyID(propID common.Hash) { txData.PropertyID = propID }
+func (txData *TxTokenData) SetPropertyID(propID common.Hash)    { txData.PropertyID = propID }
 func (txData *TxTokenData) SetPropertyName(propertyName string) { txData.PropertyName = propertyName }
-func (txData *TxTokenData) SetPropertySymbol(propertySymbol string) { txData.PropertySymbol = propertySymbol }
-func (txData *TxTokenData) SetType(t int) { txData.Type = t }
+func (txData *TxTokenData) SetPropertySymbol(propertySymbol string) {
+	txData.PropertySymbol = propertySymbol
+}
+func (txData *TxTokenData) SetType(t int)             { txData.Type = t }
 func (txData *TxTokenData) SetMintable(mintable bool) { txData.Mintable = mintable }
-func (txData *TxTokenData) SetAmount(amount uint64) { txData.Amount = amount }
+func (txData *TxTokenData) SetAmount(amount uint64)   { txData.Amount = amount }
 
 func (txData TxTokenData) String() string {
 	record := txData.PropertyName

@@ -7,7 +7,7 @@ import (
 type PDEFeeWithdrawalResponse struct {
 	MetadataBase
 	RequestedTxID common.Hash
-	SharedRandom       []byte `json:"SharedRandom,omitempty"`
+	SharedRandom  []byte `json:"SharedRandom,omitempty"`
 }
 
 func (iRes PDEFeeWithdrawalResponse) Hash() *common.Hash {

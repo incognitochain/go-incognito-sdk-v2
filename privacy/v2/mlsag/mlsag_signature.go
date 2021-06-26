@@ -12,7 +12,7 @@ type MlsagSig struct {
 }
 
 func NewMlsagSig(c *crypto.Scalar, keyImages []*crypto.Point, r [][]*crypto.Scalar) (*MlsagSig, error) {
-	if len(r)==0 {
+	if len(r) == 0 {
 		return nil, fmt.Errorf("cannot create new mlsag signature, length of r is not correct")
 	}
 	if len(keyImages) != len(r[0]) {
@@ -67,8 +67,8 @@ func (this *MlsagSig) ToBytes() ([]byte, error) {
 		if n > MaxSizeByte || m > MaxSizeByte {
 			return nil, fmt.Errorf("length of R of mlsagSig is too large > 255")
 		}
-		b = append(b, byte(n & 0xFF))
-		b = append(b, byte(m & 0xFF))
+		b = append(b, byte(n&0xFF))
+		b = append(b, byte(m&0xFF))
 		for i := 0; i < n; i += 1 {
 			if m != len(this.r[i]) {
 				return []byte{}, fmt.Errorf("error in MLSAG MlsagSig ToBytes: the signature is broken (size of keyImages and r differ)")
@@ -99,11 +99,11 @@ func (this *MlsagSig) FromBytes(b []byte) (*MlsagSig, error) {
 		return nil, fmt.Errorf("cannot parse value C, byte length of C is wrong")
 	}
 	offset += 1
-	if offset + crypto.Ed25519KeySize > len(b) {
+	if offset+crypto.Ed25519KeySize > len(b) {
 		return nil, fmt.Errorf("cannot parse value C, byte is too small")
 	}
 	C := new(crypto.Scalar).FromBytesS(b[offset : offset+crypto.Ed25519KeySize])
-	if !C.ScalarValid(){
+	if !C.ScalarValid() {
 		return nil, fmt.Errorf("cannot parse value C, invalid scalar")
 	}
 	offset += crypto.Ed25519KeySize
@@ -115,7 +115,7 @@ func (this *MlsagSig) FromBytes(b []byte) (*MlsagSig, error) {
 	offset += 1
 	keyImages := make([]*crypto.Point, lenKeyImages)
 	for i := 0; i < lenKeyImages; i += 1 {
-		if offset + crypto.Ed25519KeySize > len(b) {
+		if offset+crypto.Ed25519KeySize > len(b) {
 			return nil, fmt.Errorf("cannot parse keyimage of mlsagSig, byte is too small")
 		}
 		var err error
@@ -126,22 +126,22 @@ func (this *MlsagSig) FromBytes(b []byte) (*MlsagSig, error) {
 		offset += crypto.Ed25519KeySize
 	}
 
-	if offset + 2 > len(b) {
+	if offset+2 > len(b) {
 		return nil, fmt.Errorf("cannot parse length of R, byte is too small")
 	}
 	n := int(b[offset])
-	m := int(b[offset + 1])
+	m := int(b[offset+1])
 	offset += 2
 
 	R := make([][]*crypto.Scalar, n)
 	for i := 0; i < n; i += 1 {
 		R[i] = make([]*crypto.Scalar, m)
 		for j := 0; j < m; j += 1 {
-			if offset + crypto.Ed25519KeySize > len(b) {
+			if offset+crypto.Ed25519KeySize > len(b) {
 				return nil, fmt.Errorf("cannot parse R of mlsagSig, byte is too small")
 			}
 			sc := new(crypto.Scalar).FromBytesS(b[offset : offset+crypto.Ed25519KeySize])
-			if !sc.ScalarValid(){
+			if !sc.ScalarValid() {
 				return nil, fmt.Errorf("cannot parse R of mlsagSig, invalid scalar")
 			}
 			R[i][j] = sc

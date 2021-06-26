@@ -40,7 +40,7 @@ func (server *RPCServer) GetBurnProofForSC(txHash string) ([]byte, error) {
 	return server.SendPostRequestWithQuery(string(query))
 }
 
-func (server *RPCServer) CheckShieldStatus(txHash string) ([]byte, error){
+func (server *RPCServer) CheckShieldStatus(txHash string) ([]byte, error) {
 	method := getBridgeReqWithStatus
 
 	tmpParams := make(map[string]interface{})

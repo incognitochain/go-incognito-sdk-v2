@@ -36,15 +36,15 @@ type TxTokenParams struct {
 
 // CustomTokenParamTx - use for rpc request json body
 type TokenParam struct {
-	PropertyID     string                 `json:"TokenID"`
-	PropertyName   string                 `json:"TokenName"`
-	PropertySymbol string                 `json:"TokenSymbol"`
-	Amount         uint64                 `json:"TokenAmount"`
-	TokenTxType    int                    `json:"TokenTxType"`
+	PropertyID     string             `json:"TokenID"`
+	PropertyName   string             `json:"TokenName"`
+	PropertySymbol string             `json:"TokenSymbol"`
+	Amount         uint64             `json:"TokenAmount"`
+	TokenTxType    int                `json:"TokenTxType"`
 	Receiver       []*key.PaymentInfo `json:"TokenReceiver"`
-	TokenInput     []coin.PlainCoin    `json:"TokenInput"`
-	Mintable       bool                   `json:"TokenMintable"`
-	Fee            uint64                 `json:"TokenFee"`
+	TokenInput     []coin.PlainCoin   `json:"TokenInput"`
+	Mintable       bool               `json:"TokenMintable"`
+	Fee            uint64             `json:"TokenFee"`
 	Kvargs         map[string]interface{}
 }
 

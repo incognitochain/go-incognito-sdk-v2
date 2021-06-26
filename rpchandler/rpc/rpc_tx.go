@@ -7,6 +7,7 @@ import (
 	"github.com/incognitochain/go-incognito-sdk-v2/rpchandler"
 	"github.com/incognitochain/go-incognito-sdk-v2/wallet"
 )
+
 //========== GET RPCs ==========
 
 // Query the RPC server then return the AutoTxByHash
@@ -347,4 +348,3 @@ func (server *RPCServer) CreateAndSendTokenInitTransaction(privateKey string, to
 
 	return server.SendPostRequestWithQuery(string(query))
 }
-
