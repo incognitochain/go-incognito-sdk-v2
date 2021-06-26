@@ -61,11 +61,11 @@ type OutCoin struct {
 // It is usually used to enhance privacy before being sent to the remote server.
 func (outCoin *OutCoin) Conceal() {
 	outCoin.Index = ""
-	outCoin.SNDerivator = ""
+	outCoin.SNDerivator = base58.Base58Check{}.Encode(common.RandBytes(32), common.ZeroByte)
 	outCoin.KeyImage = ""
-	outCoin.Randomness = ""
-	outCoin.Value = ""
-	outCoin.Info = ""
+	outCoin.Randomness = base58.Base58Check{}.Encode(common.RandBytes(32), common.ZeroByte)
+	outCoin.Value = "0"
+	outCoin.Info = base58.Base58Check{}.Encode([]byte{}, common.ZeroByte)
 	outCoin.SharedRandom = ""
 	outCoin.SharedConcealRandom = ""
 	outCoin.TxRandom = ""
