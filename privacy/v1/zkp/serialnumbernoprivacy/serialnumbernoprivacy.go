@@ -48,27 +48,6 @@ func (proof SNNoPrivacyProof) GetSND() *crypto.Scalar {
 	return proof.stmt.snd
 }
 
-// ValidateSanity checks sanity of an ValidateSanity.
-func (proof SNNoPrivacyProof) ValidateSanity() bool {
-	if !proof.stmt.sn.PointValid() {
-		return false
-	}
-	if !proof.stmt.pubKey.PointValid() {
-		return false
-	}
-	if !proof.stmt.snd.ScalarValid() {
-		return false
-	}
-
-	if !proof.tSeed.PointValid() {
-		return false
-	}
-	if !proof.tOutput.PointValid() {
-		return false
-	}
-	return proof.zSeed.ScalarValid()
-}
-
 // Init creates an empty ValidateSanity.
 func (proof *SNNoPrivacyProof) Init() *SNNoPrivacyProof {
 	proof.stmt.sn = new(crypto.Point)

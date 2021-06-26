@@ -39,41 +39,6 @@ type SNPrivacyProof struct {
 	zRInput *crypto.Scalar // second challenge-dependent information to open the commitment to input
 }
 
-// ValidateSanity validates sanity of proof
-func (proof SNPrivacyProof) ValidateSanity() bool {
-	if !proof.stmt.sn.PointValid() {
-		return false
-	}
-	if !proof.stmt.comSK.PointValid() {
-		return false
-	}
-	if !proof.stmt.comInput.PointValid() {
-		return false
-	}
-	if !proof.tSK.PointValid() {
-		return false
-	}
-	if !proof.tInput.PointValid() {
-		return false
-	}
-	if !proof.tSN.PointValid() {
-		return false
-	}
-	if !proof.zSK.ScalarValid() {
-		return false
-	}
-	if !proof.zRSK.ScalarValid() {
-		return false
-	}
-	if !proof.zInput.ScalarValid() {
-		return false
-	}
-	if !proof.zRInput.ScalarValid() {
-		return false
-	}
-	return true
-}
-
 func (proof SNPrivacyProof) isNil() bool {
 	if proof.stmt.sn == nil {
 		return true
