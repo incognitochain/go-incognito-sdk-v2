@@ -32,43 +32,6 @@ type OneOutOfManyProof struct {
 	zd             *crypto.Scalar
 }
 
-// ValidateSanity checks sanity of an OneOutOfManyProof.
-func (proof OneOutOfManyProof) ValidateSanity() bool {
-	if len(proof.cl) != privacyUtils.CommitmentRingSizeExp || len(proof.ca) != privacyUtils.CommitmentRingSizeExp ||
-		len(proof.cb) != privacyUtils.CommitmentRingSizeExp || len(proof.cd) != privacyUtils.CommitmentRingSizeExp ||
-		len(proof.f) != privacyUtils.CommitmentRingSizeExp || len(proof.za) != privacyUtils.CommitmentRingSizeExp ||
-		len(proof.zb) != privacyUtils.CommitmentRingSizeExp {
-		return false
-	}
-
-	for i := 0; i < len(proof.cl); i++ {
-		if !proof.cl[i].PointValid() {
-			return false
-		}
-		if !proof.ca[i].PointValid() {
-			return false
-		}
-		if !proof.cb[i].PointValid() {
-			return false
-		}
-		if !proof.cd[i].PointValid() {
-			return false
-		}
-
-		if !proof.f[i].ScalarValid() {
-			return false
-		}
-		if !proof.za[i].ScalarValid() {
-			return false
-		}
-		if !proof.zb[i].ScalarValid() {
-			return false
-		}
-	}
-
-	return proof.zd.ScalarValid()
-}
-
 // Init creates an empty OneOutOfManyProof.
 func (proof *OneOutOfManyProof) Init() *OneOutOfManyProof {
 	proof.zd = new(crypto.Scalar)

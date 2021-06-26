@@ -32,22 +32,6 @@ func (proof *InnerProductProof) Init() *InnerProductProof {
 	return proof
 }
 
-// ValidateSanity check sanity of an InnerProductProof.
-func (proof InnerProductProof) ValidateSanity() bool {
-	if len(proof.l) != len(proof.r) {
-		return false
-	}
-	for i := 0; i < len(proof.l); i++ {
-		if !proof.l[i].PointValid() || !proof.r[i].PointValid() {
-			return false
-		}
-	}
-	if !proof.a.ScalarValid() || !proof.b.ScalarValid() {
-		return false
-	}
-	return proof.p.PointValid()
-}
-
 // Bytes returns the byte-representation of an InnerProductProof.
 func (proof InnerProductProof) Bytes() []byte {
 	var res []byte
