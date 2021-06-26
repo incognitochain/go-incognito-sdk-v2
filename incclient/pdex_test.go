@@ -3,10 +3,27 @@ package incclient
 import (
 	"fmt"
 	"github.com/incognitochain/go-incognito-sdk-v2/common"
+	"github.com/incognitochain/go-incognito-sdk-v2/rpchandler/jsonresult"
 	"math"
+	"math/big"
 	"testing"
 	"time"
 )
+
+func calculatePoolAmount(pool *jsonresult.PoolInfo, totalShare uint64, shareAmount uint64) (uint64, uint64) {
+	shareBig := new(big.Int).SetUint64(shareAmount)
+	totalShareBig := new(big.Int).SetUint64(totalShare)
+
+	value1 := new(big.Int).SetUint64(pool.Token1PoolValue)
+	value1 = value1.Mul(value1, shareBig)
+	value1 = value1.Div(value1, totalShareBig)
+
+	value2 := new(big.Int).SetUint64(pool.Token2PoolValue)
+	value2 = value2.Mul(value2, shareBig)
+	value2 = value2.Div(value2, totalShareBig)
+
+	return value1.Uint64(), value2.Uint64()
+}
 
 func TestIncClient_CreateAndSendPDETradeTransaction(t *testing.T) {
 	ic, err := NewTestNet1Client()
@@ -72,7 +89,7 @@ func TestIncClient_CreateAndSendPDEContributeTransaction(t *testing.T) {
 	addr := PrivateKeyToPaymentAddress(privateKey, -1)
 	tokenID1 := common.PRVIDStr
 	tokenID2 := "00000000000000000000000000000000000000000000000000000000000000ff"
-	pairID := "INC" + randChars(10)
+	pairID := "INC" + common.RandChars(10)
 
 	oldBalance1, err := ic.GetBalance(privateKey, tokenID1)
 	if err != nil {

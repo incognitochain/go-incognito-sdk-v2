@@ -14,6 +14,7 @@ import (
 	"time"
 )
 
+// TransactionDetail describes the detail of a transaction returned by an RPC response.
 type TransactionDetail struct {
 	BlockHash   string `json:"BlockHash"`
 	BlockHeight uint64 `json:"BlockHeight"`
@@ -52,6 +53,7 @@ type TransactionDetail struct {
 	Info string `json:"Info"`
 }
 
+// TxNormalRPC describes the detail of a TxNormal returned by an RPC response.
 type TxNormalRPC struct {
 	Version              int8
 	Type                 string

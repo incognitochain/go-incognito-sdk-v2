@@ -1,41 +1,49 @@
 package schnorr
 
 import (
-	"crypto/subtle"
 	"errors"
 	"github.com/incognitochain/go-incognito-sdk-v2/common"
 	"github.com/incognitochain/go-incognito-sdk-v2/crypto"
 	"github.com/incognitochain/go-incognito-sdk-v2/privacy/utils"
 )
 
-// SchnorrPublicKey represents Schnorr Publickey
-// PK = G^SK + H^R
+// SchnorrPublicKey represents a public key used in the Schnorr signature scheme.
+//
+// PK = G^SK + H^R.
 type SchnorrPublicKey struct {
 	publicKey *crypto.Point
 	g, h      *crypto.Point
 }
 
-func (schnorrPubKey SchnorrPublicKey) GetPublicKey() *crypto.Point {
-	return schnorrPubKey.publicKey
+// GetPublicKey returns the real public key of a SchnorrPublicKey.
+func (publicKey SchnorrPublicKey) GetPublicKey() *crypto.Point {
+	return publicKey.publicKey
 }
 
-// SchnorrPrivateKey represents Schnorr Privatekey
+// Set sets v as the real public key of a SchnorrPublicKey.
+func (publicKey *SchnorrPublicKey) Set(v *crypto.Point) {
+	pubKey := v.GetKey()
+	pedRandom := crypto.PedCom.G[crypto.PedersenRandomnessIndex].GetKey()
+	pedPrivate := crypto.PedCom.G[crypto.PedersenPrivateKeyIndex].GetKey()
+
+	publicKey.publicKey, _ = new(crypto.Point).SetKey(&pubKey)
+	publicKey.g, _ = new(crypto.Point).SetKey(&pedPrivate)
+	publicKey.h, _ = new(crypto.Point).SetKey(&pedRandom)
+}
+
+// SchnorrPrivateKey represents a private key used to sign messages in the Schnorr signature scheme.
 type SchnorrPrivateKey struct {
 	privateKey *crypto.Scalar
 	randomness *crypto.Scalar
 	publicKey  *SchnorrPublicKey
 }
 
-func (schnPrivKey SchnorrPrivateKey) GetPublicKey() *SchnorrPublicKey {
-	return schnPrivKey.publicKey
+// GetPublicKey returns the corresponding public key of a SchnorrPrivateKey.
+func (privateKey SchnorrPrivateKey) GetPublicKey() *SchnorrPublicKey {
+	return privateKey.publicKey
 }
 
-// SchnSignature represents Schnorr Signature
-type SchnSignature struct {
-	e, z1, z2 *crypto.Scalar
-}
-
-// Set sets Schnorr private key
+// Set creats a new SchnorrPrivateKey.
 func (privateKey *SchnorrPrivateKey) Set(sk *crypto.Scalar, r *crypto.Scalar) {
 	pedRandom := crypto.PedCom.G[crypto.PedersenRandomnessIndex].GetKey()
 	pedPrivate := crypto.PedCom.G[crypto.PedersenPrivateKeyIndex].GetKey()
@@ -49,15 +57,20 @@ func (privateKey *SchnorrPrivateKey) Set(sk *crypto.Scalar, r *crypto.Scalar) {
 	privateKey.publicKey.publicKey.Add(privateKey.publicKey.publicKey, new(crypto.Point).ScalarMult(crypto.PedCom.G[crypto.PedersenRandomnessIndex], r))
 }
 
-// Set sets Schnorr public key
-func (publicKey *SchnorrPublicKey) Set(pk *crypto.Point) {
-	pubKey := pk.GetKey()
-	pedRandom := crypto.PedCom.G[crypto.PedersenRandomnessIndex].GetKey()
-	pedPrivate := crypto.PedCom.G[crypto.PedersenPrivateKeyIndex].GetKey()
+// SchnSignature represents a Schnorr signature. The Schnorr signature is used to sign a transaction of version 1,
+// or to sign metadata in a transaction of version 2.
+type SchnSignature struct {
+	e, z1, z2 *crypto.Scalar
+}
 
-	publicKey.publicKey, _ = new(crypto.Point).SetKey(&pubKey)
-	publicKey.g, _ = new(crypto.Point).SetKey(&pedPrivate)
-	publicKey.h, _ = new(crypto.Point).SetKey(&pedRandom)
+// Bytes returns the byte-representation of a SchnSignature.
+func (sig SchnSignature) Bytes() []byte {
+	bytes := append(sig.e.ToBytesS(), sig.z1.ToBytesS()...)
+	// Z2 is nil when has no privacy
+	if sig.z2 != nil {
+		bytes = append(bytes, sig.z2.ToBytesS()...)
+	}
+	return bytes
 }
 
 // SetBytes returns a SchnSignature given its byte-representation.

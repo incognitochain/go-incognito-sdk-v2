@@ -3,7 +3,6 @@ package tx_generic
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"github.com/incognitochain/go-incognito-sdk-v2/coin"
 	"github.com/incognitochain/go-incognito-sdk-v2/common"
@@ -12,14 +11,18 @@ import (
 	"sort"
 )
 
+// Tx is a alias for metadata.Transaction
 type Tx = metadata.Transaction
 
+// TxTokenBase represents a token transaction field. It is used in both TxTokenVer1 and TxTokenVer2.
+// A TxTokenBase consists of a PRV sub-transaction for paying the transaction fee, and the token data.
 type TxTokenBase struct {
 	Tx
 	TxTokenData TxTokenData `json:"TxTokenPrivacyData"`
 	cachedHash  *common.Hash
 }
 
+// TxTokenParams consists of parameters used to create a new token transaction.
 type TxTokenParams struct {
 	SenderKey       *key.PrivateKey
 	PaymentInfo     []*key.PaymentInfo
@@ -31,10 +34,10 @@ type TxTokenParams struct {
 	HasPrivacyToken bool
 	ShardID         byte
 	Info            []byte
-	Kvargs          map[string]interface{}
+	KvArgs          map[string]interface{}
 }
 
-// CustomTokenParamTx - use for rpc request json body
+// TokenParam represents the parameters of a token transaction.
 type TokenParam struct {
 	PropertyID     string             `json:"TokenID"`
 	PropertyName   string             `json:"TokenName"`
@@ -45,9 +48,10 @@ type TokenParam struct {
 	TokenInput     []coin.PlainCoin   `json:"TokenInput"`
 	Mintable       bool               `json:"TokenMintable"`
 	Fee            uint64             `json:"TokenFee"`
-	Kvargs         map[string]interface{}
+	KvArgs         map[string]interface{}
 }
 
+// NewTokenParam creates a new TokenParam based on the given inputs.
 func NewTokenParam(propertyID, propertyName, propertySymbol string,
 	amount uint64,
 	tokenTxType int,
@@ -55,7 +59,7 @@ func NewTokenParam(propertyID, propertyName, propertySymbol string,
 	tokenInput []coin.PlainCoin,
 	mintable bool,
 	fee uint64,
-	kvargs map[string]interface{}) *TokenParam {
+	kvArgs map[string]interface{}) *TokenParam {
 
 	params := &TokenParam{
 		PropertyID:     propertyID,
@@ -67,11 +71,12 @@ func NewTokenParam(propertyID, propertyName, propertySymbol string,
 		TokenInput:     tokenInput,
 		Mintable:       mintable,
 		Fee:            fee,
-		Kvargs:         kvargs,
+		KvArgs:         kvArgs,
 	}
 	return params
 }
 
+// NewTxTokenParams creates a new TxTokenParams based on the given inputs.
 func NewTxTokenParams(senderKey *key.PrivateKey,
 	paymentInfo []*key.PaymentInfo,
 	inputCoin []coin.PlainCoin,
@@ -82,7 +87,7 @@ func NewTxTokenParams(senderKey *key.PrivateKey,
 	hasPrivacyToken bool,
 	shardID byte,
 	info []byte,
-	kargs map[string]interface{}) *TxTokenParams {
+	kvArgs map[string]interface{}) *TxTokenParams {
 	params := &TxTokenParams{
 		ShardID:         shardID,
 		PaymentInfo:     paymentInfo,
@@ -94,40 +99,34 @@ func NewTxTokenParams(senderKey *key.PrivateKey,
 		SenderKey:       senderKey,
 		TokenParams:     tokenParams,
 		Info:            info,
-		Kvargs:          kargs,
+		KvArgs:          kvArgs,
 	}
 	return params
 }
 
-// ========== Get/Set FUNCTION ============
-
+// GetTxBase returns the PRV sub-transaction of a TxTokenBase.
 func (txToken TxTokenBase) GetTxBase() metadata.Transaction { return txToken.Tx }
-func (txToken *TxTokenBase) SetTxBase(tx metadata.Transaction) error {
-	txToken.Tx = tx
-	return nil
-}
-func (txToken TxTokenBase) GetTxNormal() metadata.Transaction { return txToken.TxTokenData.TxNormal }
-func (txToken *TxTokenBase) SetTxNormal(tx metadata.Transaction) error {
-	txToken.TxTokenData.TxNormal = tx
-	return nil
-}
-func (txToken TxTokenBase) GetTxTokenData() TxTokenData { return txToken.TxTokenData }
-func (txToken *TxTokenBase) SetTxTokenData(data TxTokenData) error {
-	txToken.TxTokenData = data
-	return nil
-}
 
+// GetTxNormal returns the token sub-transaction of a TxTokenBase.
+func (txToken TxTokenBase) GetTxNormal() metadata.Transaction { return txToken.TxTokenData.TxNormal }
+
+// GetTxTokenData returns token data of a TxTokenBase.
+func (txToken TxTokenBase) GetTxTokenData() TxTokenData { return txToken.TxTokenData }
+
+// GetTxMintData returns the minting data of a TxTokenBase.
 func (txToken TxTokenBase) GetTxMintData() (bool, coin.Coin, *common.Hash, error) {
 	tokenID := txToken.TxTokenData.GetPropertyID()
 	return GetTxMintData(txToken.TxTokenData.TxNormal, &tokenID)
 }
 
+// GetTxBurnData returns the burning data (token only) of a TxTokenBase.
 func (txToken TxTokenBase) GetTxBurnData() (bool, coin.Coin, *common.Hash, error) {
 	tokenID := txToken.TxTokenData.GetPropertyID()
 	isBurn, burnCoin, _, err := txToken.TxTokenData.TxNormal.GetTxBurnData()
 	return isBurn, burnCoin, &tokenID, err
 }
 
+// GetTxFullBurnData returns the full burning data (both PRV and token) of a TxTokenBase.
 func (txToken TxTokenBase) GetTxFullBurnData() (bool, coin.Coin, coin.Coin, *common.Hash, error) {
 	isBurnToken, burnToken, burnedTokenID, errToken := txToken.GetTxBurnData()
 	isBurnPrv, burnPrv, _, errPrv := txToken.GetTxBase().GetTxBurnData()
@@ -139,17 +138,40 @@ func (txToken TxTokenBase) GetTxFullBurnData() (bool, coin.Coin, coin.Coin, *com
 	return isBurnPrv || isBurnToken, burnPrv, burnToken, burnedTokenID, nil
 }
 
-// ========== CHECK FUNCTION ===========
-
-func (txToken TxTokenBase) CheckAuthorizedSender(publicKey []byte) (bool, error) {
-	sigPubKey := txToken.TxTokenData.TxNormal.GetSigPubKey()
-	if bytes.Equal(sigPubKey, publicKey) {
-		return true, nil
-	} else {
-		return false, nil
-	}
+// GetSigPubKey returns the sigPubKey of a TxTokenBase.
+func (txToken TxTokenBase) GetSigPubKey() []byte {
+	return txToken.TxTokenData.TxNormal.GetSigPubKey()
 }
 
+// GetTxFeeToken returns to transaction fee paid in the token of a TxTokenBase.
+func (txToken TxTokenBase) GetTxFeeToken() uint64 {
+	return txToken.TxTokenData.TxNormal.GetTxFee()
+}
+
+// GetTokenID returns the tokenID of a TxTokenBase.
+func (txToken TxTokenBase) GetTokenID() *common.Hash {
+	return &txToken.TxTokenData.PropertyID
+}
+
+// GetTransferData returns the transferred data (receivers and amounts) of a TxTokenBase.
+// The result does not the transferred data of PRV.
+func (txToken TxTokenBase) GetTransferData() (bool, []byte, uint64, *common.Hash) {
+	pubKeys, amounts := txToken.TxTokenData.TxNormal.GetReceivers()
+	if len(pubKeys) == 0 {
+		return false, nil, 0, &txToken.TxTokenData.PropertyID
+	}
+	if len(pubKeys) > 1 {
+		return false, nil, 0, &txToken.TxTokenData.PropertyID
+	}
+	return true, pubKeys[0], amounts[0], &txToken.TxTokenData.PropertyID
+}
+
+// GetTxFee returns the transaction fee paid in PRV of a TxTokenBase.
+func (txToken TxTokenBase) GetTxFee() uint64 {
+	return txToken.Tx.GetTxFee()
+}
+
+// IsSalaryTx checks if a TxTokenBase is a salary transaction.
 func (txToken TxTokenBase) IsSalaryTx() bool {
 	if txToken.GetType() != common.TxRewardType {
 		return false
@@ -163,8 +185,35 @@ func (txToken TxTokenBase) IsSalaryTx() bool {
 	return true
 }
 
-// ==========  PARSING JSON FUNCTIONS ==========
+// SetTxBase sets v as the TxBase of a TxTokenBase.
+func (txToken *TxTokenBase) SetTxBase(v metadata.Transaction) error {
+	txToken.Tx = v
+	return nil
+}
 
+// SetTxNormal sets v as the TxNormal of a TxTokenBase.
+func (txToken *TxTokenBase) SetTxNormal(v metadata.Transaction) error {
+	txToken.TxTokenData.TxNormal = v
+	return nil
+}
+
+// SetTxTokenData sets v as the token data of a TxTokenBase.
+func (txToken *TxTokenBase) SetTxTokenData(v TxTokenData) error {
+	txToken.TxTokenData = v
+	return nil
+}
+
+// CheckAuthorizedSender checks if the sender of a TxTokenBase is authorized w.r.t to a public key.
+func (txToken TxTokenBase) CheckAuthorizedSender(publicKey []byte) (bool, error) {
+	sigPubKey := txToken.TxTokenData.TxNormal.GetSigPubKey()
+	if bytes.Equal(sigPubKey, publicKey) {
+		return true, nil
+	} else {
+		return false, nil
+	}
+}
+
+// MarshalJSON does the JSON-marshalling operation for a TxTokenBase.
 func (txToken TxTokenBase) MarshalJSON() ([]byte, error) {
 	type TemporaryTxToken struct {
 		TxBase
@@ -174,7 +223,7 @@ func (txToken TxTokenBase) MarshalJSON() ([]byte, error) {
 	tempTx.TxTokenData = txToken.GetTxTokenData()
 	tx := txToken.GetTxBase()
 	if tx == nil {
-		return nil, errors.New("Cannot unmarshal transaction: txfee cannot be nil")
+		return nil, fmt.Errorf("cannot unmarshal transaction: txfee cannot be nil")
 	}
 	tempTx.TxBase.SetVersion(tx.GetVersion())
 	tempTx.TxBase.SetType(tx.GetType())
@@ -191,6 +240,7 @@ func (txToken TxTokenBase) MarshalJSON() ([]byte, error) {
 	return json.Marshal(tempTx)
 }
 
+// String returns the string-representation of a TxTokenBase.
 func (txToken TxTokenBase) String() string {
 	// get hash of tx
 	record := txToken.Tx.Hash().String()
@@ -205,17 +255,7 @@ func (txToken TxTokenBase) String() string {
 	return record
 }
 
-func (txToken TxTokenBase) JSONString() string {
-	data, err := json.MarshalIndent(txToken, "", "\t")
-	if err != nil {
-		return ""
-	}
-	return string(data)
-}
-
-// =================== FUNCTIONS THAT GET STUFF ===================
-
-// Hash returns the hash of all fields of the transaction
+// Hash calculates the hash of a TxTokenBase.
 func (txToken *TxTokenBase) Hash() *common.Hash {
 	if txToken.cachedHash != nil {
 		return txToken.cachedHash
@@ -226,37 +266,12 @@ func (txToken *TxTokenBase) Hash() *common.Hash {
 	return &hash
 }
 
+// HashWithoutMetadataSig calculates the hash of a TxTokenBase with out adding the signature of its metadata.
 func (txToken *TxTokenBase) HashWithoutMetadataSig() *common.Hash {
-	// hashing to sign metadata is version-specific
 	return nil
 }
 
-// Get SigPubKey of ptoken
-func (txToken TxTokenBase) GetSigPubKey() []byte {
-	return txToken.TxTokenData.TxNormal.GetSigPubKey()
-}
-
-// GetTxFeeToken - return Token Fee use to pay for privacy token Tx
-func (txToken TxTokenBase) GetTxFeeToken() uint64 {
-	return txToken.TxTokenData.TxNormal.GetTxFee()
-}
-
-func (txToken TxTokenBase) GetTokenID() *common.Hash {
-	return &txToken.TxTokenData.PropertyID
-}
-
-func (txToken TxTokenBase) GetTransferData() (bool, []byte, uint64, *common.Hash) {
-	pubkeys, amounts := txToken.TxTokenData.TxNormal.GetReceivers()
-	if len(pubkeys) == 0 {
-		return false, nil, 0, &txToken.TxTokenData.PropertyID
-	}
-	if len(pubkeys) > 1 {
-		return false, nil, 0, &txToken.TxTokenData.PropertyID
-	}
-	return true, pubkeys[0], amounts[0], &txToken.TxTokenData.PropertyID
-}
-
-// CalculateBurnAmount - get tx value for pToken
+// CalculateTxValue calculates total output values (not including the coins which are sent back to the sender).
 func (txToken TxTokenBase) CalculateTxValue() uint64 {
 	proof := txToken.TxTokenData.TxNormal.GetProof()
 	if proof == nil {
@@ -289,9 +304,10 @@ func (txToken TxTokenBase) CalculateTxValue() uint64 {
 	return txValue
 }
 
+// ListSerialNumbersHashH returns the hash list of all serial numbers in a TxTokenBase.
 func (txToken TxTokenBase) ListSerialNumbersHashH() []common.Hash {
 	tx := txToken.Tx
-	result := []common.Hash{}
+	result := make([]common.Hash, 0)
 	if tx.GetProof() != nil {
 		for _, d := range tx.GetProof().GetInputCoins() {
 			hash := common.HashH(d.GetKeyImage().ToBytesS())
@@ -311,17 +327,7 @@ func (txToken TxTokenBase) ListSerialNumbersHashH() []common.Hash {
 	return result
 }
 
-// GetTxFee - return fee PRV of Tx which contain privacy token Tx
-func (txToken TxTokenBase) GetTxFee() uint64 {
-	return txToken.Tx.GetTxFee()
-}
-
-// ================== NORMAL INIT FUNCTIONS ===================
-
-// =================== FUNCTION THAT CHECK STUFFS  ===================
-
-// ========== VALIDATE FUNCTIONS ===========
-
+// ValidateType checks if the type of a TxTokenBase is valid.
 func (txToken TxTokenBase) ValidateType() bool {
 	return txToken.Tx.GetType() == common.TxCustomTokenPrivacyType
 }

@@ -2,18 +2,21 @@ package jsonresult
 
 import "github.com/incognitochain/go-incognito-sdk-v2/common"
 
+// MissingSignature keeps track of the number of missing signatures of a BeaconBestState.
 type MissingSignature struct {
 	Total   uint
 	Missing uint
 }
 
+// Penalty keeps track of the node-penalties of a BeaconBestState.
 type Penalty struct {
 	MinPercent   uint
 	Time         int64
-	ForceUnstake bool
+	ForceUnStake bool
 }
 
-type GetBeaconBestState struct {
+// BeaconBestState describes the best state of the beacon chain.
+type BeaconBestState struct {
 	BestBlockHash                          common.Hash                 `json:"BestBlockHash"`         // The hash of the block.
 	PreviousBestBlockHash                  common.Hash                 `json:"PreviousBestBlockHash"` // The hash of the block.
 	BestShardHash                          map[byte]common.Hash        `json:"BestShardHash"`

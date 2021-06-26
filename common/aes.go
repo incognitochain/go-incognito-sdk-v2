@@ -4,26 +4,28 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
-	"errors"
+	"fmt"
 	"io"
 )
 
-var PlainTextIsEmptyErr = errors.New("plaintext is empty")
-var CipherTextIsEmptyErr = errors.New("ciphertext is empty")
-var InvalidAESKeyErr = errors.New("aes key is invalid")
+var plainTextIsEmptyErr = fmt.Errorf("plaintext is empty")
+var cipherTextIsEmptyErr = fmt.Errorf("ciphertext is empty")
+var invalidAESKeyErr = fmt.Errorf("aes key is invalid")
 
+// AES consists of the symmetric key used in the aes encryption scheme.
 type AES struct {
 	Key []byte
 }
 
+// Encrypt encrypts a message. The encryption operation uses the CRT mode.
 func (aesObj *AES) Encrypt(plaintext []byte) ([]byte, error) {
 	if len(plaintext) == 0 {
-		return []byte{}, PlainTextIsEmptyErr
+		return []byte{}, plainTextIsEmptyErr
 	}
 
 	block, err := aes.NewCipher(aesObj.Key)
 	if err != nil {
-		return nil, InvalidAESKeyErr
+		return nil, invalidAESKeyErr
 	}
 
 	ciphertext := make([]byte, aes.BlockSize+len(plaintext))
@@ -38,9 +40,10 @@ func (aesObj *AES) Encrypt(plaintext []byte) ([]byte, error) {
 	return ciphertext, nil
 }
 
+// Decrypt decrypts a cipher text.
 func (aesObj *AES) Decrypt(ciphertext []byte) ([]byte, error) {
 	if len(ciphertext) == 0 {
-		return []byte{}, CipherTextIsEmptyErr
+		return []byte{}, cipherTextIsEmptyErr
 	}
 
 	plaintext := make([]byte, len(ciphertext[aes.BlockSize:]))

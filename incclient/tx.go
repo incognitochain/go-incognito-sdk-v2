@@ -314,6 +314,9 @@ func (client *IncClient) CreateRawTransactionWithInputCoins(param *TxParam, inpu
 	} else {
 		//Retrieve commitments and indices
 		shardID := GetShardIDFromPrivateKey(param.senderPrivateKey)
+		if shardID == 255 {
+			return nil, "", fmt.Errorf("private key is invalid")
+		}
 
 		kvArgs, err = client.getRandomCommitmentV2(shardID, common.PRVIDStr, len(inputCoins)*(privacy.RingSize-1))
 		if err != nil {

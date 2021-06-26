@@ -1,7 +1,3 @@
-// Copyright (c) 2013-2014 The thaibaoautonomous developers
-// Use of this source code is governed by an ISC
-// license that can be found in the LICENSE file.
-
 package base58
 
 import (
@@ -37,13 +33,14 @@ func ChecksumFirst4Bytes(data []byte, isNewCheckSum bool) (ckSum []byte) {
 	return
 }
 
+// Base58Check is used to encode and decode with the base58 algorithm, with check-sum checking.
 type Base58Check struct {
 }
 
 var base58Cache, _ = lru.New(10000)
 
 // Encode prepends a version byte and appends a four byte checksum.
-func (self Base58Check) Encode(input []byte, version byte) string {
+func (b58Check Base58Check) Encode(input []byte, version byte) string {
 	/*if len(input) == 0 {
 		return ""
 	}*/
@@ -55,8 +52,8 @@ func (self Base58Check) Encode(input []byte, version byte) string {
 	b := make([]byte, 0, 1+len(input)+common.CheckSumLen)
 	b = append(b, version)
 	b = append(b, input[:]...)
-	cksum := ChecksumFirst4Bytes(b, version == 1)
-	b = append(b, cksum[:]...)
+	ckSum := ChecksumFirst4Bytes(b, version == 1)
+	b = append(b, ckSum[:]...)
 	encodeData := Base58{}.Encode(b)
 	base58Cache.Add(string(input), encodeData)
 	return encodeData
@@ -65,7 +62,7 @@ func (self Base58Check) Encode(input []byte, version byte) string {
 // NewEncode prepends a version byte and appends a 4-byte checksum.
 //
 // New way to generate the 4-byte checksum is applied to this function.
-func (self Base58Check) NewEncode(input []byte, version byte) string {
+func (b58Check Base58Check) NewEncode(input []byte, version byte) string {
 	/*if len(input) == 0 {
 		return ""
 	}*/
@@ -77,8 +74,8 @@ func (self Base58Check) NewEncode(input []byte, version byte) string {
 	b := make([]byte, 0, 1+len(input)+common.CheckSumLen)
 	b = append(b, version)
 	b = append(b, input[:]...)
-	cksum := ChecksumFirst4Bytes(b, true)
-	b = append(b, cksum[:]...)
+	ckSum := ChecksumFirst4Bytes(b, true)
+	b = append(b, ckSum[:]...)
 	encodeData := Base58{}.Encode(b)
 	base58Cache.Add(string(input), encodeData)
 	return encodeData
@@ -87,7 +84,7 @@ func (self Base58Check) NewEncode(input []byte, version byte) string {
 // Decode decodes a string that was encoded with Encode and verifies the checksum.
 //
 // The Decode function allows to decode both old and new base58-encoded strings.
-func (self Base58Check) Decode(input string) (result []byte, version byte, err error) {
+func (b58Check Base58Check) Decode(input string) (result []byte, version byte, err error) {
 	/*if len(input) == 0 {
 		return []byte{}, 0, errors.New("Input to decode is empty")
 	}*/
@@ -97,25 +94,15 @@ func (self Base58Check) Decode(input string) (result []byte, version byte, err e
 		return nil, 0, ErrInvalidFormat
 	}
 	version = decoded[0]
-	// var cksum []byte
-	cksum := make([]byte, common.CheckSumLen)
-	copy(cksum[:], decoded[len(decoded)-common.CheckSumLen:])
-	if bytes.Compare(ChecksumFirst4Bytes(decoded[:len(decoded)-common.CheckSumLen], true), cksum) != 0 { //Try to decode with the new checksum
-		if bytes.Compare(ChecksumFirst4Bytes(decoded[:len(decoded)-common.CheckSumLen], false), cksum) != 0 { //Try to decode with the old checksum
+	// var ckSum []byte
+	ckSum := make([]byte, common.CheckSumLen)
+	copy(ckSum[:], decoded[len(decoded)-common.CheckSumLen:])
+	if bytes.Compare(ChecksumFirst4Bytes(decoded[:len(decoded)-common.CheckSumLen], true), ckSum) != 0 { //Try to decode with the new checksum
+		if bytes.Compare(ChecksumFirst4Bytes(decoded[:len(decoded)-common.CheckSumLen], false), ckSum) != 0 { //Try to decode with the old checksum
 			return nil, 0, ErrChecksum
 		}
 	}
 	payload := decoded[1 : len(decoded)-common.CheckSumLen]
 	result = append(result, payload...)
 	return
-}
-
-var b58Check = Base58Check{}
-
-func DecodeCheck(input string) (result []byte, version byte, err error) {
-	return b58Check.Decode(input)
-}
-
-func EncodeCheck(input []byte) string {
-	return b58Check.Encode(input, 0x00)
 }

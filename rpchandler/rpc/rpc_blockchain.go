@@ -1,122 +1,43 @@
 package rpc
 
-import (
-	"encoding/json"
-	"errors"
-	"fmt"
-	"github.com/incognitochain/go-incognito-sdk-v2/rpchandler"
-)
-
+// GetBlockchainInfo returns the current state of the Incognito network.
 func (server *RPCServer) GetBlockchainInfo() ([]byte, error) {
-	if server == nil || len(server.url) == 0 {
-		return nil, fmt.Errorf("rpc server not set")
-	}
-
-	query := `{
-		"jsonrpc":"1.0",
-		"method":"getblockchaininfo",
-		"params": "",
-		"id":1
-	}`
-	return server.SendPostRequestWithQuery(query)
+	return server.SendQuery(getBlockChainInfo, nil)
 }
 
+// GetBestBlock returns the best block numbers (for beacon and shard chains).
 func (server *RPCServer) GetBestBlock() ([]byte, error) {
-	if server == nil || len(server.url) == 0 {
-		return nil, fmt.Errorf("rpc server not set")
-	}
-
-	if len(server.GetURL()) == 0 {
-		return []byte{}, errors.New("Server has not set mainnet or testnet")
-	}
-	query := `{
-		"jsonrpc":"1.0",
-		"method":"getbestblock",
-		"params": "",
-		"id":1
-	}`
-	return server.SendPostRequestWithQuery(query)
+	return server.SendQuery(getBestBlock, nil)
 }
 
+// GetBestBlockHash returns the current best block hashes.
 func (server *RPCServer) GetBestBlockHash() ([]byte, error) {
-	if server == nil || len(server.url) == 0 {
-		return nil, fmt.Errorf("rpc server not set")
-	}
-
-	query := `{
-		"jsonrpc":"1.0",
-		"method":"getbestblockhash",
-		"params": "",
-		"id":1
-	}`
-	return server.SendPostRequestWithQuery(query)
+	return server.SendQuery(getBestBlockHash, nil)
 }
 
+// RetrieveBlock returns the detail of a block given its hash.
 func (server *RPCServer) RetrieveBlock(blockHash string, verbosity string) ([]byte, error) {
-	if server == nil || len(server.url) == 0 {
-		return nil, fmt.Errorf("rpc server not set")
-	}
-
-	method := retrieveBlock
-
 	params := make([]interface{}, 0)
 	params = append(params, blockHash)
 	params = append(params, verbosity)
 
-	request := rpchandler.CreateJsonRequest("1.0", method, params, 1)
-
-	query, err := json.Marshal(request)
-	if err != nil {
-		return nil, err
-	}
-
-	return server.SendPostRequestWithQuery(string(query))
+	return server.SendQuery(retrieveBlock, params)
 }
 
+// GetShardBestState returns the best state of a shard chain.
 func (server *RPCServer) GetShardBestState(shardID byte) ([]byte, error) {
-	if server == nil || len(server.url) == 0 {
-		return nil, fmt.Errorf("rpc server not set")
-	}
-
-	method := getShardBestState
 	params := make([]interface{}, 0)
 	params = append(params, shardID)
 
-	request := rpchandler.CreateJsonRequest("1.0", method, params, 1)
-	query, err := json.Marshal(request)
-	if err != nil {
-		return nil, err
-	}
-
-	return server.SendPostRequestWithQuery(string(query))
+	return server.SendQuery(getShardBestState, params)
 }
 
+// GetBeaconBestState returns the best state of the beacon chain.
 func (server *RPCServer) GetBeaconBestState() ([]byte, error) {
-	if server == nil || len(server.url) == 0 {
-		return nil, fmt.Errorf("rpc server not set")
-	}
-
-	method := getBeaconBestState
-	params := make([]interface{}, 0)
-
-	request := rpchandler.CreateJsonRequest("1.0", method, params, 1)
-	query, err := json.Marshal(request)
-	if err != nil {
-		return nil, err
-	}
-
-	return server.SendPostRequestWithQuery(string(query))
+	return server.SendQuery(getBeaconBestState, nil)
 }
 
-func (server *RPCServer) GetRawMempool() ([]byte, error) {
-	if server == nil || len(server.url) == 0 {
-		return nil, fmt.Errorf("rpc server not set")
-	}
-	query := `{
-		"jsonrpc": "1.0",
-		"method": "getmempoolinfo",
-		"params": "",
-		"id": 1
-	}`
-	return server.SendPostRequestWithQuery(query)
+// GetRawMemPool returns a list of transactions currently in the pool.
+func (server *RPCServer) GetRawMemPool() ([]byte, error) {
+	return server.SendQuery(getRawMempool, nil)
 }

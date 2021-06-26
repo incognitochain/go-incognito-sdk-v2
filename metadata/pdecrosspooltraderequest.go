@@ -5,11 +5,12 @@ import (
 	"strconv"
 )
 
-// PDECrossPoolTradeRequest - privacy dex cross pool trade
+// PDECrossPoolTradeRequest is a request to place a trade on the pDEX.
+// It is the updated version of a PDETradeRequest.
 type PDECrossPoolTradeRequest struct {
 	TokenIDToBuyStr     string
 	TokenIDToSellStr    string
-	SellAmount          uint64 // must be equal to vout value
+	SellAmount          uint64
 	MinAcceptableAmount uint64
 	TradingFee          uint64
 	TraderAddressStr    string
@@ -19,35 +20,7 @@ type PDECrossPoolTradeRequest struct {
 	MetadataBase
 }
 
-type PDECrossPoolTradeRequestAction struct {
-	Meta    PDECrossPoolTradeRequest
-	TxReqID common.Hash
-	ShardID byte
-}
-
-type PDECrossPoolTradeAcceptedContent struct {
-	TraderAddressStr         string
-	TxRandomStr              string `json:"TxRandomStr,omitempty"`
-	TokenIDToBuyStr          string
-	ReceiveAmount            uint64
-	Token1IDStr              string
-	Token2IDStr              string
-	Token1PoolValueOperation TokenPoolValueOperation
-	Token2PoolValueOperation TokenPoolValueOperation
-	ShardID                  byte
-	RequestedTxID            common.Hash
-	AddingFee                uint64
-}
-
-type PDERefundCrossPoolTrade struct {
-	TraderAddressStr string
-	TxRandomStr      string `json:"TxRandomStr,omitempty"`
-	TokenIDStr       string
-	Amount           uint64
-	ShardID          byte
-	TxReqID          common.Hash
-}
-
+// NewPDECrossPoolTradeRequest creates a new PDECrossPoolTradeRequest.
 func NewPDECrossPoolTradeRequest(
 	tokenIDToBuyStr string,
 	tokenIDToSellStr string,
@@ -78,6 +51,7 @@ func NewPDECrossPoolTradeRequest(
 	return pdeCrossPoolTradeRequest, nil
 }
 
+// Hash overrides MetadataBase.Hash().
 func (pc PDECrossPoolTradeRequest) Hash() *common.Hash {
 	record := pc.MetadataBase.Hash().String()
 	record += pc.TokenIDToBuyStr
@@ -100,6 +74,7 @@ func (pc PDECrossPoolTradeRequest) Hash() *common.Hash {
 	return &hash
 }
 
+// CalculateSize overrides MetadataBase.CalculateSize().
 func (pc *PDECrossPoolTradeRequest) CalculateSize() uint64 {
 	return calculateSize(pc)
 }

@@ -6,6 +6,7 @@ import (
 	"github.com/incognitochain/go-incognito-sdk-v2/common"
 )
 
+// PortalReplacementFeeRequest is a request to replace the fee of existing un-shielding requests (via PortalV4).
 type PortalReplacementFeeRequest struct {
 	MetadataBaseWithSignature
 	TokenID string
@@ -13,6 +14,7 @@ type PortalReplacementFeeRequest struct {
 	Fee     uint
 }
 
+// NewPortalReplacementFeeRequest creates a new PortalReplacementFeeRequest.
 func NewPortalReplacementFeeRequest(metaType int, tokenID, batchID string, fee uint) (*PortalReplacementFeeRequest, error) {
 	metadataBase := MetadataBase{
 		Type: metaType,
@@ -29,6 +31,7 @@ func NewPortalReplacementFeeRequest(metaType int, tokenID, batchID string, fee u
 	return portalUnshieldReq, nil
 }
 
+// Hash overrides MetadataBase.Hash().
 func (repl PortalReplacementFeeRequest) Hash() *common.Hash {
 	record := repl.MetadataBase.Hash().String()
 	record += repl.TokenID
@@ -43,6 +46,7 @@ func (repl PortalReplacementFeeRequest) Hash() *common.Hash {
 	return &hash
 }
 
+// HashWithoutSig overrides MetadataBase.HashWithoutSig().
 func (repl PortalReplacementFeeRequest) HashWithoutSig() *common.Hash {
 	record := repl.MetadataBaseWithSignature.Hash().String()
 	record += repl.TokenID
@@ -53,6 +57,7 @@ func (repl PortalReplacementFeeRequest) HashWithoutSig() *common.Hash {
 	return &hash
 }
 
+// CalculateSize overrides MetadataBase.CalculateSize().
 func (repl *PortalReplacementFeeRequest) CalculateSize() uint64 {
 	return calculateSize(repl)
 }
