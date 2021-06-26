@@ -69,7 +69,7 @@ type TxHistory struct {
 Now, let's get to the detail of how we can use these functions.
 
 ## Connect to the network
-Because most of currently running full-nodes don't have some required RPCs ad data, the created client in this case must point to the designated address, which is `SOME_URL_HERE`.
+Because most of currently running full-nodes don't have some required RPCs ad data, the created client in this case must point to the designated address, which is `https://beta-fullnode.incognito.org/fullnode`.
 ```go
 // For main-net
 client, err := incclient.NewIncClient("https://beta-fullnode.incognito.org/fullnode", incclient.MainNetETHHost, 1)
