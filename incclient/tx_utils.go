@@ -173,6 +173,22 @@ func getListIdx(inCoins []coin.PlainCoin, allCoins []coin.PlainCoin, allIdx []*b
 	return res, nil
 }
 
+// getVersionFromInputCoins checks if all of the given input coins have the same version, and return the version.
+func getVersionFromInputCoins(inputCoins []coin.PlainCoin) (uint8, error) {
+	if len(inputCoins) == 0 {
+		return 0, fmt.Errorf("no coin to check")
+	}
+
+	version := inputCoins[0].GetVersion()
+	for i := 1; i < len(inputCoins); i++ {
+		if inputCoins[i].GetVersion() != version {
+			return 0, fmt.Errorf("expect input coin %v to have version %v, but got %v", i, version, inputCoins[i].GetVersion())
+		}
+	}
+
+	return version, nil
+}
+
 func (client *IncClient) getRandomCommitmentV1(inputCoins []coin.PlainCoin, tokenID string) (map[string]interface{}, error) {
 	if len(inputCoins) == 0 {
 		return nil, fmt.Errorf("no input coin to retrieve random commitments, tokenID: %v", tokenID)
@@ -180,6 +196,7 @@ func (client *IncClient) getRandomCommitmentV1(inputCoins []coin.PlainCoin, toke
 	outCoinList := make([]jsonresult.OutCoin, 0)
 	for _, inputCoin := range inputCoins {
 		outCoin := jsonresult.NewOutCoin(inputCoin)
+		outCoin.Conceal()
 		outCoinList = append(outCoinList, outCoin)
 	}
 

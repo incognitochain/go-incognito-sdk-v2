@@ -267,12 +267,35 @@ func (client *IncClient) CreateAndSendRawConversionTransaction(privateKey string
 }
 
 // CreateRawTransactionWithInputCoins creates a raw PRV transaction from the provided input coins.
+// Parameters:
+//	- param: a regular TxParam.
+//	- inputCoins: a list of decrypted, unspent PRV output coins (with the same version).
+//	- coinIndices: a list of corresponding indices for the input coins. This value must not be `nil` if the caller is
+//	creating a transaction v2.
 //
 // For transaction with metadata, callers must make sure other values of `param` are valid.
 //
 // NOTE: this servers PRV transactions only.
 func (client *IncClient) CreateRawTransactionWithInputCoins(param *TxParam, inputCoins []coin.PlainCoin, coinIndices []uint64) ([]byte, string, error) {
 	var txHash string
+	if param.txTokenParam != nil {
+		return nil, txHash, fmt.Errorf("this function supports PRV transaction only")
+	}
+
+	// check version of coins
+	version, err := getVersionFromInputCoins(inputCoins)
+	if err != nil {
+		return nil, txHash, err
+	}
+	if version == 2 && coinIndices == nil {
+		return nil, txHash, fmt.Errorf("coinIndices must not be nil")
+	}
+
+	// check number of input coins
+	if len(inputCoins) > MaxInputSize {
+		return nil, txHash, fmt.Errorf("support at most %v input coins, got %v", MaxInputSize, len(inputCoins))
+	}
+
 	senderWallet, err := wallet.Base58CheckDeserialize(param.senderPrivateKey)
 	if err != nil {
 		return nil, txHash, fmt.Errorf("cannot init private key %v: %v", param.senderPrivateKey, err)
@@ -293,11 +316,11 @@ func (client *IncClient) CreateRawTransactionWithInputCoins(param *TxParam, inpu
 		totalAmount += amount
 	}
 	var kvArgs = make(map[string]interface{})
-	if coinIndices == nil {
+	if version == 1 {
 		//Retrieve commitments and indices
 		kvArgs, err = client.getRandomCommitmentV1(inputCoins, common.PRVIDStr)
 		if err != nil {
-			return nil, txHash, err
+			return nil, txHash, fmt.Errorf("getRandomCommitmentV1 error: %v", err)
 		}
 		txInitParam := tx_generic.NewTxPrivacyInitParams(&(senderWallet.KeySet.PrivateKey), paymentInfos, inputCoins, txFee, true, &common.PRVCoinID, param.md, nil, kvArgs)
 		tx := new(tx_ver1.Tx)
@@ -320,7 +343,7 @@ func (client *IncClient) CreateRawTransactionWithInputCoins(param *TxParam, inpu
 
 		kvArgs, err = client.getRandomCommitmentV2(shardID, common.PRVIDStr, len(inputCoins)*(privacy.RingSize-1))
 		if err != nil {
-			return nil, txHash, err
+			return nil, txHash, fmt.Errorf("getRandomCommitmentV2 error: %v", err)
 		}
 		kvArgs[utils.MyIndices] = coinIndices
 
