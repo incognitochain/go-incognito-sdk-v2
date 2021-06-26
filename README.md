@@ -1,3 +1,4 @@
+[![Go Report Card](https://goreportcard.com/badge/github.com/incognitochain/go-incognito-sdk-v2)](https://goreportcard.com/report/github.com/incognitochain/go-incognito-sdk-v2) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/incognitochain/go-incognito-sdk-v2/blob/master/LICENSE)
 # go-incognito
 ## Introduction
 A Golang SDK for interacting with the Incognito network.
