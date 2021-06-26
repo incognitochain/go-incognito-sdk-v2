@@ -2,6 +2,7 @@
 ## Introduction
 A Golang SDK for interacting with the Incognito network.
 
+[![Go Report Card](https://goreportcard.com/badge/github.com/incognitochain/go-incognito-sdk-v2)](https://goreportcard.com/report/github.com/incognitochain/go-incognito-sdk-v2)
 ## Installation
 ```go
 go get github.com/incognitochain/go-incognito-sdk-v2
