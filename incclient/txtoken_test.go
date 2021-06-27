@@ -1,6 +1,7 @@
 package incclient
 
 import (
+	"fmt"
 	"github.com/incognitochain/go-incognito-sdk-v2/common"
 	"log"
 	"strconv"
@@ -10,34 +11,77 @@ import (
 
 func TestIncClient_CreateRawTokenTransaction(t *testing.T) {
 	var err error
-	ic, err = NewTestNet1Client()
+	ic, err = NewLocalClient("")
 	if err != nil {
 		panic(err)
 	}
 
-	privateKey := "112t8rnzyZWHhboZMZYMmeMGj1nDuVNkXB3FzwpPbhnNbWcSrbytAeYjDdNLfLSJhauvzYLWM2DQkWW2hJ14BGvmFfH1iDFAxgc4ywU6qMqW"
-	paymentAddress := PrivateKeyToPaymentAddress("112t8rnzyZWHhboZMZYMmeMGj1nDuVNkXB3FzwpPbhnNbWcSrbytAeYjDdNLfLSJhauvzYLWM2DQkWW2hJ14BGvmFfH1iDFAxgc4ywU6qMqW", -1)
-	tokenID := "974ff9005a6769b4159b5b3e718f12cd8218673797870cb95d76784addf65066"
+	privateKey := "11111117yu4WAe9fiqmRR4GTxocW6VUKD4dB58wHFjbcQXeDSWQMNyND6Ms3x136EfGcfL7rk3L83BZBzUJLSczmmNi1ngra1WW5Wsjsu5P"
 
-	receiverList := []string{paymentAddress}
-	amountList := []uint64{1000000}
+	receiverPrivateKey := "11111113iP7vLqNpK2RPPmwkQgaXf4c6dzto5RfyNYTsk8L1hNLajtcPRMihKpD9Tg8N8UkGrGso3iAUHaDbDDT2rrf7QXwAGADHkuV5A1U"
+	paymentAddress := PrivateKeyToPaymentAddress(receiverPrivateKey, -1)
+	tokenIDStr := "f3e586e281d275ea2059e35ae434d0431947d2b49466b6d2479808378268f822"
 
-	txHash, err := ic.CreateAndSendRawTokenTransaction(privateKey, receiverList, amountList, tokenID, 2, nil)
-	if err != nil {
-		panic(err)
+	for i := 0; i < numTests; i++ {
+		version := 1 + common.RandInt()%2
+		log.Printf("TEST %v, VERSION %v\n", i, version)
+
+		oldSenderBalance, err := getBalanceByVersion(privateKey, tokenIDStr, uint8(version))
+		if err != nil {
+			panic(err)
+		}
+		log.Printf("oldSenderBalance: %v\n", oldSenderBalance)
+
+		oldReceiverBalance, err := getBalanceByVersion(receiverPrivateKey, tokenIDStr, uint8(version))
+		if err != nil {
+			panic(err)
+		}
+		log.Printf("oldReceiverBalance: %v\n", oldReceiverBalance)
+
+		sendingAmount := common.RandUint64() % (oldSenderBalance / 100)
+		receiverList := []string{paymentAddress}
+		amountList := []uint64{sendingAmount}
+		log.Printf("sendingAmount: %v\n", sendingAmount)
+
+		txHash, err := ic.CreateAndSendRawTokenTransaction(privateKey, receiverList, amountList, tokenIDStr, int8(version), nil)
+		if err != nil {
+			panic(err)
+		}
+
+		fmt.Printf("TxHash: %v\n", txHash)
+
+		// checking if tx is in blocks
+		log.Printf("Checking status of tx %v...\n", txHash)
+		err = waitingCheckTxInBlock(txHash)
+		if err != nil {
+			panic(err)
+		}
+
+		// checking updated balance
+		log.Printf("Checking balance of tx %v...\n", receiverPrivateKey)
+		expectedReceiverBalance := oldReceiverBalance + sendingAmount
+		expectedSenderBalance := oldSenderBalance - sendingAmount
+		err = waitingCheckBalanceUpdated(receiverPrivateKey, tokenIDStr, oldReceiverBalance, expectedReceiverBalance, uint8(version))
+		if err != nil {
+			panic(err)
+		}
+		err = waitingCheckBalanceUpdated(privateKey, tokenIDStr, oldSenderBalance, expectedSenderBalance, uint8(version))
+		if err != nil {
+			panic(err)
+		}
+		log.Printf("FINISHED TEST %v\n\n", i)
 	}
 
-	log.Printf("TxHash: %v\n", txHash)
 }
 
 func TestIncClient_CreateTokenInitTransaction(t *testing.T) {
 	var err error
-	ic, err = NewTestNet1Client()
+	ic, err = NewLocalClient("")
 	if err != nil {
 		panic(err)
 	}
 
-	privateKey := "112t8rnzyZWHhboZMZYMmeMGj1nDuVNkXB3FzwpPbhnNbWcSrbytAeYjDdNLfLSJhauvzYLWM2DQkWW2hJ14BGvmFfH1iDFAxgc4ywU6qMqW"
+	privateKey := "11111117yu4WAe9fiqmRR4GTxocW6VUKD4dB58wHFjbcQXeDSWQMNyND6Ms3x136EfGcfL7rk3L83BZBzUJLSczmmNi1ngra1WW5Wsjsu5P"
 	shardID := GetShardIDFromPrivateKey(privateKey)
 
 	initAmount := common.RandUint64() % uint64(1000000000000000)
@@ -69,7 +113,7 @@ func TestIncClient_CreateTokenInitTransaction(t *testing.T) {
 		panic(err)
 	}
 
-	for i := 0; i < MaxAttempts; i++ {
+	for i := 0; i < maxAttempts; i++ {
 		log.Printf("Attempt %v\n", i)
 		balance, err := ic.GetBalance(privateKey, tokenID.String())
 		if err != nil {

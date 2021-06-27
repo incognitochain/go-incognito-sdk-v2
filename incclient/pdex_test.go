@@ -127,7 +127,7 @@ func TestIncClient_CreateAndSendPDEContributeTransaction(t *testing.T) {
 	pool, err := ic.GetPDEPoolPair(0, tokenID1, tokenID2)
 	contributedShare := uint64(0)
 	attempt := 0
-	for attempt < MaxAttempts {
+	for attempt < maxAttempts {
 		minAmount := uint64(math.Min(float64(oldBalance1), float64(oldBalance2)))
 		minAmount = uint64(math.Min(float64(minAmount), float64(oldTotalShares)))
 		contributedShare = 1 + common.RandUint64()%(minAmount/10)
@@ -147,7 +147,7 @@ func TestIncClient_CreateAndSendPDEContributeTransaction(t *testing.T) {
 		}
 		attempt += 1
 	}
-	if attempt > MaxAttempts {
+	if attempt > maxAttempts {
 		panic("cannot calculate contributed amounts")
 	}
 
@@ -174,7 +174,7 @@ func TestIncClient_CreateAndSendPDEContributeTransaction(t *testing.T) {
 	}
 
 	attempt = 0
-	for attempt < MaxAttempts {
+	for attempt < maxAttempts {
 		newTotalShares, err := ic.GetTotalSharesAmount(0, tokenID1, tokenID2)
 		if err != nil {
 			panic(err)
@@ -283,7 +283,7 @@ func TestIncClient_CreateAndSendPDEWithdrawalTransaction(t *testing.T) {
 	}
 
 	attempt := 0
-	for attempt < MaxAttempts {
+	for attempt < maxAttempts {
 		newBalance1, err := ic.GetBalance(privateKey, tokenID1)
 		if err != nil {
 			panic(err)

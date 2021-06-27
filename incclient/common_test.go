@@ -8,7 +8,8 @@ import (
 )
 
 const (
-	MaxAttempts = 30
+	maxAttempts = 30
+	numTests    = 10
 )
 
 // waitingCheckTxInBlock waits and checks until a transaction has been included in a block.
@@ -39,9 +40,9 @@ func waitingCheckTxInBlock(txHash string) error {
 // waitingCheckTxInBlock waits and checks until a transaction has been included in a block.
 //
 // In case the transaction is invalid, it stops.
-func waitingCheckBalanceUpdated(privateKey, tokenID string, oldAmount, expectedNewAmount uint64) error {
+func waitingCheckBalanceUpdated(privateKey, tokenID string, oldAmount, expectedNewAmount uint64, version uint8) error {
 	for {
-		balance, err := ic.GetBalance(privateKey, tokenID)
+		balance, err := getBalanceByVersion(privateKey, tokenID, version)
 		if err != nil {
 			return err
 		}

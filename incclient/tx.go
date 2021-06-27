@@ -3,18 +3,15 @@ package incclient
 import (
 	"encoding/json"
 	"fmt"
-
 	"github.com/incognitochain/go-incognito-sdk-v2/coin"
 	"github.com/incognitochain/go-incognito-sdk-v2/common"
 	"github.com/incognitochain/go-incognito-sdk-v2/common/base58"
 	"github.com/incognitochain/go-incognito-sdk-v2/key"
 	"github.com/incognitochain/go-incognito-sdk-v2/metadata"
-	"github.com/incognitochain/go-incognito-sdk-v2/privacy"
 	"github.com/incognitochain/go-incognito-sdk-v2/rpchandler"
 	"github.com/incognitochain/go-incognito-sdk-v2/transaction/tx_generic"
 	"github.com/incognitochain/go-incognito-sdk-v2/transaction/tx_ver1"
 	"github.com/incognitochain/go-incognito-sdk-v2/transaction/tx_ver2"
-	"github.com/incognitochain/go-incognito-sdk-v2/transaction/utils"
 	"github.com/incognitochain/go-incognito-sdk-v2/wallet"
 )
 
@@ -78,7 +75,7 @@ func (client *IncClient) CreateRawTransactionVer1(param *TxParam) ([]byte, strin
 		hasPrivacy = false
 	}
 
-	coinsToSpend, kvArgs, err := client.initParams(privateKey, common.PRVIDStr, totalAmount, hasPrivacy, 1)
+	coinsToSpend, kvArgs, err := client.initParamsV1(param, common.PRVIDStr, totalAmount, hasPrivacy)
 	if err != nil {
 		return nil, "", err
 	}
@@ -134,11 +131,12 @@ func (client *IncClient) CreateRawTransactionVer2(param *TxParam) ([]byte, strin
 		hasPrivacy = false
 	}
 
-	coinsToSpend, kArgs, err := client.initParams(privateKey, common.PRVIDStr, totalAmount, hasPrivacy, 2)
+	coinsToSpend, kArgs, err := client.initParamsV2(param, common.PRVIDStr, totalAmount)
 	if err != nil {
 		return nil, "", err
 	}
-	txParam := tx_generic.NewTxPrivacyInitParams(&(senderWallet.KeySet.PrivateKey), paymentInfos, coinsToSpend, DefaultPRVFee, hasPrivacy, &common.PRVCoinID, param.md, nil, kArgs)
+
+	txParam := tx_generic.NewTxPrivacyInitParams(&(senderWallet.KeySet.PrivateKey), paymentInfos, coinsToSpend, txFee, hasPrivacy, &common.PRVCoinID, param.md, nil, kArgs)
 
 	tx := new(tx_ver2.Tx)
 	err = tx.Init(txParam)
@@ -299,72 +297,14 @@ func (client *IncClient) CreateRawTransactionWithInputCoins(param *TxParam, inpu
 		return nil, txHash, fmt.Errorf("support at most %v input coins, got %v", MaxInputSize, len(inputCoins))
 	}
 
-	senderWallet, err := wallet.Base58CheckDeserialize(param.senderPrivateKey)
-	if err != nil {
-		return nil, txHash, fmt.Errorf("cannot init private key %v: %v", param.senderPrivateKey, err)
+	cp := coinParams{
+		coinList: inputCoins,
+		idxList:  coinIndices,
 	}
-	//Create list of payment infos
-	paymentInfos, err := createPaymentInfos(param.receiverList, param.amountList)
-	if err != nil {
-		return nil, txHash, err
-	}
-	//Get tx fee
-	txFee := DefaultPRVFee
-	if param.fee != 0 {
-		txFee = param.fee
-	}
-	//Calculate the total transacted amount
-	totalAmount := txFee
-	for _, amount := range param.amountList {
-		totalAmount += amount
-	}
-	var kvArgs = make(map[string]interface{})
-	if version == 1 {
-		//Retrieve commitments and indices
-		kvArgs, err = client.getRandomCommitmentV1(inputCoins, common.PRVIDStr)
-		if err != nil {
-			return nil, txHash, fmt.Errorf("getRandomCommitmentV1 error: %v", err)
-		}
-		txInitParam := tx_generic.NewTxPrivacyInitParams(&(senderWallet.KeySet.PrivateKey), paymentInfos, inputCoins, txFee, true, &common.PRVCoinID, param.md, nil, kvArgs)
-		tx := new(tx_ver1.Tx)
-		err = tx.Init(txInitParam)
-		if err != nil {
-			return nil, txHash, fmt.Errorf("init txver1 error: %v", err)
-		}
-		txBytes, err := json.Marshal(tx)
-		if err != nil {
-			return nil, txHash, fmt.Errorf("cannot marshal txver1: %v", err)
-		}
-		base58CheckData := base58.Base58Check{}.Encode(txBytes, common.ZeroByte)
-		return []byte(base58CheckData), tx.Hash().String(), nil
-	} else {
-		//Retrieve commitments and indices
-		shardID := GetShardIDFromPrivateKey(param.senderPrivateKey)
-		if shardID == 255 {
-			return nil, "", fmt.Errorf("private key is invalid")
-		}
+	param.kArgs = make(map[string]interface{})
+	param.kArgs[prvInCoinKey] = cp
 
-		kvArgs, err = client.getRandomCommitmentV2(shardID, common.PRVIDStr, len(inputCoins)*(privacy.RingSize-1))
-		if err != nil {
-			return nil, txHash, fmt.Errorf("getRandomCommitmentV2 error: %v", err)
-		}
-		kvArgs[utils.MyIndices] = coinIndices
-
-		txInitParam := tx_generic.NewTxPrivacyInitParams(&(senderWallet.KeySet.PrivateKey), paymentInfos, inputCoins, txFee, true, &common.PRVCoinID, param.md, nil, kvArgs)
-		tx := new(tx_ver2.Tx)
-		err = tx.Init(txInitParam)
-		if err != nil {
-			return nil, "", fmt.Errorf("init txver2 error: %v", err)
-		}
-
-		txBytes, err := json.Marshal(tx)
-		if err != nil {
-			return nil, "", fmt.Errorf("cannot marshal txver2: %v", err)
-		}
-
-		base58CheckData := base58.Base58Check{}.Encode(txBytes, common.ZeroByte)
-		return []byte(base58CheckData), tx.Hash().String(), nil
-	}
+	return client.CreateRawTransaction(param, int8(version))
 }
 
 // SendRawTx sends submits a raw PRV transaction to the Incognito blockchain.

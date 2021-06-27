@@ -12,9 +12,11 @@ import (
 )
 
 const (
-	DefaultPRVFee = uint64(100)
-	MaxInputSize  = 30
-	MaxOutputSize = 30
+	DefaultPRVFee  = uint64(100)
+	MaxInputSize   = 30
+	MaxOutputSize  = 30
+	prvInCoinKey   = "PRVInputCoins"
+	tokenInCoinKey = "TokenInputCoins"
 )
 
 // TxParam describes the parameters needed to create a transaction in general.
@@ -27,7 +29,13 @@ type TxParam struct {
 	fee              uint64
 	txTokenParam     *TxTokenParam
 	md               metadata.Metadata
-	kArgs            map[string]interface{}
+
+	// additional parameters for special functions
+	//	- "PRVInputCoins": a coinParams consisting of PRV input coins and indices used to create a transaction with given
+	//input coins.
+	//	- "TokenInputCoins": a coinParams consisting of token input coins and indices used to create a transaction with given
+	//input coins..
+	kArgs map[string]interface{}
 }
 
 // TxTokenParam describes the parameters needed for creating a token transaction.
