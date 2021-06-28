@@ -102,7 +102,7 @@ func TestIncClient_ConsolidateTokenV1s(t *testing.T) {
 		log.Printf("oldBalance: %v\n", balance)
 
 		// consolidating UTXOs
-		_, err = ic.ConsolidateTokenV1s(privateKey, tokenIDStr, version, expectedNumUTXOs)
+		_, err = ic.ConsolidateTokenV1s(privateKey, tokenIDStr, expectedNumUTXOs)
 		if err != nil {
 			panic(err)
 		}
