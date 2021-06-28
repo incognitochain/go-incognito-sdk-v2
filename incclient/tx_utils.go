@@ -152,7 +152,11 @@ func chooseBestCoinsByAmount(coinList []coin.PlainCoin, requiredAmount uint64) (
 	}
 
 	if totalInputAmount == requiredAmount {
-		return coinList, nil, nil
+		chosenIndexList := make([]uint64, 0)
+		for i := 0; i < len(coinList); i++ {
+			chosenIndexList = append(chosenIndexList, uint64(i))
+		}
+		return coinList, chosenIndexList, nil
 	}
 
 	coinsToSpend := make([]coin.PlainCoin, 0)
@@ -506,8 +510,6 @@ func (client *IncClient) initParamsV1(txParam *TxParam, tokenIDStr string, total
 	}
 
 	if coinsToSpend == nil {
-		log.Printf("get UTXOs from the db...\n")
-
 		//Get list of UTXOs
 		utxoList, idxList, err := client.GetUnspentOutputCoinsFromCache(privateKey, tokenIDStr, 0)
 		if err != nil {
@@ -581,8 +583,6 @@ func (client *IncClient) initParamsV2(txParam *TxParam, tokenIDStr string, total
 	} // in case we use provided input coins to init the transaction.
 
 	if coinsToSpend == nil {
-		log.Printf("get UTXOs from the db...\n")
-
 		//Get list of UTXOs
 		utxoList, idxList, err := client.GetUnspentOutputCoinsFromCache(privateKey, tokenIDStr, 0)
 		if err != nil {
