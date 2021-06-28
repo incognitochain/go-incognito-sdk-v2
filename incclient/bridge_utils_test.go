@@ -3,6 +3,7 @@ package incclient
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"testing"
 )
 
@@ -121,4 +122,20 @@ func TestIncClient_GetEVMTransactionStatus(t *testing.T) {
 	}
 
 	fmt.Printf("status: %v\n", status)
+}
+
+func TestIncClient_GetBurnProof(t *testing.T) {
+	var err error
+	ic, err = NewDevNetClient()
+	if err != nil {
+		panic(err)
+	}
+
+	txHash := "c87985f9b09012dc182dffffc8630d7396aa34d0c541c265e5c9d777755e0754"
+	burnProof, err := ic.GetBurnProof(txHash)
+	if err != nil {
+		panic(err)
+	}
+
+	log.Println(burnProof)
 }
