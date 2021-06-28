@@ -31,7 +31,6 @@ func waitingCheckTxInBlock(txHash string) error {
 			log.Printf("Tx %v is in block\n", txHash)
 			return nil
 		} else {
-			log.Printf("Tx %v is in mempool\n", txHash)
 			time.Sleep(10 * time.Second)
 		}
 	}
