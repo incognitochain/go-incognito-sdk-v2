@@ -60,4 +60,4 @@ func NewLogger(isEnable bool, logFile ...string) *IncLogger {
 	}
 }
 
-var Logger = NewLogger(true)
+var Logger = NewLogger(false)
