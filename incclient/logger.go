@@ -32,4 +32,4 @@ func NewLogger(isEnable bool, logFile ...string) *IncLogger {
 	}
 }
 
-var incLogger = NewLogger(false)
+var Logger = NewLogger(false)

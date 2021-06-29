@@ -125,12 +125,12 @@ func PrivateKeyToPublicKey(privateKey string) []byte {
 func PrivateKeyToPrivateOTAKey(privateKey string) string {
 	keyWallet, err := wallet.Base58CheckDeserialize(privateKey)
 	if err != nil {
-		incLogger.Log.Println(err)
+		Logger.Log.Println(err)
 		return ""
 	}
 
 	if len(keyWallet.KeySet.PrivateKey) == 0 {
-		incLogger.Log.Println("no private key found")
+		Logger.Log.Println("no private key found")
 		return ""
 	}
 
@@ -143,12 +143,12 @@ func PrivateKeyToPrivateOTAKey(privateKey string) string {
 func PrivateKeyToReadonlyKey(privateKey string) string {
 	keyWallet, err := wallet.Base58CheckDeserialize(privateKey)
 	if err != nil {
-		incLogger.Log.Println(err)
+		Logger.Log.Println(err)
 		return ""
 	}
 
 	if len(keyWallet.KeySet.PrivateKey) == 0 {
-		incLogger.Log.Println("no private key found")
+		Logger.Log.Println("no private key found")
 		return ""
 	}
 
@@ -160,7 +160,7 @@ func PrivateKeyToReadonlyKey(privateKey string) string {
 func PrivateKeyToMiningKey(privateKey string) string {
 	keyWallet, err := wallet.Base58CheckDeserialize(privateKey)
 	if err != nil {
-		incLogger.Log.Println(err)
+		Logger.Log.Println(err)
 		return ""
 	}
 

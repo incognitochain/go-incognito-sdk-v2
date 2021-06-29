@@ -38,7 +38,7 @@ func (client *IncClient) ConsolidatePRVs(privateKey string, version int8, numThr
 	}
 
 	if len(utxoList) <= maxUTXOsAfterConsolidated {
-		incLogger.Log.Printf("already consolidated\n")
+		Logger.Log.Printf("already consolidated\n")
 		return txList, nil
 	}
 
@@ -47,7 +47,7 @@ func (client *IncClient) ConsolidatePRVs(privateKey string, version int8, numThr
 	txDoneCh := make(chan string)
 	txList = make([]string, 0)
 	for len(utxoList) > maxUTXOsAfterConsolidated {
-		incLogger.Log.Printf("#numUTXOs: %v\n", len(utxoList))
+		Logger.Log.Printf("#numUTXOs: %v\n", len(utxoList))
 		numWorkers := 0
 		for current := 0; current < len(utxoList); current += MaxInputSize {
 			next := current + MaxInputSize
@@ -71,7 +71,7 @@ func (client *IncClient) ConsolidatePRVs(privateKey string, version int8, numThr
 			}
 		}
 
-		incLogger.Log.Printf("numWorkers: %v\n", numWorkers)
+		Logger.Log.Printf("numWorkers: %v\n", numWorkers)
 
 		allDone := false
 		numErr := 0
@@ -81,25 +81,25 @@ func (client *IncClient) ConsolidatePRVs(privateKey string, version int8, numThr
 			case txHash := <-txDoneCh:
 				numDone++
 				txList = append(txList, txHash)
-				incLogger.Log.Printf("Finished tx %v, numDone %v, numErr %v\n", txHash, numDone, numErr)
+				Logger.Log.Printf("Finished tx %v, numDone %v, numErr %v\n", txHash, numDone, numErr)
 			case err = <-errCh:
 				numErr++
-				incLogger.Log.Printf("%v\n", err)
+				Logger.Log.Printf("%v\n", err)
 			case <-timeOut:
-				incLogger.Log.Printf("Timeout!!!!\n")
+				Logger.Log.Printf("Timeout!!!!\n")
 				return txList, fmt.Errorf("time-out")
 			default:
 				if numDone == numWorkers {
-					incLogger.Log.Printf("ALL SUCCEEDED\n")
+					Logger.Log.Printf("ALL SUCCEEDED\n")
 					allDone = true
 					break
 				}
 				if numErr == numWorkers {
-					incLogger.Log.Printf("ALL FAILED\n")
+					Logger.Log.Printf("ALL FAILED\n")
 					return txList, fmt.Errorf("all thread fails, please try again later")
 				}
 				if numDone+numErr == numWorkers {
-					incLogger.Log.Printf("All WORKERs FINISHED, numDone %v, numErr %v\n", numDone, numErr)
+					Logger.Log.Printf("All WORKERs FINISHED, numDone %v, numErr %v\n", numDone, numErr)
 					allDone = true
 					break
 				}
@@ -131,7 +131,7 @@ func (client *IncClient) ConsolidateTokenV1s(privateKey, tokenIDStr string, numT
 	}
 
 	if len(utxoList) <= maxUTXOsAfterConsolidated {
-		incLogger.Log.Printf("already consolidated\n")
+		Logger.Log.Printf("already consolidated\n")
 		return txList, nil
 	}
 
@@ -140,7 +140,7 @@ func (client *IncClient) ConsolidateTokenV1s(privateKey, tokenIDStr string, numT
 	txDoneCh := make(chan string)
 	txList = make([]string, 0)
 	for len(utxoList) > maxUTXOsAfterConsolidated {
-		incLogger.Log.Printf("#numUTXOs: %v\n", len(utxoList))
+		Logger.Log.Printf("#numUTXOs: %v\n", len(utxoList))
 		numWorkers := 0
 		for current := 0; current < len(utxoList); current += MaxInputSize {
 			next := current + MaxInputSize
@@ -165,7 +165,7 @@ func (client *IncClient) ConsolidateTokenV1s(privateKey, tokenIDStr string, numT
 			time.Sleep(3 * time.Second)
 		}
 
-		incLogger.Log.Printf("numWorkers: %v\n", numWorkers)
+		Logger.Log.Printf("numWorkers: %v\n", numWorkers)
 
 		allDone := false
 		numErr := 0
@@ -175,25 +175,25 @@ func (client *IncClient) ConsolidateTokenV1s(privateKey, tokenIDStr string, numT
 			case txHash := <-txDoneCh:
 				numDone++
 				txList = append(txList, txHash)
-				incLogger.Log.Printf("Finished tx %v, numDone %v, numErr %v\n", txHash, numDone, numErr)
+				Logger.Log.Printf("Finished tx %v, numDone %v, numErr %v\n", txHash, numDone, numErr)
 			case err = <-errCh:
 				numErr++
-				incLogger.Log.Printf("%v\n", err)
+				Logger.Log.Printf("%v\n", err)
 			case <-timeOut:
-				incLogger.Log.Printf("Timeout!!!!\n")
+				Logger.Log.Printf("Timeout!!!!\n")
 				return txList, fmt.Errorf("time-out")
 			default:
 				if numDone == numWorkers {
-					incLogger.Log.Printf("ALL SUCCEEDED\n")
+					Logger.Log.Printf("ALL SUCCEEDED\n")
 					allDone = true
 					break
 				}
 				if numErr == numWorkers {
-					incLogger.Log.Printf("ALL FAILED\n")
+					Logger.Log.Printf("ALL FAILED\n")
 					return txList, fmt.Errorf("all thread fails, please try again later")
 				}
 				if numDone+numErr == numWorkers {
-					incLogger.Log.Printf("All WORKERs FINISHED, numDone %v, numErr %v\n", numDone, numErr)
+					Logger.Log.Printf("All WORKERs FINISHED, numDone %v, numErr %v\n", numDone, numErr)
 					allDone = true
 					break
 				}
@@ -221,7 +221,7 @@ func (client *IncClient) consolidatePRVs(id int, privateKey string,
 	txDoneCh chan string,
 	errCh chan error,
 ) {
-	incLogger.Log.Printf("[ID %v] CONSOLIDATING %v UTXOs, %v INDICES\n", id, len(inputCoins), len(indices))
+	Logger.Log.Printf("[ID %v] CONSOLIDATING %v UTXOs, %v INDICES\n", id, len(inputCoins), len(indices))
 	totalAmount := uint64(0)
 	for _, c := range inputCoins {
 		totalAmount += c.GetValue()
@@ -239,7 +239,7 @@ func (client *IncClient) consolidatePRVs(id int, privateKey string,
 		errCh <- fmt.Errorf("[ID %v] %v", id, err)
 		return
 	}
-	incLogger.Log.Printf("[ID %v] TxHash %v\n", id, txHash)
+	Logger.Log.Printf("[ID %v] TxHash %v\n", id, txHash)
 	err = client.SendRawTx(encodedTx)
 	if err != nil {
 		errCh <- fmt.Errorf("[ID %v] %v", id, err)
@@ -252,7 +252,7 @@ func (client *IncClient) consolidatePRVs(id int, privateKey string,
 	}
 
 	txDoneCh <- txHash
-	incLogger.Log.Printf("[ID %v] FINISHED\n\n", id)
+	Logger.Log.Printf("[ID %v] FINISHED\n\n", id)
 	return
 }
 
@@ -263,7 +263,7 @@ func (client *IncClient) consolidateTokenV1s(id int, privateKey, tokenIDStr stri
 	txDoneCh chan string,
 	errCh chan error,
 ) {
-	incLogger.Log.Printf("[ID %v] CONSOLIDATING %v TOKEN UTXOs, %v INDICES\n", id, len(inputCoins), len(indices))
+	Logger.Log.Printf("[ID %v] CONSOLIDATING %v TOKEN UTXOs, %v INDICES\n", id, len(inputCoins), len(indices))
 	totalAmount := uint64(0)
 	for _, c := range inputCoins {
 		totalAmount += c.GetValue()
@@ -276,7 +276,7 @@ func (client *IncClient) consolidateTokenV1s(id int, privateKey, tokenIDStr stri
 		errCh <- fmt.Errorf("[ID %v] cannot estimate token fee: %v", id, err)
 	}
 	tokenFee = (MaxInputSize * tokenFee) / 10
-	incLogger.Log.Printf("[ID %v] tokenFee %v\n", id, tokenFee)
+	Logger.Log.Printf("[ID %v] tokenFee %v\n", id, tokenFee)
 	if totalAmount <= tokenFee {
 		errCh <- fmt.Errorf("[ID %v] not enough PRV, got %v, want at least %v", id, totalAmount, tokenFee+1)
 		return
@@ -291,7 +291,7 @@ func (client *IncClient) consolidateTokenV1s(id int, privateKey, tokenIDStr stri
 		errCh <- fmt.Errorf("[ID %v] %v", id, err)
 		return
 	}
-	incLogger.Log.Printf("[ID %v] TxHash %v\n", id, txHash)
+	Logger.Log.Printf("[ID %v] TxHash %v\n", id, txHash)
 	err = client.SendRawTokenTx(encodedTx)
 	if err != nil {
 		errCh <- fmt.Errorf("[ID %v] %v", id, err)
@@ -305,6 +305,6 @@ func (client *IncClient) consolidateTokenV1s(id int, privateKey, tokenIDStr stri
 	}
 
 	txDoneCh <- txHash
-	incLogger.Log.Printf("[ID %v] FINISHED\n\n", id)
+	Logger.Log.Printf("[ID %v] FINISHED\n\n", id)
 	return
 }

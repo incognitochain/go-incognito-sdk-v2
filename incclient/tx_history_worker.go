@@ -79,8 +79,8 @@ func (p *TxHistoryProcessor) addHistory(history TxHistory) {
 		}
 		p.history.TxOutList = append(p.history.TxOutList, txOut)
 	}
-	incLogger.Log.Printf("Added %v TxsIn, %v TxsOut\n", len(history.TxInList), len(history.TxOutList))
-	incLogger.Log.Printf("Current history: #TxsIn = %v, #TxsOut = %v\n", len(p.history.TxInList), len(p.history.TxOutList))
+	Logger.Log.Printf("Added %v TxsIn, %v TxsOut\n", len(history.TxInList), len(history.TxOutList))
+	Logger.Log.Printf("Current history: #TxsIn = %v, #TxsOut = %v\n", len(p.history.TxInList), len(p.history.TxOutList))
 
 	p.mtx.Unlock()
 }
@@ -141,7 +141,7 @@ func (p *TxHistoryProcessor) GetTxsIn(privateKey string, tokenIDStr string, vers
 				})
 				return p.history.TxInList, nil
 			}
-			incLogger.Log.Printf("Receive new data, numSuccess = %v\n", numSuccess)
+			Logger.Log.Printf("Receive new data, numSuccess = %v\n", numSuccess)
 		}
 	}
 
@@ -174,7 +174,7 @@ func (p *TxHistoryProcessor) GetTxsOut(privateKey string, tokenIDStr string, ver
 		return nil, nil
 	}
 
-	incLogger.Log.Printf("len(snList) = %v\n", len(snList))
+	Logger.Log.Printf("len(snList) = %v\n", len(snList))
 
 	numWorkers := 0
 	if version == 1 {
@@ -214,7 +214,7 @@ func (p *TxHistoryProcessor) GetTxsOut(privateKey string, tokenIDStr string, ver
 				})
 				return p.history.TxOutList, nil
 			}
-			incLogger.Log.Printf("Receive new data, numSuccess = %v\n", numSuccess)
+			Logger.Log.Printf("Receive new data, numSuccess = %v\n", numSuccess)
 		}
 	}
 
@@ -222,19 +222,19 @@ func (p *TxHistoryProcessor) GetTxsOut(privateKey string, tokenIDStr string, ver
 
 // GetTokenHistory returns the history of a private key w.r.t a tokenID in a parallel manner.
 func (p *TxHistoryProcessor) GetTokenHistory(privateKey string, tokenIDStr string) (*TxHistory, error) {
-	incLogger.Log.Printf("GETTING in-coming txs\n")
+	Logger.Log.Printf("GETTING in-coming txs\n")
 	txsIn, err := p.GetTxsIn(privateKey, tokenIDStr, 1)
 	if err != nil {
 		return nil, err
 	}
-	incLogger.Log.Printf("FINISHED in-coming txs\n\n")
+	Logger.Log.Printf("FINISHED in-coming txs\n\n")
 
-	incLogger.Log.Printf("GETTING out-going txs\n")
+	Logger.Log.Printf("GETTING out-going txs\n")
 	txsOut, err := p.GetTxsOut(privateKey, tokenIDStr, 1)
 	if err != nil {
 		return nil, err
 	}
-	incLogger.Log.Printf("FINISHED out-going txs\n\n")
+	Logger.Log.Printf("FINISHED out-going txs\n\n")
 
 	return &TxHistory{
 		TxInList:  txsIn,
@@ -279,7 +279,7 @@ func (worker TxHistoryWorker) getListTxs(txList []string) (map[string]metadata.T
 			res[txHash] = tx
 		}
 		count += len(txMap)
-		incLogger.Log.Printf("[WORKER %v], count %v, timeElapsed %v\n", worker.id, count, time.Since(start).Seconds())
+		Logger.Log.Printf("[WORKER %v], count %v, timeElapsed %v\n", worker.id, count, time.Since(start).Seconds())
 	}
 
 	return res, nil
@@ -289,7 +289,7 @@ func (worker TxHistoryWorker) getListTxs(txList []string) (map[string]metadata.T
 //
 // It only returns the list of transactions whose value is greater than 0.
 func (worker TxHistoryWorker) getTxsInV1(keySet *key.KeySet, listDecryptedCoins map[string]coin.PlainCoin, txList []string, tokenIDStr string, txChan chan TxHistory, errChan chan error) {
-	incLogger.Log.Printf("[WORKER %v] getTxsInV1, #TXS: %v\n", worker.id, len(txList))
+	Logger.Log.Printf("[WORKER %v] getTxsInV1, #TXS: %v\n", worker.id, len(txList))
 	mapCmt := makeMapCMToPlainCoin(listDecryptedCoins)
 
 	//retrieve transactions in object
@@ -339,7 +339,7 @@ func (worker TxHistoryWorker) getTxsInV1(keySet *key.KeySet, listDecryptedCoins 
 		TxInList:  res,
 		TxOutList: nil,
 	}
-	incLogger.Log.Printf("[WORKER %v] FINISHED getTxsInV1, #TXS: %v!!\n\n", worker.id, len(res))
+	Logger.Log.Printf("[WORKER %v] FINISHED getTxsInV1, #TXS: %v!!\n\n", worker.id, len(res))
 }
 
 // getTxsInV2 returns the list of in-coming transactions of version 2.
@@ -354,7 +354,7 @@ func (worker TxHistoryWorker) getTxsInV2(keySet *key.KeySet, listDecryptedCoins 
 		}
 	}
 
-	incLogger.Log.Printf("[WORKER %v] getTxsInV2, #No: %v\n", worker.id, len(publicKeys))
+	Logger.Log.Printf("[WORKER %v] getTxsInV2, #No: %v\n", worker.id, len(publicKeys))
 	mapCmt := makeMapCMToPlainCoin(listDecryptedCoins)
 
 	//retrieve transactions in object
@@ -405,14 +405,14 @@ func (worker TxHistoryWorker) getTxsInV2(keySet *key.KeySet, listDecryptedCoins 
 		TxInList:  res,
 		TxOutList: nil,
 	}
-	incLogger.Log.Printf("[WORKER %v] FINISHED getTxsInV2, #TXS: %v!!\n\n", worker.id, len(res))
+	Logger.Log.Printf("[WORKER %v] FINISHED getTxsInV2, #TXS: %v!!\n\n", worker.id, len(res))
 }
 
 // getTxsOut returns the list of out-going transactions of version 1.
 //
 // It only returns the list of transactions whose value is greater than 0.
 func (worker TxHistoryWorker) getTxsOutV1(keySet *key.KeySet, mapSpentCoins map[string]coin.PlainCoin, snList []string, tokenIDStr string, txChan chan TxHistory, errChan chan error) {
-	incLogger.Log.Printf("[WORKER %v] getTxsOutV1, #No: %v\n", worker.id, len(snList))
+	Logger.Log.Printf("[WORKER %v] getTxsOutV1, #No: %v\n", worker.id, len(snList))
 
 	shardID := common.GetShardIDFromLastByte(keySet.PaymentAddress.Pk[len(keySet.PaymentAddress.Pk)-1])
 
@@ -507,5 +507,5 @@ func (worker TxHistoryWorker) getTxsOutV1(keySet *key.KeySet, mapSpentCoins map[
 		TxInList:  nil,
 		TxOutList: res,
 	}
-	incLogger.Log.Printf("[WORKER %v] FINISHED getTxsOutV1, #TXS: %v!!\n\n", worker.id, len(res))
+	Logger.Log.Printf("[WORKER %v] FINISHED getTxsOutV1, #TXS: %v!!\n\n", worker.id, len(res))
 }

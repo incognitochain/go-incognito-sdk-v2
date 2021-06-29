@@ -680,19 +680,19 @@ func (client *IncClient) GetTxs(txHashList []string) (map[string]metadata.Transa
 	for txHash, encodedTx := range mapRes {
 		txBytes, _, err := base58.Base58Check{}.Decode(encodedTx)
 		if err != nil {
-			incLogger.Log.Printf("base58-decode failed: %v\n", string(txBytes))
+			Logger.Log.Printf("base58-decode failed: %v\n", string(txBytes))
 			return nil, err
 		}
 
 		txChoice, err := transaction.DeserializeTransactionJSON(txBytes)
 		if err != nil {
-			incLogger.Log.Printf("unMarshal failed: %v\n", string(txBytes))
+			Logger.Log.Printf("unMarshal failed: %v\n", string(txBytes))
 			return nil, err
 		}
 		tx := txChoice.ToTx()
 
 		if tx.Hash().String() != txHash {
-			incLogger.Log.Printf("txParseFail: %v\n", string(txBytes))
+			Logger.Log.Printf("txParseFail: %v\n", string(txBytes))
 			return nil, fmt.Errorf("txHash changes after unmarshalling, expect %v, got %v", txHash, tx.Hash().String())
 		}
 		res[txHash] = tx
@@ -744,7 +744,7 @@ func (client *IncClient) GetTransactionsByReceiver(paymentAddress string) (map[s
 		res[txHash] = tx
 		count += 1
 		if count%5 == 0 {
-			incLogger.Log.Printf("count %v, timeElapsed: %v\n", count, time.Since(start).Seconds())
+			Logger.Log.Printf("count %v, timeElapsed: %v\n", count, time.Since(start).Seconds())
 		}
 	}
 
