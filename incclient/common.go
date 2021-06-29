@@ -3,20 +3,10 @@ package incclient
 
 import (
 	"fmt"
-	"log"
-
 	"github.com/incognitochain/go-incognito-sdk-v2/common"
 	"github.com/incognitochain/go-incognito-sdk-v2/common/base58"
 	"github.com/incognitochain/go-incognito-sdk-v2/metadata"
 	"github.com/incognitochain/go-incognito-sdk-v2/wallet"
-)
-
-const (
-	DefaultPRVFee  = uint64(100)
-	MaxInputSize   = 30
-	MaxOutputSize  = 30
-	prvInCoinKey   = "PRVInputCoins"
-	tokenInCoinKey = "TokenInputCoins"
 )
 
 // TxParam describes the parameters needed to create a transaction in general.
@@ -135,12 +125,12 @@ func PrivateKeyToPublicKey(privateKey string) []byte {
 func PrivateKeyToPrivateOTAKey(privateKey string) string {
 	keyWallet, err := wallet.Base58CheckDeserialize(privateKey)
 	if err != nil {
-		log.Println(err)
+		incLogger.Log.Println(err)
 		return ""
 	}
 
 	if len(keyWallet.KeySet.PrivateKey) == 0 {
-		log.Println("no private key found")
+		incLogger.Log.Println("no private key found")
 		return ""
 	}
 
@@ -153,12 +143,12 @@ func PrivateKeyToPrivateOTAKey(privateKey string) string {
 func PrivateKeyToReadonlyKey(privateKey string) string {
 	keyWallet, err := wallet.Base58CheckDeserialize(privateKey)
 	if err != nil {
-		log.Println(err)
+		incLogger.Log.Println(err)
 		return ""
 	}
 
 	if len(keyWallet.KeySet.PrivateKey) == 0 {
-		log.Println("no private key found")
+		incLogger.Log.Println("no private key found")
 		return ""
 	}
 
@@ -170,7 +160,7 @@ func PrivateKeyToReadonlyKey(privateKey string) string {
 func PrivateKeyToMiningKey(privateKey string) string {
 	keyWallet, err := wallet.Base58CheckDeserialize(privateKey)
 	if err != nil {
-		log.Println(err)
+		incLogger.Log.Println(err)
 		return ""
 	}
 

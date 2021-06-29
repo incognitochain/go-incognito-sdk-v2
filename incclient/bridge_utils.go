@@ -5,7 +5,6 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"log"
 	"math/big"
 	"strconv"
 
@@ -98,7 +97,7 @@ func (client *IncClient) GetEVMDepositProof(txHash string) (*EVMDepositProof, ui
 	// Get tx content
 	txContent, err := client.GetEVMTxByHash(txHash)
 	if err != nil {
-		log.Println("cannot get eth by hash", err)
+		incLogger.Log.Println("cannot get eth by hash", err)
 		return nil, 0, err
 	}
 
@@ -171,12 +170,12 @@ func (client *IncClient) GetEVMDepositProof(txHash string) (*EVMDepositProof, ui
 		return nil, 0, fmt.Errorf("cannot parse transactions in %v", txContent)
 	}
 
-	log.Println("length of transactions in block", len(siblingTxs))
+	incLogger.Log.Println("length of transactions in block", len(siblingTxs))
 
 	// Constructing the receipt trie (source: go-ethereum/core/types/derive_sha.go)
 	keyBuf := new(bytes.Buffer)
 	receiptTrie := new(trie.Trie)
-	log.Println("Start creating receipt trie...")
+	incLogger.Log.Println("Start creating receipt trie...")
 	for i, tx := range siblingTxs {
 		txStr, ok := tx.(string)
 		if !ok {
@@ -198,7 +197,7 @@ func (client *IncClient) GetEVMDepositProof(txHash string) (*EVMDepositProof, ui
 		receiptTrie.Update(keyBuf.Bytes(), encodedReceipt)
 	}
 
-	log.Println("Finish creating receipt trie.")
+	incLogger.Log.Println("Finish creating receipt trie.")
 
 	// Constructing the proof for the current receipt (source: go-ethereum/trie/proof.go)
 	proof := light.NewNodeSet()
@@ -207,12 +206,12 @@ func (client *IncClient) GetEVMDepositProof(txHash string) (*EVMDepositProof, ui
 	if err != nil {
 		return nil, 0, fmt.Errorf("rlp encode returns an error: %v", err)
 	}
-	log.Println("Start proving receipt trie...")
+	incLogger.Log.Println("Start proving receipt trie...")
 	err = receiptTrie.Prove(keyBuf.Bytes(), 0, proof)
 	if err != nil {
 		return nil, 0, err
 	}
-	log.Println("Finish proving receipt trie.")
+	incLogger.Log.Println("Finish proving receipt trie.")
 
 	nodeList := proof.NodeList()
 	encNodeList := make([]string, 0)
