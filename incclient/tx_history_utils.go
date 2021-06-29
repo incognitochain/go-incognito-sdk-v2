@@ -265,6 +265,6 @@ func SaveTxHistory(txHistory *TxHistory, filePath string) error {
 	}
 	err = w.Write([]string{"totalOut", fmt.Sprintf("%v", totalOut)})
 
-	Logger.Log.Printf("Finished storing history to file %v\n", filePath)
+	Logger.Printf("Finished storing history to file %v\n", filePath)
 	return nil
 }

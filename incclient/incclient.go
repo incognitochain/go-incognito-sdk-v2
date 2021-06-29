@@ -27,7 +27,7 @@ func NewTestNetClient() (*IncClient, error) {
 		return nil, err
 	}
 
-	Logger.Log.Printf("Init to %v, activeShards: %v\n", TestNetFullNode, activeShards)
+	Logger.Printf("Init to %v, activeShards: %v\n", TestNetFullNode, activeShards)
 
 	common.MaxShardNumber = activeShards
 	if incClient.version == 1 {
@@ -51,7 +51,7 @@ func NewTestNet1Client() (*IncClient, error) {
 		return nil, err
 	}
 
-	Logger.Log.Printf("Init to %v, activeShards: %v\n", TestNet1FullNode, activeShards)
+	Logger.Printf("Init to %v, activeShards: %v\n", TestNet1FullNode, activeShards)
 
 	common.MaxShardNumber = activeShards
 	if incClient.version == 1 {
@@ -75,7 +75,7 @@ func NewMainNetClient() (*IncClient, error) {
 		return nil, err
 	}
 
-	Logger.Log.Printf("Init to %v, activeShards: %v\n", MainNetFullNode, activeShards)
+	Logger.Printf("Init to %v, activeShards: %v\n", MainNetFullNode, activeShards)
 
 	common.MaxShardNumber = activeShards
 	if incClient.version == 1 {
@@ -102,7 +102,7 @@ func NewLocalClient(port string) (*IncClient, error) {
 		return nil, err
 	}
 
-	Logger.Log.Printf("Init to %v, activeShards: %v\n", LocalFullNode, activeShards)
+	Logger.Printf("Init to %v, activeShards: %v\n", LocalFullNode, activeShards)
 
 	common.MaxShardNumber = activeShards
 	if incClient.version == 1 {
@@ -126,7 +126,7 @@ func NewDevNetClient() (*IncClient, error) {
 		return nil, err
 	}
 
-	Logger.Log.Printf("Init to %v, activeShards: %v\n", DevNetFullNode, activeShards)
+	Logger.Printf("Init to %v, activeShards: %v\n", DevNetFullNode, activeShards)
 
 	common.MaxShardNumber = activeShards
 	if incClient.version == 1 {
@@ -150,7 +150,7 @@ func NewIncClient(fullNode, ethNode string, version int) (*IncClient, error) {
 		return nil, err
 	}
 
-	Logger.Log.Printf("Init to %v, activeShards: %v\n", fullNode, activeShards)
+	Logger.Printf("Init to %v, activeShards: %v\n", fullNode, activeShards)
 
 	common.MaxShardNumber = activeShards
 	if incClient.version == 1 {

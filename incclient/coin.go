@@ -175,7 +175,7 @@ func (client *IncClient) GetSpentOutputCoins(privateKey, tokenID string, height 
 		return nil, nil, err
 	}
 
-	Logger.Log.Printf("Len(OutputCoins) = %v\n", len(listOutputCoins))
+	Logger.Printf("Len(OutputCoins) = %v\n", len(listOutputCoins))
 
 	if len(listOutputCoins) == 0 {
 		return nil, nil, nil
@@ -201,7 +201,7 @@ func (client *IncClient) GetSpentOutputCoins(privateKey, tokenID string, height 
 		}
 	}
 
-	Logger.Log.Printf("Len(spentCoins) = %v\n", len(listSpentOutputCoins))
+	Logger.Printf("Len(spentCoins) = %v\n", len(listSpentOutputCoins))
 
 	return listSpentOutputCoins, listSpentIndices, nil
 }

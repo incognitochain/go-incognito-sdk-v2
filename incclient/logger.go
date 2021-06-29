@@ -12,6 +12,34 @@ type IncLogger struct {
 	IsEnable bool
 }
 
+// Printf overrides log.Printf.
+func (l IncLogger) Printf(format string, v ...interface{}) {
+	if l.IsEnable {
+		l.Log.Printf(format, v...)
+	}
+}
+
+// Println overrides log.Println.
+func (l IncLogger) Println(v ...interface{}) {
+	if l.IsEnable {
+		l.Log.Println(v...)
+	}
+}
+
+// Fatalf overrides log.Fatalf.
+func (l IncLogger) Fatalf(format string, v ...interface{}) {
+	if l.IsEnable {
+		l.Log.Fatalf(format, v...)
+	}
+}
+
+// Fatalln overrides log.Fatalln.
+func (l IncLogger) Fatalln(v ...interface{}) {
+	if l.IsEnable {
+		l.Log.Fatalln(v...)
+	}
+}
+
 // NewLogger creates a new IncLogger. If isEnable = true, it will do logging.
 // If logFile is set, it will store logging information into the given logFile.
 func NewLogger(isEnable bool, logFile ...string) *IncLogger {
@@ -32,4 +60,4 @@ func NewLogger(isEnable bool, logFile ...string) *IncLogger {
 	}
 }
 
-var Logger = NewLogger(false)
+var Logger = NewLogger(true)

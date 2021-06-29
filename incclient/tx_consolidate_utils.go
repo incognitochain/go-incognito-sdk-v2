@@ -38,13 +38,13 @@ func (client *IncClient) waitingCheckTxInBlock(txHash string) error {
 		isInBlock, err := client.CheckTxInBlock(txHash)
 		if err != nil {
 			if !strings.Contains(err.Error(), "-m") {
-				Logger.Log.Printf("CheckTxInBlock of %v error: %v\n", txHash, err)
+				Logger.Printf("CheckTxInBlock of %v error: %v\n", txHash, err)
 				return err
 			}
 		}
 
 		if isInBlock {
-			Logger.Log.Printf("Tx %v is in block\n", txHash)
+			Logger.Printf("Tx %v is in block\n", txHash)
 			return nil
 		}
 
