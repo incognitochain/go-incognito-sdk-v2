@@ -134,7 +134,7 @@ func NewDevNetClient() (*IncClient, error) {
 	} else if incClient.version == 2 {
 		common.AddressVersion = 1
 	}
-	
+
 	return &incClient, nil
 }
 
