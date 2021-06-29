@@ -1,5 +1,5 @@
 ---
-description: Tutorial on how to create an un-staking transaction.
+Description: Tutorial on how to create an un-staking transaction.
 ---
 # Ethereum Bridge
 The Incognito side-chain can be attached to any blockchain to conduct confidential asset transfer — this time, we consider Ethereum. The Incognito network runs parallel to main blockchains, allowing for secure two-way transfers of crypto assets whenever privacy is needed.

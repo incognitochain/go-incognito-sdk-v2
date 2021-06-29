@@ -1,5 +1,5 @@
 ---
-description: Tutorial on how to retrieve the history of an account.
+Description: Tutorial on how to retrieve the history of an account.
 ---
 Currently, thousands of transactions take place on the Incognito chain every day. A user might have done a few to thousands of transactions. Therefore, the need to retrieve the history of these transaction is inevitable. However, there is not a known method to extract an account's history for users who do not use the Incognito wallet. In this tutorial, we will show you how to perform this task with the go-sdk.
 

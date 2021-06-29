@@ -1,5 +1,5 @@
 ---
-description: Tutorial on how to create HD wallets.
+Description: Tutorial on how to create HD wallets.
 ---
 # HD Wallets
 A **hierarchical deterministic** (HD) wallet is a cryptocurrency wallet that generates all addresses from a single master seed phrase and automatically creates a hierarchical (tree-like) structure to govern your private keys.

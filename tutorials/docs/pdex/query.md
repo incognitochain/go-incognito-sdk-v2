@@ -1,5 +1,5 @@
 ---
-description: Tutorial on how to query the pDEX.
+Description: Tutorial on how to query the pDEX.
 ---
 
 The Incognito client supports the following functions:

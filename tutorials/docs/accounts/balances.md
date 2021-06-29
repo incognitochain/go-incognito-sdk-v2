@@ -1,5 +1,5 @@
 ---
-description: Tutorial on how to retrieve balances of an Incognito account.
+Description: Tutorial on how to retrieve balances of an Incognito account.
 ---
 
 ## Balances
