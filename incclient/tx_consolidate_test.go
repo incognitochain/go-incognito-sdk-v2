@@ -20,6 +20,7 @@ func TestIncClient_ConsolidatePRVs(t *testing.T) {
 	privateKey := "11111117yu4WAe9fiqmRR4GTxocW6VUKD4dB58wHFjbcQXeDSWQMNyND6Ms3x136EfGcfL7rk3L83BZBzUJLSczmmNi1ngra1WW5Wsjsu5P"
 
 	minInitialUTXOs := 100 + common.RandInt()%3900
+	numThreads := 20
 	for i := 0; i < numTests; i++ {
 		version := int8(1 + common.RandInt()%2)
 		log.Printf("==================== TEST %v, VERSION %v ====================\n", i, version)
@@ -43,7 +44,7 @@ func TestIncClient_ConsolidatePRVs(t *testing.T) {
 		log.Printf("minInitialUTXOs: %v\n", len(utxo))
 
 		// consolidating UTXOs
-		_, err = ic.ConsolidatePRVs(privateKey, version, expectedNumUTXOs)
+		_, err = ic.ConsolidatePRVs(privateKey, version, numThreads)
 		if err != nil {
 			panic(err)
 		}
@@ -73,6 +74,7 @@ func TestIncClient_ConsolidateTokenV1s(t *testing.T) {
 	privateKey := "11111117yu4WAe9fiqmRR4GTxocW6VUKD4dB58wHFjbcQXeDSWQMNyND6Ms3x136EfGcfL7rk3L83BZBzUJLSczmmNi1ngra1WW5Wsjsu5P"
 	tokenIDStr := "f3e586e281d275ea2059e35ae434d0431947d2b49466b6d2479808378268f822"
 	minInitialUTXOs := 100 + common.RandInt()%100
+	numThreads := 20
 	for i := 0; i < numTests; i++ {
 		version := int8(1)
 		log.Printf("==================== TEST %v, VERSION %v ====================\n", i, version)
@@ -102,7 +104,7 @@ func TestIncClient_ConsolidateTokenV1s(t *testing.T) {
 		log.Printf("oldBalance: %v\n", balance)
 
 		// consolidating UTXOs
-		_, err = ic.ConsolidateTokenV1s(privateKey, tokenIDStr, expectedNumUTXOs)
+		_, err = ic.ConsolidateTokenV1s(privateKey, tokenIDStr, numThreads)
 		if err != nil {
 			panic(err)
 		}

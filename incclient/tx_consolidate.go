@@ -8,13 +8,27 @@ import (
 	"time"
 )
 
-// ConsolidatePRVs consolidates the list of UTXOs of an account, with the given version into a smaller group
-// whose size is at most maxUTXOs.
-func (client *IncClient) ConsolidatePRVs(privateKey string, version int8, maxUTXOs int) ([]string, error) {
-	var txList []string
-	if maxUTXOs < 1 {
-		return txList, fmt.Errorf("maxUTXOs cannot be less than 1")
+const (
+	maxUTXOsAfterConsolidated = 10
+)
+
+// Consolidate consolidates the list of UTXOs of an account for the given tokenIDStr.
+// It uses a number of threads working simultaneously to boost up the consolidating speed.
+func (client *IncClient) Consolidate(privateKey, tokenIDStr string, version int8, numThreads int) ([]string, error) {
+	if tokenIDStr == common.PRVIDStr {
+		return client.ConsolidatePRVs(privateKey, version, numThreads)
 	}
+	if version == 1 {
+		return client.ConsolidateTokenV1s(privateKey, tokenIDStr, numThreads)
+	}
+
+	return nil, fmt.Errorf("consolidating tokens version 2 not supported")
+}
+
+// ConsolidatePRVs consolidates the list of UTXOs of an account, with the given version into a smaller group
+// whose size is at most 10.
+func (client *IncClient) ConsolidatePRVs(privateKey string, version int8, numThreads int) ([]string, error) {
+	var txList []string
 	if version > 2 || version < 1 {
 		return txList, fmt.Errorf("version %v not supported", version)
 	}
@@ -24,7 +38,7 @@ func (client *IncClient) ConsolidatePRVs(privateKey string, version int8, maxUTX
 		return txList, err
 	}
 
-	if len(utxoList) <= maxUTXOs {
+	if len(utxoList) <= maxUTXOsAfterConsolidated {
 		log.Printf("already consolidated\n")
 		return txList, nil
 	}
@@ -33,9 +47,9 @@ func (client *IncClient) ConsolidatePRVs(privateKey string, version int8, maxUTX
 	errCh := make(chan error)
 	txDoneCh := make(chan string)
 	txList = make([]string, 0)
-	for len(utxoList) > maxUTXOs {
+	for len(utxoList) > maxUTXOsAfterConsolidated {
 		log.Printf("#numUTXOs: %v\n", len(utxoList))
-		numWorker := 0
+		numWorkers := 0
 		for current := 0; current < len(utxoList); current += MaxInputSize {
 			next := current + MaxInputSize
 			if next > len(utxoList) {
@@ -50,15 +64,15 @@ func (client *IncClient) ConsolidatePRVs(privateKey string, version int8, maxUTX
 			if idxList != nil {
 				tmpIdxList = idxList[current:next]
 			}
-			go client.consolidatePRVs(numWorker, privateKey, tmpUTXOList, tmpIdxList, txDoneCh, errCh)
+			go client.consolidatePRVs(numWorkers, privateKey, tmpUTXOList, tmpIdxList, txDoneCh, errCh)
 
-			numWorker++
-			if numWorker >= 30 {
+			numWorkers++
+			if numWorkers >= numThreads {
 				break
 			}
 		}
 
-		log.Printf("numWorkers: %v\n", numWorker)
+		log.Printf("numWorkers: %v\n", numWorkers)
 
 		allDone := false
 		numErr := 0
@@ -76,14 +90,24 @@ func (client *IncClient) ConsolidatePRVs(privateKey string, version int8, maxUTX
 				log.Printf("Timeout!!!!\n")
 				return txList, fmt.Errorf("time-out")
 			default:
-				if numDone+numErr == numWorker {
-					log.Printf("All WORKERs FINISHED, numDone %v, numErr %v\n", numDone, numErr)
+				if numDone == numWorkers {
+					log.Printf("ALL SUCCEEDED\n")
 					allDone = true
-					time.Sleep(5 * time.Second)
 					break
 				}
+				if numErr == numWorkers {
+					log.Printf("ALL FAILED\n")
+					return txList, fmt.Errorf("all thread fails, please try again later")
+				}
+				if numDone+numErr == numWorkers {
+					log.Printf("All WORKERs FINISHED, numDone %v, numErr %v\n", numDone, numErr)
+					allDone = true
+					break
+				}
+				time.Sleep(5 * time.Second)
 			}
 			if allDone {
+				time.Sleep(5 * time.Second)
 				break
 			}
 		}
@@ -99,18 +123,15 @@ func (client *IncClient) ConsolidatePRVs(privateKey string, version int8, maxUTX
 
 // ConsolidateTokenV1s consolidates the list of UTXOs of an account, with the given version into a smaller group
 // whose size is at most maxUTXOs.
-func (client *IncClient) ConsolidateTokenV1s(privateKey, tokenIDStr string, maxUTXOs int) ([]string, error) {
+func (client *IncClient) ConsolidateTokenV1s(privateKey, tokenIDStr string, numThreads int) ([]string, error) {
 	var txList []string
-	if maxUTXOs < 1 {
-		return txList, fmt.Errorf("maxUTXOs cannot be less than 1")
-	}
 
 	utxoList, idxList, err := client.getUTXOsListByVersion(privateKey, tokenIDStr, 1)
 	if err != nil {
 		return txList, err
 	}
 
-	if len(utxoList) <= maxUTXOs {
+	if len(utxoList) <= maxUTXOsAfterConsolidated {
 		log.Printf("already consolidated\n")
 		return txList, nil
 	}
@@ -119,9 +140,9 @@ func (client *IncClient) ConsolidateTokenV1s(privateKey, tokenIDStr string, maxU
 	errCh := make(chan error)
 	txDoneCh := make(chan string)
 	txList = make([]string, 0)
-	for len(utxoList) > maxUTXOs {
+	for len(utxoList) > maxUTXOsAfterConsolidated {
 		log.Printf("#numUTXOs: %v\n", len(utxoList))
-		numWorker := 0
+		numWorkers := 0
 		for current := 0; current < len(utxoList); current += MaxInputSize {
 			next := current + MaxInputSize
 			if next > len(utxoList) {
@@ -136,16 +157,16 @@ func (client *IncClient) ConsolidateTokenV1s(privateKey, tokenIDStr string, maxU
 			if idxList != nil {
 				tmpIdxList = idxList[current:next]
 			}
-			go client.consolidateTokenV1s(numWorker, privateKey, tokenIDStr, tmpUTXOList, tmpIdxList, txDoneCh, errCh)
+			go client.consolidateTokenV1s(numWorkers, privateKey, tokenIDStr, tmpUTXOList, tmpIdxList, txDoneCh, errCh)
 
-			numWorker++
-			if numWorker >= 30 {
+			numWorkers++
+			if numWorkers >= numThreads {
 				break
 			}
 			time.Sleep(3 * time.Second)
 		}
 
-		log.Printf("numWorkers: %v\n", numWorker)
+		log.Printf("numWorkers: %v\n", numWorkers)
 
 		allDone := false
 		numErr := 0
@@ -163,14 +184,24 @@ func (client *IncClient) ConsolidateTokenV1s(privateKey, tokenIDStr string, maxU
 				log.Printf("Timeout!!!!\n")
 				return txList, fmt.Errorf("time-out")
 			default:
-				if numDone+numErr == numWorker {
-					log.Printf("All WORKERs FINISHED, numDone %v, numErr %v\n", numDone, numErr)
+				if numDone == numWorkers {
+					log.Printf("ALL SUCCEEDED\n")
 					allDone = true
-					time.Sleep(5 * time.Second)
 					break
 				}
+				if numErr == numWorkers {
+					log.Printf("ALL FAILED\n")
+					return txList, fmt.Errorf("all thread fails, please try again later")
+				}
+				if numDone+numErr == numWorkers {
+					log.Printf("All WORKERs FINISHED, numDone %v, numErr %v\n", numDone, numErr)
+					allDone = true
+					break
+				}
+				time.Sleep(5 * time.Second)
 			}
 			if allDone {
+				time.Sleep(5 * time.Second)
 				break
 			}
 		}
@@ -209,7 +240,7 @@ func (client *IncClient) consolidatePRVs(id int, privateKey string,
 		errCh <- fmt.Errorf("[ID %v] %v", id, err)
 		return
 	}
-
+	log.Printf("[ID %v] TxHash %v\n", id, txHash)
 	err = client.SendRawTx(encodedTx)
 	if err != nil {
 		errCh <- fmt.Errorf("[ID %v] %v", id, err)
@@ -261,7 +292,6 @@ func (client *IncClient) consolidateTokenV1s(id int, privateKey, tokenIDStr stri
 		errCh <- fmt.Errorf("[ID %v] %v", id, err)
 		return
 	}
-
 	log.Printf("[ID %v] TxHash %v\n", id, txHash)
 	err = client.SendRawTokenTx(encodedTx)
 	if err != nil {
