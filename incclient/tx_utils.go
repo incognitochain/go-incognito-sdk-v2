@@ -3,7 +3,6 @@ package incclient
 import (
 	"fmt"
 	"github.com/incognitochain/go-incognito-sdk-v2/transaction"
-	"log"
 	"math/big"
 	"sort"
 	"time"
@@ -22,7 +21,102 @@ import (
 	"github.com/incognitochain/go-incognito-sdk-v2/wallet"
 )
 
-var pageSize = 100
+const pageSize = 100
+
+type coinParams struct {
+	coinList []coin.PlainCoin
+	idxList  []uint64
+}
+
+func (cp coinParams) Bytes() []byte {
+	if cp.coinList == nil || len(cp.coinList) == 0 {
+		return nil
+	}
+	resBytes := make([]byte, 0)
+
+	// first byte is the number of coins
+	resBytes = append(resBytes, byte(len(cp.coinList)))
+	for _, c := range cp.coinList {
+		cBytes := c.Bytes()
+		resBytes = append(resBytes, byte(len(cBytes)))
+		resBytes = append(resBytes, cBytes...)
+	}
+
+	// next byte is the length of indices
+	resBytes = append(resBytes, byte(len(cp.idxList)))
+	for _, idx := range cp.idxList {
+		idxBytes := common.IntToBytes(int(idx))
+		resBytes = append(resBytes, byte(len(idxBytes)))
+		resBytes = append(resBytes, idxBytes...)
+	}
+
+	return resBytes
+}
+
+func (cp *coinParams) SetBytes(data []byte) error {
+	if len(data) == 0 {
+		return fmt.Errorf("length data is zero")
+	}
+
+	var err error
+	offSet := 0
+
+	// get num input coins
+	if offSet >= len(data) {
+		return fmt.Errorf("out of range  numInCoins")
+	}
+	numInCoins := int(data[offSet])
+	offSet++
+	cp.coinList = make([]coin.PlainCoin, numInCoins)
+	for i := 0; i < numInCoins; i++ {
+		if offSet >= len(data) {
+			return fmt.Errorf("out of range lenCoin")
+		}
+		lenCoin := int(data[offSet])
+		offSet++
+
+		if offSet+lenCoin > len(data) {
+			return fmt.Errorf("out of range input coins")
+		}
+		coinBytes := data[offSet : offSet+lenCoin]
+		cp.coinList[i], err = coin.NewPlainCoinFromByte(coinBytes)
+		if err != nil {
+			return fmt.Errorf("set byte to inputCoin got error")
+		}
+		offSet += lenCoin
+	}
+
+	if offSet >= len(data) {
+		return fmt.Errorf("out of range numIndices")
+	}
+	numIndices := int(data[offSet])
+	offSet++
+	if numIndices == 0 {
+		return nil
+	}
+
+	cp.idxList = make([]uint64, numIndices)
+	for i := 0; i < numIndices; i++ {
+		if offSet >= len(data) {
+			return fmt.Errorf("out of range lenIdx")
+		}
+		lenIdx := int(data[offSet])
+		offSet++
+
+		if offSet+lenIdx > len(data) {
+			return fmt.Errorf("out of range index")
+		}
+		idxBytes := data[offSet : offSet+lenIdx]
+		cp.idxList[i] = uint64(common.BytesToInt(idxBytes))
+		offSet += lenIdx
+	}
+
+	if len(cp.idxList) > 0 && len(cp.idxList) != len(cp.coinList) {
+		return fmt.Errorf("lengths of idxList and coinList mismatch: %v != %v", len(cp.idxList), len(cp.coinList))
+	}
+
+	return nil
+}
 
 // createPaymentInfos creates a list of key.PaymentInfo based on the provided address list and corresponding amount list.
 func createPaymentInfos(addrList []string, amountList []uint64) ([]*key.PaymentInfo, error) {
@@ -57,7 +151,11 @@ func chooseBestCoinsByAmount(coinList []coin.PlainCoin, requiredAmount uint64) (
 	}
 
 	if totalInputAmount == requiredAmount {
-		return coinList, nil, nil
+		chosenIndexList := make([]uint64, 0)
+		for i := 0; i < len(coinList); i++ {
+			chosenIndexList = append(chosenIndexList, uint64(i))
+		}
+		return coinList, chosenIndexList, nil
 	}
 
 	coinsToSpend := make([]coin.PlainCoin, 0)
@@ -173,6 +271,22 @@ func getListIdx(inCoins []coin.PlainCoin, allCoins []coin.PlainCoin, allIdx []*b
 	return res, nil
 }
 
+// getVersionFromInputCoins checks if all of the given input coins have the same version, and return the version.
+func getVersionFromInputCoins(inputCoins []coin.PlainCoin) (uint8, error) {
+	if len(inputCoins) == 0 {
+		return 0, fmt.Errorf("no coin to check")
+	}
+
+	version := inputCoins[0].GetVersion()
+	for i := 1; i < len(inputCoins); i++ {
+		if inputCoins[i].GetVersion() != version {
+			return 0, fmt.Errorf("expect input coin %v to have version %v, but got %v", i, version, inputCoins[i].GetVersion())
+		}
+	}
+
+	return version, nil
+}
+
 func (client *IncClient) getRandomCommitmentV1(inputCoins []coin.PlainCoin, tokenID string) (map[string]interface{}, error) {
 	if len(inputCoins) == 0 {
 		return nil, fmt.Errorf("no input coin to retrieve random commitments, tokenID: %v", tokenID)
@@ -180,6 +294,7 @@ func (client *IncClient) getRandomCommitmentV1(inputCoins []coin.PlainCoin, toke
 	outCoinList := make([]jsonresult.OutCoin, 0)
 	for _, inputCoin := range inputCoins {
 		outCoin := jsonresult.NewOutCoin(inputCoin)
+		outCoin.Conceal()
 		outCoinList = append(outCoinList, outCoin)
 	}
 
@@ -362,6 +477,146 @@ func (client *IncClient) initParams(privateKey string, tokenIDStr string, totalA
 	}
 }
 
+// initParamsV1 queries and chooses coins to spend + init random params v1.
+func (client *IncClient) initParamsV1(txParam *TxParam, tokenIDStr string, totalAmount uint64, hasPrivacy bool) ([]coin.PlainCoin, map[string]interface{}, error) {
+	_, err := new(common.Hash).NewHashFromStr(tokenIDStr)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	//Create sender private key from string
+	privateKey := txParam.senderPrivateKey
+
+	var coinsToSpend []coin.PlainCoin
+	if txParam.kArgs != nil { // in case we use provided input coins to init the transaction.
+		var ok bool
+		var cpInterface interface{}
+		if tokenIDStr == common.PRVIDStr {
+			cpInterface, ok = txParam.kArgs[prvInCoinKey]
+		} else {
+			cpInterface, ok = txParam.kArgs[tokenInCoinKey]
+		}
+
+		if ok {
+			cp, ok := cpInterface.(coinParams)
+			if ok {
+				v, _ := getVersionFromInputCoins(cp.coinList)
+				if v == 1 {
+					coinsToSpend = cp.coinList
+				}
+			}
+		}
+	}
+
+	if coinsToSpend == nil {
+		//Get list of UTXOs
+		utxoList, idxList, err := client.GetUnspentOutputCoinsFromCache(privateKey, tokenIDStr, 0)
+		if err != nil {
+			return nil, nil, err
+		}
+
+		//fmt.Printf("Finish getting UTXOs for %v of %v. Length of UTXOs: %v\n", totalAmount, tokenIDStr, len(utxoList))
+		coinV1List, _, _, err := divideCoins(utxoList, idxList, true)
+		if err != nil {
+			return nil, nil, fmt.Errorf("cannot divide coin: %v", err)
+		}
+
+		//Choose best coins for creating transactions
+		coinsToSpend, _, err = chooseBestCoinsByAmount(coinV1List, totalAmount)
+		if err != nil {
+			return nil, nil, err
+		}
+	}
+
+	var kvArgs = make(map[string]interface{})
+	if hasPrivacy {
+		//Retrieve commitments and indices
+		kvArgs, err = client.getRandomCommitmentV1(coinsToSpend, tokenIDStr)
+		if err != nil {
+			return nil, nil, err
+		}
+	}
+
+	return coinsToSpend, kvArgs, nil
+
+}
+
+// initParamsV2 queries and chooses coins to spend + init random params v2.
+func (client *IncClient) initParamsV2(txParam *TxParam, tokenIDStr string, totalAmount uint64) ([]coin.PlainCoin, map[string]interface{}, error) {
+	_, err := new(common.Hash).NewHashFromStr(tokenIDStr)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	//Create sender private key from string
+	privateKey := txParam.senderPrivateKey
+	senderWallet, err := wallet.Base58CheckDeserialize(privateKey)
+	if err != nil {
+		return nil, nil, fmt.Errorf("cannot init private key %v: %v", privateKey, err)
+	}
+
+	lastByteSender := senderWallet.KeySet.PaymentAddress.Pk[len(senderWallet.KeySet.PaymentAddress.Pk)-1]
+	shardID := common.GetShardIDFromLastByte(lastByteSender)
+
+	var coinsToSpend []coin.PlainCoin
+	var myIndices []uint64
+	if txParam.kArgs != nil { // in case we use provided input coins to init the transaction.
+		var ok bool
+		var cpInterface interface{}
+		if tokenIDStr == common.PRVIDStr {
+			cpInterface, ok = txParam.kArgs[prvInCoinKey]
+		} else {
+			cpInterface, ok = txParam.kArgs[tokenInCoinKey]
+		}
+
+		if ok {
+			cp, ok := cpInterface.(coinParams)
+			if ok {
+				v, _ := getVersionFromInputCoins(cp.coinList)
+				if v == 2 {
+					coinsToSpend = cp.coinList
+					myIndices = cp.idxList
+				}
+			}
+		}
+	} // in case we use provided input coins to init the transaction.
+
+	if coinsToSpend == nil {
+		//Get list of UTXOs
+		utxoList, idxList, err := client.GetUnspentOutputCoinsFromCache(privateKey, tokenIDStr, 0)
+		if err != nil {
+			return nil, nil, err
+		}
+
+		_, coinV2List, idxV2List, err := divideCoins(utxoList, idxList, true)
+		if err != nil {
+			return nil, nil, fmt.Errorf("cannot divide coin: %v", err)
+		}
+
+		var chosenIdxList []uint64
+		coinsToSpend, chosenIdxList, err = chooseBestCoinsByAmount(coinV2List, totalAmount)
+		if err != nil {
+			return nil, nil, err
+		}
+
+		myIndices = make([]uint64, 0)
+		for _, idx := range chosenIdxList {
+			myIndices = append(myIndices, idxV2List[idx])
+		}
+	}
+
+	//Retrieve commitments and indices
+	var kvArgs = make(map[string]interface{})
+	kvArgs, err = client.getRandomCommitmentV2(shardID, tokenIDStr, len(coinsToSpend)*(privacy.RingSize-1))
+	if err != nil {
+		return nil, nil, err
+	}
+	kvArgs[utils.MyIndices] = myIndices
+
+	return coinsToSpend, kvArgs, nil
+
+}
+
 // GetTokenFee returns the token fee per kb.
 func (client *IncClient) GetTokenFee(shardID byte, tokenIDStr string) (uint64, error) {
 	if tokenIDStr == common.PRVIDStr {
@@ -425,19 +680,19 @@ func (client *IncClient) GetTxs(txHashList []string) (map[string]metadata.Transa
 	for txHash, encodedTx := range mapRes {
 		txBytes, _, err := base58.Base58Check{}.Decode(encodedTx)
 		if err != nil {
-			log.Printf("base58-decode failed: %v\n", string(txBytes))
+			Logger.Printf("base58-decode failed: %v\n", string(txBytes))
 			return nil, err
 		}
 
 		txChoice, err := transaction.DeserializeTransactionJSON(txBytes)
 		if err != nil {
-			log.Printf("unMarshal failed: %v\n", string(txBytes))
+			Logger.Printf("unMarshal failed: %v\n", string(txBytes))
 			return nil, err
 		}
 		tx := txChoice.ToTx()
 
 		if tx.Hash().String() != txHash {
-			log.Printf("txParseFail: %v\n", string(txBytes))
+			Logger.Printf("txParseFail: %v\n", string(txBytes))
 			return nil, fmt.Errorf("txHash changes after unmarshalling, expect %v, got %v", txHash, tx.Hash().String())
 		}
 		res[txHash] = tx
@@ -489,7 +744,7 @@ func (client *IncClient) GetTransactionsByReceiver(paymentAddress string) (map[s
 		res[txHash] = tx
 		count += 1
 		if count%5 == 0 {
-			log.Printf("count %v, timeElapsed: %v\n", count, time.Since(start).Seconds())
+			Logger.Printf("count %v, timeElapsed: %v\n", count, time.Since(start).Seconds())
 		}
 	}
 

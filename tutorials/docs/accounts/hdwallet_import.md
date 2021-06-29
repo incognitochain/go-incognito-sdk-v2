@@ -1,5 +1,5 @@
 ---
-description: Tutorial on how to restore accounts from a mnemonic string.
+Description: Tutorial on how to restore accounts from a mnemonic string.
 ---
 # Restore Accounts from a Mnemonic String
 Suppose that you have created your accounts from somewhere else (e.g., Incognito Wallet) and you want to restore all of them using this `go-sdk`. This time, we use the function [`ImportAccount`](../../../incclient/account.go) in the [`incclient`](../../../incclient) package.

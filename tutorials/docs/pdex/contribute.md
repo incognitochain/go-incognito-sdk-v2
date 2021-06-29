@@ -1,5 +1,5 @@
 ---
-description: Tutorial on how to add pairs to the pDEX.
+Description: Tutorial on how to add pairs to the pDEX.
 ---
 # pDEX Contribution
 Liquidity providers play an essential role in pDEX. They provide liquidity to various pools on pDEX and earn trading fees. The current pDEX consists of several pairs of tokens that helps accelerate trading activities. The more liquidity in the pDEX, the better experience the trading process gets. For a pair with high liquidity, the slippage rate will be small. On the other hand, trading with low-liquidity pair will result in a high slippage rate.

@@ -1,5 +1,5 @@
 ---
-description: Tutorial on how to create an un-staking transaction.
+Description: Tutorial on how to create an un-staking transaction.
 ---
 # Node UnStaking
 To un-stake a node, call the [`CreateAndSendUnStakingTransaction`](../../../incclient/staking.go) function with our private key, mining private key, and the candidate address.

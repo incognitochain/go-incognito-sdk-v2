@@ -1,5 +1,5 @@
 ---
-description: Tutorial on how to retrieve output coins V1.
+Description: Tutorial on how to retrieve output coins V1.
 ---
 
 # Retrieve Output Coins

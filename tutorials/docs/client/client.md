@@ -1,5 +1,5 @@
 ---
-description: Tutorial on how to set up a client to connect to Incognito with Go.
+Description: Tutorial on how to set up a client to connect to Incognito with Go.
 ---
 
 ## Setting up the Client

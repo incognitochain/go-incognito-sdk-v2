@@ -1,5 +1,5 @@
 ---
-description: Tutorial on how to monitor a validator node.
+Description: Tutorial on how to monitor a validator node.
 ---
 # Node Monitoring
 Beside the official [tool](https://monitor.incognito.org/node-monitor), node owners can use this go-sdk to monitor their nodes, collect statistics

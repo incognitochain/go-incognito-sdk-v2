@@ -1,5 +1,5 @@
 ---
-description: Tutorial on how to withdraw pairs from pDEX.
+Description: Tutorial on how to withdraw pairs from pDEX.
 ---
 # pDEX Withdrawal
 Liquidity providers can withdraw their contributions at any time they want. The Client implements a transaction [`CreateAndSendPDEWithdrawalTransaction`](../../../incclient/pdex.go) to facilitate this operation.

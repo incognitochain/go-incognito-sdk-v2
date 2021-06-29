@@ -39,3 +39,11 @@ const (
 	DevNetETHHost               = "https://kovan.infura.io/v3/93fe721349134964aa71071a713c5cef"
 	DevNetPrivacyVersion        = 2
 )
+
+const (
+	DefaultPRVFee  = uint64(100)
+	MaxInputSize   = 30
+	MaxOutputSize  = 30
+	prvInCoinKey   = "PRVInputCoins"
+	tokenInCoinKey = "TokenInputCoins"
+)

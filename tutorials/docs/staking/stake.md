@@ -1,5 +1,5 @@
 ---
-description: Tutorial on how to create a staking transaction.
+Description: Tutorial on how to create a staking transaction.
 ---
 # Node Staking
 A validator is someone who is responsible for verifying transactions on the Incognito network. Once transactions are verified, they are added to the database of each validator. The present of validators helps secure the network by participating in the consensus decisions. Incognito proposes and implements a variant of [pBFT](http://pmg.csail.mit.edu/papers/osdi99.pdf) at the consensus layer. We further improve its efficiency by employing the BLS-based aggregate multi-signature scheme [AMSP](https://eprint.iacr.org/2018/483.pdf). 
