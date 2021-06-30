@@ -18,14 +18,15 @@ func TestIncClient_ConsolidatePRVs(t *testing.T) {
 
 	masterPrivateKey := "112t8roafGgHL1rhAP9632Yef3sx5k8xgp8cwK4MCJsCL1UWcxXvpzg97N4dwvcD735iKf31Q2ZgrAvKfVjeSUEvnzKJyyJD3GqqSZdxN4or"
 	privateKey := "11111117yu4WAe9fiqmRR4GTxocW6VUKD4dB58wHFjbcQXeDSWQMNyND6Ms3x136EfGcfL7rk3L83BZBzUJLSczmmNi1ngra1WW5Wsjsu5P"
-
-	minInitialUTXOs := 100 + common.RandInt()%3900
+	MaxUTXO := 200
+	minInitialUTXOs := 100 + common.RandInt()% (MaxUTXO - 100)
 	numThreads := 20
 	for i := 0; i < numTests; i++ {
-		version := int8(1 + common.RandInt()%2)
-		log.Printf("==================== TEST %v, VERSION %v ====================\n", i, version)
+		//version := int8(1 + common.RandInt()%2)
+		version := int8(2)
+		Logger.Printf("==================== TEST %v, VERSION %v ====================\n", i, version)
 		expectedNumUTXOs := 1 + common.RandInt()%29
-		log.Printf("ExpectedNumUTXOs: %v, minInitial: %v\n", expectedNumUTXOs, minInitialUTXOs)
+		Logger.Printf("ExpectedNumUTXOs: %v, minInitial: %v\n", expectedNumUTXOs, minInitialUTXOs)
 
 		// preparing UTXOs
 		err = prepareUTXOs(masterPrivateKey, privateKey, common.PRVIDStr, minInitialUTXOs, version)
@@ -41,7 +42,13 @@ func TestIncClient_ConsolidatePRVs(t *testing.T) {
 		if len(utxo) < minInitialUTXOs {
 			panic(fmt.Sprintf("require at least %v UTXOs, got %v", minInitialUTXOs, len(utxo)))
 		}
-		log.Printf("minInitialUTXOs: %v\n", len(utxo))
+		Logger.Printf("minInitialUTXOs: %v\n", len(utxo))
+
+		balance, err := getBalanceByVersion(privateKey, common.PRVIDStr, uint8(version))
+		if err != nil {
+			panic(err)
+		}
+		Logger.Printf("oldBalance: %v\n", balance)
 
 		// consolidating UTXOs
 		_, err = ic.ConsolidatePRVs(privateKey, version, numThreads)
@@ -56,10 +63,15 @@ func TestIncClient_ConsolidatePRVs(t *testing.T) {
 		if len(utxo) > expectedNumUTXOs {
 			panic(fmt.Sprintf("require at most %v UTXOs, got %v", expectedNumUTXOs, len(utxo)))
 		}
-		log.Printf("numUTXOs: %v\n", len(utxo))
+		Logger.Printf("numUTXOs: %v\n", len(utxo))
+		balance, err = getBalanceByVersion(privateKey, common.PRVIDStr, uint8(version))
+		if err != nil {
+			panic(err)
+		}
+		Logger.Printf("newBalance: %v\n", balance)
 
-		minInitialUTXOs = 100 + common.RandInt()%3900
-		log.Printf("==================== FINISHED TEST %v ====================\n\n", i)
+		minInitialUTXOs = 100 + common.RandInt()% (MaxUTXO - 100)
+		Logger.Printf("==================== FINISHED TEST %v ====================\n\n", i)
 	}
 }
 
@@ -73,13 +85,14 @@ func TestIncClient_ConsolidateTokenV1s(t *testing.T) {
 	masterPrivateKey := "112t8roafGgHL1rhAP9632Yef3sx5k8xgp8cwK4MCJsCL1UWcxXvpzg97N4dwvcD735iKf31Q2ZgrAvKfVjeSUEvnzKJyyJD3GqqSZdxN4or"
 	privateKey := "11111117yu4WAe9fiqmRR4GTxocW6VUKD4dB58wHFjbcQXeDSWQMNyND6Ms3x136EfGcfL7rk3L83BZBzUJLSczmmNi1ngra1WW5Wsjsu5P"
 	tokenIDStr := "f3e586e281d275ea2059e35ae434d0431947d2b49466b6d2479808378268f822"
-	minInitialUTXOs := 100 + common.RandInt()%100
+	MaxUTXO := 200
+	minInitialUTXOs := 100 + common.RandInt()% (MaxUTXO - 100)
 	numThreads := 20
 	for i := 0; i < numTests; i++ {
 		version := int8(1)
-		log.Printf("==================== TEST %v, VERSION %v ====================\n", i, version)
+		Logger.Printf("==================== TEST %v, VERSION %v ====================\n", i, version)
 		expectedNumUTXOs := 1 + common.RandInt()%29
-		log.Printf("ExpectedNumUTXOs: %v, minInitial: %v\n", expectedNumUTXOs, minInitialUTXOs)
+		Logger.Printf("ExpectedNumUTXOs: %v, minInitial: %v\n", expectedNumUTXOs, minInitialUTXOs)
 
 		// preparing UTXOs
 		err = prepareUTXOs(masterPrivateKey, privateKey, tokenIDStr, minInitialUTXOs, version)
@@ -95,13 +108,13 @@ func TestIncClient_ConsolidateTokenV1s(t *testing.T) {
 		if len(utxo) < minInitialUTXOs {
 			panic(fmt.Sprintf("require at least %v UTXOs, got %v", minInitialUTXOs, len(utxo)))
 		}
-		log.Printf("minInitialUTXOs: %v\n", len(utxo))
+		Logger.Printf("minInitialUTXOs: %v\n", len(utxo))
 
 		balance, err := getBalanceByVersion(privateKey, tokenIDStr, uint8(version))
 		if err != nil {
 			panic(err)
 		}
-		log.Printf("oldBalance: %v\n", balance)
+		Logger.Printf("oldBalance: %v\n", balance)
 
 		// consolidating UTXOs
 		_, err = ic.ConsolidateTokenV1s(privateKey, tokenIDStr, numThreads)
@@ -116,16 +129,85 @@ func TestIncClient_ConsolidateTokenV1s(t *testing.T) {
 		if len(utxo) > expectedNumUTXOs {
 			panic(fmt.Sprintf("require at most %v UTXOs, got %v", expectedNumUTXOs, len(utxo)))
 		}
-		log.Printf("numUTXOs: %v\n", len(utxo))
+		Logger.Printf("numUTXOs: %v\n", len(utxo))
 
 		balance, err = getBalanceByVersion(privateKey, tokenIDStr, uint8(version))
 		if err != nil {
 			panic(err)
 		}
-		log.Printf("newBalance: %v\n", balance)
+		Logger.Printf("newBalance: %v\n", balance)
 
-		minInitialUTXOs = 100 + common.RandInt()%3900
-		log.Printf("==================== FINISHED TEST %v ====================\n\n", i)
+		minInitialUTXOs = 100 + common.RandInt()% (MaxUTXO - 100)
+		Logger.Printf("==================== FINISHED TEST %v ====================\n\n", i)
+	}
+}
+
+func TestIncClient_ConsolidateTokenV2s(t *testing.T) {
+	var err error
+	ic, err = NewLocalClient("")
+	if err != nil {
+		panic(err)
+	}
+
+	//masterPrivateKey := "112t8roafGgHL1rhAP9632Yef3sx5k8xgp8cwK4MCJsCL1UWcxXvpzg97N4dwvcD735iKf31Q2ZgrAvKfVjeSUEvnzKJyyJD3GqqSZdxN4or"
+	privateKey := "11111117yu4WAe9fiqmRR4GTxocW6VUKD4dB58wHFjbcQXeDSWQMNyND6Ms3x136EfGcfL7rk3L83BZBzUJLSczmmNi1ngra1WW5Wsjsu5P"
+	tokenIDStr := "f3e586e281d275ea2059e35ae434d0431947d2b49466b6d2479808378268f822"
+	MaxUTXO := 200
+	minInitialUTXOs := 100 + common.RandInt()% (MaxUTXO - 100)
+	numThreads := 20
+	for i := 0; i < numTests; i++ {
+		version := int8(2)
+		Logger.Printf("==================== TEST %v, VERSION %v ====================\n", i, version)
+		Logger.Printf("ExpectedNumUTXOs: %v, minInitial: %v\n", maxUTXOsAfterConsolidated, minInitialUTXOs)
+
+		//// preparing UTXOs
+		//err = prepareUTXOs(masterPrivateKey, privateKey, tokenIDStr, minInitialUTXOs, version)
+		//if err != nil {
+		//	panic(err)
+		//}
+
+		// checking UTXOs
+		utxo, _, err := ic.getUTXOsListByVersion(privateKey, tokenIDStr, uint8(version))
+		if err != nil {
+			panic(err)
+		}
+		if len(utxo) < minInitialUTXOs {
+			panic(fmt.Sprintf("require at least %v UTXOs, got %v", minInitialUTXOs, len(utxo)))
+		}
+		Logger.Printf("minInitialUTXOs: %v\n", len(utxo))
+
+		balance, err := getBalanceByVersion(privateKey, tokenIDStr, uint8(version))
+		if err != nil {
+			panic(err)
+		}
+		Logger.Printf("oldBalance: %v\n", balance)
+
+		// consolidating UTXOs
+		_, err = ic.ConsolidateTokenV2s(privateKey, tokenIDStr, numThreads)
+		if err != nil {
+			panic(err)
+		}
+
+		utxo, _, err = ic.getUTXOsListByVersion(privateKey, tokenIDStr, uint8(version))
+		if err != nil {
+			panic(err)
+		}
+		if len(utxo) > maxUTXOsAfterConsolidated {
+			panic(fmt.Sprintf("require at most %v UTXOs, got %v", maxUTXOsAfterConsolidated, len(utxo)))
+		}
+		Logger.Printf("numUTXOs: %v\n", len(utxo))
+
+		newBalance, err := getBalanceByVersion(privateKey, tokenIDStr, uint8(version))
+		if err != nil {
+			panic(err)
+		}
+		Logger.Printf("newBalance: %v\n", newBalance)
+		if newBalance != balance {
+			panic(fmt.Errorf("expect newBalance to be %v, got %v", balance, newBalance))
+		}
+
+		minInitialUTXOs = 100 + common.RandInt()% (MaxUTXO - 100)
+		Logger.Printf("==================== FINISHED TEST %v ====================\n\n", i)
 	}
 }
 
@@ -161,10 +243,10 @@ func prepareUTXOs(senderPrivateKey, receiverPrivateKey, tokenIDStr string, numUT
 	}
 
 	for len(utxo) < numUTXOs {
-		log.Printf("\n\ninitialNumUTXOs: %v\n", len(utxo))
-		log.Printf("Sending funds to tmp accounts...\n")
+		Logger.Printf("\n\ninitialNumUTXOs: %v\n", len(utxo))
+		Logger.Printf("Sending funds to tmp accounts...\n")
 		amountForEach := common.RandUint64() % 10000
-		log.Printf("Amount for each: %v\n", amountForEach)
+		Logger.Printf("Amount for each: %v\n", amountForEach)
 		tmpAmountList := make([]uint64, 0)
 		amountList := make([]uint64, 0)
 		feeAmountList := make([]uint64, 0)
@@ -182,7 +264,7 @@ func prepareUTXOs(senderPrivateKey, receiverPrivateKey, tokenIDStr string, numUT
 		if err != nil {
 			return err
 		}
-		log.Printf("txHash %v\n", txHash)
+		Logger.Printf("txHash %v\n", txHash)
 		err = waitingCheckTxInBlock(txHash)
 		if err != nil {
 			return err
@@ -196,7 +278,7 @@ func prepareUTXOs(senderPrivateKey, receiverPrivateKey, tokenIDStr string, numUT
 			}
 			if len(utxo) != 0 {
 				numPassed++
-				log.Printf("numPasssed %v\n", numPassed)
+				Logger.Printf("numPassed %v\n", numPassed)
 			} else {
 				time.Sleep(5 * time.Second)
 			}
@@ -206,7 +288,7 @@ func prepareUTXOs(senderPrivateKey, receiverPrivateKey, tokenIDStr string, numUT
 		if err != nil {
 			return err
 		}
-		log.Printf("txHash %v\n", txHash)
+		Logger.Printf("txHash for sending PRV fees %v\n", txHash)
 		err = waitingCheckTxInBlock(txHash)
 		if err != nil {
 			return err
@@ -214,13 +296,13 @@ func prepareUTXOs(senderPrivateKey, receiverPrivateKey, tokenIDStr string, numUT
 		numPassed = 0
 		for numPassed < 5 {
 			r := common.RandInt() % MaxOutputSize
-			utxo, _, err := ic.getUTXOsListByVersion(tmpPrivateKeys[r], tokenIDStr, uint8(version))
+			utxo, _, err := ic.getUTXOsListByVersion(tmpPrivateKeys[r], common.PRVIDStr, uint8(version))
 			if err != nil {
 				return err
 			}
 			if len(utxo) != 0 {
 				numPassed++
-				log.Printf("numPasssed %v\n", numPassed)
+				Logger.Printf("numPassed %v\n", numPassed)
 			} else {
 				time.Sleep(5 * time.Second)
 			}
@@ -242,18 +324,18 @@ func prepareUTXOs(senderPrivateKey, receiverPrivateKey, tokenIDStr string, numUT
 				numErr++
 			case txHash = <-doneCh:
 				numDone++
-				log.Printf("TxHash %v DONE, numDone %v, numErr %v\n", txHash, numDone, numErr)
+				Logger.Printf("TxHash %v DONE, numDone %v, numErr %v\n", txHash, numDone, numErr)
 			default:
 				if numErr == MaxOutputSize {
 					return fmt.Errorf("ALL FAILED")
 				}
 				if numDone == MaxOutputSize {
-					log.Printf("ALL SUCCESS\n")
+					Logger.Printf("ALL SUCCESS\n")
 					allDone = true
 					break
 				}
 				if numDone+numErr == MaxOutputSize {
-					log.Printf("ALL FINISHED!!! numDone %v, numErr %v\n", numDone, numErr)
+					Logger.Printf("ALL FINISHED!!! numDone %v, numErr %v\n", numDone, numErr)
 					allDone = true
 					break
 				}
@@ -279,7 +361,7 @@ func send(id int, privateKey, tokenIDStr string, addrList []string, amountList [
 	var txHash string
 	var err error
 
-	log.Printf("[ID %v] version %v\n", id, version)
+	Logger.Printf("[ID %v] version %v\n", id, version)
 
 	if tokenIDStr == common.PRVIDStr {
 		txHash, err = ic.CreateAndSendRawTransaction(privateKey, addrList, amountList, version, nil)
@@ -290,7 +372,7 @@ func send(id int, privateKey, tokenIDStr string, addrList []string, amountList [
 		errCh <- fmt.Errorf("[ID %v] %v", id, err)
 		return
 	}
-	log.Printf("[ID %v] TxHash %v\n", id, txHash)
+	Logger.Printf("[ID %v] TxHash %v\n", id, txHash)
 	err = waitingCheckTxInBlock(txHash)
 	if err != nil {
 		errCh <- fmt.Errorf("[ID %v] %v", id, err)

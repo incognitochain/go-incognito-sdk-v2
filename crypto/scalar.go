@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"math/big"
 
-	C25519 "github.com/incognitochain/incognito-chain/privacy/curve25519"
+	C25519 "github.com/incognitochain/go-incognito-sdk-v2/crypto/curve25519"
 )
 
 // Scalar represents a scalar of an elliptic curve.

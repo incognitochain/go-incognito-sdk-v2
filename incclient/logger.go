@@ -52,7 +52,7 @@ func NewLogger(isEnable bool, logFile ...string) *IncLogger {
 			os.Exit(1)
 		}
 	}
-	Log := log.New(writer, "", log.Ldate|log.Ltime|log.Lshortfile)
+	Log := log.New(writer, "", log.Ldate|log.Ltime)
 
 	return &IncLogger{
 		Log:      Log,
