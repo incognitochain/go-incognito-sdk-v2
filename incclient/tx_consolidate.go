@@ -49,7 +49,7 @@ func (client *IncClient) ConsolidatePRVs(privateKey string, version int8, numThr
 	txList = make([]string, 0)
 	for len(utxoList) > maxUTXOsAfterConsolidated {
 		Logger.Printf("#numUTXOs: %v\n", len(utxoList))
-		numWorkers := 0
+		numWORKERS := 0
 		for current := 0; current < len(utxoList); current += MaxInputSize {
 			next := current + MaxInputSize
 			if next > len(utxoList) {
@@ -64,15 +64,15 @@ func (client *IncClient) ConsolidatePRVs(privateKey string, version int8, numThr
 			if idxList != nil {
 				tmpIdxList = idxList[current:next]
 			}
-			go client.consolidatePRVs(numWorkers, privateKey, tmpUTXOList, tmpIdxList, txDoneCh, errCh)
+			go client.consolidatePRVs(numWORKERS, privateKey, tmpUTXOList, tmpIdxList, txDoneCh, errCh)
 
-			numWorkers++
-			if numWorkers >= numThreads {
+			numWORKERS++
+			if numWORKERS >= numThreads {
 				break
 			}
 		}
 
-		Logger.Printf("numWorkers: %v\n", numWorkers)
+		Logger.Printf("numWORKERS: %v\n", numWORKERS)
 
 		allDone := false
 		numErr := 0
@@ -90,17 +90,17 @@ func (client *IncClient) ConsolidatePRVs(privateKey string, version int8, numThr
 				Logger.Printf("Timeout!!!!\n")
 				return txList, fmt.Errorf("time-out")
 			default:
-				if numDone == numWorkers {
+				if numDone == numWORKERS {
 					Logger.Printf("ALL SUCCEEDED\n")
 					allDone = true
 					break
 				}
-				if numErr == numWorkers {
+				if numErr == numWORKERS {
 					Logger.Printf("ALL FAILED\n")
 					return txList, fmt.Errorf("all thread fails, please try again later")
 				}
-				if numDone+numErr == numWorkers {
-					Logger.Printf("All WORKERs FINISHED, numDone %v, numErr %v\n", numDone, numErr)
+				if numDone+numErr == numWORKERS {
+					Logger.Printf("All WORKERS FINISHED, numDone %v, numErr %v\n", numDone, numErr)
 					allDone = true
 					break
 				}
@@ -142,7 +142,7 @@ func (client *IncClient) ConsolidateTokenV1s(privateKey, tokenIDStr string, numT
 	txList = make([]string, 0)
 	for len(utxoList) > maxUTXOsAfterConsolidated {
 		Logger.Printf("#numUTXOs: %v\n", len(utxoList))
-		numWorkers := 0
+		numWORKERS := 0
 		for current := 0; current < len(utxoList); current += MaxInputSize {
 			next := current + MaxInputSize
 			if next > len(utxoList) {
@@ -157,16 +157,16 @@ func (client *IncClient) ConsolidateTokenV1s(privateKey, tokenIDStr string, numT
 			if idxList != nil {
 				tmpIdxList = idxList[current:next]
 			}
-			go client.consolidateTokenV1s(numWorkers, privateKey, tokenIDStr, tmpUTXOList, tmpIdxList, txDoneCh, errCh)
+			go client.consolidateTokenV1s(numWORKERS, privateKey, tokenIDStr, tmpUTXOList, tmpIdxList, txDoneCh, errCh)
 
-			numWorkers++
-			if numWorkers >= numThreads {
+			numWORKERS++
+			if numWORKERS >= numThreads {
 				break
 			}
 			time.Sleep(3 * time.Second)
 		}
 
-		Logger.Printf("numWorkers: %v\n", numWorkers)
+		Logger.Printf("numWORKERS: %v\n", numWORKERS)
 
 		allDone := false
 		numErr := 0
@@ -184,17 +184,17 @@ func (client *IncClient) ConsolidateTokenV1s(privateKey, tokenIDStr string, numT
 				Logger.Printf("Timeout!!!!\n")
 				return txList, fmt.Errorf("time-out")
 			default:
-				if numDone == numWorkers {
+				if numDone == numWORKERS {
 					Logger.Printf("ALL SUCCEEDED\n")
 					allDone = true
 					break
 				}
-				if numErr == numWorkers {
+				if numErr == numWORKERS {
 					Logger.Printf("ALL FAILED\n")
 					return txList, fmt.Errorf("all thread fails, please try again later")
 				}
-				if numDone+numErr == numWorkers {
-					Logger.Printf("All WORKERs FINISHED, numDone %v, numErr %v\n", numDone, numErr)
+				if numDone+numErr == numWORKERS {
+					Logger.Printf("All WORKERS FINISHED, numDone %v, numErr %v\n", numDone, numErr)
 					allDone = true
 					break
 				}
@@ -249,7 +249,7 @@ func (client *IncClient) ConsolidateTokenV2s(privateKey, tokenIDStr string, numT
 		}
 
 		currentPRVIdx := 0
-		numWorkers := 0
+		numWORKERS := 0
 		for current := 0; current < len(utxoList); current += MaxInputSize {
 			next := current + MaxInputSize
 			if next > len(utxoList) {
@@ -279,20 +279,20 @@ func (client *IncClient) ConsolidateTokenV2s(privateKey, tokenIDStr string, numT
 				return txList, fmt.Errorf("cannot get PRV UTXO to payfee for index %v", current)
 			}
 
-			Logger.Printf("[ID %v] PRV idx: %v, pubKey: %v\n", numWorkers, tmpPRVIdx[0],
+			Logger.Printf("[ID %v] PRV idx: %v, pubKey: %v\n", numWORKERS, tmpPRVIdx[0],
 				base58.Base58Check{}.Encode(tmpPRV[0].GetPublicKey().ToBytesS(), 0x00))
 
-			go client.consolidateTokenV2s(numWorkers, privateKey, tokenIDStr,
+			go client.consolidateTokenV2s(numWORKERS, privateKey, tokenIDStr,
 				tmpUTXOList, tmpIdxList, tmpPRV, tmpPRVIdx, txDoneCh, errCh)
 
-			numWorkers++
-			if numWorkers >= numThreads {
+			numWORKERS++
+			if numWORKERS >= numThreads {
 				break
 			}
 			time.Sleep(3 * time.Second)
 		}
 
-		Logger.Printf("numWorkers: %v\n", numWorkers)
+		Logger.Printf("numWORKERS: %v\n", numWORKERS)
 
 		allDone := false
 		numErr := 0
@@ -310,17 +310,17 @@ func (client *IncClient) ConsolidateTokenV2s(privateKey, tokenIDStr string, numT
 				Logger.Printf("Timeout!!!!\n")
 				return txList, fmt.Errorf("time-out")
 			default:
-				if numDone == numWorkers {
+				if numDone == numWORKERS {
 					Logger.Printf("ALL SUCCEEDED\n")
 					allDone = true
 					break
 				}
-				if numErr == numWorkers {
+				if numErr == numWORKERS {
 					Logger.Printf("ALL FAILED\n")
 					return txList, fmt.Errorf("all thread fails, please try again later")
 				}
-				if numDone+numErr == numWorkers {
-					Logger.Printf("All WORKERs FINISHED, numDone %v, numErr %v\n", numDone, numErr)
+				if numDone+numErr == numWORKERS {
+					Logger.Printf("All WORKERS FINISHED, numDone %v, numErr %v\n", numDone, numErr)
 					allDone = true
 					break
 				}
