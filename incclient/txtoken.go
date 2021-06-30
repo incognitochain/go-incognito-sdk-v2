@@ -223,6 +223,7 @@ func (client *IncClient) CreateRawTokenTransactionVer2(txParam *TxParam) ([]byte
 	//Init PRV fee param
 	coinsToSpendPRV, kvArgsPRV, err := client.initParamsV2(txParam, common.PRVIDStr, totalPRVAmount)
 	if err != nil {
+		Logger.Printf("init PRVParamsV2 error: %v\n", err)
 		return nil, "", err
 	}
 	//End init PRV fee param
@@ -230,6 +231,7 @@ func (client *IncClient) CreateRawTokenTransactionVer2(txParam *TxParam) ([]byte
 	//Init token param
 	coinsTokenToSpend, kvArgsToken, err := client.initParamsV2(txParam, tokenIDStr, totalAmount)
 	if err != nil {
+		Logger.Printf("init TokenParamsV2 error: %v\n", err)
 		return nil, "", err
 	}
 	//End init token param
