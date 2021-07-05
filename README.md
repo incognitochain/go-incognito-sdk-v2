@@ -9,7 +9,7 @@ go get github.com/incognitochain/go-incognito-sdk-v2
 ```
 
 ## Dependencies
-* `go-ethereum`: version 1.9 
+* `go-ethereum`: version 1.9.12
 
 ## Import
 ```go
