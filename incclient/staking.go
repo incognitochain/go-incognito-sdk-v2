@@ -134,18 +134,31 @@ func (client *IncClient) CreateAndSendUnStakingTransaction(privateKey, privateSe
 }
 
 // CreateWithDrawRewardTransaction creates a raw reward-withdrawing transaction.
-func (client *IncClient) CreateWithDrawRewardTransaction(privateKey, addr, tokenIDStr string) ([]byte, string, error) {
+func (client *IncClient) CreateWithDrawRewardTransaction(privateKey, addr, tokenIDStr string, version int8) ([]byte, string, error) {
+	if version != 1 && version != 2 {
+		return nil, "", fmt.Errorf("only support version 1 or 2")
+	}
+
 	senderWallet, err := wallet.Base58CheckDeserialize(privateKey)
 	if err != nil {
+		Logger.Printf("%v\n", err)
 		return nil, "", err
 	}
 
 	funderAddr := senderWallet.Base58CheckSerialize(wallet.PaymentAddressType)
-
 	if len(addr) == 0 {
 		addr = funderAddr
 	}
+	if version == 1 {
+		addr, err = wallet.GetPaymentAddressV1(addr, false)
+		if err != nil {
+			Logger.Printf("%v\n", err)
+			return nil, "", err
+		}
+	}
+
 	if len(tokenIDStr) == 0 {
+		Logger.Printf("No tokenID provided, using the default PRV\n")
 		tokenIDStr = common.PRVIDStr
 	}
 
@@ -157,8 +170,8 @@ func (client *IncClient) CreateWithDrawRewardTransaction(privateKey, addr, token
 }
 
 // CreateAndSendWithDrawRewardTransaction creates a raw reward-withdrawing transaction and broadcasts it to the blockchain.
-func (client *IncClient) CreateAndSendWithDrawRewardTransaction(privateKey, addr, tokenIDStr string) (string, error) {
-	encodedTx, txHash, err := client.CreateWithDrawRewardTransaction(privateKey, addr, tokenIDStr)
+func (client *IncClient) CreateAndSendWithDrawRewardTransaction(privateKey, addr, tokenIDStr string, version int8) (string, error) {
+	encodedTx, txHash, err := client.CreateWithDrawRewardTransaction(privateKey, addr, tokenIDStr, version)
 	if err != nil {
 		return "", err
 	}
