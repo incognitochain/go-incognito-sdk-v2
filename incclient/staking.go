@@ -166,7 +166,7 @@ func (client *IncClient) CreateWithDrawRewardTransaction(privateKey, addr, token
 
 	txParam := NewTxParam(privateKey, []string{}, []uint64{}, 0, nil, withdrawRewardMetadata, nil)
 
-	return client.CreateRawTransaction(txParam, -1)
+	return client.CreateRawTransaction(txParam, version)
 }
 
 // CreateAndSendWithDrawRewardTransaction creates a raw reward-withdrawing transaction and broadcasts it to the blockchain.
