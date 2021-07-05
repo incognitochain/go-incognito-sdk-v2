@@ -134,7 +134,7 @@ func (client *IncClient) CreateAndSendUnStakingTransaction(privateKey, privateSe
 }
 
 // CreateWithDrawRewardTransaction creates a raw reward-withdrawing transaction.
-func (client *IncClient) CreateWithDrawRewardTransaction(privateKey, addr string) ([]byte, string, error) {
+func (client *IncClient) CreateWithDrawRewardTransaction(privateKey, addr, tokenIDStr string) ([]byte, string, error) {
 	senderWallet, err := wallet.Base58CheckDeserialize(privateKey)
 	if err != nil {
 		return nil, "", err
@@ -145,8 +145,11 @@ func (client *IncClient) CreateWithDrawRewardTransaction(privateKey, addr string
 	if len(addr) == 0 {
 		addr = funderAddr
 	}
+	if len(tokenIDStr) == 0 {
+		tokenIDStr = common.PRVIDStr
+	}
 
-	withdrawRewardMetadata, err := metadata.NewWithDrawRewardRequest(common.PRVIDStr, addr, 0, metadata.WithDrawRewardRequestMeta)
+	withdrawRewardMetadata, err := metadata.NewWithDrawRewardRequest(tokenIDStr, addr, 0, metadata.WithDrawRewardRequestMeta)
 
 	txParam := NewTxParam(privateKey, []string{}, []uint64{}, 0, nil, withdrawRewardMetadata, nil)
 
@@ -154,8 +157,8 @@ func (client *IncClient) CreateWithDrawRewardTransaction(privateKey, addr string
 }
 
 // CreateAndSendWithDrawRewardTransaction creates a raw reward-withdrawing transaction and broadcasts it to the blockchain.
-func (client *IncClient) CreateAndSendWithDrawRewardTransaction(privateKey, addr string) (string, error) {
-	encodedTx, txHash, err := client.CreateWithDrawRewardTransaction(privateKey, addr)
+func (client *IncClient) CreateAndSendWithDrawRewardTransaction(privateKey, addr, tokenIDStr string) (string, error) {
+	encodedTx, txHash, err := client.CreateWithDrawRewardTransaction(privateKey, addr, tokenIDStr)
 	if err != nil {
 		return "", err
 	}
