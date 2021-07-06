@@ -128,16 +128,16 @@ func TestMultiScalarMultKey(t *testing.T) {
 		scalarLs := make([]*Key, len)
 		pointLs := make([]*Key, len)
 
-		for j:=0; j <len; j++ {
+		for j := 0; j < len; j++ {
 			scalarLs[j] = RandomScalar()
 			pointLs[j] = RandomPubKey()
 
 		}
 
-		res := ScalarMultKey(pointLs[0],scalarLs[0])
+		res := ScalarMultKey(pointLs[0], scalarLs[0])
 
-		for j:= 1; j < len; j++ {
-			tmp := ScalarMultKey(pointLs[j],scalarLs[j])
+		for j := 1; j < len; j++ {
+			tmp := ScalarMultKey(pointLs[j], scalarLs[j])
 			AddKeys(res, res, tmp)
 		}
 
@@ -154,7 +154,7 @@ func BenchmarkMultiScalarMultKey(b *testing.B) {
 	scalarLs := make([]*Key, len)
 	pointLs := make([]*Key, len)
 
-	for j:=0; j <len; j++ {
+	for j := 0; j < len; j++ {
 		scalarLs[j] = RandomScalar()
 		pointLs[j] = RandomPubKey()
 
@@ -162,11 +162,12 @@ func BenchmarkMultiScalarMultKey(b *testing.B) {
 
 	b.ResetTimer()
 
-	for i:=0; i< b.N; i++ {
+	for i := 0; i < b.N; i++ {
 
 		MultiScalarMultKey(pointLs, scalarLs)
 	}
 }
+
 //
 //func TestMultiScalarMultKey(t *testing.T) {
 //	len := 64

@@ -49,8 +49,8 @@ func (client *IncClient) splitPRVForFees(privateKey string, version uint8, numTh
 		}
 		totalAmount += c.GetValue()
 	}
-	if totalAmount < uint64(numThreads + 1 ) * DefaultPRVFee {
-		return "", fmt.Errorf("require at least %v nano PRV of version %v, got %v", uint64(numThreads + 1 ) * DefaultPRVFee, version, totalAmount)
+	if totalAmount < uint64(numThreads+1)*DefaultPRVFee {
+		return "", fmt.Errorf("require at least %v nano PRV of version %v, got %v", uint64(numThreads+1)*DefaultPRVFee, version, totalAmount)
 	}
 	if numRequiredUTXOs >= numThreads {
 		Logger.Log.Printf("Already have enough UTXOs\n")
@@ -96,7 +96,6 @@ func (client *IncClient) splitPRVForFees(privateKey string, version uint8, numTh
 		time.Sleep(10 * time.Second)
 	}
 	Logger.Printf("UTXOs updated\n\n")
-
 
 	return txHash, nil
 }

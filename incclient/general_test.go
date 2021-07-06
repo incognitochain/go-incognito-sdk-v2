@@ -43,14 +43,37 @@ func TestIncClient_AuthorizedSubmitKey(t *testing.T) {
 
 func TestIncClient_NewRPCCall(t *testing.T) {
 	var err error
-	ic, err = NewTestNetClient()
+	ic, err = NewIncClient("http://51.79.76.38:8334", "", 2)
 	if err != nil {
 		panic(err)
 	}
 
-	method := "getshardbeststate"
+	method := "listunspentoutputcoinsfromcache"
 	params := make([]interface{}, 0)
-	params = append(params, 1)
+	params = append(params, 0)
+	params = append(params, 99999999)
+	keyParams := make([]interface{}, 0)
+	keyParams = append(keyParams, map[string]interface{}{"PrivateKey": "112t8rnX6USJnBzswUeuuanesuEEUGsxE8Pj3kkxkqvGRedUUPyocmtsqETX2WMBSvfBCwwsmMpxonhfQm2N5wy3SrNk11eYx6pMsmsic4Vz"})
+	params = append(params, keyParams)
+
+	resp, err := ic.NewRPCCall("1.0", method, params, 1)
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println(string(resp))
+}
+
+func TestIncClient_NewRPCCall2(t *testing.T) {
+	var err error
+	ic, err = NewIncClient("http://51.79.76.38:8334", "", 2)
+	if err != nil {
+		panic(err)
+	}
+
+	method := "getbalancebyprivatekey"
+	params := make([]interface{}, 0)
+	params = append(params, "112t8rnX6USJnBzswUeuuanesuEEUGsxE8Pj3kkxkqvGRedUUPyocmtsqETX2WMBSvfBCwwsmMpxonhfQm2N5wy3SrNk11eYx6pMsmsic4Vz")
 
 	resp, err := ic.NewRPCCall("1.0", method, params, 1)
 	if err != nil {

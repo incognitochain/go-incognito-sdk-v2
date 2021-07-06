@@ -6,8 +6,8 @@ import (
 	"github.com/incognitochain/go-incognito-sdk-v2/coin"
 	"github.com/incognitochain/go-incognito-sdk-v2/common"
 	"github.com/incognitochain/go-incognito-sdk-v2/metadata"
-	"github.com/tendermint/tendermint/libs/math"
 	"log"
+	"math"
 	"testing"
 )
 
@@ -191,7 +191,7 @@ func TestIncClient_CreateRawTransactionWithInputCoinsV1(t *testing.T) {
 		// choose random UTXOs to spend
 		coinsToSpend := coinV1s
 		if len(coinV1s) > 1 {
-			r := 1 + common.RandInt()%(math.MinInt(len(coinV1s)-1, MaxInputSize))
+			r := 1 + common.RandInt()%(int(math.Min(float64(len(coinV1s)-1), MaxInputSize)))
 			coinsToSpend, _ = chooseRandomCoins(coinV1s, nil, r)
 		}
 
@@ -307,7 +307,7 @@ func TestIncClient_CreateRawTransactionWithInputCoinsV2(t *testing.T) {
 		coinsToSpend := coinV2s
 		idxToSpend := idxListV2
 		if len(coinV2s) > 1 {
-			r := 1 + common.RandInt()%(math.MinInt(len(coinV2s)-1, MaxInputSize))
+			r := 1 + common.RandInt()%(int(math.Min(float64(len(coinV2s)-1), MaxInputSize)))
 			coinsToSpend, idxToSpend = chooseRandomCoins(coinV2s, idxListV2, r)
 		}
 

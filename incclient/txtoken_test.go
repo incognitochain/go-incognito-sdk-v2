@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"github.com/incognitochain/go-incognito-sdk-v2/common"
 	"github.com/incognitochain/go-incognito-sdk-v2/transaction/tx_generic"
-	"github.com/tendermint/tendermint/libs/math"
 	"log"
+	"math"
 	"strconv"
 	"testing"
 	"time"
@@ -175,7 +175,7 @@ func TestIncClient_CreateRawTokenTransactionWithInputCoinsV1WithTokenFee(t *test
 		// choose random UTXOs to spend
 		coinsToSpend := coinV1s
 		if len(coinV1s) > 1 {
-			r := 1 + common.RandInt()%(math.MinInt(len(coinV1s)-1, MaxInputSize))
+			r := 1 + common.RandInt()%(int(math.Min(float64(len(coinV1s)-1), MaxInputSize)))
 			coinsToSpend, _ = chooseRandomCoins(coinV1s, nil, r)
 		}
 
@@ -306,7 +306,7 @@ func TestIncClient_CreateRawTokenTransactionWithInputCoinsV1WithPRVFee(t *testin
 		// choose random UTXOs to spend
 		coinsToSpend := coinV1s
 		if len(coinV1s) > 1 {
-			r := 1 + common.RandInt()%(math.MinInt(len(coinV1s)-1, MaxInputSize))
+			r := 1 + common.RandInt()%(int(math.Min(float64(len(coinV1s)-1), MaxInputSize)))
 			coinsToSpend, _ = chooseRandomCoins(coinV1s, nil, r)
 		}
 		log.Printf("#coinsToSpend: %v\n", len(coinsToSpend))
@@ -318,7 +318,7 @@ func TestIncClient_CreateRawTokenTransactionWithInputCoinsV1WithPRVFee(t *testin
 		// choose random PRV UTXOs to pay fee
 		prvCoinsToSpend := prvCoinV1s
 		if len(coinV1s) > 1 {
-			r := 1 + common.RandInt()%(math.MinInt(len(prvCoinV1s)-1, MaxInputSize))
+			r := 1 + common.RandInt()%(int(math.Min(float64(len(prvCoinV1s)-1), MaxInputSize)))
 			prvCoinsToSpend, _ = chooseRandomCoins(prvCoinV1s, nil, r)
 		}
 		log.Printf("#prvCoinsToSpend: %v\n", len(prvCoinsToSpend))
@@ -453,7 +453,7 @@ func TestIncClient_CreateRawTokenTransactionWithInputCoinsV2(t *testing.T) {
 		coinsToSpend := coinV2s
 		indices := idxV2List
 		if len(coinV2s) > 1 {
-			r := 1 + common.RandInt()%(math.MinInt(len(coinV2s)-1, MaxInputSize))
+			r := 1 + common.RandInt()%(int(math.Min(float64(len(coinV2s)-1), MaxInputSize)))
 			coinsToSpend, indices = chooseRandomCoins(coinV2s, idxV2List, r)
 		}
 		log.Printf("#coinsToSpend: %v\n", len(coinsToSpend))
@@ -466,7 +466,7 @@ func TestIncClient_CreateRawTokenTransactionWithInputCoinsV2(t *testing.T) {
 		prvCoinsToSpend := prvCoinV2s
 		prvIndices := prvIdxV2List
 		if len(prvCoinV2s) > 1 {
-			r := 1 + common.RandInt()%(math.MinInt(len(prvCoinV2s)-1, MaxInputSize))
+			r := 1 + common.RandInt()%(int(math.Min(float64(len(prvCoinV2s)-1), MaxInputSize)))
 			prvCoinsToSpend, prvIndices = chooseRandomCoins(prvCoinV2s, prvIdxV2List, r)
 		}
 		log.Printf("#prvCoinsToSpend: %v\n", len(prvCoinsToSpend))

@@ -19,7 +19,7 @@ func TestIncClient_ConsolidatePRVs(t *testing.T) {
 	masterPrivateKey := "112t8roafGgHL1rhAP9632Yef3sx5k8xgp8cwK4MCJsCL1UWcxXvpzg97N4dwvcD735iKf31Q2ZgrAvKfVjeSUEvnzKJyyJD3GqqSZdxN4or"
 	privateKey := "11111117yu4WAe9fiqmRR4GTxocW6VUKD4dB58wHFjbcQXeDSWQMNyND6Ms3x136EfGcfL7rk3L83BZBzUJLSczmmNi1ngra1WW5Wsjsu5P"
 	MaxUTXO := 200
-	minInitialUTXOs := 100 + common.RandInt()% (MaxUTXO - 100)
+	minInitialUTXOs := 100 + common.RandInt()%(MaxUTXO-100)
 	numThreads := 20
 	for i := 0; i < numTests; i++ {
 		//version := int8(1 + common.RandInt()%2)
@@ -70,7 +70,7 @@ func TestIncClient_ConsolidatePRVs(t *testing.T) {
 		}
 		Logger.Printf("newBalance: %v\n", balance)
 
-		minInitialUTXOs = 100 + common.RandInt()% (MaxUTXO - 100)
+		minInitialUTXOs = 100 + common.RandInt()%(MaxUTXO-100)
 		Logger.Printf("==================== FINISHED TEST %v ====================\n\n", i)
 	}
 }
@@ -86,7 +86,7 @@ func TestIncClient_ConsolidateTokenV1s(t *testing.T) {
 	privateKey := "11111117yu4WAe9fiqmRR4GTxocW6VUKD4dB58wHFjbcQXeDSWQMNyND6Ms3x136EfGcfL7rk3L83BZBzUJLSczmmNi1ngra1WW5Wsjsu5P"
 	tokenIDStr := "f3e586e281d275ea2059e35ae434d0431947d2b49466b6d2479808378268f822"
 	MaxUTXO := 200
-	minInitialUTXOs := 100 + common.RandInt()% (MaxUTXO - 100)
+	minInitialUTXOs := 100 + common.RandInt()%(MaxUTXO-100)
 	numThreads := 20
 	for i := 0; i < numTests; i++ {
 		version := int8(1)
@@ -137,7 +137,7 @@ func TestIncClient_ConsolidateTokenV1s(t *testing.T) {
 		}
 		Logger.Printf("newBalance: %v\n", balance)
 
-		minInitialUTXOs = 100 + common.RandInt()% (MaxUTXO - 100)
+		minInitialUTXOs = 100 + common.RandInt()%(MaxUTXO-100)
 		Logger.Printf("==================== FINISHED TEST %v ====================\n\n", i)
 	}
 }
@@ -153,7 +153,7 @@ func TestIncClient_ConsolidateTokenV2s(t *testing.T) {
 	privateKey := "11111117yu4WAe9fiqmRR4GTxocW6VUKD4dB58wHFjbcQXeDSWQMNyND6Ms3x136EfGcfL7rk3L83BZBzUJLSczmmNi1ngra1WW5Wsjsu5P"
 	tokenIDStr := "f3e586e281d275ea2059e35ae434d0431947d2b49466b6d2479808378268f822"
 	MaxUTXO := 200
-	minInitialUTXOs := 100 + common.RandInt()% (MaxUTXO - 100)
+	minInitialUTXOs := 100 + common.RandInt()%(MaxUTXO-100)
 	numThreads := 20
 	for i := 0; i < numTests; i++ {
 		version := int8(2)
@@ -206,7 +206,7 @@ func TestIncClient_ConsolidateTokenV2s(t *testing.T) {
 			panic(fmt.Errorf("expect newBalance to be %v, got %v", balance, newBalance))
 		}
 
-		minInitialUTXOs = 100 + common.RandInt()% (MaxUTXO - 100)
+		minInitialUTXOs = 100 + common.RandInt()%(MaxUTXO-100)
 		Logger.Printf("==================== FINISHED TEST %v ====================\n\n", i)
 	}
 }

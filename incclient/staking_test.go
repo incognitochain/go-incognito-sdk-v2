@@ -2,6 +2,7 @@ package incclient
 
 import (
 	"fmt"
+	"github.com/incognitochain/go-incognito-sdk-v2/common"
 	"testing"
 )
 
@@ -55,7 +56,7 @@ func TestIncClient_CreateAndSendWithDrawRewardTransaction(t *testing.T) {
 	privateKey := ""
 	rewardAddress := PrivateKeyToPaymentAddress(privateKey, -1)
 
-	txHash, err := ic.CreateAndSendWithDrawRewardTransaction(privateKey, rewardAddress)
+	txHash, err := ic.CreateAndSendWithDrawRewardTransaction(privateKey, rewardAddress, common.PRVIDStr, 2)
 	if err != nil {
 		panic(err)
 	}

@@ -275,7 +275,7 @@ func (client *IncClient) ConsolidateTokenV2s(privateKey, tokenIDStr string, numT
 				}
 			}
 
-			if tmpPRV == nil || tmpPRVIdx == nil{
+			if tmpPRV == nil || tmpPRVIdx == nil {
 				return txList, fmt.Errorf("cannot get PRV UTXO to payfee for index %v", current)
 			}
 
