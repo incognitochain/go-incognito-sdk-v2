@@ -3,6 +3,7 @@ module github.com/incognitochain/go-incognito-sdk-v2
 go 1.12
 
 require (
+	github.com/btcsuite/btcutil v1.0.2 // indirect
 	github.com/ebfe/keccak v0.0.0-20150115210727-5cc570678d1b
 	github.com/ethereum/go-ethereum v1.9.12
 	github.com/hashicorp/golang-lru v0.5.5-0.20210104140557-80c98217689d
