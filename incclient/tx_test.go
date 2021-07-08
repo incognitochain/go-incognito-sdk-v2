@@ -433,7 +433,7 @@ func TestIncClient_CreateConversionTransactionWithInputCoins(t *testing.T) {
 
 		// choose the sending amount
 		log.Printf("totalConvertingAmount: %v, txFee: %v\n", totalAmount, txFee)
-		
+
 		encodedTx, txHash, err := ic.CreateConversionTransactionWithInputCoins(privateKey, coinsToSpend)
 		if err != nil {
 			panic(err)

@@ -8,6 +8,7 @@ import (
 	"github.com/incognitochain/go-incognito-sdk-v2/common/base58"
 	"github.com/incognitochain/go-incognito-sdk-v2/key"
 	"github.com/incognitochain/go-incognito-sdk-v2/metadata"
+	"github.com/incognitochain/go-incognito-sdk-v2/privacy"
 	"github.com/incognitochain/go-incognito-sdk-v2/rpchandler"
 	"github.com/incognitochain/go-incognito-sdk-v2/transaction/tx_generic"
 	"github.com/incognitochain/go-incognito-sdk-v2/transaction/tx_ver1"
@@ -379,7 +380,7 @@ func (client *IncClient) CreateRawTokenConversionTransaction(privateKey, tokenID
 		return nil, "", fmt.Errorf("cannot init private key %v: %v", privateKey, err)
 	}
 
-	//We need to use PRV coinV2 to payment (it's a must)
+	//We need to use PRV coinV2 to pay fee (it's a must)
 	prvFee := DefaultPRVFee
 	coinsToSpendPRV, kvArgsPRV, err := client.initParams(privateKey, common.PRVIDStr, prvFee, true, 2)
 	if err != nil {
@@ -504,6 +505,125 @@ func (client *IncClient) CreateRawTokenTransactionWithInputCoins(txParam *TxPara
 	txParam.kArgs[tokenInCoinKey] = tokenCp
 
 	return client.CreateRawTokenTransaction(txParam, int8(version))
+}
+
+// CreateTokenConversionTransactionWithInputCoins convert a list of token UTXOs V1 into PRV UTXOs v2.
+// Parameters:
+//	- privateKey: the private key of the user.
+//	- tokenIDStr: the id of the asset being converted.
+//	- tokenInCoins: a list of decrypted, unspent token output coins v1.
+//	- prvInCoins: a list of decrypted, unspent PRV output coins v2 for paying the transaction fee.
+//	- prvIndices: a list of corresponding indices for the prv input coins.
+//
+// This function uses the DefaultPRVFee to pay the transaction fee.
+//
+// NOTE: this servers PRV transactions only.
+func (client *IncClient) CreateTokenConversionTransactionWithInputCoins(privateKey,
+	tokenIDStr string,
+	tokenInCoins []coin.PlainCoin,
+	prvInCoins []coin.PlainCoin,
+	prvIndices []uint64,
+) ([]byte, string, error) {
+	var txHash string
+
+	//Create sender private key from string
+	senderWallet, err := wallet.Base58CheckDeserialize(privateKey)
+	if err != nil {
+		return nil, txHash, fmt.Errorf("cannot init private key %v: %v", privateKey, err)
+	}
+	shardID := GetShardIDFromPrivateKey(privateKey)
+
+	// check number of token input coins
+	if len(tokenInCoins) > MaxInputSize {
+		return nil, txHash, fmt.Errorf("support at most %v token input coins, got %v", MaxInputSize, len(tokenInCoins))
+	}
+	if len(tokenInCoins) == 0 {
+		return nil, txHash, fmt.Errorf("no token CoinV1 to be converted")
+	}
+
+	// check version of token input coins
+	version, err := getVersionFromInputCoins(tokenInCoins)
+	if err != nil {
+		return nil, txHash, err
+	}
+	if version != 1 {
+		return nil, txHash, fmt.Errorf("token input coins must be of version 1")
+	}
+
+	// check number of token input coins
+	if len(prvInCoins) > MaxInputSize {
+		return nil, txHash, fmt.Errorf("support at most %v PRV input coins, got %v", MaxInputSize, len(prvInCoins))
+	}
+	if len(prvInCoins) == 0 {
+		return nil, txHash, fmt.Errorf("no PRV CoinV2 to pay fee")
+	}
+
+	// check version of PRV input coins
+	version, err = getVersionFromInputCoins(prvInCoins)
+	if err != nil {
+		return nil, txHash, err
+	}
+	if version != 2 {
+		return nil, txHash, fmt.Errorf("PRV input coins must be of version 2")
+	}
+	if len(prvIndices) != len(prvInCoins) {
+		return nil, txHash, fmt.Errorf("need %v PRV indices, got %v", len(prvInCoins), len(prvIndices))
+	}
+
+	// check and parse tokenID
+	if tokenIDStr == common.PRVIDStr {
+		return nil, txHash, fmt.Errorf("try conversion transaction")
+	}
+	tokenID, err := new(common.Hash).NewHashFromStr(tokenIDStr)
+	if err != nil {
+		return nil, txHash, fmt.Errorf("invalid token ID: %v", tokenID)
+	}
+
+	//We need to use PRV coinV2 to pay fee (it's a must)
+	prvFee := DefaultPRVFee
+	totalPRVAmount := uint64(0)
+	for _, utxo := range prvInCoins {
+		totalPRVAmount += utxo.GetValue()
+	}
+	if totalPRVAmount < prvFee {
+		return nil, txHash, fmt.Errorf("not enough PRV to pay fee, need %v, got %v", DefaultPRVFee, totalPRVAmount)
+	}
+
+	//Calculate the total token amount to be converted
+	totalAmount := uint64(0)
+	for _, utxo := range tokenInCoins {
+		totalAmount += utxo.GetValue()
+	}
+
+	// init PRV parameters
+	kvArgs, err := client.getRandomCommitmentV2(shardID, common.PRVIDStr, len(prvInCoins)*(privacy.RingSize-1))
+	if err != nil {
+		return nil, txHash, err
+	}
+	kvArgs[utils.MyIndices] = prvIndices
+
+	//Create unique receiver for token
+	uniquePayment := key.PaymentInfo{PaymentAddress: senderWallet.KeySet.PaymentAddress, Amount: totalAmount, Message: []byte{}}
+
+	txTokenParam := tx_ver2.NewTxTokenConvertVer1ToVer2InitParams(&(senderWallet.KeySet.PrivateKey),
+		prvInCoins, []*key.PaymentInfo{}, tokenInCoins,
+		[]*key.PaymentInfo{&uniquePayment}, prvFee, tokenID,
+		nil, nil, kvArgs)
+
+	tx := new(tx_ver2.TxToken)
+	err = tx_ver2.InitTokenConversion(tx, txTokenParam)
+	if err != nil {
+		return nil, txHash, fmt.Errorf("init txtokenconversion error: %v", err)
+	}
+
+	txBytes, err := json.Marshal(tx)
+	if err != nil {
+		return nil, txHash, fmt.Errorf("cannot marshal txtokenconversion: %v", err)
+	}
+
+	base58CheckData := base58.Base58Check{}.Encode(txBytes, common.ZeroByte)
+
+	return []byte(base58CheckData), tx.Hash().String(), nil
 }
 
 // SendRawTokenTx sends submits a raw token transaction to the Incognito blockchain.
