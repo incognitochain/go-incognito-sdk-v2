@@ -307,6 +307,78 @@ func (client *IncClient) CreateRawTransactionWithInputCoins(param *TxParam, inpu
 	return client.CreateRawTransaction(param, int8(version))
 }
 
+// CreateConversionTransactionWithInputCoins convert a list of PRV UTXOs V1 into PRV UTXOs v2.
+// Parameters:
+//	- param: a regular TxParam.
+//	- inputCoins: a list of decrypted, unspent PRV output coins (with the same version).
+//	- coinIndices: a list of corresponding indices for the input coins. This value must not be `nil` if the caller is
+//	creating a transaction v2.
+//
+// This function uses the DefaultPRVFee to pay the transaction fee.
+//
+// NOTE: this servers PRV transactions only.
+func (client *IncClient) CreateConversionTransactionWithInputCoins(param *TxParam, coinV1List []coin.PlainCoin) ([]byte, string, error) {
+	var txHash string
+	if param.txTokenParam != nil {
+		return nil, txHash, fmt.Errorf("this function supports PRV transaction only")
+	}
+
+	//Create sender private key from string
+	senderWallet, err := wallet.Base58CheckDeserialize(param.senderPrivateKey)
+	if err != nil {
+		return nil, "", fmt.Errorf("cannot init private key %v: %v", param.senderPrivateKey, err)
+	}
+
+	// check version of coins
+	version, err := getVersionFromInputCoins(coinV1List)
+	if err != nil {
+		return nil, txHash, err
+	}
+	if version != 1 {
+		return nil, txHash, fmt.Errorf("input coins must not be nil")
+	}
+
+	// check number of input coins
+	if len(coinV1List) > MaxInputSize {
+		return nil, txHash, fmt.Errorf("support at most %v input coins, got %v", MaxInputSize, len(coinV1List))
+	}
+	if len(coinV1List) == 0 {
+		return nil, txHash, fmt.Errorf("no CoinV1 left to be converted")
+	}
+
+	//Calculating the total amount being converted.
+	totalAmount := uint64(0)
+	for _, utxo := range coinV1List {
+		totalAmount += utxo.GetValue()
+	}
+	if totalAmount < DefaultPRVFee {
+		fmt.Printf("Total amount (%v) is less than txFee (%v).\n", totalAmount, DefaultPRVFee)
+		return nil, "", fmt.Errorf("Total amount (%v) is less than txFee (%v).\n", totalAmount, DefaultPRVFee)
+	}
+	totalAmount -= DefaultPRVFee
+
+	uniquePayment := key.PaymentInfo{PaymentAddress: senderWallet.KeySet.PaymentAddress, Amount: totalAmount, Message: []byte{}}
+
+	//Create tx conversion params
+	txParam := tx_ver2.NewTxConvertVer1ToVer2InitParams(&(senderWallet.KeySet.PrivateKey), []*key.PaymentInfo{&uniquePayment}, coinV1List,
+		DefaultPRVFee, nil, nil, nil, nil)
+
+	tx := new(tx_ver2.Tx)
+	err = tx_ver2.InitConversion(tx, txParam)
+	if err != nil {
+		return nil, "", fmt.Errorf("init txconvert error: %v", err)
+	}
+
+	txBytes, err := json.Marshal(tx)
+	if err != nil {
+		return nil, "", fmt.Errorf("cannot marshal txconvert: %v", err)
+	}
+
+	base58CheckData := base58.Base58Check{}.Encode(txBytes, common.ZeroByte)
+
+	return []byte(base58CheckData), tx.Hash().String(), nil
+}
+
 // SendRawTx sends submits a raw PRV transaction to the Incognito blockchain.
 func (client *IncClient) SendRawTx(encodedTx []byte) error {
 	responseInBytes, err := client.rpcServer.SendRawTx(string(encodedTx))

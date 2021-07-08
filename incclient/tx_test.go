@@ -375,6 +375,111 @@ func TestIncClient_CreateRawTransactionWithInputCoinsV2(t *testing.T) {
 	}
 }
 
+func TestIncClient_CreateConversionTransactionWithInputCoins(t *testing.T) {
+	var err error
+	ic, err = NewLocalClient("")
+	if err != nil {
+		panic(err)
+	}
+
+	privateKey := "11111113iP7vLqNpK2RPPmwkQgaXf4c6dzto5RfyNYTsk8L1hNLajtcPRMihKpD9Tg8N8UkGrGso3iAUHaDbDDT2rrf7QXwAGADHkuV5A1U"
+	for i := 0; i < numTests; i++ {
+		log.Printf("TEST %v\n", i)
+		oldBalanceV1, err := getBalanceByVersion(privateKey, common.PRVIDStr, 1)
+		if err != nil {
+			panic(err)
+		}
+		log.Printf("oldBalanceV1: %v\n", oldBalanceV1)
+
+		oldBalanceV2, err := getBalanceByVersion(privateKey, common.PRVIDStr, 2)
+		if err != nil {
+			panic(err)
+		}
+		log.Printf("oldBalanceV2: %v\n", oldBalanceV2)
+
+		utxoList, listIndices, err := ic.GetUnspentOutputCoins(privateKey, common.PRVIDStr, 0)
+		if err != nil {
+			panic(err)
+		}
+
+		coinV1s, _, _, err := divideCoins(utxoList, listIndices, true)
+		if err != nil {
+			panic(err)
+		}
+
+		if len(coinV1s) == 0 {
+			panic("no UTXO v1 to spend")
+		}
+
+		log.Printf("TESTING WITH %v INPUT COINs V1\n", len(coinV1s))
+
+		// choose random UTXOs to spend
+		coinsToSpend := coinV1s
+		if len(coinV1s) > 1 {
+			r := 1 + common.RandInt()%(int(math.Min(float64(len(coinV1s)-1), MaxInputSize)))
+			coinsToSpend, _ = chooseRandomCoins(coinV1s, nil, r)
+		}
+
+		log.Printf("#coinsToSpend: %v\n", len(coinsToSpend))
+
+		txFee := DefaultPRVFee
+		totalAmount := uint64(0)
+		for _, c := range coinsToSpend {
+			totalAmount += c.GetValue()
+		}
+		if totalAmount <= txFee {
+			panic("not enough coins to spend")
+		}
+
+		// choose the sending amount
+		log.Printf("totalConvertingAmount: %v, txFee: %v\n", totalAmount, txFee)
+
+		txParam := NewTxParam(privateKey, nil, nil, txFee, nil, nil, nil)
+		encodedTx, txHash, err := ic.CreateConversionTransactionWithInputCoins(txParam, coinsToSpend)
+		if err != nil {
+			panic(err)
+		}
+		err = ic.SendRawTx(encodedTx)
+		if err != nil {
+			panic(err)
+		}
+		log.Printf("TxHash created: %v\n", txHash)
+
+		// checking if tx is in blocks
+		log.Printf("Checking status of tx %v...\n", txHash)
+		err = waitingCheckTxInBlock(txHash)
+		if err != nil {
+			panic(err)
+		}
+
+		// checking if tx has spent the coinsToSpend
+		tx, err := ic.GetTx(txHash)
+		if err != nil {
+			panic(err)
+		}
+		_, err = compareInputCoins(coinsToSpend, tx.GetProof().GetInputCoins())
+		if err != nil {
+			panic(err)
+		}
+		log.Printf("Checked input coins SUCCEEDED\n")
+
+		// checking updated balance
+		expectedBalanceV1 := oldBalanceV1 - totalAmount
+		expectedBalanceV2 := oldBalanceV2 + totalAmount - DefaultPRVFee
+		err = waitingCheckBalanceUpdated(privateKey, common.PRVIDStr, oldBalanceV1, expectedBalanceV1, 1)
+		if err != nil {
+			panic(err)
+		}
+		err = waitingCheckBalanceUpdated(privateKey, common.PRVIDStr, oldBalanceV2, expectedBalanceV2, 2)
+		if err != nil {
+			panic(err)
+		}
+
+		log.Printf("FINISHED TEST %v\n\n", i)
+	}
+
+}
+
 func chooseRandomCoins(inputCoins []coin.PlainCoin, indices []uint64, numCoins int) ([]coin.PlainCoin, []uint64) {
 	coinRes := make([]coin.PlainCoin, 0)
 	var idxRes []uint64
