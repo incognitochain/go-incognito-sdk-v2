@@ -1,5 +1,5 @@
 ---
-description: Tutorial on how to create an ETH-shielding transaction
+Description: Tutorial on how to create an ETH-shielding transaction
 ---
 # Depositing ETH/ERC20 to Incognito
 Suppose that we already have a transaction that deposited some ETH/ERC20 to the smart contract. To mint the same amount of pETH/pERC20 inside the Incognito network, we use the function [`CreateAndSendIssuingETHRequestTransaction`](../../../incclient/bridge.go) with the following inputs:

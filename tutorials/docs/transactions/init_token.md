@@ -1,5 +1,5 @@
 ---
-description: Tutorial on how to create a custom token in Incognito.
+Description: Tutorial on how to create a custom token in Incognito.
 ---
 
 # Create Custom Tokens

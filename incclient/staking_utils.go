@@ -25,25 +25,23 @@ import (
 //		"f6c3b18679aff8d307b08d4724697bb8dca123a536b863cbe55dc59c110f5c10": 27272,
 //		"ffd8d42dc40a8d166ea4848baf8b5f6e9fe0e9c30d60062eb7d44a8df9e00854": 9
 //	}
-func (client *IncClient) GetRewardAmount(paymentAddress string) (map[common.Hash]uint64, error) {
+func (client *IncClient) GetRewardAmount(paymentAddress string) (map[string]uint64, error) {
 	responseInBytes, err := client.rpcServer.GetRewardAmount(paymentAddress)
 	if err != nil {
 		return nil, err
 	}
 
-	var res map[common.Hash]uint64
+	var res map[string]uint64
 	err = rpchandler.ParseResponse(responseInBytes, &res)
 	if err != nil {
+		Logger.Printf("%v\n", err)
 		return nil, err
 	}
 
-	// the full-node return "PRV":amount so we have to parse it into "0000000000000000000000000000000000000000000000000000000000000004":amount
-	tmpPRVHash, err := common.Hash{}.NewHashFromStr("0000000000000000000000000000000000000000000000000000000000000000")
-	if err != nil {
-		return nil, err
-	}
-	res[common.PRVCoinID] = res[*tmpPRVHash]
-	delete(res, *tmpPRVHash)
+	// the full-node return "PRV":amount for the PRV reward
+	tmpPRVKey := "PRV"
+	res[common.PRVIDStr] = res[tmpPRVKey]
+	delete(res, tmpPRVKey)
 
 	return res, err
 }

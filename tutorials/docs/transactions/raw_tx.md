@@ -1,5 +1,5 @@
 ---
-description: Tutorial on how to create a PRV transaction in Incognito.
+Description: Tutorial on how to create a PRV transaction in Incognito.
 ---
 
 # Transferring PRV

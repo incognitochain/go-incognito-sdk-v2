@@ -1,5 +1,5 @@
 ---
-description: Tutorial on how to create an un-shielding transaction
+Description: Tutorial on how to create an un-shielding transaction
 ---
 # Withdrawing pETH/pERC20 from the Incognito Network
 The very first step in withdrawing pETH/pERC20 from the Incognito network to the main Ethereum network is to burn pETH/pERC20 and have the beacon generate a burn proof for us.

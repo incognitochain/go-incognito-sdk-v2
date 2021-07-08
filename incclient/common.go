@@ -3,15 +3,11 @@ package incclient
 
 import (
 	"fmt"
-	"log"
-
 	"github.com/incognitochain/go-incognito-sdk-v2/common"
 	"github.com/incognitochain/go-incognito-sdk-v2/common/base58"
 	"github.com/incognitochain/go-incognito-sdk-v2/metadata"
 	"github.com/incognitochain/go-incognito-sdk-v2/wallet"
 )
-
-const DefaultPRVFee = uint64(100)
 
 // TxParam describes the parameters needed to create a transaction in general.
 //
@@ -23,7 +19,13 @@ type TxParam struct {
 	fee              uint64
 	txTokenParam     *TxTokenParam
 	md               metadata.Metadata
-	kArgs            map[string]interface{}
+
+	// additional parameters for special functions
+	//	- "PRVInputCoins": a coinParams consisting of PRV input coins and indices used to create a transaction with given
+	//input coins.
+	//	- "TokenInputCoins": a coinParams consisting of token input coins and indices used to create a transaction with given
+	//input coins..
+	kArgs map[string]interface{}
 }
 
 // TxTokenParam describes the parameters needed for creating a token transaction.
@@ -123,12 +125,12 @@ func PrivateKeyToPublicKey(privateKey string) []byte {
 func PrivateKeyToPrivateOTAKey(privateKey string) string {
 	keyWallet, err := wallet.Base58CheckDeserialize(privateKey)
 	if err != nil {
-		log.Println(err)
+		Logger.Println(err)
 		return ""
 	}
 
 	if len(keyWallet.KeySet.PrivateKey) == 0 {
-		log.Println("no private key found")
+		Logger.Println("no private key found")
 		return ""
 	}
 
@@ -141,12 +143,12 @@ func PrivateKeyToPrivateOTAKey(privateKey string) string {
 func PrivateKeyToReadonlyKey(privateKey string) string {
 	keyWallet, err := wallet.Base58CheckDeserialize(privateKey)
 	if err != nil {
-		log.Println(err)
+		Logger.Println(err)
 		return ""
 	}
 
 	if len(keyWallet.KeySet.PrivateKey) == 0 {
-		log.Println("no private key found")
+		Logger.Println("no private key found")
 		return ""
 	}
 
@@ -158,7 +160,7 @@ func PrivateKeyToReadonlyKey(privateKey string) string {
 func PrivateKeyToMiningKey(privateKey string) string {
 	keyWallet, err := wallet.Base58CheckDeserialize(privateKey)
 	if err != nil {
-		log.Println(err)
+		Logger.Println(err)
 		return ""
 	}
 

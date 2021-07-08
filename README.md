@@ -9,7 +9,7 @@ go get github.com/incognitochain/go-incognito-sdk-v2
 ```
 
 ## Dependencies
-* `go-ethereum`: version 1.9 
+* `go-ethereum`: version 1.9.12
 
 ## Import
 ```go
@@ -31,6 +31,7 @@ Following is a series of examples to help you get familiar with the Incognito ne
     * [UTXOs](tutorials/docs/accounts/utxo.md)
       * [Retrieving output coins V1](tutorials/docs/accounts/utxo_retrieve.md)
       * [Key Submitting](tutorials/docs/accounts/submit_key.md)
+      * [Consolidating](tutorials/docs/accounts/consolidate.md)
     * [Account Balances](tutorials/docs/accounts/balances.md)
     * [Account History](tutorials/docs/accounts/tx_history.md)
 * [Transactions](tutorials/docs/transactions)

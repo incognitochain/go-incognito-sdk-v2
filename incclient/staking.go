@@ -134,28 +134,44 @@ func (client *IncClient) CreateAndSendUnStakingTransaction(privateKey, privateSe
 }
 
 // CreateWithDrawRewardTransaction creates a raw reward-withdrawing transaction.
-func (client *IncClient) CreateWithDrawRewardTransaction(privateKey, addr string) ([]byte, string, error) {
+func (client *IncClient) CreateWithDrawRewardTransaction(privateKey, addr, tokenIDStr string, version int8) ([]byte, string, error) {
+	if version != 1 && version != 2 {
+		return nil, "", fmt.Errorf("only support version 1 or 2")
+	}
+
 	senderWallet, err := wallet.Base58CheckDeserialize(privateKey)
 	if err != nil {
+		Logger.Printf("%v\n", err)
 		return nil, "", err
 	}
 
 	funderAddr := senderWallet.Base58CheckSerialize(wallet.PaymentAddressType)
-
 	if len(addr) == 0 {
 		addr = funderAddr
 	}
+	if version == 1 {
+		addr, err = wallet.GetPaymentAddressV1(addr, false)
+		if err != nil {
+			Logger.Printf("%v\n", err)
+			return nil, "", err
+		}
+	}
 
-	withdrawRewardMetadata, err := metadata.NewWithDrawRewardRequest(common.PRVIDStr, addr, 0, metadata.WithDrawRewardRequestMeta)
+	if len(tokenIDStr) == 0 {
+		Logger.Printf("No tokenID provided, using the default PRV\n")
+		tokenIDStr = common.PRVIDStr
+	}
+
+	withdrawRewardMetadata, err := metadata.NewWithDrawRewardRequest(tokenIDStr, addr, 0, metadata.WithDrawRewardRequestMeta)
 
 	txParam := NewTxParam(privateKey, []string{}, []uint64{}, 0, nil, withdrawRewardMetadata, nil)
 
-	return client.CreateRawTransaction(txParam, -1)
+	return client.CreateRawTransaction(txParam, version)
 }
 
 // CreateAndSendWithDrawRewardTransaction creates a raw reward-withdrawing transaction and broadcasts it to the blockchain.
-func (client *IncClient) CreateAndSendWithDrawRewardTransaction(privateKey, addr string) (string, error) {
-	encodedTx, txHash, err := client.CreateWithDrawRewardTransaction(privateKey, addr)
+func (client *IncClient) CreateAndSendWithDrawRewardTransaction(privateKey, addr, tokenIDStr string, version int8) (string, error) {
+	encodedTx, txHash, err := client.CreateWithDrawRewardTransaction(privateKey, addr, tokenIDStr, version)
 	if err != nil {
 		return "", err
 	}

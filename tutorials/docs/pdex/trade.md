@@ -1,5 +1,5 @@
 ---
-description: Tutorial on how to creat trading transactions in pDEX.
+Description: Tutorial on how to creat trading transactions in pDEX.
 ---
 # pDEX Trades
 The Incognito pDEX borrows heavily from Nick Johnson's [reddit post](https://www.reddit.com/r/ethereum/comments/54l32y/euler_the_simplest_exchange_and_currency/) in 2016, Vitalik Buterin's [reddit post](https://www.reddit.com/r/ethereum/comments/55m04x/lets_run_onchain_decentralized_exchanges_the_way/) in 2016, Hayden Adam's [Uniswap implementation](https://github.com/Uniswap/contracts-vyper/blob/master/contracts/uniswap_exchange.vy) in 2018. 

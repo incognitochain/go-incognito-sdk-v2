@@ -1,5 +1,5 @@
 ---
-description: Tutorial on how to have a full-node cache our output coins.
+Description: Tutorial on how to have a full-node cache our output coins.
 ---
 # Full-nodes' Cache
 The benefits of increased privacy are not without costs. Retrieving output coins is one of the most prominent. In Privacy V1, a user's output coins all have the same public key, which is the user's public key. In this approach, a full-node's database can effortlessly aggregate these output coins. When a user requests all of his or her output coins, the full-node only needs to look for those that have the same public key.

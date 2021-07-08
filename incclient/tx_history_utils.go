@@ -10,7 +10,6 @@ import (
 	"github.com/incognitochain/go-incognito-sdk-v2/metadata"
 	"github.com/incognitochain/go-incognito-sdk-v2/privacy"
 	"github.com/incognitochain/go-incognito-sdk-v2/transaction/tx_generic"
-	"log"
 	"os"
 )
 
@@ -266,6 +265,6 @@ func SaveTxHistory(txHistory *TxHistory, filePath string) error {
 	}
 	err = w.Write([]string{"totalOut", fmt.Sprintf("%v", totalOut)})
 
-	log.Printf("Finished storing history to file %v\n", filePath)
+	Logger.Printf("Finished storing history to file %v\n", filePath)
 	return nil
 }
