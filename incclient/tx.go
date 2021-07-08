@@ -330,7 +330,7 @@ func (client *IncClient) CreateConversionTransactionWithInputCoins(privateKey st
 		return nil, txHash, err
 	}
 	if version != 1 {
-		return nil, txHash, fmt.Errorf("input coins must not be nil")
+		return nil, txHash, fmt.Errorf("input coins must be of version 1")
 	}
 
 	// check number of input coins
@@ -338,7 +338,7 @@ func (client *IncClient) CreateConversionTransactionWithInputCoins(privateKey st
 		return nil, txHash, fmt.Errorf("support at most %v input coins, got %v", MaxInputSize, len(coinV1List))
 	}
 	if len(coinV1List) == 0 {
-		return nil, txHash, fmt.Errorf("no CoinV1 left to be converted")
+		return nil, txHash, fmt.Errorf("no CoinV1 to be converted")
 	}
 
 	//Calculating the total amount being converted.
