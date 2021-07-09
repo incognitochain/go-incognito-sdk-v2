@@ -251,9 +251,9 @@ func (client *IncClient) CreateConversionTransactionWithInputCoins(privateKey st
 //	- prvInCoins: a list of decrypted, unspent PRV output coins v2 for paying the transaction fee.
 //	- prvIndices: a list of corresponding indices for the prv input coins.
 //
-// This function uses the DefaultPRVFee to pay the transaction fee.
+// This function uses the DefaultPRVFee to pay the transaction fee. Callers must make sure the PRV input coins have
+// enough value to cover the transaction fee.
 //
-// NOTE: this servers PRV transactions only.
 func (client *IncClient) CreateTokenConversionTransactionWithInputCoins(privateKey,
 	tokenIDStr string,
 	tokenInCoins []coin.PlainCoin,
