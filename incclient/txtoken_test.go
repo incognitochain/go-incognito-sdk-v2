@@ -443,7 +443,7 @@ func TestIncClient_CreateRawTokenTransactionWithInputCoinsV2(t *testing.T) {
 		if err != nil {
 			panic(err)
 		}
-		if len(coinV2s) == 0 {
+		if len(prvCoinV2s) == 0 {
 			panic("no PRV UTXO v2 to spend")
 		}
 
@@ -674,7 +674,7 @@ func TestIncClient_CreateTokenConversionTransactionWithInputCoins(t *testing.T) 
 		}
 		log.Printf("Checked PRV input coins SUCCEEDED\n")
 
-		// checking updated balance
+		// checking updated balances
 		expectedBalanceV1 := oldBalanceV1 - totalAmount
 		expectedBalanceV2 := oldBalanceV2 + totalAmount
 		err = waitingCheckBalanceUpdated(privateKey, tokenIDStr, oldBalanceV1, expectedBalanceV1, 1)
