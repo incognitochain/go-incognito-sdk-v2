@@ -60,4 +60,7 @@ func NewLogger(isEnable bool, logFile ...string) *IncLogger {
 	}
 }
 
+// Logger prints necessary information during the use of the IncClient. Set Logger.IsEnable to true to print all the logs
+// of this instance while using it. By default, it is disabled. For testing purposes, it should be enabled for devs to
+// understand the running path of active functions.
 var Logger = NewLogger(false)
