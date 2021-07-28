@@ -13,7 +13,7 @@ secondToken := "0000000000000000000000000000000000000000000000000000000000000100
 addr := incclient.PrivateKeyToPaymentAddress(privateKey, -1)
 sharedAmount, err := client.GetShareAmount(0, firstToken, secondToken, addr) // get our current shared amount
 ```
-We need to specify the two tokenIDs we wish to withdraw, our payment address and the withdrawal shared amount. In this case, we are withdrawing everything we have in the pDEX.
+We need to specify the two tokenIDs we wish to withdraw, our payment address, and the withdrawal shared amount. In this case, we are withdrawing everything we have in the pDEX.
 
 ## Create and send the withdrawal transaction
 ```go

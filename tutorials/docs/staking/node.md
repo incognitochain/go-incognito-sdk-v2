@@ -12,7 +12,7 @@ GetReward | Get the rewards of a payment address | Full-node
 GetMiningInfo | Get the staking information of a node | Validator node
 GetSyncStats | Get the statistics of data-synchronizing status of a node | Validator node
 
-All of these functions are implemented in this [file](../../../incclient/staking_utils.go). Next, we give an example of each function.
+We implemented these functions in this [file](../../../incclient/staking_utils.go). Next, we give an example of each function.
 
 ## List rewards
 It's easy to list all the current staking rewards by calling the function `ListReward`.
