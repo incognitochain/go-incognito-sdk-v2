@@ -18,9 +18,9 @@ func TestIncClient_CreateRawTokenTransaction(t *testing.T) {
 		panic(err)
 	}
 
-	privateKey := "11111117yu4WAe9fiqmRR4GTxocW6VUKD4dB58wHFjbcQXeDSWQMNyND6Ms3x136EfGcfL7rk3L83BZBzUJLSczmmNi1ngra1WW5Wsjsu5P"
+	privateKey := "11111113iP7vLqNpK2RPPmwkQgaXf4c6dzto5RfyNYTsk8L1hNLajtcPRMihKpD9Tg8N8UkGrGso3iAUHaDbDDT2rrf7QXwAGADHkuV5A1U"
 
-	receiverPrivateKey := "11111113iP7vLqNpK2RPPmwkQgaXf4c6dzto5RfyNYTsk8L1hNLajtcPRMihKpD9Tg8N8UkGrGso3iAUHaDbDDT2rrf7QXwAGADHkuV5A1U"
+	receiverPrivateKey := "11111117yu4WAe9fiqmRR4GTxocW6VUKD4dB58wHFjbcQXeDSWQMNyND6Ms3x136EfGcfL7rk3L83BZBzUJLSczmmNi1ngra1WW5Wsjsu5P"
 	paymentAddress := PrivateKeyToPaymentAddress(receiverPrivateKey, -1)
 	tokenIDStr := "f3e586e281d275ea2059e35ae434d0431947d2b49466b6d2479808378268f822"
 
@@ -297,7 +297,7 @@ func TestIncClient_CreateRawTokenTransactionWithInputCoinsV1WithPRVFee(t *testin
 		if err != nil {
 			panic(err)
 		}
-		if len(coinV1s) == 0 {
+		if len(prvCoinV1s) == 0 {
 			panic("no PRV UTXO v1 to spend")
 		}
 
@@ -317,7 +317,7 @@ func TestIncClient_CreateRawTokenTransactionWithInputCoinsV1WithPRVFee(t *testin
 
 		// choose random PRV UTXOs to pay fee
 		prvCoinsToSpend := prvCoinV1s
-		if len(coinV1s) > 1 {
+		if len(prvCoinV1s) > 1 {
 			r := 1 + common.RandInt()%(int(math.Min(float64(len(prvCoinV1s)-1), MaxInputSize)))
 			prvCoinsToSpend, _ = chooseRandomCoins(prvCoinV1s, nil, r)
 		}
@@ -443,7 +443,7 @@ func TestIncClient_CreateRawTokenTransactionWithInputCoinsV2(t *testing.T) {
 		if err != nil {
 			panic(err)
 		}
-		if len(coinV2s) == 0 {
+		if len(prvCoinV2s) == 0 {
 			panic("no PRV UTXO v2 to spend")
 		}
 
