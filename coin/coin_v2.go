@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-
 	"github.com/incognitochain/go-incognito-sdk-v2/common"
 	"github.com/incognitochain/go-incognito-sdk-v2/common/base58"
 	"github.com/incognitochain/go-incognito-sdk-v2/crypto"
@@ -631,4 +630,35 @@ func (c *CoinV2) DoesCoinBelongToKeySet(keySet *key.KeySet) (bool, *crypto.Point
 	KCheck := new(crypto.Point).Sub(c.GetPublicKey(), HnG)
 
 	return crypto.IsPointEqual(KCheck, keySet.OTAKey.GetPublicSpend()), rK
+}
+
+// GetTokenId attempts to retrieve the asset a CoinV2.
+// Parameters:
+// 	- keySet: the key set of the user, must contain an OTAKey
+//	- rawAssetTags: a pre-computed mapping from a raw assetTag to the tokenId (e.g, HashToPoint(PRV) => PRV).
+func (c *CoinV2) GetTokenId(keySet *key.KeySet, rawAssetTags map[string]*common.Hash) (*common.Hash, error) {
+	if c.GetAssetTag() == nil {
+		return &common.PRVCoinID, nil
+	}
+
+	if asset, ok := rawAssetTags[c.GetAssetTag().String()]; ok {
+		return asset, nil
+	}
+
+	belong, sharedSecret := c.DoesCoinBelongToKeySet(keySet)
+	if !belong {
+		return nil, fmt.Errorf("coin does not belong to the keyset")
+	}
+
+	blinder := crypto.HashToScalar(append(sharedSecret.ToBytesS(), []byte("assettag")...))
+	rawAssetTag := new(crypto.Point).Sub(
+		c.GetAssetTag(),
+		new(crypto.Point).ScalarMult(crypto.PedCom.G[PedersenRandomnessIndex], blinder),
+	)
+
+	if asset, ok := rawAssetTags[rawAssetTag.String()]; ok {
+		return asset, nil
+	}
+
+	return nil, fmt.Errorf("cannot find the tokenId")
 }
