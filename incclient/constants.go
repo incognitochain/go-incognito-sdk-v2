@@ -13,7 +13,7 @@ const (
 	TestNetETHContractAddressStr = "0x2f6F03F1b43Eab22f7952bd617A24AB46E970dF7"
 	TestNetFullNode              = "https://testnet.incognito.org/fullnode"
 	TestNetETHHost               = "https://kovan.infura.io/v3/93fe721349134964aa71071a713c5cef"
-	TestNetPrivacyVersion        = 1
+	TestNetPrivacyVersion        = 2
 )
 
 // TestNet1 config
