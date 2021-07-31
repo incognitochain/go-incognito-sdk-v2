@@ -33,6 +33,15 @@ func (client *IncClient) convertAllPRVs(privateKey string, numThreads int) ([]st
 	if err != nil {
 		return txList, err
 	}
+	if len(utxoV1List) == 0 {
+		return nil, fmt.Errorf("no UTXOs to convert")
+	} else if len(utxoV1List) <= MaxInputSize {
+		txHash, err := client.CreateAndSendRawConversionTransaction(privateKey, common.PRVIDStr)
+		if err != nil {
+			return nil, err
+		}
+		return []string{txHash}, nil
+	}
 
 	timeOut := time.After(30 * time.Minute)
 	errCh := make(chan error)
@@ -115,6 +124,15 @@ func (client *IncClient) convertAllTokens(privateKey, tokenIDStr string, numThre
 	utxoV1List, _, err := client.getUTXOsListByVersion(privateKey, tokenIDStr, 1)
 	if err != nil {
 		return txList, err
+	}
+	if len(utxoV1List) == 0 {
+		return nil, fmt.Errorf("no UTXOs to convert")
+	} else if len(utxoV1List) <= MaxInputSize {
+		txHash, err := client.CreateAndSendRawConversionTransaction(privateKey, tokenIDStr)
+		if err != nil {
+			return nil, err
+		}
+		return []string{txHash}, nil
 	}
 
 	timeOut := time.After(30 * time.Minute)
