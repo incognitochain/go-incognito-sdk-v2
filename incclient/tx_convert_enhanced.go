@@ -41,6 +41,7 @@ func (client *IncClient) convertAllPRVs(privateKey string, numThreads int) ([]st
 		if err != nil {
 			return nil, err
 		}
+		Logger.Printf("txHash: %v\n", txHash)
 		err = client.waitingCheckTxInBlock(txHash)
 		if err != nil {
 			return nil, err
@@ -139,6 +140,7 @@ func (client *IncClient) convertAllTokens(privateKey, tokenIDStr string, numThre
 		if err != nil {
 			return nil, err
 		}
+		Logger.Printf("txHash: %v\n", txHash)
 		err = client.waitingCheckTxInBlock(txHash)
 		if err != nil {
 			return nil, err
