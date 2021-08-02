@@ -33,6 +33,32 @@ func (client *IncClient) convertAllPRVs(privateKey string, numThreads int) ([]st
 	if err != nil {
 		return txList, err
 	}
+	if len(utxoV1List) == 0 {
+		return nil, fmt.Errorf("no UTXOs to convert")
+	} else if len(utxoV1List) <= MaxInputSize {
+		Logger.Printf("#numUTXOs: %v\n", len(utxoV1List))
+		totalAmount := uint64(0)
+		for _, c := range utxoV1List {
+			totalAmount += c.GetValue()
+		}
+		if totalAmount < DefaultPRVFee {
+			Logger.Printf("not enough PRV, got %v, want at least %v\n", totalAmount, DefaultPRVFee)
+			return nil, fmt.Errorf("no UTXOs to convert")
+		}
+		Logger.Printf("TotalUTXOAmount: %v\n", totalAmount)
+
+		txHash, err := client.CreateAndSendRawConversionTransaction(privateKey, common.PRVIDStr)
+		if err != nil {
+			return nil, err
+		}
+		Logger.Printf("txHash: %v. Checking tx in block...\n", txHash)
+		err = client.waitingCheckTxInBlock(txHash)
+		if err != nil {
+			return nil, err
+		}
+
+		return []string{txHash}, nil
+	}
 
 	timeOut := time.After(30 * time.Minute)
 	errCh := make(chan error)
@@ -115,6 +141,28 @@ func (client *IncClient) convertAllTokens(privateKey, tokenIDStr string, numThre
 	utxoV1List, _, err := client.getUTXOsListByVersion(privateKey, tokenIDStr, 1)
 	if err != nil {
 		return txList, err
+	}
+	if len(utxoV1List) == 0 {
+		return nil, fmt.Errorf("no UTXOs to convert")
+	} else if len(utxoV1List) <= MaxInputSize {
+		Logger.Printf("#numUTXOs: %v\n", len(utxoV1List))
+		totalAmount := uint64(0)
+		for _, c := range utxoV1List {
+			totalAmount += c.GetValue()
+		}
+		Logger.Printf("TotalUTXOAmount: %v\n", totalAmount)
+
+		txHash, err := client.CreateAndSendRawConversionTransaction(privateKey, tokenIDStr)
+		if err != nil {
+			return nil, err
+		}
+		Logger.Printf("txHash: %v. Checking tx in block...\n", txHash)
+		err = client.waitingCheckTxInBlock(txHash)
+		if err != nil {
+			return nil, err
+		}
+
+		return []string{txHash}, nil
 	}
 
 	timeOut := time.After(30 * time.Minute)
@@ -242,6 +290,8 @@ func (client *IncClient) convertPRVs(id int, privateKey string,
 		return
 	}
 
+	Logger.Printf("[ID %v] TotalUTXOAmount: %v\n", totalAmount)
+
 	encodedTx, txHash, err := client.CreateConversionTransactionWithInputCoins(privateKey, inputCoins)
 	if err != nil {
 		errCh <- fmt.Errorf("[ID %v] %v", id, err)
@@ -286,6 +336,8 @@ func (client *IncClient) convertTokens(id int, privateKey, tokenIDStr string,
 		errCh <- fmt.Errorf("[ID %v] not enough PRV, got %v, want at least %v", id, totalAmount, DefaultPRVFee)
 		return
 	}
+
+	Logger.Printf("[ID %v] TotalUTXOAmount: %v\n", totalAmount)
 
 	encodedTx, txHash, err := client.CreateTokenConversionTransactionWithInputCoins(privateKey, tokenIDStr,
 		inputCoins, prvInputCoins, prvIndices)

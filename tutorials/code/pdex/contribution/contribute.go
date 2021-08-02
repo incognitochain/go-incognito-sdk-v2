@@ -27,7 +27,7 @@ func main() {
 	if err == nil {
 		secondAmount = expectedSecondAmount
 	} else {
-		log.Println("pool has bot been initialized")
+		log.Println("pool has not been initialized")
 	}
 
 	firstTx, err := client.CreateAndSendPDEContributeTransaction(privateKey, pairID, firstToken, firstAmount, 2)

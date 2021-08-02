@@ -127,5 +127,5 @@ var (
 	PRVCoinID           = Hash{4}
 	ConfidentialAssetID = Hash{5}
 	MaxShardNumber      = 8 //programmatically config based on networkID
-	AddressVersion      = 0
+	AddressVersion      = 1
 )
