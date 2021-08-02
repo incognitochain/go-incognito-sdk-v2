@@ -103,3 +103,18 @@ func TestIncClient_GetSpentOutputCoins(t *testing.T) {
 			spentCoin.GetValue())
 	}
 }
+
+func TestIncClient_BuildAssetTags(t *testing.T) {
+	var err error
+	ic, err = NewMainNetClient()
+	if err != nil {
+		panic(err)
+	}
+
+	assetTags, err := ic.GetAllAssetTags()
+	if err != nil {
+		panic(err)
+	}
+
+	Logger.Println(len(assetTags), assetTags)
+}

@@ -2,6 +2,7 @@ package incclient
 
 import (
 	"fmt"
+	"github.com/incognitochain/go-incognito-sdk-v2/crypto"
 	"math/big"
 
 	"github.com/incognitochain/go-incognito-sdk-v2/coin"
@@ -204,6 +205,25 @@ func (client *IncClient) GetSpentOutputCoins(privateKey, tokenID string, height 
 	Logger.Printf("Len(spentCoins) = %v\n", len(listSpentOutputCoins))
 
 	return listSpentOutputCoins, listSpentIndices, nil
+}
+
+// GetAllAssetTags computes a mapping from raw assetTags to tokenIds (e.g, HashToPoint(PRV) => PRV).
+func (client *IncClient) GetAllAssetTags() (map[string]*common.Hash, error) {
+	assetTags := make(map[string]*common.Hash)
+	assetTags[crypto.HashToPoint(common.PRVCoinID[:]).String()] = &common.PRVCoinID
+	listTokens, err := client.GetListToken()
+	if err != nil {
+		return nil, err
+	}
+	for tokenIdStr := range listTokens {
+		tokenHash, err := new(common.Hash).NewHashFromStr(tokenIdStr)
+		if err != nil {
+			return nil, err
+		}
+		assetTags[crypto.HashToPoint(tokenHash[:]).String()] = tokenHash
+	}
+
+	return assetTags, nil
 }
 
 // NewOutCoinKeyFromPrivateKey creates a new rpc.OutCoinKey given the private key.
