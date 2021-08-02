@@ -145,3 +145,24 @@ func TestIncClient_GetTxs(t *testing.T) {
 
 	}
 }
+
+func TestIncClient_GetReceivingInfo(t *testing.T) {
+	var err error
+	ic, err = NewTestNetClient()
+	if err != nil {
+		panic(err)
+	}
+
+	receiverOtaKey := "14y77fjaSSxc7LNcy1rf5scTkucn2CndPSRE8NTxkxB7hJfs5s6cAsK5jh1sJWWKGJYKoConDPJ1sLUqh59oTq6DVHd1Rc7S9sCtJwi"
+	receiverReadonlyKey := "13hVXWMfgetD6ci9LwgJFBdXqBaapBo7HEDQsPoNg13smvjTn1rKFKpJzSvX96MzDR524Ng7m9RJ5ZYBipVxvkFnJxwHbEqEYW7MRai"
+	txHash := "8afd4009134a6d30e46b1b2fc6322d93e84f242001e36b13a54446d4e337ae93"
+
+	received, receivingInfo, err := ic.GetReceivingInfo(txHash, receiverOtaKey, receiverReadonlyKey)
+	if err != nil {
+		panic(err)
+	}
+
+	Logger.Printf("received: %v\n", received)
+	Logger.Printf("receivingInfo: %v\n", receivingInfo)
+
+}

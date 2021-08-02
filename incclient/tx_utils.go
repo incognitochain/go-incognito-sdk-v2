@@ -3,6 +3,7 @@ package incclient
 import (
 	"fmt"
 	"github.com/incognitochain/go-incognito-sdk-v2/transaction"
+	"github.com/incognitochain/go-incognito-sdk-v2/transaction/tx_generic"
 	"math/big"
 	"sort"
 	"time"
@@ -840,4 +841,125 @@ func (client *IncClient) CheckTxInBlock(txHash string) (bool, error) {
 	}
 
 	return txDetail.IsInBlock, nil
+}
+
+// GetReceivingInfo verifies if a transaction is sent to the given `otaKey` and the transacted tokenIds.
+// Furthermore, in case a read-only key is given, it will
+// decrypt the received output coins and return the total amounts. If there are multiple read-only keys,
+// only the first one is used.
+func (client *IncClient) GetReceivingInfo(
+	txHash string,
+	otaKey string,
+	readonlyKey ...string,
+) (received bool, mapResult map[string]uint64, err error) {
+	mapResult = make(map[string]uint64)
+
+	// deserialize the ota key
+	w, err := wallet.Base58CheckDeserialize(otaKey)
+	if err != nil || w.KeySet.OTAKey.GetOTASecretKey() == nil || w.KeySet.OTAKey.GetPublicSpend() == nil {
+		err = fmt.Errorf("otaKey is invalid: %v", err)
+		return
+	}
+	keySet := w.KeySet
+	keySet.PaymentAddress = key.PaymentAddress{Pk: keySet.OTAKey.GetPublicSpend().ToBytesS()}
+
+	// deserialize the ota key (if have)
+	if len(readonlyKey) > 0 {
+		tmpWallet, tmpErr := wallet.Base58CheckDeserialize(readonlyKey[0])
+		if tmpErr != nil ||
+			tmpWallet.KeySet.ReadonlyKey.GetPublicSpend() == nil ||
+			tmpWallet.KeySet.ReadonlyKey.GetPrivateView() == nil {
+			err = fmt.Errorf("readonlyKey is invalid: %v", tmpErr)
+			return
+		}
+		keySet.ReadonlyKey = tmpWallet.KeySet.ReadonlyKey
+	}
+
+	// get the transaction detail
+	tmpTxs, err := client.GetTxs([]string{txHash})
+	if err != nil {
+		return
+	}
+	tx := tmpTxs[txHash]
+	tokenIdStr := tx.GetTokenID().String()
+
+	// get the output coins
+	outCoins := make([]coin.Coin, 0)
+	switch tx.GetType() {
+	case common.TxCustomTokenPrivacyType, common.TxTokenConversionType:
+		txToken, ok := tx.(tx_generic.TransactionToken)
+		if !ok {
+			err = fmt.Errorf("cannot parse tx as a token transaction")
+			return
+		}
+		// get the PRV amount (if have)
+		if txToken.GetTxBase() != nil {
+			prvAmount, err := getTxOutputAmountByKeySet(txToken, common.PRVIDStr, &keySet)
+			if err != nil {
+				Logger.Printf("get PRV amount error: %v\n", err)
+			}
+			if prvAmount > 0 {
+				received = true
+			}
+			mapResult[common.PRVIDStr] = prvAmount
+		}
+
+		txNormal := txToken.GetTxNormal()
+		if txNormal.GetProof() != nil && txNormal.GetProof().GetOutputCoins() != nil {
+			outCoins = append(outCoins, txNormal.GetProof().GetOutputCoins()...)
+		}
+	case common.TxNormalType, common.TxRewardType, common.TxReturnStakingType, common.TxConversionType:
+		prvAmount, err := getTxOutputAmountByKeySet(tx, common.PRVIDStr, &keySet)
+		if err != nil {
+			Logger.Printf("get PRV amount error: %v\n", err)
+		}
+		if prvAmount > 0 {
+			received = true
+		}
+		mapResult[common.PRVIDStr] = prvAmount
+	default:
+		err = fmt.Errorf("transaction type `%v` is invalid", tx.GetType())
+	}
+
+	if len(outCoins) == 0 {
+		err = fmt.Errorf("transaction does not have output coins")
+	}
+
+	// getAssetTags
+	assetTags, err := client.GetAllAssetTags()
+	if err != nil {
+		return
+	}
+
+	// check if there is any output coins belong to the `keySet`, and decrypt it if there is a read-only key.
+	var plainCoin coin.PlainCoin
+	var tmpTokenId *common.Hash
+	for _, outCoin := range outCoins {
+		belong, _ := outCoin.DoesCoinBelongToKeySet(&keySet)
+		if belong {
+			received = true
+
+			// try to decrypt first
+			amount := uint64(0)
+			plainCoin, _ = outCoin.Decrypt(&keySet)
+			if plainCoin != nil {
+				amount = plainCoin.GetValue()
+			}
+
+			switch tokenIdStr {
+			case common.ConfidentialAssetID.String():
+				if tmpTokenId == nil {
+					tmpTokenId, err = outCoin.(*coin.CoinV2).GetTokenId(&keySet, assetTags)
+					if err != nil {
+						return
+					}
+				}
+				mapResult[tmpTokenId.String()] += amount
+			default:
+				mapResult[tokenIdStr] += amount
+			}
+		}
+	}
+
+	return
 }
