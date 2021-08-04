@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	client, err := incclient.NewTestNet1Client()
+	client, err := incclient.NewTestNetClient()
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -20,7 +20,13 @@ func main() {
 		log.Fatal(err)
 	}
 
-	// for enhanced cache
+	// at this point, if you submit again, it will throw an error
+	err = client.SubmitKey(privateOTAKey)
+	if err != nil {
+		log.Println(err) // should throw an error: OTAKey has been submitted and status = 2
+	}
+
+	// However, you can override the regular submission by the enhanced mode.
 	accessToken := "0c3d46946bbf9339c8213dd7f6c640ed643003bdc056a5b68e7e80f5ef5aa0dd"
 	fromHeight := uint64(0)
 	isReset := true

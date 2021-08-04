@@ -7,8 +7,16 @@ import (
 
 // SubmitKey submits an OTAKey to the full-node.
 func (client *IncClient) SubmitKey(otaKey string) error {
-	_, err := client.rpcServer.SubmitKey(otaKey)
-	return err
+	responseInBytes, err := client.rpcServer.SubmitKey(otaKey)
+	if err != nil {
+		return err
+	}
+
+	err = rpchandler.ParseResponse(responseInBytes, nil)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 // AuthorizedSubmitKey handles submitting OTA keys in an authorized manner.

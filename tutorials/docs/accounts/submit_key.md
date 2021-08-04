@@ -49,6 +49,10 @@ if err != nil {
 	log.Fatal(err)
 }
 ```
+After the submission is successful, if you try to submit the key again, it will throw an error like this:
+```
+OTAKey has been submitted and status = 2
+```
 
 ## Enhanced mode
 As we can see, the previous mode does not provide much flexibility and creates a poor user experience. That is, if a user fails to submit the key, he/she will be unable to retrieve the balance through the full-node. As a result, we introduce the enhanced mode to assist the full-node owner or anyone else authorized in retrieving their total balance.
