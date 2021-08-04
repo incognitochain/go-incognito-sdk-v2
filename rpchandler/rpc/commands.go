@@ -110,6 +110,8 @@ const (
 	createAndSendTokenInitTransaction          = "createandsendtokeninittransaction"
 	decryptoutputcoinbykeyoftransaction        = "decryptoutputcoinbykeyoftransaction"
 	randomCommitmentsAndPublicKeys             = "randomcommitmentsandpublickeys"
+	getOTACoinLength                           = "getotacoinlength"
+	getOTACoinsByIndices                       = "getotacoinsbyindices"
 
 	//===========For Testing and Benchmark==============
 	getAndSendTxsFromFile      = "getandsendtxsfromfile"

@@ -41,6 +41,21 @@ func (server *RPCServer) GetListOutputCoinsByRPCV2(outCoinKey *OutCoinKey, token
 	return server.SendQuery(listOutputCoinsFromCache, params)
 }
 
+// GetOTACoinsByIndices returns the list of output coins given the indices.
+func (server *RPCServer) GetOTACoinsByIndices(shardID byte, tokenID string, idxList []uint64) ([]byte, error) {
+	mapParams := make(map[string]interface{})
+	mapParams["ShardID"] = shardID
+	mapParams["TokenID"] = tokenID
+	mapParams["Indices"] = idxList
+
+	return server.SendQuery(getOTACoinsByIndices, []interface{}{mapParams})
+}
+
+// GetOTACoinLength returns the number of OTA coins for each shard.
+func (server *RPCServer) GetOTACoinLength() ([]byte, error) {
+	return server.SendQuery(getOTACoinLength, []interface{}{})
+}
+
 // ListUnspentOutputCoinsByRPC retrieves list of output coins of an OutCoinKey and returns the result in raw json bytes.
 //
 // NOTE: PrivateKey must be supplied and sent to the server.
