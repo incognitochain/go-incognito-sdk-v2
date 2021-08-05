@@ -5,7 +5,7 @@ Description: Tutorial on how to retrieve balances of an Incognito account.
 ## Balances
 
 To retrieve the balance of either PRV or any token on the Incognito network, we first need to get ourselves connected to the network
-using the `incclient` package as described in [Client](../client/client.md). Please make sure that you have correctly [submit your key](../submit_key.md) to the remote host.
+using the `incclient` package as described in [Client](../client/client.md). Please make sure that you have correctly [submit your key](./submit_key.md) to the remote host.
 
 ```go
 client, err := incclient.NewTestNet1Client()
