@@ -1,7 +1,9 @@
 package metadata
 
 import (
+	"encoding/base64"
 	"encoding/json"
+	"fmt"
 
 	"github.com/pkg/errors"
 )
@@ -117,6 +119,26 @@ func ParseMetadata(metaInBytes []byte) (Metadata, error) {
 	err = json.Unmarshal(metaInBytes, &md)
 	if err != nil {
 		return nil, err
+	}
+
+	switch theType {
+	case WithDrawRewardRequestMeta:
+		tmpMd, ok := md.(*WithDrawRewardRequest)
+		if !ok {
+			return nil, fmt.Errorf("cannot parse metadata")
+		}
+		if mtTemp["Sig"] != nil {
+			tmpSig := mtTemp["Sig"]
+			sig, ok := tmpSig.(string)
+			if !ok {
+				return nil, fmt.Errorf("cannot parse signature as a string")
+			}
+			tmpMd.Sig, err = base64.StdEncoding.DecodeString(sig)
+			if err != nil {
+				return nil, err
+			}
+		}
+
 	}
 
 	return md, nil
