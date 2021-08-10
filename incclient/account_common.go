@@ -19,6 +19,7 @@ type KeyInfo struct {
 	OTAPrivateKey   string
 	MiningKey       string
 	MiningPublicKey string
+	ShardID         byte
 }
 
 func (k KeyInfo) String() string {
@@ -46,6 +47,7 @@ func GetAccountInfoFromPrivateKey(privateKey string) (*KeyInfo, error) {
 	readonlyKey := PrivateKeyToReadonlyKey(privateKey)
 	otaKey := PrivateKeyToPrivateOTAKey(privateKey)
 	miningKey := PrivateKeyToMiningKey(privateKey)
+	shardID := GetShardIDFromPrivateKey(privateKey)
 
 	miningKeyBytes, _, err := base58.Base58Check{}.Decode(miningKey)
 	if err != nil {
@@ -69,5 +71,6 @@ func GetAccountInfoFromPrivateKey(privateKey string) (*KeyInfo, error) {
 		OTAPrivateKey:   otaKey,
 		MiningKey:       miningKey,
 		MiningPublicKey: miningPubKeyStr,
+		ShardID:         shardID,
 	}, nil
 }
