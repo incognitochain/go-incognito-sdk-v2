@@ -29,6 +29,8 @@ type ICoinInfo interface {
 	GetSharedRandom() *crypto.Scalar
 	GetSharedConcealRandom() *crypto.Scalar
 	GetAssetTag() *crypto.Point
+	MarshalJSON() ([]byte, error)
+	UnmarshalJSON(data []byte) error
 }
 
 // ListOutputCoins is a list of output coins returned by an RPC response.
