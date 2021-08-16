@@ -184,10 +184,10 @@ func GetShardIDFromPrivateKey(privateKey string) byte {
 	return common.GetShardIDFromLastByte(pubKey[len(pubKey)-1])
 }
 
-// GetShardIDPaymentAddressKey returns the shardID where the payment address resides in.
+// GetShardIDFromPaymentAddress returns the shardID where the payment address resides in.
 //
 // If the private key is invalid, it returns 255.
-func GetShardIDPaymentAddressKey(addrStr string) (byte, error) {
+func GetShardIDFromPaymentAddress(addrStr string) (byte, error) {
 	keyWallet, err := wallet.Base58CheckDeserialize(addrStr)
 	if err != nil {
 		return 255, err
