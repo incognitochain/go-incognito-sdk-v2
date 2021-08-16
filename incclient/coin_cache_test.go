@@ -32,7 +32,7 @@ func TestIncClient_GetOutputCoinsFromLocalCache(t *testing.T) {
 		Logger.Printf("TEST %v\n", i)
 
 		start := time.Now()
-		secondOutCoins, secondIndices, err := ic.GetAndCacheOutCoins(outCoinKey, tokenIDStr, true)
+		secondOutCoins, secondIndices, err := ic.GetAndCacheOutCoins(outCoinKey, tokenIDStr)
 		if err != nil {
 			panic(err)
 		}

@@ -125,9 +125,16 @@ func (uc *utxoCache) getCachedAccount(otaKey string) *accountCache {
 	return ac
 }
 
-func (uc *utxoCache) addAccount(otaKey string, cachedAccount *accountCache) {
+// addAccount adds an account to the cache, and saves it into a temp file if needed.
+func (uc *utxoCache) addAccount(otaKey string, cachedAccount *accountCache, save bool) {
 	uc.mtx.Lock()
 	uc.cachedData[otaKey] = cachedAccount
+	if save {
+		err := cachedAccount.store(uc.cacheDirectory)
+		if err != nil {
+			Logger.Printf("save file %v failed: %v\n", otaKey, err)
+		}
+	}
 	uc.mtx.Unlock()
 }
 
@@ -228,7 +235,9 @@ func (client *IncClient) syncOutCoinV2(outCoinKey *rpc.OutCoinKey, tokenIDStr st
 			return err
 		}
 	}
-	client.cache.addAccount(outCoinKey.OtaKey(), cachedAccount)
+
+	// add account to cache and save to file.
+	client.cache.addAccount(outCoinKey.OtaKey(), cachedAccount, true)
 	Logger.Printf("FINISHED SYNCING OUTPUT COINS OF TOKEN %v AFTER %v SECOND\n", tokenIDStr, time.Since(start).Seconds())
 
 	return nil
@@ -236,7 +245,7 @@ func (client *IncClient) syncOutCoinV2(outCoinKey *rpc.OutCoinKey, tokenIDStr st
 
 // GetAndCacheOutCoins retrieves the list of output coins and caches them for faster retrieval later.
 // This function should only be called after the cache is initialized.
-func (client *IncClient) GetAndCacheOutCoins(outCoinKey *rpc.OutCoinKey, tokenID string, save ...bool) ([]jsonresult.ICoinInfo, []*big.Int, error) {
+func (client *IncClient) GetAndCacheOutCoins(outCoinKey *rpc.OutCoinKey, tokenID string) ([]jsonresult.ICoinInfo, []*big.Int, error) {
 	if client.cache == nil || !client.cache.isRunning {
 		return nil, nil, fmt.Errorf("utxoCache is not running")
 	}
@@ -285,16 +294,6 @@ func (client *IncClient) GetAndCacheOutCoins(outCoinKey *rpc.OutCoinKey, tokenID
 	}
 	outCoinKey.SetOTAKey(otaKey)
 	Logger.Printf("Found %v v1 output coins\n", v1Count)
-
-	if save != nil {
-		isSaved := save[0]
-		if isSaved {
-			err = client.cache.save()
-			if err != nil {
-				panic(err)
-			}
-		}
-	}
 
 	return outCoins, indices, nil
 }
