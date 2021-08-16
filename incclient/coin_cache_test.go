@@ -15,7 +15,6 @@ import (
 func TestIncClient_GetOutputCoinsFromLocalCache(t *testing.T) {
 	var err error
 	ic, err = NewMainNetClientWithCache()
-	//ic, err = NewTestNetClient()
 	if err != nil {
 		panic(err)
 	}
@@ -33,7 +32,7 @@ func TestIncClient_GetOutputCoinsFromLocalCache(t *testing.T) {
 		Logger.Printf("TEST %v\n", i)
 
 		start := time.Now()
-		secondOutCoins, secondIndices, err := ic.GetOutputCoinsFromLocalCache(outCoinKey, tokenIDStr, true)
+		secondOutCoins, secondIndices, err := ic.GetAndCacheOutCoins(outCoinKey, tokenIDStr, true)
 		if err != nil {
 			panic(err)
 		}
@@ -53,11 +52,6 @@ func TestIncClient_GetOutputCoinsFromLocalCache(t *testing.T) {
 
 		Logger.Println("isEqual", isEqual)
 		Logger.Printf("FINISHED TEST %v\n\n", i)
-	}
-
-	err = ic.cache.saveAndStop()
-	if err != nil {
-		panic(err)
 	}
 }
 
