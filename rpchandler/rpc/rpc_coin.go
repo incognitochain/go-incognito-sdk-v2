@@ -161,6 +161,14 @@ func (server *RPCServer) AuthorizedSubmitKey(otaStr string, accessToken string, 
 	return server.SendQuery(authorizedSubmitKey, params)
 }
 
+// GetKeySubmissionInfo returns the information of an OTAKey if it has been submitted.
+func (server *RPCServer) GetKeySubmissionInfo(otaStr string) ([]byte, error) {
+	params := make([]interface{}, 0)
+	params = append(params, otaStr)
+
+	return server.SendQuery(getKeySubmissionInfo, params)
+}
+
 // RandomCommitments gets a list of random commitments to create transactions of version 1.
 func (server *RPCServer) RandomCommitments(shardID byte, inputCoins []jsonresult.OutCoin, tokenID string) ([]byte, error) {
 	addr := rpchandler.CreatePaymentAddress(shardID) // use a random payment address for anonymity
