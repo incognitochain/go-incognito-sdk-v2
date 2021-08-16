@@ -4,7 +4,7 @@ package incclient
 const (
 	MainNetETHContractAddressStr = "0x43D037A562099A4C2c95b1E2120cc43054450629"
 	MainNetFullNode              = "https://beta-fullnode.incognito.org/fullnode"
-	MainNetETHHost               = "//https://mainnet.infura.io/v3/34918000975d4374a056ed78fe21c517"
+	MainNetETHHost               = "https://mainnet.infura.io/v3/34918000975d4374a056ed78fe21c517"
 	MainNetPrivacyVersion        = 2
 )
 

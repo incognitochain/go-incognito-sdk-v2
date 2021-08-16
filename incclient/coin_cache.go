@@ -10,6 +10,7 @@ import (
 	"io/ioutil"
 	"log"
 	"math/big"
+	"os"
 	"strings"
 	"sync"
 	"time"
@@ -33,15 +34,26 @@ type utxoCache struct {
 }
 
 // newUTXOCache creates a new utxoCache instance.
-func newUTXOCache(cacheDirectory string) *utxoCache {
+func newUTXOCache(cacheDirectory string) (*utxoCache, error) {
 	cachedData := make(map[string]*accountCache)
 	mtx := new(sync.Mutex)
+
+	Logger.Printf("cacheDirectory: %v\n", cacheDirectory)
+
+	// if the cache directory does not exist, create one.
+	if _, err := os.Stat(cacheDirectory); os.IsNotExist(err) {
+		err = os.MkdirAll(cacheDirectory, os.ModePerm)
+		if err != nil {
+			Logger.Printf("make directory %v error: %v\n", cacheDirectory, err)
+			return nil, err
+		}
+	}
 
 	return &utxoCache{
 		cacheDirectory: cacheDirectory,
 		cachedData:     cachedData,
 		mtx:            mtx,
-	}
+	}, nil
 }
 
 func (uc *utxoCache) start() {
