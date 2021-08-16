@@ -47,6 +47,27 @@ func NewTestNetClient() (*IncClient, error) {
 	return &incClient, nil
 }
 
+// NewTestNetClientWithCache creates a new IncClient with the test-net environment.
+// It also creates a cache instance for locally saving UTXOs.
+func NewTestNetClientWithCache() (*IncClient, error) {
+	incClient, err := NewTestNetClient()
+	if err != nil {
+		return nil, err
+	}
+
+	incClient.cache, err = newUTXOCache(fmt.Sprintf("%v/%v", defaultCacheDirectory, "testnet"))
+	if err != nil {
+		return nil, err
+	}
+	go incClient.cache.start()
+	rawAssetTags, err = incClient.GetAllAssetTags()
+	if err != nil {
+		Logger.Printf("Cannot get raw asset tags: %v\n", err)
+	}
+
+	return incClient, nil
+}
+
 // NewTestNet1Client creates a new IncClient with the test-net 1 environment.
 func NewTestNet1Client() (*IncClient, error) {
 	rpcServer := rpc.NewRPCServer(TestNet1FullNode)
@@ -69,6 +90,27 @@ func NewTestNet1Client() (*IncClient, error) {
 	}
 
 	return &incClient, nil
+}
+
+// NewTestNet1ClientWithCache creates a new IncClient with the test-net-1 environment.
+// It also creates a cache instance for locally saving UTXOs.
+func NewTestNet1ClientWithCache() (*IncClient, error) {
+	incClient, err := NewTestNetClient()
+	if err != nil {
+		return nil, err
+	}
+
+	incClient.cache, err = newUTXOCache(fmt.Sprintf("%v/%v", defaultCacheDirectory, "testnet1"))
+	if err != nil {
+		return nil, err
+	}
+	go incClient.cache.start()
+	rawAssetTags, err = incClient.GetAllAssetTags()
+	if err != nil {
+		Logger.Printf("Cannot get raw asset tags: %v\n", err)
+	}
+
+	return incClient, nil
 }
 
 // NewMainNetClient creates a new IncClient with the main-net environment.
@@ -98,32 +140,22 @@ func NewMainNetClient() (*IncClient, error) {
 // NewMainNetClientWithCache creates a new IncClient with the main-net environment.
 // It also creates a cache instance for locally saving UTXOs.
 func NewMainNetClientWithCache() (*IncClient, error) {
-	rpcServer := rpc.NewRPCServer(MainNetFullNode)
-	ethServer := rpc.NewRPCServer(MainNetETHHost)
-
-	incClient := IncClient{rpcServer: rpcServer, ethServer: ethServer, version: MainNetPrivacyVersion}
-	activeShards, err := incClient.GetActiveShard()
+	incClient, err := NewMainNetClient()
 	if err != nil {
 		return nil, err
 	}
-	incClient.cache = newUTXOCache(fmt.Sprintf("%v/%v", defaultCacheDirectory, "mainnet"))
-	go incClient.cache.start()
 
-	Logger.Printf("Init to %v, activeShards: %v\n", MainNetFullNode, activeShards)
-
-	common.MaxShardNumber = activeShards
-	if incClient.version == 1 {
-		common.AddressVersion = 0
-	} else if incClient.version == 2 {
-		common.AddressVersion = 1
+	incClient.cache, err = newUTXOCache(fmt.Sprintf("%v/%v", defaultCacheDirectory, "mainnet"))
+	if err != nil {
+		return nil, err
 	}
-
+	go incClient.cache.start()
 	rawAssetTags, err = incClient.GetAllAssetTags()
 	if err != nil {
-		Logger.Printf("Canot get raw asset tags: %v\n", err)
+		Logger.Printf("Cannot get raw asset tags: %v\n", err)
 	}
 
-	return &incClient, nil
+	return incClient, nil
 }
 
 // NewLocalClient creates a new IncClient with the local environment.
@@ -151,6 +183,27 @@ func NewLocalClient(port string) (*IncClient, error) {
 	}
 
 	return &incClient, nil
+}
+
+// NewLocalClientWithCache creates a new IncClient with the local environment.
+// It also creates a cache instance for locally saving UTXOs.
+func NewLocalClientWithCache() (*IncClient, error) {
+	incClient, err := NewLocalClient("")
+	if err != nil {
+		return nil, err
+	}
+
+	incClient.cache, err = newUTXOCache(fmt.Sprintf("%v/%v", defaultCacheDirectory, "local"))
+	if err != nil {
+		return nil, err
+	}
+	go incClient.cache.start()
+	rawAssetTags, err = incClient.GetAllAssetTags()
+	if err != nil {
+		Logger.Printf("Cannot get raw asset tags: %v\n", err)
+	}
+
+	return incClient, nil
 }
 
 // NewDevNetClient creates a new IncClient with the dev-net environment.
@@ -217,8 +270,15 @@ func NewIncClientWithCache(fullNode, ethNode string, version int) (*IncClient, e
 
 	Logger.Printf("Init to %v, activeShards: %v\n", fullNode, activeShards)
 
-	incClient.cache = newUTXOCache(fmt.Sprintf("%v/%v", defaultCacheDirectory, "mainnet"))
-	incClient.cache.start()
+	incClient.cache, err = newUTXOCache(fmt.Sprintf("%v/%v", defaultCacheDirectory, "custom"))
+	if err != nil {
+		return nil, err
+	}
+	go incClient.cache.start()
+	rawAssetTags, err = incClient.GetAllAssetTags()
+	if err != nil {
+		Logger.Printf("Cannot get raw asset tags: %v\n", err)
+	}
 
 	common.MaxShardNumber = activeShards
 	if incClient.version == 1 {
@@ -229,10 +289,6 @@ func NewIncClientWithCache(fullNode, ethNode string, version int) (*IncClient, e
 		return nil, fmt.Errorf("version %v not supported", version)
 	}
 
-	rawAssetTags, err = incClient.GetAllAssetTags()
-	if err != nil {
-		Logger.Printf("Cannot get raw asset tags: %v\n", err)
-	}
 
 	return &incClient, nil
 }
