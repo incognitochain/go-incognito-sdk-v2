@@ -65,7 +65,7 @@ func (uc *utxoCache) start() {
 	uc.isRunning = true
 }
 
-// saveAndStop saves the current cache and stop.
+// saveAndStop saves the current cache and stops.
 func (uc *utxoCache) saveAndStop() error {
 	uc.isRunning = false
 	err := uc.save()
