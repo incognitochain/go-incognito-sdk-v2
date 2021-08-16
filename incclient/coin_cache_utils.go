@@ -152,13 +152,12 @@ func (ac *accountCache) update(tokenIDStr string, latestIndex uint64, outCoins c
 
 	tokenCached := ac.CachedTokens[tokenIDStr]
 	if tokenCached == nil {
-		ac.CachedTokens[tokenIDStr] = &tokenCache{
+		tokenCached = &tokenCache{
 			LatestIndex: latestIndex,
 			OutCoins:    outCoins,
 		}
-	}
-
-	if len(outCoins.Data) != 0 {
+		updatedRecords = tokenCached.OutCoins.Data
+	} else if len(outCoins.Data) != 0 {
 		Logger.Printf("Adding %v OutCoins to cached %v, LatestIndex %v\n", len(outCoins.Data), tokenIDStr, latestIndex)
 		for idx, outCoin := range outCoins.Data {
 			if _, ok := tokenCached.OutCoins.Data[idx]; !ok {
@@ -169,6 +168,7 @@ func (ac *accountCache) update(tokenIDStr string, latestIndex uint64, outCoins c
 	}
 
 	tokenCached.LatestIndex = latestIndex
+	ac.CachedTokens[tokenIDStr] = tokenCached
 
 	Logger.Printf("Updated %v records for token %v\n", len(updatedRecords), tokenIDStr)
 	Logger.Printf("Current cached size for token %v: %v\n", tokenIDStr, len(tokenCached.OutCoins.Data))
@@ -262,8 +262,6 @@ func (ac *accountCache) updateAllTokens(latestIndex uint64, data cachedOutCoins,
 		if err != nil {
 			return err
 		}
-
-		Logger.Println(idx, tokenId)
 
 		tokenCached := ac.CachedTokens[tokenId.String()]
 		if tokenCached == nil {

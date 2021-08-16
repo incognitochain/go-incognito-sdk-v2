@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/incognitochain/go-incognito-sdk-v2/common"
-	"github.com/incognitochain/go-incognito-sdk-v2/rpchandler"
 	"github.com/incognitochain/go-incognito-sdk-v2/rpchandler/jsonresult"
 	"github.com/incognitochain/go-incognito-sdk-v2/rpchandler/rpc"
 	"github.com/incognitochain/go-incognito-sdk-v2/wallet"
@@ -120,29 +119,7 @@ func (uc *utxoCache) addAccount(otaKey string, cachedAccount *accountCache) {
 	uc.mtx.Unlock()
 }
 
-func (client *IncClient) getOutCoinV1(outCoinKey *rpc.OutCoinKey, tokenIDStr string) ([]jsonresult.ICoinInfo, error) {
-	otaKey := outCoinKey.OtaKey()
-	outCoinKey.SetOTAKey("") // set this to empty so that the full-node only query v1 output coins.
-
-	var tmp jsonresult.ListOutputCoins
-	responseInBytes, err := client.rpcServer.GetListOutputCoinsByRPCV1(outCoinKey, tokenIDStr, 0)
-	if err != nil {
-		return nil, err
-	}
-	err = rpchandler.ParseResponse(responseInBytes, &tmp)
-	if err != nil {
-		return nil, err
-	}
-
-	outCoins, _, err := ParseCoinFromJsonResponse(responseInBytes)
-	if err != nil {
-		return nil, fmt.Errorf("get v1 output coins error: %v", err)
-	}
-
-	outCoinKey.SetOTAKey(otaKey)
-	return outCoins, nil
-}
-
+// syncOutCoinV2 syncs output coins of an account w.r.t the given tokenIDStr.
 func (client *IncClient) syncOutCoinV2(outCoinKey *rpc.OutCoinKey, tokenIDStr string) error {
 	if tokenIDStr != common.PRVIDStr {
 		tokenIDStr = common.ConfidentialAssetID.String()
@@ -229,7 +206,6 @@ func (client *IncClient) syncOutCoinV2(outCoinKey *rpc.OutCoinKey, tokenIDStr st
 	} else {
 		// update cached data for each token
 		if rawAssetTags == nil {
-			Logger.Printf("dasdasdasdasda\n")
 			rawAssetTags, err = client.GetAllAssetTags()
 			if err != nil {
 				return err
@@ -247,13 +223,14 @@ func (client *IncClient) syncOutCoinV2(outCoinKey *rpc.OutCoinKey, tokenIDStr st
 	return nil
 }
 
-// GetOutputCoinsFromLocalCache returns the list of UTXOs from the client's cache.
+// GetAndCacheOutCoins retrieves the list of output coins and caches them for faster retrieval later.
 // This function should only be called after the cache is initialized.
-func (client *IncClient) GetOutputCoinsFromLocalCache(outCoinKey *rpc.OutCoinKey, tokenID string, save ...bool) ([]jsonresult.ICoinInfo, []*big.Int, error) {
+func (client *IncClient) GetAndCacheOutCoins(outCoinKey *rpc.OutCoinKey, tokenID string, save ...bool) ([]jsonresult.ICoinInfo, []*big.Int, error) {
 	if client.cache == nil || !client.cache.isRunning {
 		return nil, nil, fmt.Errorf("utxoCache is not running")
 	}
 
+	// sync v2 output coins from the remote node
 	err := client.syncOutCoinV2(outCoinKey, tokenID)
 	if err != nil {
 		return nil, nil, err
@@ -262,6 +239,7 @@ func (client *IncClient) GetOutputCoinsFromLocalCache(outCoinKey *rpc.OutCoinKey
 	outCoins := make([]jsonresult.ICoinInfo, 0)
 	indices := make([]*big.Int, 0)
 
+	// query v2 output coins
 	cachedAccount := client.cache.getCachedAccount(outCoinKey.OtaKey())
 	if cachedAccount == nil {
 		return nil, nil, fmt.Errorf("otaKey %v has not been cached", outCoinKey.OtaKey())
@@ -277,7 +255,10 @@ func (client *IncClient) GetOutputCoinsFromLocalCache(outCoinKey *rpc.OutCoinKey
 		Logger.Printf("No cached found for tokenID %v\n", tokenID)
 	}
 
-	v1OutCoins, err := client.getOutCoinV1(outCoinKey, tokenID)
+	// query v1 output coins
+	otaKey := outCoinKey.OtaKey()
+	outCoinKey.SetOTAKey("") // set this to empty so that the full-node only query v1 output coins.
+	v1OutCoins, _, err := client.GetOutputCoinsV1(outCoinKey, tokenID, 0)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -291,6 +272,7 @@ func (client *IncClient) GetOutputCoinsFromLocalCache(outCoinKey *rpc.OutCoinKey
 		indices = append(indices, idxBig)
 		v1Count++
 	}
+	outCoinKey.SetOTAKey(otaKey)
 	Logger.Printf("Found %v v1 output coins\n", v1Count)
 
 	if save != nil {
