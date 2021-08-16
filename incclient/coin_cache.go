@@ -131,7 +131,7 @@ func (uc *utxoCache) addAccount(otaKey string, cachedAccount *accountCache) {
 	uc.mtx.Unlock()
 }
 
-// syncOutCoinV2 syncs output coins of an account w.r.t the given tokenIDStr.
+// syncOutCoinV2 syncs v2 output coins of an account w.r.t the given tokenIDStr.
 func (client *IncClient) syncOutCoinV2(outCoinKey *rpc.OutCoinKey, tokenIDStr string) error {
 	if tokenIDStr != common.PRVIDStr {
 		tokenIDStr = common.ConfidentialAssetID.String()
