@@ -17,10 +17,10 @@ type IncClient struct {
 	ethServer *rpc.RPCServer
 
 	// the version of the client
-	version   int
+	version int
 
 	// the utxoCache of the client
-	cache     *utxoCache
+	cache *utxoCache
 }
 
 // NewTestNetClient creates a new IncClient with the test-net environment.
@@ -288,7 +288,6 @@ func NewIncClientWithCache(fullNode, ethNode string, version int) (*IncClient, e
 	} else {
 		return nil, fmt.Errorf("version %v not supported", version)
 	}
-
 
 	return &incClient, nil
 }

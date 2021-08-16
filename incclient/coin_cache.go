@@ -179,7 +179,7 @@ func (client *IncClient) syncOutCoinV2(outCoinKey *rpc.OutCoinKey, tokenIDStr st
 		idxList := make([]uint64, 0)
 
 		nextIndex := currentIndex + uint64(batchSize)
-		if nextIndex > coinLength - 1 {
+		if nextIndex > coinLength-1 {
 			nextIndex = coinLength - 1
 		}
 		for i := currentIndex; i < nextIndex; i++ {
@@ -189,7 +189,7 @@ func (client *IncClient) syncOutCoinV2(outCoinKey *rpc.OutCoinKey, tokenIDStr st
 			break
 		}
 
-		Logger.Printf("Get output coins of indices from %v to %v\n", currentIndex, nextIndex - 1)
+		Logger.Printf("Get output coins of indices from %v to %v\n", currentIndex, nextIndex-1)
 
 		tmpOutCoins, err := client.GetOTACoinsByIndices(shardID, tokenIDStr, idxList)
 		if err != nil {
@@ -211,7 +211,6 @@ func (client *IncClient) syncOutCoinV2(outCoinKey *rpc.OutCoinKey, tokenIDStr st
 	}
 
 	Logger.Printf("newOutCoins: %v\n", len(res.Data))
-
 
 	if tokenIDStr == common.PRVIDStr {
 		cachedAccount.update(common.PRVIDStr, coinLength, *res)

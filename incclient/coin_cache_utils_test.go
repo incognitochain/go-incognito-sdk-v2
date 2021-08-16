@@ -21,10 +21,10 @@ func TestCachedOutCoin_Unmarshal(t *testing.T) {
 		panic(err)
 	}
 
-	r := 1 + common.RandInt() % 100
+	r := 1 + common.RandInt()%100
 	idxList := make([]uint64, 0)
 	for len(idxList) < r {
-		idxList = append(idxList, common.RandUint64() % length)
+		idxList = append(idxList, common.RandUint64()%length)
 	}
 
 	res, err := ic.GetOTACoinsByIndices(shardID, tokenID, idxList)

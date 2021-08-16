@@ -70,7 +70,7 @@ func compareUTXOs(firstOutCoins, secondOutCoins []jsonresult.ICoinInfo, firstInd
 
 	type outCoinIdx struct {
 		outCoin jsonresult.ICoinInfo
-		idx *big.Int
+		idx     *big.Int
 	}
 	mapOutCoins := make(map[string]outCoinIdx)
 	for i, outCoin := range firstOutCoins {
@@ -103,6 +103,3 @@ func compareUTXOs(firstOutCoins, secondOutCoins []jsonresult.ICoinInfo, firstInd
 
 	return true, nil
 }
-
-
-

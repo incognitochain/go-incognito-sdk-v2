@@ -35,7 +35,6 @@ func (co *cachedOutCoins) UnmarshalJSON(data []byte) error {
 	}
 	jsb, _ := json.Marshal(tmpData)
 
-
 	cachedData := make(map[uint64]string)
 	err = json.Unmarshal(jsb, &cachedData)
 
