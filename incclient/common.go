@@ -199,3 +199,5 @@ func GetShardIDFromPaymentAddress(addrStr string) (byte, error) {
 	}
 	return common.GetShardIDFromLastByte(pubKey[len(pubKey)-1]), nil
 }
+
+var rawAssetTags map[string]*common.Hash

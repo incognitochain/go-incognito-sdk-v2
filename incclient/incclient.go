@@ -10,9 +10,17 @@ import (
 
 // IncClient defines the environment with which users want to interact.
 type IncClient struct {
+	// the Incognito-RPC server
 	rpcServer *rpc.RPCServer
+
+	// the Ethereum-RPC server
 	ethServer *rpc.RPCServer
+
+	// the version of the client
 	version   int
+
+	// the utxoCache of the client
+	cache     *utxoCache
 }
 
 // NewTestNetClient creates a new IncClient with the test-net environment.
@@ -82,6 +90,37 @@ func NewMainNetClient() (*IncClient, error) {
 		common.AddressVersion = 0
 	} else if incClient.version == 2 {
 		common.AddressVersion = 1
+	}
+
+	return &incClient, nil
+}
+
+// NewMainNetClientWithCache creates a new IncClient with the main-net environment.
+// It also creates a cache instance for locally saving UTXOs.
+func NewMainNetClientWithCache() (*IncClient, error) {
+	rpcServer := rpc.NewRPCServer(MainNetFullNode)
+	ethServer := rpc.NewRPCServer(MainNetETHHost)
+
+	incClient := IncClient{rpcServer: rpcServer, ethServer: ethServer, version: MainNetPrivacyVersion}
+	activeShards, err := incClient.GetActiveShard()
+	if err != nil {
+		return nil, err
+	}
+	incClient.cache = newUTXOCache(fmt.Sprintf("%v/%v", defaultCacheDirectory, "mainnet"))
+	go incClient.cache.start()
+
+	Logger.Printf("Init to %v, activeShards: %v\n", MainNetFullNode, activeShards)
+
+	common.MaxShardNumber = activeShards
+	if incClient.version == 1 {
+		common.AddressVersion = 0
+	} else if incClient.version == 2 {
+		common.AddressVersion = 1
+	}
+
+	rawAssetTags, err = incClient.GetAllAssetTags()
+	if err != nil {
+		Logger.Printf("Canot get raw asset tags: %v\n", err)
 	}
 
 	return &incClient, nil
@@ -159,6 +198,40 @@ func NewIncClient(fullNode, ethNode string, version int) (*IncClient, error) {
 		common.AddressVersion = 1
 	} else {
 		return nil, fmt.Errorf("version %v not supported", version)
+	}
+
+	return &incClient, nil
+}
+
+// NewIncClientWithCache creates a new IncClient from given parameters.
+// It also creates a cache instance for locally saving UTXOs.
+func NewIncClientWithCache(fullNode, ethNode string, version int) (*IncClient, error) {
+	rpcServer := rpc.NewRPCServer(fullNode)
+	ethServer := rpc.NewRPCServer(ethNode)
+
+	incClient := IncClient{rpcServer: rpcServer, ethServer: ethServer, version: version}
+	activeShards, err := incClient.GetActiveShard()
+	if err != nil {
+		return nil, err
+	}
+
+	Logger.Printf("Init to %v, activeShards: %v\n", fullNode, activeShards)
+
+	incClient.cache = newUTXOCache(fmt.Sprintf("%v/%v", defaultCacheDirectory, "mainnet"))
+	incClient.cache.start()
+
+	common.MaxShardNumber = activeShards
+	if incClient.version == 1 {
+		common.AddressVersion = 0
+	} else if incClient.version == 2 {
+		common.AddressVersion = 1
+	} else {
+		return nil, fmt.Errorf("version %v not supported", version)
+	}
+
+	rawAssetTags, err = incClient.GetAllAssetTags()
+	if err != nil {
+		Logger.Printf("Cannot get raw asset tags: %v\n", err)
 	}
 
 	return &incClient, nil
