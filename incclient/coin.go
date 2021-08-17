@@ -20,6 +20,10 @@ import (
 //	- A list of output coins
 //	- A list of corresponding indices. For an output coin v1, its index is -1.
 func (client *IncClient) GetOutputCoins(outCoinKey *rpc.OutCoinKey, tokenID string, height uint64) ([]jsonresult.ICoinInfo, []*big.Int, error) {
+	if client.cache != nil && client.cache.isRunning {
+		return client.GetAndCacheOutCoins(outCoinKey, tokenID)
+	}
+
 	if client.version == 1 {
 		return client.GetOutputCoinsV1(outCoinKey, tokenID, height)
 	} else {
