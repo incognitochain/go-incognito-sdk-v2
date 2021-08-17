@@ -39,7 +39,7 @@ func NewSeedFromMnemonic(mnemonic string) ([]byte, error) {
 // GetBurningPublicKey returns the public key of the burning address.
 func GetBurningPublicKey() []byte {
 	// get burning address
-	w, err := Base58CheckDeserialize(common.BurningAddress)
+	w, err := Base58CheckDeserialize(common.BurningAddress2)
 	if err != nil {
 		return nil
 	}
