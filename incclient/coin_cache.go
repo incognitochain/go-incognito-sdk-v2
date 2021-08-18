@@ -38,7 +38,11 @@ func newUTXOCache(cacheDirectory string) (*utxoCache, error) {
 	cachedData := make(map[string]*accountCache)
 	mtx := new(sync.Mutex)
 
-	Logger.Printf("cacheDirectory: %v\n", cacheDirectory)
+	currentDir, err := os.Getwd()
+	if err != nil {
+		return nil, err
+	}
+	fmt.Printf("cacheDirectory: %v/%v\n", currentDir, cacheDirectory)
 
 	// if the cache directory does not exist, create one.
 	if _, err := os.Stat(cacheDirectory); os.IsNotExist(err) {
