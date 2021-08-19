@@ -185,6 +185,9 @@ func (client *IncClient) syncOutCoinV2(outCoinKey *rpc.OutCoinKey, tokenIDStr st
 
 	start := time.Now()
 	currentIndex := cachedToken.LatestIndex + 1
+	if currentIndex == 1 {
+		currentIndex = 0
+	}
 	Logger.Printf("Current LatestIndex for token %v: %v\n", tokenIDStr, cachedToken.LatestIndex)
 	for currentIndex < coinLength {
 		idxList := make([]uint64, 0)
