@@ -12,15 +12,18 @@ import (
 	"time"
 )
 
-func TestIncClient_GetOutputCoinsFromLocalCache(t *testing.T) {
+func TestIncClient_GetAndCacheOutCoins(t *testing.T) {
 	var err error
-	ic, err = NewMainNetClientWithCache()
+	ic, err = NewTestNetClientWithCache()
 	if err != nil {
 		panic(err)
 	}
 
+	masterPrivateKey := ""
+
 	privateKey := ""
-	tokenIDStr := common.PRVIDStr
+	tokenIDStr := "75b4045a68b30ab04eb7077a5a972b6ec92fdf24ec3993d685b0c4657dfce948"
+	address := PrivateKeyToPaymentAddress(privateKey, -1)
 
 	outCoinKey, err := NewOutCoinKeyFromPrivateKey(privateKey)
 	if err != nil {
@@ -28,18 +31,64 @@ func TestIncClient_GetOutputCoinsFromLocalCache(t *testing.T) {
 	}
 	outCoinKey.SetReadonlyKey("")
 
-	for i := 0; i < 2; i++ {
+	testTokenIDStr := tokenIDStr
+	for i := 0; i < 100; i++ {
 		Logger.Printf("TEST %v\n", i)
 
+		isPRV := (common.RandInt() % 2) == 1
+		Logger.Printf("isPRV %v\n", isPRV)
+		if isPRV {
+			testTokenIDStr = common.PRVIDStr
+		} else {
+			testTokenIDStr = tokenIDStr
+		}
+
+		// send some token to the designated address
+		addrList := make([]string, 0)
+		amtList := make([]uint64, 0)
+		numOutCoins := 1 + common.RandInt()%9
+		Logger.Printf("#numOutCoins: %v\n", numOutCoins)
+		for i := 0; i < numOutCoins; i++ {
+			amount := 1 + common.RandUint64()%50
+			addrList = append(addrList, address)
+			amtList = append(amtList, amount)
+		}
+
+		var txHash string
+		if isPRV {
+			txHash, err = ic.CreateAndSendRawTransaction(
+				masterPrivateKey,
+				addrList,
+				amtList,
+				2, nil)
+		} else {
+			txHash, err = ic.CreateAndSendRawTokenTransaction(
+				masterPrivateKey,
+				addrList,
+				amtList,
+				testTokenIDStr, 2, nil)
+		}
+
+		if err != nil {
+			panic(err)
+		}
+		Logger.Printf("TxHash %v\n", txHash)
+
+		err = waitingCheckTxInBlock(txHash)
+		if err != nil {
+			panic(err)
+		}
+		time.Sleep(40 * time.Second)
+
 		start := time.Now()
-		secondOutCoins, secondIndices, err := ic.GetAndCacheOutCoins(outCoinKey, tokenIDStr)
+		secondOutCoins, secondIndices, err := ic.GetAndCacheOutCoins(outCoinKey, testTokenIDStr)
 		if err != nil {
 			panic(err)
 		}
 		Logger.Printf("GetOutputCoinsFromLocalCache time %v\n", time.Since(start).Seconds())
 
 		start = time.Now()
-		firstOutCoins, firstIndices, err := ic.GetOutputCoins(outCoinKey, tokenIDStr, 0)
+		firstOutCoins, firstIndices, err := ic.GetOutputCoins(outCoinKey, testTokenIDStr, 0)
 		if err != nil {
 			panic(err)
 		}
@@ -52,6 +101,7 @@ func TestIncClient_GetOutputCoinsFromLocalCache(t *testing.T) {
 
 		Logger.Println("isEqual", isEqual)
 		Logger.Printf("FINISHED TEST %v\n\n", i)
+		time.Sleep(10 * time.Second)
 	}
 }
 

@@ -157,7 +157,7 @@ func (ac *accountCache) update(tokenIDStr string, latestIndex uint64, outCoins c
 		}
 		updatedRecords = tokenCached.OutCoins.Data
 	} else if len(outCoins.Data) != 0 {
-		Logger.Printf("Adding %v OutCoins to cached %v, LatestIndex %v\n", len(outCoins.Data), tokenIDStr, latestIndex)
+		Logger.Printf("About to update %v output coins to cached %v, LatestIndex %v\n", len(outCoins.Data), tokenIDStr, latestIndex)
 		for idx, outCoin := range outCoins.Data {
 			if _, ok := tokenCached.OutCoins.Data[idx]; !ok {
 				tokenCached.OutCoins.Data[idx] = outCoin

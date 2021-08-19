@@ -184,14 +184,14 @@ func (client *IncClient) syncOutCoinV2(outCoinKey *rpc.OutCoinKey, tokenIDStr st
 	burningPubKey := wallet.GetBurningPublicKey()
 
 	start := time.Now()
-	currentIndex := cachedToken.LatestIndex
-	Logger.Printf("Current LatestIndex for token %v: %v\n", tokenIDStr, currentIndex)
+	currentIndex := cachedToken.LatestIndex + 1
+	Logger.Printf("Current LatestIndex for token %v: %v\n", tokenIDStr, cachedToken.LatestIndex)
 	for currentIndex < coinLength {
 		idxList := make([]uint64, 0)
 
 		nextIndex := currentIndex + uint64(batchSize)
-		if nextIndex > coinLength-1 {
-			nextIndex = coinLength - 1
+		if nextIndex > coinLength {
+			nextIndex = coinLength
 		}
 		for i := currentIndex; i < nextIndex; i++ {
 			idxList = append(idxList, i)
@@ -224,7 +224,7 @@ func (client *IncClient) syncOutCoinV2(outCoinKey *rpc.OutCoinKey, tokenIDStr st
 	Logger.Printf("newOutCoins: %v\n", len(res.Data))
 
 	if tokenIDStr == common.PRVIDStr {
-		cachedAccount.update(common.PRVIDStr, coinLength, *res)
+		cachedAccount.update(common.PRVIDStr, coinLength-1, *res)
 	} else {
 		// update cached data for each token
 		if rawAssetTags == nil {
@@ -234,7 +234,7 @@ func (client *IncClient) syncOutCoinV2(outCoinKey *rpc.OutCoinKey, tokenIDStr st
 			}
 		}
 
-		err = cachedAccount.updateAllTokens(coinLength, *res, rawAssetTags)
+		err = cachedAccount.updateAllTokens(coinLength-1, *res, rawAssetTags)
 		if err != nil {
 			return err
 		}
