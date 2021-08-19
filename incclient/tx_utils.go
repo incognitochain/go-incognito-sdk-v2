@@ -692,10 +692,10 @@ func (client *IncClient) GetTxs(txHashList []string) (map[string]metadata.Transa
 		}
 		tx := txChoice.ToTx()
 
-		if tx.Hash().String() != txHash {
-			Logger.Printf("txParseFail: %v\n", string(txBytes))
-			return nil, fmt.Errorf("txHash changes after unmarshalling, expect %v, got %v", txHash, tx.Hash().String())
-		}
+		//if tx.Hash().String() != txHash {
+		//	Logger.Printf("txParseFail: %v\n", string(txBytes))
+		//	return nil, fmt.Errorf("txHash changes after unmarshalling, expect %v, got %v", txHash, tx.Hash().String())
+		//}
 		res[txHash] = tx
 	}
 
