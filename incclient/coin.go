@@ -16,15 +16,22 @@ import (
 )
 
 // GetOutputCoins calls the remote server to get all the output tokens for an output coin key.
-// If the current cache layer is enabled, the function will retrieve output tokens from the cache.
+// `isFromCache` indicates whether the client should retrieve output tokens from the local cache.
+// In case this value is not set, the client uses the regular `GetOutputCoins` method.
+// If multiple values are passed to `isFromCache`, only the first one is used.
 // For better user experience, if the cache is not running and isFromCache holds true, the client still automatically
 // switches to the non-cache method.
 //
 // The returned result consists of
 //	- A list of output coins
 //	- A list of corresponding indices. For an output coin v1, its index is -1.
-func (client *IncClient) GetOutputCoins(outCoinKey *rpc.OutCoinKey, tokenID string, height uint64) ([]jsonresult.ICoinInfo, []*big.Int, error) {
-	if client.cache != nil && client.cache.isRunning {
+func (client *IncClient) GetOutputCoins(outCoinKey *rpc.OutCoinKey, tokenID string, height uint64, isFromCache ...bool) ([]jsonresult.ICoinInfo, []*big.Int, error) {
+	fromCache := true
+	if len(isFromCache) != 0 {
+		fromCache = isFromCache[0]
+	}
+
+	if fromCache && client.cache != nil && client.cache.isRunning {
 		return client.GetAndCacheOutCoins(outCoinKey, tokenID)
 	}
 
