@@ -17,7 +17,7 @@ func (server *RPCServer) GetListOutputCoinsByRPCV1(outCoinKey *OutCoinKey, token
 
 	params := make([]interface{}, 0)
 	params = append(params, 0)
-	params = append(params, 999999)
+	params = append(params, h)
 	params = append(params, []interface{}{keyParams})
 	params = append(params, tokenID)
 
@@ -159,6 +159,14 @@ func (server *RPCServer) AuthorizedSubmitKey(otaStr string, accessToken string, 
 	params = append(params, isReset)
 
 	return server.SendQuery(authorizedSubmitKey, params)
+}
+
+// GetKeySubmissionInfo returns the information of an OTAKey if it has been submitted.
+func (server *RPCServer) GetKeySubmissionInfo(otaStr string) ([]byte, error) {
+	params := make([]interface{}, 0)
+	params = append(params, otaStr)
+
+	return server.SendQuery(getKeySubmissionInfo, params)
 }
 
 // RandomCommitments gets a list of random commitments to create transactions of version 1.

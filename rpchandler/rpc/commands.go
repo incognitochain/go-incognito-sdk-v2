@@ -149,6 +149,7 @@ const (
 	setTxFee                        = "settxfee"
 	submitKey                       = "submitkey"
 	authorizedSubmitKey             = "authorizedsubmitkey"
+	getKeySubmissionInfo            = "getkeysubmissioninfo"
 
 	// walletsta
 	getPublicKeyFromPaymentAddress = "getpublickeyfrompaymentaddress"

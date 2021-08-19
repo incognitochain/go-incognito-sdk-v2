@@ -16,10 +16,25 @@ import (
 )
 
 // GetOutputCoins calls the remote server to get all the output tokens for an output coin key.
+// `isFromCache` indicates whether the client should retrieve output tokens from the local cache.
+// In case this value is not set, the client uses the regular `GetOutputCoins` method.
+// If multiple values are passed to `isFromCache`, only the first one is used.
+// For better user experience, if the cache is not running and isFromCache holds true, the client still automatically
+// switches to the non-cache method.
+//
 // The returned result consists of
 //	- A list of output coins
 //	- A list of corresponding indices. For an output coin v1, its index is -1.
-func (client *IncClient) GetOutputCoins(outCoinKey *rpc.OutCoinKey, tokenID string, height uint64) ([]jsonresult.ICoinInfo, []*big.Int, error) {
+func (client *IncClient) GetOutputCoins(outCoinKey *rpc.OutCoinKey, tokenID string, height uint64, isFromCache ...bool) ([]jsonresult.ICoinInfo, []*big.Int, error) {
+	fromCache := true
+	if len(isFromCache) != 0 {
+		fromCache = isFromCache[0]
+	}
+
+	if fromCache && client.cache != nil && client.cache.isRunning {
+		return client.GetAndCacheOutCoins(outCoinKey, tokenID)
+	}
+
 	if client.version == 1 {
 		return client.GetOutputCoinsV1(outCoinKey, tokenID, height)
 	} else {
@@ -205,6 +220,89 @@ func (client *IncClient) GetSpentOutputCoins(privateKey, tokenID string, height 
 	Logger.Printf("Len(spentCoins) = %v\n", len(listSpentOutputCoins))
 
 	return listSpentOutputCoins, listSpentIndices, nil
+}
+
+// GetOTACoinsByIndices retrieves output coins given the shardID, tokenID, and a list of indices.
+// Callers must make sure the input indices are within the range of output coins ([0 : OTALength - 1]) of the given shard.
+// Otherwise, it will throw an error.
+func (client *IncClient) GetOTACoinsByIndices(shardID byte, tokenID string, idxList []uint64) (map[uint64]jsonresult.ICoinInfo, error) {
+	responseInBytes, err := client.rpcServer.GetOTACoinsByIndices(shardID, tokenID, idxList)
+	if err != nil {
+		return nil, err
+	}
+
+	var tmpRes map[uint64]jsonresult.OutCoin
+	err = rpchandler.ParseResponse(responseInBytes, &tmpRes)
+	if err != nil {
+		return nil, err
+	}
+
+	res := make(map[uint64]jsonresult.ICoinInfo)
+	for idx, outCoin := range tmpRes {
+		coinInfo, _, err := jsonresult.NewCoinFromJsonOutCoin(outCoin)
+		if err != nil {
+			return nil, err
+		}
+		res[idx] = coinInfo
+	}
+
+	return res, nil
+}
+
+// GetOTACoinLength returns the current sizes (number of output coins) of PRV and tokens for each shard.
+//
+// Sample output:
+// map[
+//	0000000000000000000000000000000000000000000000000000000000000004:map[0:43635 1:14775 2:11407 3:20724 4:12613 5:10165 6:18216 7:15629]
+//	0000000000000000000000000000000000000000000000000000000000000005:map[0:37831 1:7379 2:2349 3:11310 4:2218 5:2247 6:8416 7:8601]
+// ]
+func (client *IncClient) GetOTACoinLength() (map[string]map[byte]uint64, error) {
+	responseInBytes, err := client.rpcServer.GetOTACoinLength()
+	if err != nil {
+		return nil, err
+	}
+
+	var res map[string]map[byte]uint64
+	err = rpchandler.ParseResponse(responseInBytes, &res)
+	if err != nil {
+		return nil, err
+	}
+
+	return res, nil
+}
+
+// GetOTACoinLengthByShard returns the number of output coins of a shard w.r.t to the given tokenID.
+//
+// Note that all tokens' output coins are grouped together (except PRV), there for it will return the same result for
+// two different tokenIDs (jus use the common.ConfidentialAssetID for token retrieval).
+func (client *IncClient) GetOTACoinLengthByShard(shardID byte, tokenID string) (uint64, error) {
+	if int(shardID) >= common.MaxShardNumber {
+		return 0, fmt.Errorf("invalid shardID %v", shardID)
+	}
+
+	responseInBytes, err := client.rpcServer.GetOTACoinLength()
+	if err != nil {
+		return 0, err
+	}
+
+	var res map[string]map[byte]uint64
+	err = rpchandler.ParseResponse(responseInBytes, &res)
+	if err != nil {
+		return 0, err
+	}
+
+	switch tokenID {
+	case common.PRVIDStr:
+		if res[tokenID] == nil {
+			return 0, fmt.Errorf("RPC result does not include PRV")
+		}
+		return res[tokenID][shardID], nil
+	default:
+		if res[common.ConfidentialAssetID.String()] == nil {
+			return 0, fmt.Errorf("RPC result does not include tokens")
+		}
+		return res[common.ConfidentialAssetID.String()][shardID], nil
+	}
 }
 
 // GetAllAssetTags computes a mapping from raw assetTags to tokenIds (e.g, HashToPoint(PRV) => PRV).

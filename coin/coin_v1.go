@@ -317,6 +317,11 @@ func (pc *PlainCoinV1) SetBytes(coinBytes []byte) error {
 	return nil
 }
 
+// DoesCoinBelongToKeySet checks if a PlainCoinV1 belongs to the given key set.
+func (pc *PlainCoinV1) DoesCoinBelongToKeySet(keySet *key.KeySet) (bool, *crypto.Point) {
+	return crypto.IsPointEqual(keySet.PaymentAddress.GetPublicSpend(), pc.GetPublicKey()), nil
+}
+
 // CoinV1 implements the Coin interface. It is mainly used as an output coin of a transaction v1.
 //
 // It contains CoinDetails and CoinDetailsEncrypted (encrypted value and randomness).
