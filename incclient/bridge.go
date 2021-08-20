@@ -67,6 +67,8 @@ func (client *IncClient) CreateIssuingEVMRequestTransaction(privateKey, tokenIDS
 		return nil, "", fmt.Errorf("cannot init issue eth request for %v, tokenID %v: %v", proof, tokenIDStr, err)
 	}
 
+	Logger.Printf("Request: %v\n", issuingETHRequestMeta)
+
 	txParam := NewTxParam(privateKey, []string{}, []uint64{}, DefaultPRVFee, nil, issuingETHRequestMeta, nil)
 
 	return client.CreateRawTransaction(txParam, -1)
