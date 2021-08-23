@@ -150,6 +150,8 @@ func (client *IncClient) GetBurnProof(txHash string) (*jsonresult.InstructionPro
 		return nil, err
 	}
 
+	Logger.Println(string(responseInBytes))
+
 	var tmp jsonresult.InstructionProof
 	err = rpchandler.ParseResponse(responseInBytes, &tmp)
 	if err != nil {
