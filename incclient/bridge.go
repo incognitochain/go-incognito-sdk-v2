@@ -154,8 +154,8 @@ func (client *IncClient) CreateAndSendBurningRequestTransaction(privateKey, remo
 }
 
 // GetBurnProof retrieves the burning proof for the Incognito network for submitting to the smart contract later.
-func (client *IncClient) GetBurnProof(txHash string) (*jsonresult.InstructionProof, error) {
-	responseInBytes, err := client.rpcServer.GetBurnProof(txHash)
+func (client *IncClient) GetBurnProof(txHash string, isBSC ...bool) (*jsonresult.InstructionProof, error) {
+	responseInBytes, err := client.rpcServer.GetBurnProof(txHash, isBSC...)
 	if err != nil {
 		return nil, err
 	}

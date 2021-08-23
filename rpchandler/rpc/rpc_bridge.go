@@ -1,10 +1,14 @@
 package rpc
 
 // GetBurnProof retrieves the burning proof of a transaction.
-func (server *RPCServer) GetBurnProof(txHash string) ([]byte, error) {
+func (server *RPCServer) GetBurnProof(txHash string, isBSC ...bool) ([]byte, error) {
+	method := getBurnProof
+	if len(isBSC) > 0 && isBSC[0] {
+		method = getBSCBurnProof
+	}
 	params := make([]interface{}, 0)
 	params = append(params, txHash)
-	return server.SendQuery(getBurnProof, params)
+	return server.SendQuery(method, params)
 }
 
 // GetBurnProofForSC retrieves the burning proof of a transaction for depositing to smart contracts.
