@@ -141,6 +141,7 @@ func (client *IncClient) GetEVMDepositProof(txHash string) (*EVMDepositProof, ui
 	if err != nil {
 		return nil, 0, err
 	}
+	Logger.Printf("txIndex: %v\n", txIndex)
 
 	// Get txs block for constructing receipt trie
 	_, ok = txContent["blockNumber"]
