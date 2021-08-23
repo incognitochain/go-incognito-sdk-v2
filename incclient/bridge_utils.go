@@ -216,31 +216,6 @@ func (client *IncClient) GetEVMDepositProof(txHash string) (*EVMDepositProof, ui
 		receiptTrie.Update(indexBuf, value)
 	}
 
-	//// Constructing the receipt trie (source: go-ethereum/core/types/derive_sha.go)
-	//keyBuf := new(bytes.Buffer)
-	//receiptTrie := new(trie.Trie)
-	//Logger.Println("Start creating receipt trie...")
-	//for i, tx := range siblingTxs {
-	//	txStr, ok := tx.(string)
-	//	if !ok {
-	//		return nil, 0, fmt.Errorf("cannot parse sibling tx: %v", tx)
-	//	}
-	//	siblingReceipt, err := client.GetEVMTxReceipt(txStr)
-	//	if err != nil {
-	//		return nil, 0, err
-	//	}
-	//	keyBuf.Reset()
-	//	err = rlp.Encode(keyBuf, uint(i))
-	//	if err != nil {
-	//		return nil, 0, fmt.Errorf("rlp encode returns an error: %v", err)
-	//	}
-	//	encodedReceipt, err := rlp.EncodeToBytes(siblingReceipt)
-	//	if err != nil {
-	//		return nil, 0, err
-	//	}
-	//	receiptTrie.Update(keyBuf.Bytes(), encodedReceipt)
-	//}
-
 	Logger.Println("Finish creating receipt trie.")
 
 	// Constructing the proof for the current receipt (source: go-ethereum/trie/proof.go)
@@ -321,4 +296,3 @@ func encodeForDerive(list types.DerivableList, i int, buf *bytes.Buffer) []byte 
 var encodeBufferPool = sync.Pool{
 	New: func() interface{} { return new(bytes.Buffer) },
 }
-
