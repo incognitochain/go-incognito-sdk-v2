@@ -16,6 +16,9 @@ type IncClient struct {
 	// the Ethereum-RPC server
 	ethServer *rpc.RPCServer
 
+	// the BSC-RPC server
+	bscServer *rpc.RPCServer
+
 	// the version of the client
 	version int
 
@@ -27,8 +30,9 @@ type IncClient struct {
 func NewTestNetClient() (*IncClient, error) {
 	rpcServer := rpc.NewRPCServer(TestNetFullNode)
 	ethServer := rpc.NewRPCServer(TestNetETHHost)
+	bscServer := rpc.NewRPCServer(TestNetBSCHost)
 
-	incClient := IncClient{rpcServer: rpcServer, ethServer: ethServer, version: TestNetPrivacyVersion}
+	incClient := IncClient{rpcServer: rpcServer, ethServer: ethServer, bscServer: bscServer, version: TestNetPrivacyVersion}
 
 	activeShards, err := incClient.GetActiveShard()
 	if err != nil {
@@ -72,8 +76,9 @@ func NewTestNetClientWithCache() (*IncClient, error) {
 func NewTestNet1Client() (*IncClient, error) {
 	rpcServer := rpc.NewRPCServer(TestNet1FullNode)
 	ethServer := rpc.NewRPCServer(TestNet1ETHHost)
+	bscServer := rpc.NewRPCServer(TestNet1BSCHost)
 
-	incClient := IncClient{rpcServer: rpcServer, ethServer: ethServer, version: TestNet1PrivacyVersion}
+	incClient := IncClient{rpcServer: rpcServer, ethServer: ethServer, bscServer: bscServer, version: TestNet1PrivacyVersion}
 
 	activeShards, err := incClient.GetActiveShard()
 	if err != nil {
@@ -117,8 +122,9 @@ func NewTestNet1ClientWithCache() (*IncClient, error) {
 func NewMainNetClient() (*IncClient, error) {
 	rpcServer := rpc.NewRPCServer(MainNetFullNode)
 	ethServer := rpc.NewRPCServer(MainNetETHHost)
+	bscServer := rpc.NewRPCServer(MainNetBSCHost)
 
-	incClient := IncClient{rpcServer: rpcServer, ethServer: ethServer, version: MainNetPrivacyVersion}
+	incClient := IncClient{rpcServer: rpcServer, ethServer: ethServer, bscServer: bscServer, version: MainNetPrivacyVersion}
 
 	activeShards, err := incClient.GetActiveShard()
 	if err != nil {
@@ -210,8 +216,9 @@ func NewLocalClientWithCache() (*IncClient, error) {
 func NewDevNetClient() (*IncClient, error) {
 	rpcServer := rpc.NewRPCServer(DevNetFullNode)
 	ethServer := rpc.NewRPCServer(DevNetETHHost)
+	bscServer := rpc.NewRPCServer(DevNetBSCHost)
 
-	incClient := IncClient{rpcServer: rpcServer, ethServer: ethServer, version: DevNetPrivacyVersion}
+	incClient := IncClient{rpcServer: rpcServer, ethServer: ethServer, bscServer: bscServer, version: DevNetPrivacyVersion}
 
 	activeShards, err := incClient.GetActiveShard()
 	if err != nil {
