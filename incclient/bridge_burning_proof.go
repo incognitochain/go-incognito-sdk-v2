@@ -22,6 +22,7 @@ type BurnProof struct {
 	SigSs           [2][][32]byte
 }
 
+// DecodeBurnProof decodes a burn proof from the Incognito chain into a BurnProof.
 func DecodeBurnProof(r *jsonresult.InstructionProof) (*BurnProof, error) {
 	inst := decode(r.Instruction)
 
@@ -59,7 +60,6 @@ func DecodeBurnProof(r *jsonresult.InstructionProof) (*BurnProof, error) {
 		bridgeInstPath[i] = decode32(path)
 		bridgeInstPathIsLeft[i] = r.BridgeInstPathIsLeft[i]
 	}
-	// fmt.Printf("bridgeInstRoot: %x\n", bridgeInstRoot)
 	bridgeBlkData := toByte32(decode(r.BridgeBlkData))
 
 	bridgeSigVs, bridgeSigRs, bridgeSigSs, err := decodeSigs(r.BridgeSigs)
