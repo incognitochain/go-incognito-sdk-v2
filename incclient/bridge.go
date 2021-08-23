@@ -55,14 +55,19 @@ func NewETHDepositProof(blockNumber uint, blockHash ethCommon.Hash, txIdx uint, 
 // CreateIssuingEVMRequestTransaction creates an EVM shielding trading transaction. By EVM, it means either ETH or BSC.
 //
 // It returns the base58-encoded transaction, the transaction's hash, and an error (if any).
-func (client *IncClient) CreateIssuingEVMRequestTransaction(privateKey, tokenIDStr string, proof EVMDepositProof) ([]byte, string, error) {
+func (client *IncClient) CreateIssuingEVMRequestTransaction(privateKey, tokenIDStr string, proof EVMDepositProof, isBSC ...bool) ([]byte, string, error) {
 	tokenID, err := new(common.Hash).NewHashFromStr(tokenIDStr)
 	if err != nil {
 		return nil, "", err
 	}
 
+	mdType := metadata.IssuingETHRequestMeta
+	if len(isBSC) > 0 && isBSC[0] {
+		mdType = metadata.IssuingBSCRequestMeta
+	}
+
 	var issuingETHRequestMeta *metadata.IssuingEVMRequest
-	issuingETHRequestMeta, err = metadata.NewIssuingEVMRequest(proof.blockHash, proof.txIdx, proof.nodeList, *tokenID, metadata.IssuingETHRequestMeta)
+	issuingETHRequestMeta, err = metadata.NewIssuingEVMRequest(proof.blockHash, proof.txIdx, proof.nodeList, *tokenID, mdType)
 	if err != nil {
 		return nil, "", fmt.Errorf("cannot init issue eth request for %v, tokenID %v: %v", proof, tokenIDStr, err)
 	}
@@ -74,8 +79,8 @@ func (client *IncClient) CreateIssuingEVMRequestTransaction(privateKey, tokenIDS
 // CreateAndSendIssuingEVMRequestTransaction creates an EVM shielding transaction, and submits it to the Incognito network.
 //
 // It returns the transaction's hash, and an error (if any).
-func (client *IncClient) CreateAndSendIssuingEVMRequestTransaction(privateKey, tokenIDStr string, proof EVMDepositProof) (string, error) {
-	encodedTx, txHash, err := client.CreateIssuingEVMRequestTransaction(privateKey, tokenIDStr, proof)
+func (client *IncClient) CreateAndSendIssuingEVMRequestTransaction(privateKey, tokenIDStr string, proof EVMDepositProof, isBSC ...bool) (string, error) {
+	encodedTx, txHash, err := client.CreateIssuingEVMRequestTransaction(privateKey, tokenIDStr, proof, isBSC...)
 	if err != nil {
 		return "", err
 	}
