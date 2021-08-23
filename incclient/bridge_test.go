@@ -24,6 +24,7 @@ func initClients() error {
 
 	return nil
 }
+
 //END UTILS
 
 //TEST FUNCTIONS

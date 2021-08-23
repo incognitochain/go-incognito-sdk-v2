@@ -33,7 +33,7 @@ func (client *IncClient) GetEVMTxByHash(txHash string, isOnBSC ...bool) (map[str
 	if len(isOnBSC) > 0 && isOnBSC[0] {
 		isBSC = true
 	}
-	
+
 	evmClient := client.ethServer
 	if isBSC {
 		evmClient = client.bscServer
@@ -41,7 +41,7 @@ func (client *IncClient) GetEVMTxByHash(txHash string, isOnBSC ...bool) (map[str
 	if evmClient == nil {
 		return nil, fmt.Errorf("evmClient is nil")
 	}
-	
+
 	method := "eth_getTransactionByHash"
 	params := []interface{}{txHash}
 
@@ -80,7 +80,7 @@ func (client *IncClient) GetEVMBlockByHash(blockHash string, isOnBSC ...bool) (m
 	if evmClient == nil {
 		return nil, fmt.Errorf("evmClient is nil")
 	}
-	
+
 	method := "eth_getBlockByHash"
 	params := []interface{}{blockHash, false}
 
@@ -118,7 +118,7 @@ func (client *IncClient) GetEVMTxReceipt(txHash string, isOnBSC ...bool) (*types
 	if evmClient == nil {
 		return nil, fmt.Errorf("evmClient is nil")
 	}
-	
+
 	method := "eth_getTransactionReceipt"
 	params := []interface{}{txHash}
 
@@ -148,7 +148,7 @@ func (client *IncClient) GetEVMDepositProof(txHash string, isOnBSC ...bool) (*EV
 	if len(isOnBSC) > 0 && isOnBSC[0] {
 		isBSC = true
 	}
-	
+
 	// Get tx content
 	txContent, err := client.GetEVMTxByHash(txHash, isBSC)
 	if err != nil {
@@ -310,7 +310,7 @@ func (client *IncClient) GetMostRecentEVMBlockNumber(isOnBSC ...bool) (uint64, e
 	if evmClient == nil {
 		return 0, fmt.Errorf("evmClient is nil")
 	}
-	
+
 	method := "eth_blockNumber"
 	params := make([]interface{}, 0)
 

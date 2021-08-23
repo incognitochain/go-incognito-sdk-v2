@@ -96,7 +96,7 @@ func (client *IncClient) CreateAndSendIssuingEVMRequestTransaction(privateKey, t
 // CreateBurningRequestTransaction creates an EVM burning transaction for exiting the Incognito network.
 //
 // It returns the base58-encoded transaction, the transaction's hash, and an error (if any).
-func (client *IncClient) CreateBurningRequestTransaction(privateKey, remoteAddress, tokenIDStr string, burnedAmount uint64) ([]byte, string, error) {
+func (client *IncClient) CreateBurningRequestTransaction(privateKey, remoteAddress, tokenIDStr string, burnedAmount uint64, isBSC ...bool) ([]byte, string, error) {
 	if tokenIDStr == common.PRVIDStr {
 		return nil, "", fmt.Errorf("cannot burn PRV in a burning request transaction")
 	}
@@ -119,8 +119,13 @@ func (client *IncClient) CreateBurningRequestTransaction(privateKey, remoteAddre
 		remoteAddress = remoteAddress[2:]
 	}
 
+	mdType := metadata.BurningRequestMetaV2
+	if len(isBSC) > 0 && isBSC[0] {
+		mdType = metadata.BurningPBSCRequestMeta
+	}
+
 	var md *metadata.BurningRequest
-	md, err = metadata.NewBurningRequest(burnerAddress, burnedAmount, *tokenID, tokenIDStr, remoteAddress, metadata.BurningRequestMetaV2)
+	md, err = metadata.NewBurningRequest(burnerAddress, burnedAmount, *tokenID, tokenIDStr, remoteAddress, mdType)
 	if err != nil {
 		return nil, "", fmt.Errorf("cannot init burning request with tokenID %v, burnedAmount %v, remoteAddress %v: %v", tokenIDStr, burnedAmount, remoteAddress, err)
 	}
@@ -134,8 +139,8 @@ func (client *IncClient) CreateBurningRequestTransaction(privateKey, remoteAddre
 // CreateAndSendBurningRequestTransaction creates an EVM burning transaction for exiting the Incognito network, and submits it to the network.
 //
 // It returns the transaction's hash, and an error (if any).
-func (client *IncClient) CreateAndSendBurningRequestTransaction(privateKey, remoteAddress, tokenIDStr string, burnedAmount uint64) (string, error) {
-	encodedTx, txHash, err := client.CreateBurningRequestTransaction(privateKey, remoteAddress, tokenIDStr, burnedAmount)
+func (client *IncClient) CreateAndSendBurningRequestTransaction(privateKey, remoteAddress, tokenIDStr string, burnedAmount uint64, isBSC ...bool) (string, error) {
+	encodedTx, txHash, err := client.CreateBurningRequestTransaction(privateKey, remoteAddress, tokenIDStr, burnedAmount, isBSC...)
 	if err != nil {
 		return "", err
 	}
