@@ -164,6 +164,22 @@ func (client *IncClient) GetBurnProof(txHash string) (*jsonresult.InstructionPro
 	return &tmp, nil
 }
 
+// GetBridgeTokens returns all bridge tokens in the network.
+func (client *IncClient) GetBridgeTokens() ([]*BridgeTokenInfo, error) {
+	responseInBytes, err := client.rpcServer.GetAllBridgeTokens()
+	if err != nil {
+		return nil, err
+	}
+
+	res := make([]*BridgeTokenInfo, 0)
+	err = rpchandler.ParseResponse(responseInBytes, &res)
+	if err != nil {
+		return nil, err
+	}
+
+	return res, nil
+}
+
 // CheckShieldStatus returns the status of an eth-shielding request.
 //	* -1: error
 //	* 0: tx not found

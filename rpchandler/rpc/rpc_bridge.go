@@ -23,3 +23,8 @@ func (server *RPCServer) CheckShieldStatus(txHash string) ([]byte, error) {
 	params = append(params, tmpParams)
 	return server.SendQuery(getBridgeReqWithStatus, params)
 }
+
+// GetAllBridgeTokens retrieves the list of bridge tokens in the network.
+func (server *RPCServer) GetAllBridgeTokens() ([]byte, error) {
+	return server.SendQuery(getAllBridgeTokens, nil)
+}

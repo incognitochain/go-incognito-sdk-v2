@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"github.com/incognitochain/go-incognito-sdk-v2/common"
 	"math/big"
 	"strconv"
 	"sync"
@@ -16,6 +17,15 @@ import (
 	"github.com/ethereum/go-ethereum/trie"
 	"github.com/incognitochain/go-incognito-sdk-v2/rpchandler"
 )
+
+// BridgeTokenInfo describes the information of a bridge token.
+type BridgeTokenInfo struct {
+	TokenID         *common.Hash `json:"tokenId"`
+	Amount          uint64       `json:"amount"`
+	ExternalTokenID []byte       `json:"externalTokenId"`
+	Network         string       `json:"network"`
+	IsCentralized   bool         `json:"isCentralized"`
+}
 
 // GetEVMTxByHash retrieves an EVM transaction from its hash.
 func (client *IncClient) GetEVMTxByHash(tx string) (map[string]interface{}, error) {
