@@ -68,7 +68,6 @@ func (client *IncClient) CreateIssuingEVMRequestTransaction(privateKey, tokenIDS
 	}
 
 	txParam := NewTxParam(privateKey, []string{}, []uint64{}, DefaultPRVFee, nil, issuingETHRequestMeta, nil)
-
 	return client.CreateRawTransaction(txParam, -1)
 }
 
