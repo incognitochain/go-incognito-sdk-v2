@@ -191,7 +191,7 @@ func (client *IncClient) CreatePortalUnShieldTransaction(
 	}
 
 	portalUnShieldingMetadata, err := metadata.NewPortalUnshieldRequest(
-		metadata.PortalV4UnShieldingRequestMeta,
+		metadata.PortalV4UnshieldingRequestMeta,
 		pubKeyStr,
 		txRandomStr,
 		tokenID,
