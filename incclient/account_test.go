@@ -1,6 +1,7 @@
 package incclient
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/incognitochain/go-incognito-sdk-v2/common"
 	"testing"
@@ -21,6 +22,25 @@ func TestIncClient_GetBalance(t *testing.T) {
 	}
 
 	fmt.Printf("Balance: %v\n", balance)
+}
+
+func TestIncClient_GetBalanceAll(t *testing.T) {
+	var err error
+	ic, err = NewTestNetClientWithCache()
+	if err != nil {
+		panic(err)
+	}
+
+	privateKey := "" // input the private key
+
+	Logger.IsEnable = true
+	balances, err := ic.GetBalanceAll(privateKey)
+	if err != nil {
+		panic(err)
+	}
+
+	jsb, _ := json.MarshalIndent(balances, "", "\t")
+	fmt.Printf(string(jsb))
 }
 
 func TestGetAccountInfoFromPrivateKey(t *testing.T) {

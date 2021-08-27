@@ -17,7 +17,7 @@ func getBalanceByVersion(privateKey, tokenIDStr string, version uint8) (uint64, 
 		return 0, fmt.Errorf("client not initialized")
 	}
 
-	unSpentCoins, _, err := ic.GetUnspentOutputCoinsFromCache(privateKey, tokenIDStr, 0)
+	unSpentCoins, _, err := ic.GetUnspentOutputCoins(privateKey, tokenIDStr, 0)
 	if err != nil {
 		return 0, err
 	}

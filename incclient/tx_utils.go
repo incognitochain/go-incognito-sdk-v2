@@ -423,7 +423,7 @@ func (client *IncClient) initParams(privateKey string, tokenIDStr string, totalA
 
 	//fmt.Printf("Getting UTXOs for tokenID %v...\n", tokenIDStr)
 	//Get list of UTXOs
-	utxoList, idxList, err := client.GetUnspentOutputCoinsFromCache(privateKey, tokenIDStr, 0)
+	utxoList, idxList, err := client.GetUnspentOutputCoins(privateKey, tokenIDStr, 0)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -511,7 +511,7 @@ func (client *IncClient) initParamsV1(txParam *TxParam, tokenIDStr string, total
 
 	if coinsToSpend == nil {
 		//Get list of UTXOs
-		utxoList, idxList, err := client.GetUnspentOutputCoinsFromCache(privateKey, tokenIDStr, 0)
+		utxoList, idxList, err := client.GetUnspentOutputCoins(privateKey, tokenIDStr, 0)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -584,7 +584,7 @@ func (client *IncClient) initParamsV2(txParam *TxParam, tokenIDStr string, total
 
 	if coinsToSpend == nil {
 		//Get list of UTXOs
-		utxoList, idxList, err := client.GetUnspentOutputCoinsFromCache(privateKey, tokenIDStr, 0)
+		utxoList, idxList, err := client.GetUnspentOutputCoins(privateKey, tokenIDStr, 0)
 		if err != nil {
 			return nil, nil, err
 		}

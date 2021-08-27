@@ -189,62 +189,65 @@ func (client *IncClient) syncOutCoinV2(outCoinKey *rpc.OutCoinKey, tokenIDStr st
 		currentIndex = 0
 	}
 	Logger.Printf("Current LatestIndex for token %v: %v\n", tokenIDStr, cachedToken.LatestIndex)
-	for currentIndex < coinLength {
-		idxList := make([]uint64, 0)
+	if currentIndex < coinLength {
+		for currentIndex < coinLength {
+			idxList := make([]uint64, 0)
 
-		nextIndex := currentIndex + uint64(batchSize)
-		if nextIndex > coinLength {
-			nextIndex = coinLength
-		}
-		for i := currentIndex; i < nextIndex; i++ {
-			idxList = append(idxList, i)
-		}
-		if len(idxList) == 0 {
-			break
-		}
-
-		Logger.Printf("Get output coins of indices from %v to %v\n", currentIndex, nextIndex-1)
-
-		tmpOutCoins, err := client.GetOTACoinsByIndices(shardID, tokenIDStr, idxList)
-		if err != nil {
-			return err
-		}
-		found := 0
-		for idx, outCoin := range tmpOutCoins {
-			if bytes.Equal(outCoin.Bytes(), burningPubKey) {
-				continue
+			nextIndex := currentIndex + uint64(batchSize)
+			if nextIndex > coinLength {
+				nextIndex = coinLength
 			}
-			belongs, _ := outCoin.DoesCoinBelongToKeySet(&keySet)
-			if belongs {
-				res.Data[idx] = outCoin
-				found += 1
+			for i := currentIndex; i < nextIndex; i++ {
+				idxList = append(idxList, i)
 			}
+			if len(idxList) == 0 {
+				break
+			}
+
+			Logger.Printf("Get output coins of indices from %v to %v\n", currentIndex, nextIndex-1)
+
+			tmpOutCoins, err := client.GetOTACoinsByIndices(shardID, tokenIDStr, idxList)
+			if err != nil {
+				return err
+			}
+			found := 0
+			for idx, outCoin := range tmpOutCoins {
+				if bytes.Equal(outCoin.Bytes(), burningPubKey) {
+					continue
+				}
+				belongs, _ := outCoin.DoesCoinBelongToKeySet(&keySet)
+				if belongs {
+					res.Data[idx] = outCoin
+					found += 1
+				}
+			}
+			Logger.Printf("Found %v output coins (%v) for heights from %v to %v with time %v\n", found, tokenIDStr, currentIndex, nextIndex-1, time.Since(start).Seconds())
+			currentIndex = nextIndex
 		}
-		Logger.Printf("Found %v output coins (%v) for heights from %v to %v with time %v\n", found, tokenIDStr, currentIndex, nextIndex-1, time.Since(start).Seconds())
-		currentIndex = nextIndex
-	}
 
-	Logger.Printf("newOutCoins: %v\n", len(res.Data))
+		Logger.Printf("newOutCoins: %v\n", len(res.Data))
 
-	if tokenIDStr == common.PRVIDStr {
-		cachedAccount.update(common.PRVIDStr, coinLength-1, *res)
-	} else {
-		// update cached data for each token
-		if rawAssetTags == nil {
-			rawAssetTags, err = client.GetAllAssetTags()
+		if tokenIDStr == common.PRVIDStr {
+			cachedAccount.update(common.PRVIDStr, coinLength-1, *res)
+		} else {
+			// update cached data for each token
+			if rawAssetTags == nil {
+				rawAssetTags, err = client.GetAllAssetTags()
+				if err != nil {
+					return err
+				}
+			}
+
+			err = cachedAccount.updateAllTokens(coinLength-1, *res, rawAssetTags)
 			if err != nil {
 				return err
 			}
 		}
 
-		err = cachedAccount.updateAllTokens(coinLength-1, *res, rawAssetTags)
-		if err != nil {
-			return err
-		}
+		// add account to cache and save to file.
+		client.cache.addAccount(outCoinKey.OtaKey(), cachedAccount, true)
 	}
 
-	// add account to cache and save to file.
-	client.cache.addAccount(outCoinKey.OtaKey(), cachedAccount, true)
 	Logger.Printf("FINISHED SYNCING OUTPUT COINS OF TOKEN %v AFTER %v SECOND\n", tokenIDStr, time.Since(start).Seconds())
 
 	return nil
