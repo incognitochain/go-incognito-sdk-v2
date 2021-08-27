@@ -104,8 +104,12 @@ func ParseMetadata(metaInBytes []byte) (Metadata, error) {
 		md = &RelayingHeader{}
 	case PortalV4ShieldingRequestMeta:
 		md = &PortalShieldingRequest{}
-	case PortalV4UnShieldingRequestMeta:
+	case PortalV4ShieldingResponseMeta:
+		md = &PortalShieldingResponse{}
+	case PortalV4UnshieldingRequestMeta:
 		md = &PortalUnshieldRequest{}
+	case PortalV4UnshieldingResponseMeta:
+		md = &PortalUnshieldResponse{}
 	case PortalV4FeeReplacementRequestMeta:
 		md = &PortalReplacementFeeRequest{}
 	case PortalV4SubmitConfirmedTxMeta:

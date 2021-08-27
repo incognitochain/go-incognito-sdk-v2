@@ -88,12 +88,6 @@ const (
 	PortalRedeemRequestMetaV3                     = 142
 	PortalUnlockOverRateCollateralsMeta           = 143
 
-	PortalV4ShieldingRequestMeta      = 1250
-	PortalV4UnShieldingRequestMeta    = 1252
-	PortalV4FeeReplacementRequestMeta = 1255
-	PortalV4SubmitConfirmedTxMeta     = 1256
-	PortalV4ConvertVaultRequestMeta   = 1257
-
 	PortalCustodianWithdrawConfirmMetaV3         = 170
 	PortalRedeemFromLiquidationPoolConfirmMetaV3 = 171
 	PortalLiquidateRunAwayCustodianConfirmMetaV3 = 172
@@ -110,6 +104,15 @@ const (
 	BurningForDepositToSCRequestMetaV2 = 242
 	BurningConfirmForDepositToSCMeta   = 97
 	BurningConfirmForDepositToSCMetaV2 = 243
+
+	PortalV4ShieldingRequestMeta      = 260
+	PortalV4ShieldingResponseMeta     = 261
+	PortalV4UnshieldingRequestMeta    = 262
+	PortalV4UnshieldingResponseMeta   = 263
+	PortalV4UnshieldBatchingMeta      = 264
+	PortalV4FeeReplacementRequestMeta = 265
+	PortalV4SubmitConfirmedTxMeta     = 266
+	PortalV4ConvertVaultRequestMeta   = 267
 
 	InitTokenRequestMeta  = 244
 	InitTokenResponseMeta = 245
