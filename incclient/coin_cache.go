@@ -100,6 +100,12 @@ func (uc *utxoCache) load() error {
 		return err
 	}
 
+	Logger.Printf("There are %v files in the cache directory\n", len(files))
+	for _, f := range files {
+		fileNameSplit := strings.Split(f.Name(), "/")
+		Logger.Printf("%v\n", fileNameSplit)
+	}
+
 	cachedData := make(map[string]*accountCache)
 
 	uc.mtx.Lock()
