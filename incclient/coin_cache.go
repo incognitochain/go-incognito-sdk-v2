@@ -109,6 +109,7 @@ func (uc *utxoCache) load() error {
 		ac := newAccountCache(otaKey)
 		err = ac.load(uc.cacheDirectory)
 		if err != nil {
+			Logger.Printf("loadCacheUTXO fail for ota %v: %v", fileNameSplit, err)
 			return err
 		}
 		cachedData[otaKey] = ac
