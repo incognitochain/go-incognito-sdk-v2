@@ -202,6 +202,16 @@ func TestNewMnemonicFromEntropy(t *testing.T) {
 	}
 }
 
+func TestNewMnemonicFromSeedEntropy(t *testing.T) {
+	seed := common.RandBytes(32)
+	entropy := common.HashB(seed)
+	mnemonic, err := NewMnemonicFromEntropy(entropy[:16])
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(mnemonic)
+}
+
 func TestNewSeedFromMnemonic(t *testing.T) {
 	for _, v := range testMnemonicVectors() {
 		seed, err := NewSeedFromMnemonic(v.mnemonic)
