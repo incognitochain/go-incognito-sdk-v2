@@ -7,7 +7,7 @@ import "github.com/incognitochain/go-incognito-sdk-v2/common"
 type PortalShieldingRequest struct {
 	MetadataBase
 	TokenID        string // pTokenID in incognito chain
-	IncAddressStr  string
+	IncAddressStr  string	`json:"IncogAddressStr"`
 	ShieldingProof string
 }
 
