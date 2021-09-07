@@ -20,3 +20,19 @@ func (client *IncClient) GetPortalUnShieldingRequestStatus(unShieldID string) (*
 
 	return res, nil
 }
+
+// GeneratePortalShieldingAddressFromRPC returns a multi-sig shielding address via an RPC when using the Portal.
+func (client *IncClient) GeneratePortalShieldingAddressFromRPC(paymentAddressStr, tokenIDStr string) (string, error) {
+	responseInBytes, err := client.rpcServer.GenerateShieldingMultiSigAddress(paymentAddressStr, tokenIDStr)
+	if err != nil {
+		return "", err
+	}
+
+	var res string
+	err = rpchandler.ParseResponse(responseInBytes, &res)
+	if err != nil {
+		return "", err
+	}
+
+	return res, nil
+}
