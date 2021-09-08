@@ -5,14 +5,14 @@ import (
 	"github.com/incognitochain/go-incognito-sdk-v2/rpchandler"
 )
 
-// GetPortalUnShieldingRequestStatus retrieves the status of a port un-shielding request.
-func (client *IncClient) GetPortalUnShieldingRequestStatus(unShieldID string) (*metadata.PortalUnshieldRequestStatus, error) {
-	responseInBytes, err := client.rpcServer.GetPortalUnShieldingRequestStatus(unShieldID)
+// GetPortalShieldingRequestStatus retrieves the status of a port shielding request.
+func (client *IncClient) GetPortalShieldingRequestStatus(shieldID string) (*metadata.PortalShieldingRequestStatus, error) {
+	responseInBytes, err := client.rpcServer.GetPortalShieldingRequestStatus(shieldID)
 	if err != nil {
 		return nil, err
 	}
 
-	var res *metadata.PortalUnshieldRequestStatus
+	var res *metadata.PortalShieldingRequestStatus
 	err = rpchandler.ParseResponse(responseInBytes, &res)
 	if err != nil {
 		return nil, err
@@ -32,6 +32,22 @@ func (client *IncClient) GeneratePortalShieldingAddressFromRPC(paymentAddressStr
 	err = rpchandler.ParseResponse(responseInBytes, &res)
 	if err != nil {
 		return "", err
+	}
+
+	return res, nil
+}
+
+// GetPortalUnShieldingRequestStatus retrieves the status of a port un-shielding request.
+func (client *IncClient) GetPortalUnShieldingRequestStatus(unShieldID string) (*metadata.PortalUnshieldRequestStatus, error) {
+	responseInBytes, err := client.rpcServer.GetPortalUnShieldingRequestStatus(unShieldID)
+	if err != nil {
+		return nil, err
+	}
+
+	var res *metadata.PortalUnshieldRequestStatus
+	err = rpchandler.ParseResponse(responseInBytes, &res)
+	if err != nil {
+		return nil, err
 	}
 
 	return res, nil

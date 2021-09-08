@@ -7,8 +7,20 @@ import "github.com/incognitochain/go-incognito-sdk-v2/common"
 type PortalShieldingRequest struct {
 	MetadataBase
 	TokenID        string // pTokenID in incognito chain
-	IncAddressStr  string	`json:"IncogAddressStr"`
+	IncAddressStr  string `json:"IncogAddressStr"`
 	ShieldingProof string
+}
+
+// PortalShieldingRequestStatus represents the status of an un-shield request on the Portal.
+type PortalShieldingRequestStatus struct {
+	Status        byte
+	Error         string
+	TokenID       string
+	IncAddressStr string `json:"IncogAddressStr"`
+	ProofHash     string
+	MintingAmount uint64
+	TxReqID       common.Hash
+	ExternalTxID  string
 }
 
 // NewPortalShieldingRequest creates a new PortalShieldingRequest.
