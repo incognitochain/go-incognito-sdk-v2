@@ -4,7 +4,8 @@ go 1.12
 
 require (
 	github.com/OneOfOne/xxhash v1.2.5 // indirect
-	github.com/btcsuite/btcutil v1.0.2 // indirect
+	github.com/btcsuite/btcd v0.20.1-beta
+	github.com/btcsuite/btcutil v1.0.2
 	github.com/consensys/gurvy v0.3.8 // indirect
 	github.com/ebfe/keccak v0.0.0-20150115210727-5cc570678d1b
 	github.com/elastic/gosigar v0.8.1-0.20180330100440-37f05ff46ffa // indirect

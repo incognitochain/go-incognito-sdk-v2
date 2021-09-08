@@ -25,7 +25,7 @@ func TestIncClient_GetPortalShieldingRequestStatus(t *testing.T) {
 	Logger.Println(string(jsb))
 }
 
-func TestIncClient_GeneratePortalShieldingAddressFromRPC(t *testing.T) {
+func TestIncClient_GeneratePortalShieldingAddress(t *testing.T) {
 	var err error
 	ic, err = NewMainNetClientWithCache()
 	if err != nil {
@@ -34,7 +34,7 @@ func TestIncClient_GeneratePortalShieldingAddressFromRPC(t *testing.T) {
 
 	paymentAddress := "12sdVuLAbKAetr7zaS4nQKHrZ3wxqqSFiyiXDnar4gMj552wNbXVZFTXAQuQ9wUyZuMV6ZZuWwGnKM43162ctwqe3U4rmjxmk4Ng8nFVeGH2e5TjVMACvjvWsrVd2wgmvwYtUgrMvp9eMwU2rJJn"
 	tokenIDStr := "b832e5d3b1f01a4f0623f7fe91d6673461e1f5d37d91fe78c5c2e6183ff39696"
-	status, err := ic.GeneratePortalShieldingAddressFromRPC(paymentAddress, tokenIDStr)
+	status, err := ic.GeneratePortalShieldingAddress(paymentAddress, tokenIDStr)
 	if err != nil {
 		panic(err)
 	}
@@ -65,4 +65,3 @@ func TestIncClient_GetPortalUnShieldingRequestStatus(t *testing.T) {
 	}
 	Logger.Println(string(jsb))
 }
-
