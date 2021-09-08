@@ -50,7 +50,7 @@ func TestIncClient_GetListTxsInV2(t *testing.T) {
 
 func TestIncClient_GetListTxsIn(t *testing.T) {
 	var err error
-	ic, err = NewDevNetClient()
+	ic, err = NewTestNetClient()
 	if err != nil {
 		panic(err)
 	}
@@ -71,7 +71,7 @@ func TestIncClient_GetListTxsIn(t *testing.T) {
 
 func TestIncClient_GetListTxsOutV1(t *testing.T) {
 	var err error
-	ic, err = NewDevNetClient()
+	ic, err = NewTestNetClient()
 	if err != nil {
 		panic(err)
 	}
@@ -92,7 +92,7 @@ func TestIncClient_GetListTxsOutV1(t *testing.T) {
 
 func TestIncClient_GetListTxsOutV2(t *testing.T) {
 	var err error
-	ic, err = NewDevNetClient()
+	ic, err = NewTestNetClient()
 	if err != nil {
 		panic(err)
 	}
@@ -113,7 +113,7 @@ func TestIncClient_GetListTxsOutV2(t *testing.T) {
 
 func TestIncClient_GetTxHistoryV1(t *testing.T) {
 	var err error
-	ic, err = NewDevNetClient()
+	ic, err = NewTestNetClient()
 	if err != nil {
 		panic(err)
 	}
@@ -137,7 +137,7 @@ func TestIncClient_GetTxHistoryV1(t *testing.T) {
 
 func TestIncClient_GetTxHistoryV2(t *testing.T) {
 	var err error
-	ic, err = NewDevNetClient()
+	ic, err = NewTestNetClient()
 	if err != nil {
 		panic(err)
 	}
