@@ -38,16 +38,6 @@ const (
 	LocalPrivacyVersion        = 2
 )
 
-// DevNet config
-const (
-	DevNetETHContractAddressStr = "0x2f6F03F1b43Eab22f7952bd617A24AB46E970dF7"
-	DevNetBSCContractAddressStr = "0x2f6F03F1b43Eab22f7952bd617A24AB46E970dF7"
-	DevNetFullNode              = "http://139.162.55.124:8334"
-	DevNetETHHost               = "https://kovan.infura.io/v3/93fe721349134964aa71071a713c5cef"
-	DevNetBSCHost               = "https://data-seed-prebsc-2-s1.binance.org:8545"
-	DevNetPrivacyVersion        = 2
-)
-
 const (
 	DefaultPRVFee         = uint64(100)
 	MaxInputSize          = 30

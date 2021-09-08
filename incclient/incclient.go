@@ -212,31 +212,6 @@ func NewLocalClientWithCache() (*IncClient, error) {
 	return incClient, nil
 }
 
-// NewDevNetClient creates a new IncClient with the dev-net environment.
-func NewDevNetClient() (*IncClient, error) {
-	rpcServer := rpc.NewRPCServer(DevNetFullNode)
-	ethServer := rpc.NewRPCServer(DevNetETHHost)
-	bscServer := rpc.NewRPCServer(DevNetBSCHost)
-
-	incClient := IncClient{rpcServer: rpcServer, ethServer: ethServer, bscServer: bscServer, version: DevNetPrivacyVersion}
-
-	activeShards, err := incClient.GetActiveShard()
-	if err != nil {
-		return nil, err
-	}
-
-	Logger.Printf("Init to %v, activeShards: %v\n", DevNetFullNode, activeShards)
-
-	common.MaxShardNumber = activeShards
-	if incClient.version == 1 {
-		common.AddressVersion = 0
-	} else if incClient.version == 2 {
-		common.AddressVersion = 1
-	}
-
-	return &incClient, nil
-}
-
 // NewIncClient creates a new IncClient from given parameters.
 func NewIncClient(fullNode, ethNode string, version int) (*IncClient, error) {
 	rpcServer := rpc.NewRPCServer(fullNode)
