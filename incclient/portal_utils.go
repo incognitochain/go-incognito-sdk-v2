@@ -41,6 +41,11 @@ func (client *IncClient) GeneratePortalShieldingAddress(paymentAddressStr, token
 		if paymentAddressStr == "" {
 			pubKeys = client.btcPortalParams.MasterPubKeys[:]
 		} else {
+			_, err = AssertPaymentAddressAndTxVersion(paymentAddressStr, 2)
+			if err != nil {
+				return "", fmt.Errorf("invalid payment address: %v", err)
+			}
+
 			chainCode := chainhash.HashB([]byte(paymentAddressStr))
 			for idx, masterPubKey := range client.btcPortalParams.MasterPubKeys {
 				// generate BTC child public key for this Incognito address
