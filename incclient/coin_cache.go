@@ -37,12 +37,6 @@ func newUTXOCache(cacheDirectory string) (*utxoCache, error) {
 	cachedData := make(map[string]*accountCache)
 	mtx := new(sync.Mutex)
 
-	currentDir, err := os.Getwd()
-	if err != nil {
-		return nil, err
-	}
-	fmt.Printf("cacheDirectory: %v/%v\n", currentDir, cacheDirectory)
-
 	// if the cache directory does not exist, create one.
 	if _, err := os.Stat(cacheDirectory); os.IsNotExist(err) {
 		err = os.MkdirAll(cacheDirectory, os.ModePerm)
@@ -105,6 +99,12 @@ func (uc *utxoCache) save(otaKeys ...string) error {
 // load either loads the whole cache or a specific otaKey.
 // Only the first value of `otaKeys` is processed.
 func (uc *utxoCache) load(otaKeys ...string) error {
+	currentDir, err := os.Getwd()
+	if err != nil {
+		return err
+	}
+	fmt.Printf("cacheDirectory: %v/%v\n", currentDir, uc.cacheDirectory)
+
 	var otaKeyStr string
 	if len(otaKeys) > 0 {
 		otaKeyStr = otaKeys[0]
