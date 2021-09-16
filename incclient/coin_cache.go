@@ -46,6 +46,12 @@ func newUTXOCache(cacheDirectory string) (*utxoCache, error) {
 		}
 	}
 
+	currentDir, err := os.Getwd()
+	if err != nil {
+		return nil, err
+	}
+	fmt.Printf("cacheDirectory: %v/%v\n", currentDir, cacheDirectory)
+
 	return &utxoCache{
 		cacheDirectory: cacheDirectory,
 		cachedData:     cachedData,
@@ -99,12 +105,6 @@ func (uc *utxoCache) save(otaKeys ...string) error {
 // load either loads the whole cache or a specific otaKey.
 // Only the first value of `otaKeys` is processed.
 func (uc *utxoCache) load(otaKeys ...string) error {
-	currentDir, err := os.Getwd()
-	if err != nil {
-		return err
-	}
-	fmt.Printf("cacheDirectory: %v/%v\n", currentDir, uc.cacheDirectory)
-
 	var otaKeyStr string
 	if len(otaKeys) > 0 {
 		otaKeyStr = otaKeys[0]
