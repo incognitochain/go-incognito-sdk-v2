@@ -23,6 +23,22 @@ func NewWithdrawLiquidityRequest() *WithdrawLiquidityRequest {
 	}
 }
 
+func NewWithdrawLiquidityRequestWithValue(
+	poolPairID, nftID string,
+	otaReceivers map[string]string,
+	shareAmount uint64,
+) *WithdrawLiquidityRequest {
+	return &WithdrawLiquidityRequest{
+		MetadataBase: metadataCommon.MetadataBase{
+			Type: metadataCommon.Pdexv3WithdrawLiquidityRequestMeta,
+		},
+		poolPairID:   poolPairID,
+		nftID:        nftID,
+		otaReceivers: otaReceivers,
+		shareAmount:  shareAmount,
+	}
+}
+
 func (request *WithdrawLiquidityRequest) Hash() *common.Hash {
 	rawBytes, _ := json.Marshal(&request)
 	hash := common.HashH([]byte(rawBytes))
