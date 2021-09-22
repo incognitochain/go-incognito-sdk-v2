@@ -5,19 +5,11 @@ import (
 	"encoding/json"
 	"fmt"
 
+	metadataCommon "github.com/incognitochain/go-incognito-sdk-v2/metadata/common"
+	metadataPdexv3 "github.com/incognitochain/go-incognito-sdk-v2/metadata/pdexv3"
 	"github.com/pkg/errors"
 )
 
-func calculateSize(meta Metadata) uint64 {
-	metaBytes, err := json.Marshal(meta)
-	if err != nil {
-		return 0
-	}
-	return uint64(len(metaBytes))
-}
-
-// ParseMetadata parses raw-byte data into a proper Metadata.
-// The input raw data is expected to be the JSON-marshalled data of a Metadata. Otherwise, this function will fail.
 func ParseMetadata(metaInBytes []byte) (Metadata, error) {
 	if len(metaInBytes) == 0 {
 		return nil, nil
@@ -102,20 +94,56 @@ func ParseMetadata(metaInBytes []byte) (Metadata, error) {
 		md = &BurningRequest{}
 	case RelayingBTCHeaderMeta:
 		md = &RelayingHeader{}
-	case PortalV4ShieldingRequestMeta:
-		md = &PortalShieldingRequest{}
-	case PortalV4ShieldingResponseMeta:
-		md = &PortalShieldingResponse{}
-	case PortalV4UnshieldingRequestMeta:
-		md = &PortalUnshieldRequest{}
-	case PortalV4UnshieldingResponseMeta:
-		md = &PortalUnshieldResponse{}
-	case PortalV4FeeReplacementRequestMeta:
-		md = &PortalReplacementFeeRequest{}
-	case PortalV4SubmitConfirmedTxMeta:
-		md = &PortalSubmitConfirmedTxRequest{}
-	case PortalV4ConvertVaultRequestMeta:
-		md = &PortalConvertVaultRequest{}
+	case metadataCommon.Pdexv3ModifyParamsMeta:
+		md = &metadataPdexv3.ParamsModifyingRequest{}
+	case metadataCommon.Pdexv3AddLiquidityRequestMeta:
+		md = &metadataPdexv3.AddLiquidityRequest{}
+	case metadataCommon.Pdexv3AddLiquidityResponseMeta:
+		md = &metadataPdexv3.AddLiquidityResponse{}
+	case metadataCommon.Pdexv3WithdrawLiquidityRequestMeta:
+		md = &metadataPdexv3.WithdrawLiquidityRequest{}
+	case metadataCommon.Pdexv3WithdrawLiquidityResponseMeta:
+		md = &metadataPdexv3.WithdrawLiquidityResponse{}
+	case metadataCommon.Pdexv3TradeRequestMeta:
+		md = &metadataPdexv3.TradeRequest{}
+	case metadataCommon.Pdexv3TradeResponseMeta:
+		md = &metadataPdexv3.TradeResponse{}
+	case metadataCommon.Pdexv3AddOrderRequestMeta:
+		md = &metadataPdexv3.AddOrderRequest{}
+	case metadataCommon.Pdexv3AddOrderResponseMeta:
+		md = &metadataPdexv3.AddOrderResponse{}
+	case metadataCommon.Pdexv3UserMintNftRequestMeta:
+		md = &metadataPdexv3.UserMintNftRequest{}
+	case metadataCommon.Pdexv3UserMintNftResponseMeta:
+		md = &metadataPdexv3.UserMintNftResponse{}
+	case metadataCommon.Pdexv3MintNftResponseMeta:
+		md = &metadataPdexv3.MintNftResponse{}
+	case metadataCommon.Pdexv3WithdrawOrderRequestMeta:
+		md = &metadataPdexv3.WithdrawOrderRequest{}
+	case metadataCommon.Pdexv3WithdrawOrderResponseMeta:
+		md = &metadataPdexv3.WithdrawOrderResponse{}
+	case metadataCommon.Pdexv3StakingRequestMeta:
+		md = &metadataPdexv3.StakingRequest{}
+	case metadataCommon.Pdexv3StakingResponseMeta:
+		md = &metadataPdexv3.StakingResponse{}
+	case metadataCommon.Pdexv3UnstakingRequestMeta:
+		md = &metadataPdexv3.UnstakingRequest{}
+	case metadataCommon.Pdexv3UnstakingResponseMeta:
+		md = &metadataPdexv3.UnstakingResponse{}
+	case metadataCommon.Pdexv3WithdrawLPFeeRequestMeta:
+		md = &metadataPdexv3.WithdrawalLPFeeRequest{}
+	case metadataCommon.Pdexv3WithdrawLPFeeResponseMeta:
+		md = &metadataPdexv3.WithdrawalLPFeeResponse{}
+	case metadataCommon.Pdexv3WithdrawProtocolFeeRequestMeta:
+		md = &metadataPdexv3.WithdrawalProtocolFeeRequest{}
+	case metadataCommon.Pdexv3WithdrawProtocolFeeResponseMeta:
+		md = &metadataPdexv3.WithdrawalProtocolFeeResponse{}
+	case metadataCommon.Pdexv3MintPDEXGenesisMeta:
+		md = &metadataPdexv3.MintPDEXGenesisResponse{}
+	case metadataCommon.Pdexv3WithdrawStakingRewardRequestMeta:
+		md = &metadataPdexv3.WithdrawalStakingRewardRequest{}
+	case metadataCommon.Pdexv3WithdrawStakingRewardResponseMeta:
+		md = &metadataPdexv3.WithdrawalStakingRewardResponse{}
 	default:
 		return nil, errors.Errorf("Could not parse metadata with type: %d", theType)
 	}

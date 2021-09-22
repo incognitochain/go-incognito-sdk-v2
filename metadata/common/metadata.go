@@ -1,4 +1,4 @@
-package metadata
+package common
 
 import (
 	"github.com/incognitochain/go-incognito-sdk-v2/coin"
