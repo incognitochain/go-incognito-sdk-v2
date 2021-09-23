@@ -10,32 +10,7 @@ import (
 	"github.com/incognitochain/go-incognito-sdk-v2/wallet"
 )
 
-func GenerateOTAReceivers(
-	tokens []common.Hash, addr key.PaymentAddress,
-) (map[common.Hash]coin.OTAReceiver, error) {
-	result := make(map[common.Hash]coin.OTAReceiver)
-	var err error
-	for _, tokenID := range tokens {
-		temp := coin.OTAReceiver{}
-		err = temp.FromAddress(addr)
-		if err != nil {
-			return nil, err
-		}
-		result[tokenID] = temp
-	}
-	return result, nil
-}
-
-func toStringKeys(inputMap map[common.Hash]coin.OTAReceiver) map[string]string {
-	result := make(map[string]string)
-	for k, v := range inputMap {
-		s, _ := v.String()
-		result[k.String()] = s
-	}
-	return result
-}
-
-// CreatePdexv3TradeVer2 creates a trading transaction version 2.
+// CreatePdexv3Trade creates a trading transaction.
 //
 // It returns the base58-encoded transaction, the transaction's hash, and an error (if any).
 func (client *IncClient) CreatePdexv3Trade(privateKey string, tradePath []string, tokenIDToSellStr,
@@ -98,7 +73,7 @@ func (client *IncClient) CreatePdexv3Trade(privateKey string, tradePath []string
 
 }
 
-// CreateAndSendPdexv3TradeTransaction creates a trading transaction with the provided version, and submits it to the Incognito network.
+// CreateAndSendPdexv3TradeTransaction creates a trading transaction (version 2 only), and submits it to the Incognito network.
 //
 // It returns the transaction's hash, and an error (if any).
 func (client *IncClient) CreateAndSendPdexv3TradeTransaction(privateKey string, tradePath []string, tokenIDToSellStr, tokenIDToBuyStr string, amount uint64,
@@ -124,8 +99,134 @@ func (client *IncClient) CreateAndSendPdexv3TradeTransaction(privateKey string, 
 	return txHash, nil
 }
 
+// CreatePdexv3AddOrder creates a transaction that adds a new order in pdex v3.
+//
+// It returns the base58-encoded transaction, the transaction's hash, and an error (if any).
+func (client *IncClient) CreatePdexv3AddOrder(privateKey, pairID string,
+	tokenIDToSellStr, nftIDStr string,
+	sellAmount, expectedBuy uint64,
+) ([]byte, string, error) {
+	senderWallet, err := wallet.Base58CheckDeserialize(privateKey)
+	if err != nil {
+		return nil, "", err
+	}
+
+	tokenSell, err := common.Hash{}.NewHashFromStr(tokenIDToSellStr)
+	if err != nil {
+		return nil, "", err
+	}
+	nftID, err := common.Hash{}.NewHashFromStr(nftIDStr)
+	if err != nil {
+		return nil, "", err
+	}
+
+	// construct order metadata
+	md, _ := metadataPdexv3.NewAddOrderRequest(
+		*tokenSell, pairID, sellAmount,
+		expectedBuy, nil, *nftID,
+		metadataCommon.Pdexv3AddOrderRequestMeta,
+	)
+	// create one-time receivers for response TX
+	isPRV := md.TokenToSell == common.PRVCoinID
+	tokenList := []common.Hash{md.TokenToSell}
+	md.Receiver, err = GenerateOTAReceivers(
+		tokenList, senderWallet.KeySet.PaymentAddress)
+	if err != nil {
+		return nil, "", err
+	}
+
+	if isPRV {
+		txParam := NewTxParam(privateKey, []string{common.BurningAddress2}, []uint64{sellAmount}, 0, nil, md, nil)
+		return client.CreateRawTransaction(txParam, 2)
+	} else {
+		tokenParam := NewTxTokenParam(tokenIDToSellStr, 1, []string{common.BurningAddress2}, []uint64{sellAmount}, false, 0, nil)
+		txParam := NewTxParam(privateKey, []string{}, []uint64{}, 0, tokenParam, md, nil)
+		return client.CreateRawTokenTransaction(txParam, 2)
+	}
+}
+
+// CreateAndSendPdexv3AddOrderTransaction creates an order transaction, and submits it to the Incognito network.
+//
+// It returns the transaction's hash, and an error (if any).
+func (client *IncClient) CreateAndSendPdexv3AddOrderTransaction(privateKey, pairID string,
+	tokenIDToSellStr, nftIDStr string,
+	sellAmount, expectedBuy uint64,
+) (string, error) {
+	encodedTx, txHash, err := client.CreatePdexv3AddOrder(privateKey, pairID, tokenIDToSellStr, nftIDStr, sellAmount, expectedBuy)
+	if err != nil {
+		return "", err
+	}
+
+	if tokenIDToSellStr == common.PRVIDStr {
+		err = client.SendRawTx(encodedTx)
+		if err != nil {
+			return "", err
+		}
+	} else {
+		err = client.SendRawTokenTx(encodedTx)
+		if err != nil {
+			return "", err
+		}
+	}
+
+	return txHash, nil
+}
+
+// CreatePdexv3WithdrawOrder creates a transaction that withdraws all outstanding balance from an order in pdex v3.
+//
+// It returns the base58-encoded transaction, the transaction's hash, and an error (if any).
+func (client *IncClient) CreatePdexv3WithdrawOrder(privateKey, pairID, orderID string,
+	withdrawTokenIDs []string, nftIDStr string, amount uint64) ([]byte, string, error) {
+	senderWallet, err := wallet.Base58CheckDeserialize(privateKey)
+	if err != nil {
+		return nil, "", err
+	}
+
+	nftID, err := common.Hash{}.NewHashFromStr(nftIDStr)
+	if err != nil {
+		return nil, "", err
+	}
+
+	tokenList := []common.Hash{*nftID}
+	for _, v := range withdrawTokenIDs {
+		temp, err := common.Hash{}.NewHashFromStr(v)
+		if err != nil {
+			return nil, "", err
+		}
+		tokenList = append(tokenList, *temp)
+	}
+	otaReceivers, err := GenerateOTAReceivers(tokenList, senderWallet.KeySet.PaymentAddress)
+	if err != nil {
+		return nil, "", err
+	}
+	md, _ := metadataPdexv3.NewWithdrawOrderRequest(pairID, orderID, amount,
+		otaReceivers, *nftID, metadataCommon.Pdexv3WithdrawOrderRequestMeta)
+
+	tokenParam := NewTxTokenParam(nftIDStr, 1, []string{common.BurningAddress2}, []uint64{1}, false, 0, nil)
+	txParam := NewTxParam(privateKey, []string{}, []uint64{}, 0, tokenParam, md, nil)
+
+	return client.CreateRawTransaction(txParam, 2)
+}
+
+// CreateAndSendPdexv3WithdrawalTransaction creates an order-withdrawing transaction, and submits it to the Incognito network.
+//
+// It returns the transaction's hash, and an error (if any).
+func (client *IncClient) CreateAndSendPdexv3WithdrawOrderTransaction(privateKey, pairID, orderID string,
+	withdrawTokenIDs []string, nftIDStr string, amount uint64) (string, error) {
+	encodedTx, txHash, err := client.CreatePdexv3WithdrawOrder(privateKey, pairID, orderID, withdrawTokenIDs, nftIDStr, amount)
+	if err != nil {
+		return "", err
+	}
+
+	err = client.SendRawTx(encodedTx)
+	if err != nil {
+		return "", err
+	}
+
+	return txHash, nil
+}
+
 // CreatePdexv3Contribute creates a contributing transaction which contributes an amount of tokenID to the pDEX.
-// Version = -1 indicates that whichever version is accepted.
 //
 // It returns the base58-encoded transaction, the transaction's hash, and an error (if any).
 func (client *IncClient) CreatePdexv3Contribute(privateKey, pairID, pairHash, tokenIDStr, nftIDStr string, amount uint64, amplifier uint64) ([]byte, string, error) {
@@ -164,7 +265,6 @@ func (client *IncClient) CreatePdexv3Contribute(privateKey, pairID, pairHash, to
 }
 
 // CreateAndSendPdexv3ContributeTransaction creates a contributing transaction which contributes an amount of tokenID to the pDEX, and then submits it to the Incognito network.
-// Version = -1 indicates that whichever version is accepted.
 //
 // It returns the transaction's hash, and an error (if any).
 func (client *IncClient) CreateAndSendPdexv3ContributeTransaction(privateKey, pairID, pairHash, tokenIDStr, nftIDStr string, amount uint64, amplifier uint64) (string, error) {
@@ -188,8 +288,7 @@ func (client *IncClient) CreateAndSendPdexv3ContributeTransaction(privateKey, pa
 	return txHash, nil
 }
 
-// CreatePdexv3Withdraw creates a withdrawing transaction which withdraws a pair of tokenIDs from the pDEX.
-// Version = -1 indicates that whichever version is accepted.
+// CreatePdexv3WithdrawLiquidity creates a withdrawing transaction which withdraws a pair of tokenIDs from pdex v3.
 //
 // It returns the base58-encoded transaction, the transaction's hash, and an error (if any).
 func (client *IncClient) CreatePdexv3WithdrawLiquidity(privateKey, pairID, token0IDStr, token1IDStr, nftIDStr string, shareAmount uint64) ([]byte, string, error) {
@@ -210,7 +309,7 @@ func (client *IncClient) CreatePdexv3WithdrawLiquidity(privateKey, pairID, token
 	if err != nil {
 		return nil, "", err
 	}
-	
+
 	tokenList := []common.Hash{*token0ID, *token1ID, *nftID}
 	otaReceivers, err := GenerateOTAReceivers(tokenList, senderWallet.KeySet.PaymentAddress)
 	if err != nil {
@@ -227,11 +326,10 @@ func (client *IncClient) CreatePdexv3WithdrawLiquidity(privateKey, pairID, token
 	return client.CreateRawTransaction(txParam, 2)
 }
 
-// CreateAndSendPdexv3WithdrawalTransaction creates a withdrawing transaction which withdraws a pair of tokenIDs from the pDEX, and submits it to the Incognito network.
-// Version = -1 indicates that whichever version is accepted.
+// CreateAndSendPdexv3WithdrawLiquidityTransaction creates a withdrawing transaction which withdraws a pair of tokenIDs from the pDEX, and submits it to the Incognito network.
 //
 // It returns the transaction's hash, and an error (if any).
-func (client *IncClient) CreateAndSendPdexv3WithdrawalTransaction(privateKey, pairID, token0IDStr, token1IDStr, nftIDStr string, shareAmount uint64) (string, error) {
+func (client *IncClient) CreateAndSendPdexv3WithdrawLiquidityTransaction(privateKey, pairID, token0IDStr, token1IDStr, nftIDStr string, shareAmount uint64) (string, error) {
 	encodedTx, txHash, err := client.CreatePdexv3WithdrawLiquidity(privateKey, pairID, token0IDStr, token1IDStr, nftIDStr, shareAmount)
 	if err != nil {
 		return "", err
@@ -243,4 +341,232 @@ func (client *IncClient) CreateAndSendPdexv3WithdrawalTransaction(privateKey, pa
 	}
 
 	return txHash, nil
+}
+
+// CreatePdexv3WithdrawLPFee creates a transaction that withdraws all rewards (from trading fees) earned by a liquidity provider in one pool in pdex v3.
+//
+// It returns the base58-encoded transaction, the transaction's hash, and an error (if any).
+func (client *IncClient) CreatePdexv3WithdrawLPFee(privateKey, pairID string,
+	withdrawTokenIDs []string, nftIDStr string) ([]byte, string, error) {
+	senderWallet, err := wallet.Base58CheckDeserialize(privateKey)
+	if err != nil {
+		return nil, "", err
+	}
+
+	nftID, err := common.Hash{}.NewHashFromStr(nftIDStr)
+	if err != nil {
+		return nil, "", err
+	}
+
+	tokenList := []common.Hash{*nftID, common.PRVCoinID, common.PDEXCoinID}
+	// expect withdrawTokenIDs to contain both tokens in this pool
+	for _, v := range withdrawTokenIDs {
+		temp, err := common.Hash{}.NewHashFromStr(v)
+		if err != nil {
+			return nil, "", err
+		}
+		tokenList = append(tokenList, *temp)
+	}
+	otaReceivers, err := GenerateOTAReceivers(tokenList, senderWallet.KeySet.PaymentAddress)
+	if err != nil {
+		return nil, "", err
+	}
+	md, _ := metadataPdexv3.NewPdexv3WithdrawalLPFeeRequest(
+		metadataCommon.Pdexv3WithdrawLPFeeRequestMeta,
+		pairID,
+		*nftID,
+		otaReceivers,
+	)
+
+	tokenParam := NewTxTokenParam(nftIDStr, 1, []string{common.BurningAddress2}, []uint64{1}, false, 0, nil)
+	txParam := NewTxParam(privateKey, []string{}, []uint64{}, 0, tokenParam, md, nil)
+
+	return client.CreateRawTransaction(txParam, 2)
+}
+
+// CreateAndSendPdexv3WithdrawLPFeeTransaction creates a transaction that withdraws a liquidity provider's reward in one pool, and submits it to the Incognito network.
+// Version = -1 indicates that whichever version is accepted.
+//
+// It returns the transaction's hash, and an error (if any).
+func (client *IncClient) CreateAndSendPdexv3WithdrawLPFeeTransaction(privateKey, pairID string,
+	withdrawTokenIDs []string, nftIDStr string) (string, error) {
+	encodedTx, txHash, err := client.CreatePdexv3WithdrawLPFee(privateKey, pairID, withdrawTokenIDs, nftIDStr)
+	if err != nil {
+		return "", err
+	}
+
+	err = client.SendRawTx(encodedTx)
+	if err != nil {
+		return "", err
+	}
+
+	return txHash, nil
+}
+
+// CreatePdexv3WithdrawLPFee creates a transaction that withdraws all outstanding protocol fee in pdex v3 to Incognito's funds.
+//
+// It returns the base58-encoded transaction, the transaction's hash, and an error (if any).
+func (client *IncClient) CreatePdexv3WithdrawProtocolFee(privateKey, pairID string) ([]byte, string, error) {
+	md, _ := metadataPdexv3.NewPdexv3WithdrawalProtocolFeeRequest(
+		metadataCommon.Pdexv3WithdrawProtocolFeeRequestMeta,
+		pairID,
+	)
+
+	txParam := NewTxParam(privateKey, []string{}, []uint64{}, 0, nil, md, nil)
+
+	return client.CreateRawTransaction(txParam, 2)
+}
+
+// CreateAndSendPdexv3WithdrawLPFeeTransaction creates an protocol-fee-withdrawing transaction, and submits it to the Incognito network.
+// Version = -1 indicates that whichever version is accepted.
+//
+// It returns the transaction's hash, and an error (if any).
+func (client *IncClient) CreateAndSendPdexv3WithdrawProtocolFeeTransaction(privateKey, pairID string) (string, error) {
+	encodedTx, txHash, err := client.CreatePdexv3WithdrawProtocolFee(privateKey, pairID)
+	if err != nil {
+		return "", err
+	}
+
+	err = client.SendRawTx(encodedTx)
+	if err != nil {
+		return "", err
+	}
+
+	return txHash, nil
+}
+
+// CreatePdexv3Contribute creates a staking transaction in pdex v3.
+//
+// It returns the base58-encoded transaction, the transaction's hash, and an error (if any).
+func (client *IncClient) CreatePdexv3Staking(privateKey, tokenIDStr, nftIDStr string, amount uint64) ([]byte, string, error) {
+	senderWallet, err := wallet.Base58CheckDeserialize(privateKey)
+	if err != nil {
+		return nil, "", err
+	}
+
+	tokenID, err := common.Hash{}.NewHashFromStr(tokenIDStr)
+	if err != nil {
+		return nil, "", err
+	}
+	isPRV := *tokenID == common.PRVCoinID
+
+	// construct metadata for contribution
+	temp := coin.OTAReceiver{}
+	err = temp.FromAddress(senderWallet.KeySet.PaymentAddress)
+	if err != nil {
+		return nil, "", err
+	}
+	otaReceiverStr, _ := temp.String()
+	md := metadataPdexv3.NewStakingRequestWithValue(tokenIDStr, nftIDStr, otaReceiverStr, amount)
+
+	if isPRV {
+		txParam := NewTxParam(privateKey, []string{common.BurningAddress2}, []uint64{amount}, 0, nil, md, nil)
+		return client.CreateRawTransaction(txParam, 2)
+	} else {
+		tokenParam := NewTxTokenParam(tokenIDStr, 1, []string{common.BurningAddress2}, []uint64{amount}, false, 0, nil)
+		txParam := NewTxParam(privateKey, []string{}, []uint64{}, 0, tokenParam, md, nil)
+
+		return client.CreateRawTokenTransaction(txParam, 2)
+	}
+}
+
+// CreateAndSendPdexv3StakingTransaction creates a staking transaction in pdex v3, and then submits it to the Incognito network.
+//
+// It returns the transaction's hash, and an error (if any).
+func (client *IncClient) CreateAndSendPdexv3StakingTransaction(privateKey, tokenIDStr, nftIDStr string, amount uint64) (string, error) {
+	encodedTx, txHash, err := client.CreatePdexv3Staking(privateKey, tokenIDStr, nftIDStr, amount)
+	if err != nil {
+		return "", err
+	}
+
+	if tokenIDStr == common.PRVIDStr {
+		err = client.SendRawTx(encodedTx)
+		if err != nil {
+			return "", err
+		}
+	} else {
+		err = client.SendRawTokenTx(encodedTx)
+		if err != nil {
+			return "", err
+		}
+	}
+
+	return txHash, nil
+}
+
+// CreatePdexv3Unstaking creates an unstaking transaction in pdex v3.
+//
+// It returns the base58-encoded transaction, the transaction's hash, and an error (if any).
+func (client *IncClient) CreatePdexv3Unstaking(privateKey, pairID, tokenIDStr, nftIDStr string,
+	amount uint64) ([]byte, string, error) {
+	senderWallet, err := wallet.Base58CheckDeserialize(privateKey)
+	if err != nil {
+		return nil, "", err
+	}
+
+	nftID, err := common.Hash{}.NewHashFromStr(nftIDStr)
+	if err != nil {
+		return nil, "", err
+	}
+	tokenID, err := common.Hash{}.NewHashFromStr(tokenIDStr)
+	if err != nil {
+		return nil, "", err
+	}
+
+	tokenList := []common.Hash{*nftID, *tokenID}
+	otaReceivers, err := GenerateOTAReceivers(tokenList, senderWallet.KeySet.PaymentAddress)
+	if err != nil {
+		return nil, "", err
+	}
+	md := metadataPdexv3.NewUnstakingRequestWithValue(
+		tokenIDStr, nftIDStr, toStringKeys(otaReceivers), amount,
+	)
+
+	tokenParam := NewTxTokenParam(nftIDStr, 1, []string{common.BurningAddress2}, []uint64{1}, false, 0, nil)
+	txParam := NewTxParam(privateKey, []string{}, []uint64{}, 0, tokenParam, md, nil)
+
+	return client.CreateRawTransaction(txParam, 2)
+}
+
+// CreateAndSendPdexv3UnstakingTransaction creates an unstaking transaction, and submits it to the Incognito network.
+//
+// It returns the transaction's hash, and an error (if any).
+func (client *IncClient) CreateAndSendPdexv3UnstakingTransaction(privateKey, pairID, tokenIDStr string,
+	nftIDStr string, amount uint64) (string, error) {
+	encodedTx, txHash, err := client.CreatePdexv3Unstaking(privateKey, pairID, tokenIDStr, nftIDStr, amount)
+	if err != nil {
+		return "", err
+	}
+
+	err = client.SendRawTx(encodedTx)
+	if err != nil {
+		return "", err
+	}
+
+	return txHash, nil
+}
+
+func GenerateOTAReceivers(
+	tokens []common.Hash, addr key.PaymentAddress,
+) (map[common.Hash]coin.OTAReceiver, error) {
+	result := make(map[common.Hash]coin.OTAReceiver)
+	var err error
+	for _, tokenID := range tokens {
+		temp := coin.OTAReceiver{}
+		err = temp.FromAddress(addr)
+		if err != nil {
+			return nil, err
+		}
+		result[tokenID] = temp
+	}
+	return result, nil
+}
+
+func toStringKeys(inputMap map[common.Hash]coin.OTAReceiver) map[string]string {
+	result := make(map[string]string)
+	for k, v := range inputMap {
+		s, _ := v.String()
+		result[k.String()] = s
+	}
+	return result
 }

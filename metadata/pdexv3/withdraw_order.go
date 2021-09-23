@@ -18,6 +18,26 @@ type WithdrawOrderRequest struct {
 	metadataCommon.MetadataBase
 }
 
+func NewWithdrawOrderRequest(
+	pairID, orderID string,
+	amount uint64,
+	recv map[common.Hash]coin.OTAReceiver,
+	nftID common.Hash,
+	metaType int,
+) (*WithdrawOrderRequest, error) {
+	r := &WithdrawOrderRequest{
+		PoolPairID: pairID,
+		OrderID:    orderID,
+		Amount:     amount,
+		Receiver:   recv,
+		NftID:      nftID,
+		MetadataBase: metadataCommon.MetadataBase{
+			Type: metaType,
+		},
+	}
+	return r, nil
+}
+
 func (req WithdrawOrderRequest) Hash() *common.Hash {
 	rawBytes, _ := json.Marshal(req)
 	hash := common.HashH([]byte(rawBytes))

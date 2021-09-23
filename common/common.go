@@ -126,6 +126,7 @@ var (
 var (
 	PRVCoinID           = Hash{4}
 	ConfidentialAssetID = Hash{5}
+	PDEXCoinID          = Hash{6}
 	MaxShardNumber      = 8 //programmatically config based on networkID
 	AddressVersion      = 1
 )
