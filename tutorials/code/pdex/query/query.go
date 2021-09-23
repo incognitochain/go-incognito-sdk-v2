@@ -1,10 +1,12 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
-	"github.com/incognitochain/go-incognito-sdk-v2/common"
-	"github.com/incognitochain/go-incognito-sdk-v2/incclient"
 	"log"
+
+	// "github.com/incognitochain/go-incognito-sdk-v2/common"
+	"github.com/incognitochain/go-incognito-sdk-v2/incclient"
 )
 
 func main() {
@@ -18,29 +20,30 @@ func main() {
 		log.Fatal(err)
 	}
 
-	fmt.Printf("pdeState: \n%v\n", pdeState)
+	jsb, _ := json.Marshal(pdeState)
+	fmt.Printf("pdeState: \n%s\n", string(jsb))
 
-	allPairs, err := client.GetAllPDEPoolPairs(0)
-	if err != nil {
-		log.Fatal(err)
-	}
+	// allPairs, err := client.GetAllPDEPoolPairs(0)
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
 
-	fmt.Printf("allPairs: \n%v\n", allPairs)
+	// fmt.Printf("allPairs: \n%v\n", allPairs)
 
-	tokenID1 := common.PRVIDStr
-	tokenID2 := "0000000000000000000000000000000000000000000000000000000000000100"
-	pair, err := client.GetPDEPoolPair(0, tokenID1, tokenID2)
-	if err != nil {
-		log.Fatal(err)
-	}
-	fmt.Printf("pair: %v\n", pair)
+	// tokenID1 := common.PRVIDStr
+	// tokenID2 := "0000000000000000000000000000000000000000000000000000000000000100"
+	// pair, err := client.GetPDEPoolPair(0, tokenID1, tokenID2)
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+	// fmt.Printf("pair: %v\n", pair)
 
-	tokenToSell := common.PRVIDStr
-	tokenToBuy := "0000000000000000000000000000000000000000000000000000000000000100"
-	sellAmount := uint64(1000000000)
-	expectedAmount, err := client.CheckXPrice(tokenToSell, tokenToBuy, sellAmount)
-	if err != nil {
-		log.Fatal(err)
-	}
-	fmt.Printf("Expected amount: %v\n", expectedAmount)
+	// tokenToSell := common.PRVIDStr
+	// tokenToBuy := "0000000000000000000000000000000000000000000000000000000000000100"
+	// sellAmount := uint64(1000000000)
+	// expectedAmount, err := client.CheckXPrice(tokenToSell, tokenToBuy, sellAmount)
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+	// fmt.Printf("Expected amount: %v\n", expectedAmount)
 }

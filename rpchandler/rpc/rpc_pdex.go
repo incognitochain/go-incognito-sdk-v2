@@ -27,7 +27,7 @@ func (server *RPCServer) GetPDEState(beaconHeight uint64) ([]byte, error) {
 	params := make([]interface{}, 0)
 	params = append(params, mapParams)
 
-	return server.SendQuery(getPDEState, params)
+	return server.SendQuery(pdexv3GetState, params)
 }
 
 // ConvertPDEPrice gets the pDEX to check the price between to tokens.

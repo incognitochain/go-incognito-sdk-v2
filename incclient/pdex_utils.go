@@ -3,7 +3,7 @@ package incclient
 import (
 	"fmt"
 	"sort"
-	"strings"
+	// "strings"
 
 	"github.com/incognitochain/go-incognito-sdk-v2/common"
 	"github.com/incognitochain/go-incognito-sdk-v2/rpchandler"
@@ -21,7 +21,7 @@ type Share struct {
 
 // GetPDEState retrieves the state of pDEX at the provided beacon height.
 // If the beacon height is set to 0, it returns the latest pDEX state.
-func (client *IncClient) GetPDEState(beaconHeight uint64) (*jsonresult.CurrentPDEState, error) {
+func (client *IncClient) GetPDEState(beaconHeight uint64) (*jsonresult.CurrentPdexState, error) {
 	if beaconHeight == 0 {
 		bestBlocks, err := client.GetBestBlock()
 		if err != nil {
@@ -35,7 +35,7 @@ func (client *IncClient) GetPDEState(beaconHeight uint64) (*jsonresult.CurrentPD
 		return nil, err
 	}
 
-	var pdeState jsonresult.CurrentPDEState
+	var pdeState jsonresult.CurrentPdexState
 	err = rpchandler.ParseResponse(responseInBytes, &pdeState)
 	if err != nil {
 		return nil, err
@@ -46,18 +46,18 @@ func (client *IncClient) GetPDEState(beaconHeight uint64) (*jsonresult.CurrentPD
 
 // GetAllPDEPoolPairs retrieves all pools in pDEX at the provided beacon height.
 // If the beacon height is set to 0, it returns the latest pDEX pool pairs.
-func (client *IncClient) GetAllPDEPoolPairs(beaconHeight uint64) (map[string]*jsonresult.PoolInfo, error) {
+func (client *IncClient) GetAllPDEPoolPairs(beaconHeight uint64) (map[string]*jsonresult.Pdexv3PoolPairState, error) {
 	pdeState, err := client.GetPDEState(beaconHeight)
 	if err != nil {
 		return nil, err
 	}
 
-	return pdeState.PDEPoolPairs, nil
+	return pdeState.PoolPairs, nil
 }
 
 // GetPDEPoolPair retrieves the pDEX pool information for pair tokenID1-tokenID2 at the provided beacon height.
 // If the beacon height is set to 0, it returns the latest information.
-func (client *IncClient) GetPDEPoolPair(beaconHeight uint64, tokenID1, tokenID2 string) (*jsonresult.PoolInfo, error) {
+func (client *IncClient) GetPDEPoolPair(beaconHeight uint64, tokenID1, tokenID2 string) (*jsonresult.Pdexv3PoolPairState, error) {
 	if beaconHeight == 0 {
 		bestBlocks, err := client.GetBestBlock()
 		if err != nil {
@@ -114,89 +114,89 @@ func (client *IncClient) CheckXPrice(tokenToSell, TokenToBuy string, sellAmount 
 }
 
 // GetShareAmount retrieves the share amount of a payment address in pDEX pool of tokenID1 and tokenID2.
-func (client *IncClient) GetShareAmount(beaconHeight uint64, tokenID1, tokenID2, paymentAddress string) (uint64, error) {
-	if beaconHeight == 0 {
-		bestBlocks, err := client.GetBestBlock()
-		if err != nil {
-			return 0, fmt.Errorf("cannot get best blocks: %v", err)
-		}
-		beaconHeight = bestBlocks[-1]
-	}
+// func (client *IncClient) GetShareAmount(beaconHeight uint64, tokenID1, tokenID2, paymentAddress string) (uint64, error) {
+// 	if beaconHeight == 0 {
+// 		bestBlocks, err := client.GetBestBlock()
+// 		if err != nil {
+// 			return 0, fmt.Errorf("cannot get best blocks: %v", err)
+// 		}
+// 		beaconHeight = bestBlocks[-1]
+// 	}
 
-	pdeState, err := client.GetPDEState(beaconHeight)
-	if err != nil {
-		return 0, err
-	}
+// 	pdeState, err := client.GetPDEState(beaconHeight)
+// 	if err != nil {
+// 		return 0, err
+// 	}
 
-	allShares := pdeState.PDEShares
-	shareKey, err := BuildPDEShareKey(beaconHeight, tokenID1, tokenID2, paymentAddress)
-	if err != nil {
-		return 0, fmt.Errorf("cannot build the pDEX share key")
-	}
+// 	allShares := pdeState.Shares
+// 	shareKey, err := BuildPDEShareKey(beaconHeight, tokenID1, tokenID2, paymentAddress)
+// 	if err != nil {
+// 		return 0, fmt.Errorf("cannot build the pDEX share key")
+// 	}
 
-	if amount, ok := allShares[string(shareKey)]; ok {
-		return amount, nil
-	} else {
-		return 0, nil
-	}
+// 	if amount, ok := allShares[string(shareKey)]; ok {
+// 		return amount, nil
+// 	} else {
+// 		return 0, nil
+// 	}
 
-}
+// }
 
 // GetAllShares retrieves all shares in pDEX a user has contributed.
-func (client *IncClient) GetAllShares(beaconHeight uint64, paymentAddress string) ([]*Share, error) {
-	if beaconHeight == 0 {
-		bestBlocks, err := client.GetBestBlock()
-		if err != nil {
-			return nil, fmt.Errorf("cannot get best blocks: %v", err)
-		}
-		beaconHeight = bestBlocks[-1]
-	}
+// func (client *IncClient) GetAllShares(beaconHeight uint64, paymentAddress string) ([]*Share, error) {
+// 	if beaconHeight == 0 {
+// 		bestBlocks, err := client.GetBestBlock()
+// 		if err != nil {
+// 			return nil, fmt.Errorf("cannot get best blocks: %v", err)
+// 		}
+// 		beaconHeight = bestBlocks[-1]
+// 	}
 
-	pdeState, err := client.GetPDEState(beaconHeight)
-	if err != nil {
-		return nil, err
-	}
+// 	pdeState, err := client.GetPDEState(beaconHeight)
+// 	if err != nil {
+// 		return nil, err
+// 	}
 
-	allShares := pdeState.PDEShares
-	keyAddr, err := wallet.GetPaymentAddressV1(paymentAddress, false)
-	if err != nil {
-		return nil, err
-	}
+// 	allShares := pdeState.PDEShares
+// 	keyAddr, err := wallet.GetPaymentAddressV1(paymentAddress, false)
+// 	if err != nil {
+// 		return nil, err
+// 	}
 
-	res := make([]*Share, 0)
-	for key, value := range allShares {
-		if strings.Contains(key, keyAddr) {
-			sliceStrings := strings.Split(key, "-")
-			res = append(res, &Share{
-				TokenID1Str: sliceStrings[2],
-				TokenID2Str: sliceStrings[3],
-				ShareAmount: value,
-			})
-		}
-	}
+// 	res := make([]*Share, 0)
+// 	for key, value := range allShares {
+// 		if strings.Contains(key, keyAddr) {
+// 			sliceStrings := strings.Split(key, "-")
+// 			res = append(res, &Share{
+// 				TokenID1Str: sliceStrings[2],
+// 				TokenID2Str: sliceStrings[3],
+// 				ShareAmount: value,
+// 			})
+// 		}
+// 	}
 
-	return res, nil
-}
+// 	return res, nil
+// }
 
 // GetTotalSharesAmount retrieves the total shares' amount of a pDEX pool.
-func (client *IncClient) GetTotalSharesAmount(beaconHeight uint64, tokenID1, tokenID2 string) (uint64, error) {
-	pdeState, err := client.GetPDEState(beaconHeight)
-	if err != nil {
-		return 0, err
-	}
+// func (client *IncClient) GetTotalSharesAmount(beaconHeight uint64, tokenID1, tokenID2 string) (uint64, error) {
+// 	pdeState, err := client.GetPDEState(beaconHeight)
+// 	if err != nil {
+// 		return 0, err
+// 	}
 
-	totalSharesAmount := uint64(0)
+// 	totalSharesAmount := uint64(0)
 
-	allShares := pdeState.PDEShares
-	poolKey := BuildPDEPoolKey(tokenID1, tokenID2)
-	for shareKey, amount := range allShares {
-		if strings.Contains(shareKey, poolKey) {
-			totalSharesAmount += amount
-		}
-	}
+// 	allShares := pdeState.PDEShares
+// 	poolKey := BuildPDEPoolKey(tokenID1, tokenID2)
+// 	for shareKey, amount := range allShares {
+// 		if strings.Contains(shareKey, poolKey) {
+// 			totalSharesAmount += amount
+// 		}
+// 	}
 
-	return totalSharesAmount, nil
-}
+// 	return totalSharesAmount, nil
+// }
 
 // CheckTradeStatus checks the status of a trading transaction.
 // It returns
