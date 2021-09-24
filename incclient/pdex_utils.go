@@ -2,13 +2,14 @@ package incclient
 
 import (
 	"fmt"
+	"math/big"
 	"sort"
-	// "strings"
+	"strings"
 
-	"github.com/incognitochain/go-incognito-sdk-v2/common"
+	// "github.com/incognitochain/go-incognito-sdk-v2/common"
 	"github.com/incognitochain/go-incognito-sdk-v2/rpchandler"
 	"github.com/incognitochain/go-incognito-sdk-v2/rpchandler/jsonresult"
-	"github.com/incognitochain/go-incognito-sdk-v2/rpchandler/rpc"
+	// "github.com/incognitochain/go-incognito-sdk-v2/rpchandler/rpc"
 	"github.com/incognitochain/go-incognito-sdk-v2/wallet"
 )
 
@@ -19,9 +20,9 @@ type Share struct {
 	ShareAmount uint64
 }
 
-// GetPDEState retrieves the state of pDEX at the provided beacon height.
+// GetPdexState retrieves the state of pDEX at the provided beacon height.
 // If the beacon height is set to 0, it returns the latest pDEX state.
-func (client *IncClient) GetPDEState(beaconHeight uint64) (*jsonresult.CurrentPdexState, error) {
+func (client *IncClient) GetPdexState(beaconHeight uint64) (*jsonresult.CurrentPdexState, error) {
 	if beaconHeight == 0 {
 		bestBlocks, err := client.GetBestBlock()
 		if err != nil {
@@ -30,7 +31,7 @@ func (client *IncClient) GetPDEState(beaconHeight uint64) (*jsonresult.CurrentPd
 		beaconHeight = bestBlocks[-1]
 	}
 
-	responseInBytes, err := client.rpcServer.GetPDEState(beaconHeight)
+	responseInBytes, err := client.rpcServer.GetPdexState(beaconHeight)
 	if err != nil {
 		return nil, err
 	}
@@ -44,10 +45,10 @@ func (client *IncClient) GetPDEState(beaconHeight uint64) (*jsonresult.CurrentPd
 	return &pdeState, nil
 }
 
-// GetAllPDEPoolPairs retrieves all pools in pDEX at the provided beacon height.
+// GetAllPdexPoolPairs retrieves all pools in pDEX at the provided beacon height.
 // If the beacon height is set to 0, it returns the latest pDEX pool pairs.
-func (client *IncClient) GetAllPDEPoolPairs(beaconHeight uint64) (map[string]*jsonresult.Pdexv3PoolPairState, error) {
-	pdeState, err := client.GetPDEState(beaconHeight)
+func (client *IncClient) GetAllPdexPoolPairs(beaconHeight uint64) (map[string]*jsonresult.Pdexv3PoolPairState, error) {
+	pdeState, err := client.GetPdexState(beaconHeight)
 	if err != nil {
 		return nil, err
 	}
@@ -55,9 +56,9 @@ func (client *IncClient) GetAllPDEPoolPairs(beaconHeight uint64) (map[string]*js
 	return pdeState.PoolPairs, nil
 }
 
-// GetPDEPoolPair retrieves the pDEX pool information for pair tokenID1-tokenID2 at the provided beacon height.
+// GetPdexPoolPair retrieves the pDEX pool information for pair tokenID1-tokenID2 at the provided beacon height.
 // If the beacon height is set to 0, it returns the latest information.
-func (client *IncClient) GetPDEPoolPair(beaconHeight uint64, tokenID1, tokenID2 string) (*jsonresult.Pdexv3PoolPairState, error) {
+func (client *IncClient) GetPdexPoolPair(beaconHeight uint64, tokenID1, tokenID2 string) (map[string]*jsonresult.Pdexv3PoolPairState, error) {
 	if beaconHeight == 0 {
 		bestBlocks, err := client.GetBestBlock()
 		if err != nil {
@@ -66,51 +67,69 @@ func (client *IncClient) GetPDEPoolPair(beaconHeight uint64, tokenID1, tokenID2 
 		beaconHeight = bestBlocks[-1]
 	}
 
-	allPoolPairs, err := client.GetAllPDEPoolPairs(beaconHeight)
+	allPoolPairs, err := client.GetAllPdexPoolPairs(beaconHeight)
 	if err != nil {
 		return nil, err
 	}
 
-	keyPool := jsonresult.BuildPDEPoolForPairKey(beaconHeight, tokenID1, tokenID2)
-	if poolPair, ok := allPoolPairs[string(keyPool)]; ok {
-		return poolPair, nil
+	results := make(map[string]*jsonresult.Pdexv3PoolPairState)
+	// search for the pool by concatenating tokenIDs. Try both orderings
+	prefix1 := fmt.Sprintf("%s-%s", tokenID1, tokenID2)
+	prefix2 := fmt.Sprintf("%s-%s", tokenID2, tokenID1)
+	for k, v := range allPoolPairs {
+		if strings.HasPrefix(k, prefix1) || strings.HasPrefix(k, prefix2) {
+			results[k] = v
+		}
 	}
 
-	return nil, fmt.Errorf("cannot found pool pair for tokenID %v and %v", tokenID1, tokenID2)
+	if len(results) == 0 {
+		return nil, fmt.Errorf("cannot found pool pair for tokenID %v and %v", tokenID1, tokenID2)
+	}
+	return results, nil
+}
+
+func calculateBuyAmount(amountIn uint64, virtualReserveIn *big.Int, virtualReserveOut *big.Int) (uint64, error) {
+	if amountIn <= 0 {
+		return 0, fmt.Errorf("invalid input amount %d", amountIn)
+	}
+	amount := big.NewInt(0).SetUint64(amountIn)
+	num := big.NewInt(0).Mul(amount, virtualReserveOut)
+	den := big.NewInt(0).Add(amount, virtualReserveIn)
+	result := num.Div(num, den)
+	if !result.IsUint64() {
+		return 0, fmt.Errorf("buy amount out %s of uint64 range", result.String())
+	}
+	return result.Uint64(), nil
 }
 
 // CheckPrice gets the remote server to check price for trading things.
-func (client *IncClient) CheckPrice(tokenToSell, TokenToBuy string, sellAmount uint64) (uint64, error) {
-	responseInBytes, err := client.rpcServer.ConvertPDEPrice(tokenToSell, TokenToBuy, sellAmount)
+func (client *IncClient) CheckPrice(pairID, tokenToSell string, sellAmount uint64) (uint64, error) {
+	pairs, err := client.GetAllPdexPoolPairs(0)
 	if err != nil {
 		return 0, err
 	}
+	pair, exists := pairs[pairID]
+	if !exists {
+		return 0, fmt.Errorf("No pool found for ID %s", pairID)
+	}
 
-	var convertedPrice []*rpc.ConvertedPrice
-	err = rpchandler.ParseResponse(responseInBytes, &convertedPrice)
+	var virtualAmtSell, virtualAmtBuy *big.Int
+	switch tokenToSell {
+	case pair.State.Token0ID.String():
+		virtualAmtSell = big.NewInt(0).Set(pair.State.Token0VirtualAmount)
+		virtualAmtBuy = big.NewInt(0).Set(pair.State.Token1VirtualAmount)
+	case pair.State.Token1ID.String():
+		virtualAmtSell = big.NewInt(0).Set(pair.State.Token1VirtualAmount)
+		virtualAmtBuy = big.NewInt(0).Set(pair.State.Token0VirtualAmount)
+	default:
+		return 0, fmt.Errorf("No tokenID %s in pool %s", tokenToSell, pairID)
+	}
+
+	buyAmount, err := calculateBuyAmount(sellAmount, virtualAmtSell, virtualAmtBuy)
 	if err != nil {
 		return 0, err
 	}
-
-	if len(convertedPrice) == 0 {
-		return 0, fmt.Errorf("no convertedPrice found for %v", tokenToSell)
-	}
-
-	return convertedPrice[0].Price, nil
-}
-
-// CheckXPrice gets the remote server to check cross price for trading things (for cross-pool tokens).
-func (client *IncClient) CheckXPrice(tokenToSell, TokenToBuy string, sellAmount uint64) (uint64, error) {
-	if tokenToSell == common.PRVIDStr || TokenToBuy == common.PRVIDStr {
-		return client.CheckPrice(tokenToSell, TokenToBuy, sellAmount)
-	}
-
-	expectedPRV, err := client.CheckPrice(tokenToSell, common.PRVIDStr, sellAmount)
-	if err != nil {
-		return 0, err
-	}
-
-	return client.CheckPrice(common.PRVIDStr, TokenToBuy, expectedPRV)
+	return buyAmount, nil
 }
 
 // GetShareAmount retrieves the share amount of a payment address in pDEX pool of tokenID1 and tokenID2.
@@ -218,8 +237,8 @@ func (client *IncClient) CheckTradeStatus(txHash string) (int, error) {
 	return tradeStatus, err
 }
 
-// BuildPDEShareKey constructs a key for retrieving contributed shares in pDEX.
-func BuildPDEShareKey(beaconHeight uint64, token1ID string, token2ID string, contributorAddress string) ([]byte, error) {
+// BuildPdexShareKey constructs a key for retrieving contributed shares in pDEX.
+func BuildPdexShareKey(beaconHeight uint64, token1ID string, token2ID string, contributorAddress string) ([]byte, error) {
 	pdeSharePrefix := []byte("pdeshare-")
 	prefix := append(pdeSharePrefix, []byte(fmt.Sprintf("%d-", beaconHeight))...)
 	tokenIDs := []string{token1ID, token2ID}
@@ -239,8 +258,8 @@ func BuildPDEShareKey(beaconHeight uint64, token1ID string, token2ID string, con
 	return append(prefix, []byte(tokenIDs[0]+"-"+tokenIDs[1]+"-"+keyAddr)...), nil
 }
 
-// BuildPDEPoolKey constructs a key for a pool in pDEX.
-func BuildPDEPoolKey(token1ID string, token2ID string) string {
+// BuildPdexPoolKey constructs a key for a pool in pDEX.
+func BuildPdexPoolKey(token1ID string, token2ID string) string {
 	tokenIDs := []string{token1ID, token2ID}
 	sort.Strings(tokenIDs)
 

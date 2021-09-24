@@ -1,9 +1,7 @@
 package jsonresult
 
 import (
-	"fmt"
 	"math/big"
-	"sort"
 
 	"github.com/incognitochain/go-incognito-sdk-v2/common"
 )
@@ -114,17 +112,4 @@ type Pdexv3Staker struct {
 	Liquidity           uint64
 	Rewards             map[common.Hash]uint64
 	LastRewardsPerShare map[common.Hash]*big.Int
-}
-
-// BuildPDEPoolForPairKey builds a pDEX pool-key for a pair of tokenIDs at the given beacon height.
-func BuildPDEPoolForPairKey(
-	beaconHeight uint64,
-	token1IDStr string,
-	token2IDStr string,
-) []byte {
-	beaconHeightBytes := []byte(fmt.Sprintf("%d-", beaconHeight))
-	pdePoolForPairByBCHeightPrefix := append(PDEPoolPrefix, beaconHeightBytes...)
-	tokenIDStrings := []string{token1IDStr, token2IDStr}
-	sort.Strings(tokenIDStrings)
-	return append(pdePoolForPairByBCHeightPrefix, []byte(tokenIDStrings[0]+"-"+tokenIDStrings[1])...)
 }

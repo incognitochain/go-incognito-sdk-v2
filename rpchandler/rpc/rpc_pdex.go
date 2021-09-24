@@ -19,8 +19,8 @@ func (server *RPCServer) CheckTradeStatus(txHash string) ([]byte, error) {
 	return server.SendQuery(getPDETradeStatus, params)
 }
 
-// GetPDEState retrieves the pDEX state at the given beacon height.
-func (server *RPCServer) GetPDEState(beaconHeight uint64) ([]byte, error) {
+// GetPdexState retrieves the pDEX state at the given beacon height.
+func (server *RPCServer) GetPdexState(beaconHeight uint64) ([]byte, error) {
 	mapParams := make(map[string]interface{})
 	mapParams["BeaconHeight"] = beaconHeight
 
@@ -30,8 +30,8 @@ func (server *RPCServer) GetPDEState(beaconHeight uint64) ([]byte, error) {
 	return server.SendQuery(pdexv3GetState, params)
 }
 
-// ConvertPDEPrice gets the pDEX to check the price between to tokens.
-func (server *RPCServer) ConvertPDEPrice(tokenToSell, tokenToBuy string, amount uint64) ([]byte, error) {
+// ConvertPdexPrice gets the pDEX to check the price between to tokens.
+func (server *RPCServer) ConvertPdexPrice(tokenToSell, tokenToBuy string, amount uint64) ([]byte, error) {
 	mapParam := make(map[string]interface{})
 	mapParam["FromTokenIDStr"] = tokenToSell
 	mapParam["ToTokenIDStr"] = tokenToBuy

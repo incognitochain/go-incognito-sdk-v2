@@ -3,6 +3,7 @@ package common
 import (
 	"encoding/binary"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	ethCrypto "github.com/ethereum/go-ethereum/crypto"
 	"math/big"
@@ -117,6 +118,11 @@ func B2ImN(bytes []byte) *big.Int {
 		x.SetBytes(ethCrypto.Keccak256Hash(x.Bytes()).Bytes())
 	}
 	return x
+}
+
+func PrintJson(obj interface{}, descFormat string, a ...interface{}) {
+	jsonEncoded, _ := json.MarshalIndent(obj, "", "  ")
+	fmt.Printf("%s:\n%s\n\n", fmt.Sprintf(descFormat, a...), string(jsonEncoded))
 }
 
 var (
