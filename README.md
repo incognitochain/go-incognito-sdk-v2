@@ -52,9 +52,10 @@ Following is a series of examples to help you get familiar with the Incognito ne
     * [Creating Reward Withdrawal Transactions](tutorials/docs/staking/withdraw_reward.md)
     * [Node Monitoring](tutorials/docs/staking/node.md)
 * [EVM Shielding/UnShielding](tutorials/docs/bridge/bridge.md)
-    * [Creating Shielding Transactions](tutorials/docs/bridge/shield.md)
+    * [Shielding Transactions](tutorials/docs/bridge/shield.md)
     * [Checking Shielding Status](tutorials/docs/bridge/shield_status.md)
-    * [Creating Un-Shielding Transactions](tutorials/docs/bridge/unshield.md)
+    * [Un-Shielding Transactions](tutorials/docs/bridge/unshield.md)
+    * [Un-Shielding PRV](tutorials/docs/bridge/unshield_prv.md)
 * [Calling RPCs](tutorials/docs/rpc/rpc.md)
   
 ## TODOs
