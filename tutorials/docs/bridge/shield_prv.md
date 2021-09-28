@@ -28,8 +28,8 @@ func main() {
 		log.Fatal(err)
 	}
 
-	privateKey := "112t8rneWAhErTC8YUFTnfcKHvB1x6uAVdehy1S8GP2psgqDxK3RHouUcd69fz88oAL9XuMyQ8mBY5FmmGJdcyrpwXjWBXRpoWwgJXjsxi4j"
-	evmTxHash := "0xb31d963b3f183d60532ca60d534e0113ca56070af795fde450dd456945a7be42"
+	privateKey := "YOUR_PRIVATE_KEY_HERE"
+	evmTxHash := "" //the PRV deposit transaction hash on the EVM network
 	isBSC := false
 
 	evmProof, depositAmount, err := ic.GetEVMDepositProof(evmTxHash, isBSC)
