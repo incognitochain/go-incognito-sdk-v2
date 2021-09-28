@@ -51,7 +51,7 @@ Following is a series of examples to help you get familiar with the Incognito ne
     * [Creating UnStaking Transactions](tutorials/docs/staking/unstake.md)
     * [Creating Reward Withdrawal Transactions](tutorials/docs/staking/withdraw_reward.md)
     * [Node Monitoring](tutorials/docs/staking/node.md)
-* [EVM Shielding/UnShielding](tutorials/docs/bridge/bridge.md)
+* [EVM/PRV Shielding/UnShielding](tutorials/docs/bridge/bridge.md)
     * [Shielding Transactions](tutorials/docs/bridge/shield.md)
     * [Checking Shielding Status](tutorials/docs/bridge/shield_status.md)
     * [Un-Shielding Transactions](tutorials/docs/bridge/unshield.md)
@@ -62,12 +62,22 @@ Following is a series of examples to help you get familiar with the Incognito ne
 ## TODOs
 
 - [X] UTXOs
-- [X] Balance
+  - [X] UTXO retrieval
+  - [X] UTXO consolidation
+  - [X] UTXO cache
+  - [X] Balance
 - [X] PRV + Token transactions
 - [X] pDEX
-- [X] Stake
-- [X] Shield ETH, ERC20
-- [X] UnShield ETH, ERC20
+  - [X] pDEX liquidity contribution
+  - [X] pDEX liquidity withdrawal
+  - [X] pDEX trading
+- [X] Staking/UnStaking
+- [X] Shielding/UnShielding EVM tokens (ETH/BSC/BEP20/ERC20)
+  - [X] Shielding/UnShielding ETH
+  - [X] Shielding/UnShielding ERC20
+  - [X] Shielding/UnShielding BSC
+  - [X] Shielding/UnShielding BEP20
+- [X] Shielding/UnShielding pegged-PRV tokens
 - [X] HD Wallet
 - [ ] History
 - [ ] ...
