@@ -51,8 +51,7 @@ func main() {
 }
 ```
 
-After the burning process is successful, the next step is to retrieve the burn proof and submit it to the corresponding smart contract. In this step, an EVM account is required to interact with the smart contract.
-This step is out of the scope of this tutorial series. See example on the full flow of un-shielding [here](https://github.com/incognitochain/incognito-cli/blob/development/bridge_evm.go).
+The final step is out of the scope of this tutorial series.
 
 ---
 Return to [the table of contents](../../../README.md).
