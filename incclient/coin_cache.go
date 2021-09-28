@@ -8,7 +8,6 @@ import (
 	"github.com/incognitochain/go-incognito-sdk-v2/rpchandler/rpc"
 	"github.com/incognitochain/go-incognito-sdk-v2/wallet"
 	"io/ioutil"
-	"log"
 	"math/big"
 	"os"
 	"strings"
@@ -38,12 +37,6 @@ func newUTXOCache(cacheDirectory string) (*utxoCache, error) {
 	cachedData := make(map[string]*accountCache)
 	mtx := new(sync.Mutex)
 
-	currentDir, err := os.Getwd()
-	if err != nil {
-		return nil, err
-	}
-	fmt.Printf("cacheDirectory: %v/%v\n", currentDir, cacheDirectory)
-
 	// if the cache directory does not exist, create one.
 	if _, err := os.Stat(cacheDirectory); os.IsNotExist(err) {
 		err = os.MkdirAll(cacheDirectory, os.ModePerm)
@@ -53,6 +46,12 @@ func newUTXOCache(cacheDirectory string) (*utxoCache, error) {
 		}
 	}
 
+	currentDir, err := os.Getwd()
+	if err != nil {
+		return nil, err
+	}
+	fmt.Printf("cacheDirectory: %v/%v\n", currentDir, cacheDirectory)
+
 	return &utxoCache{
 		cacheDirectory: cacheDirectory,
 		cachedData:     cachedData,
@@ -61,11 +60,6 @@ func newUTXOCache(cacheDirectory string) (*utxoCache, error) {
 }
 
 func (uc *utxoCache) start() {
-	err := uc.load()
-	if err != nil {
-		log.Fatal(err)
-	}
-
 	uc.isRunning = true
 }
 
@@ -79,11 +73,25 @@ func (uc *utxoCache) saveAndStop() error {
 	return nil
 }
 
-func (uc *utxoCache) save() error {
+// save either backs up the whole cache or a specific otaKey.
+// Only the first value of `otaKeys` is processed.
+func (uc *utxoCache) save(otaKeys ...string) error {
 	Logger.Println("Storing cached data...")
+
+	var otaKeyStr string
+	if len(otaKeys) > 0 {
+		otaKeyStr = otaKeys[0]
+		if otaKeyStr == "" {
+			return fmt.Errorf("invalid OTAKey")
+		}
+	}
+
 	var err error
 	uc.mtx.Lock()
-	for _, cachedData := range uc.cachedData {
+	for otaKey, cachedData := range uc.cachedData {
+		if otaKeyStr != "" && otaKey != otaKeyStr {
+			continue
+		}
 		err = cachedData.store(uc.cacheDirectory)
 		if err != nil {
 			return err
@@ -94,16 +102,27 @@ func (uc *utxoCache) save() error {
 	return nil
 }
 
-func (uc *utxoCache) load() error {
+// load either loads the whole cache or a specific otaKey.
+// Only the first value of `otaKeys` is processed.
+func (uc *utxoCache) load(otaKeys ...string) error {
+	var otaKeyStr string
+	if len(otaKeys) > 0 {
+		otaKeyStr = otaKeys[0]
+		if otaKeyStr == "" {
+			return fmt.Errorf("invalid OTAKey")
+		}
+	}
+
+	if uc.cachedData != nil && otaKeyStr != "" {
+		if _, ok := uc.cachedData[otaKeyStr]; ok {
+			Logger.Printf("otaKey %v has already been loaded\n", otaKeyStr)
+			return nil
+		}
+	}
+
 	files, err := ioutil.ReadDir(uc.cacheDirectory)
 	if err != nil {
 		return err
-	}
-
-	Logger.Printf("There are %v files in the cache directory\n", len(files))
-	for _, f := range files {
-		fileNameSplit := strings.Split(f.Name(), "/")
-		Logger.Printf("%v\n", fileNameSplit)
 	}
 
 	cachedData := make(map[string]*accountCache)
@@ -112,6 +131,9 @@ func (uc *utxoCache) load() error {
 	for _, f := range files {
 		fileNameSplit := strings.Split(f.Name(), "/")
 		otaKey := fileNameSplit[len(fileNameSplit)-1]
+		if otaKeyStr != "" && otaKey != otaKeyStr {
+			continue
+		}
 		ac := newAccountCache(otaKey)
 		err = ac.load(uc.cacheDirectory)
 		if err != nil {
@@ -119,6 +141,11 @@ func (uc *utxoCache) load() error {
 			return err
 		}
 		cachedData[otaKey] = ac
+	}
+	if otaKeyStr != "" {
+		if _, ok := cachedData[otaKeyStr]; !ok {
+			Logger.Printf("otaKey %v not found in cache\n", otaKeyStr)
+		}
 	}
 	uc.cachedData = cachedData
 	uc.mtx.Unlock()
@@ -153,6 +180,12 @@ func (uc *utxoCache) addAccount(otaKey string, cachedAccount *accountCache, save
 func (client *IncClient) syncOutCoinV2(outCoinKey *rpc.OutCoinKey, tokenIDStr string) error {
 	if tokenIDStr != common.PRVIDStr {
 		tokenIDStr = common.ConfidentialAssetID.String()
+	}
+
+	// load the cache for the otaKey (if possible)
+	err := client.cache.load(outCoinKey.OtaKey())
+	if err != nil {
+		return err
 	}
 
 	shardID, err := GetShardIDFromPaymentAddress(outCoinKey.PaymentAddress())

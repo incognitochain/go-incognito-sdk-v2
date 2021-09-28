@@ -106,7 +106,7 @@ func TestIncClient_CreateRawTransaction(t *testing.T) {
 }
 
 func TestIncClient_GetTx(t *testing.T) {
-	ic, err := NewDevNetClient()
+	ic, err := NewTestNetClient()
 	if err != nil {
 		panic(err)
 	}

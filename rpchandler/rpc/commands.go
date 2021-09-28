@@ -252,6 +252,7 @@ const (
 	getSignedRawReplaceFeeTransaction          = "getportalsignedrawreplacebyfeetransaction"
 	createAndSendTxPortalConvertVaultRequest   = "createandsendtxportalconvertvault"
 	getPortalConvertVaultTxStatus              = "getportalconvertvaultstatus"
+	generatePortalShieldMultisigAddress        = "generateportalshieldmultisigaddress"
 
 	// relaying
 	createAndSendTxWithRelayingBNBHeader = "createandsendtxwithrelayingbnbheader"
