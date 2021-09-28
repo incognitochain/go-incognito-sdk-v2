@@ -13,9 +13,8 @@ func main() {
 		log.Fatal(err)
 	}
 
-	privateKey := "112t8rneWAhErTC8YUFTnfcKHvB1x6uAVdehy1S8GP2psgqDxK3RHouUcd69fz88oAL9XuMyQ8mBY5FmmGJdcyrpwXjWBXRpoWwgJXjsxi4j"
-	tokenIDStr := "ffd8d42dc40a8d166ea4848baf8b5f6e9fe0e9c30d60062eb7d44a8df9e00854"
-	evmTxHash := "0xb31d963b3f183d60532ca60d534e0113ca56070af795fde450dd456945a7be42"
+	privateKey := "YOUR_PRIVATE_KEY_HERE"
+	evmTxHash := "" //the PRV deposit transaction hash on the EVM network
 	isBSC := false
 
 	evmProof, depositAmount, err := ic.GetEVMDepositProof(evmTxHash, isBSC)
@@ -24,11 +23,10 @@ func main() {
 	}
 	fmt.Printf("Deposited amount: %v\n", depositAmount)
 
-	txHashStr, err := ic.CreateAndSendIssuingEVMRequestTransaction(privateKey, tokenIDStr, *evmProof, isBSC)
+	txHashStr, err := ic.CreateAndSendIssuingPRVPeggingRequestTransaction(privateKey, *evmProof, isBSC)
 	if err != nil {
-		log.Fatal(err)
+		panic(err)
 	}
-
 	fmt.Printf("TxHash: %v\n", txHashStr)
 
 	time.Sleep(10 * time.Second)

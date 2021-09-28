@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	incClient, err := incclient.NewMainNetClient()
+	incClient, err := incclient.NewMainNetClient() // or use incclient.NewMainNetClientWithCache()
 	if err != nil {
 		log.Fatal(err)
 	}
