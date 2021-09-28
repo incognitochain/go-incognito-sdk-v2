@@ -1,8 +1,8 @@
 ---
-Description: Tutorial on how to create an un-shielding transaction
+Description: Tutorial on how to create an EVM un-shielding transaction
 ---
-# Withdrawing pETH/pERC20 from the Incognito Network
-The very first step in withdrawing pETH/pERC20 from the Incognito network to the main Ethereum network is to burn pETH/pERC20 and have the beacon generate a burn proof for us.
+# Withdrawing an EVM token from the Incognito Network
+The very first step in withdrawing an EVM token from the Incognito network to the main Ethereum/BSC networks is to burn the corresponding pEVM token inside the Incognito network and have the beacon generate a burn proof for us.
 This is done using the function [`CreateAndSendBurningRequestTransaction`](../../../incclient/bridge.go) supplied with an Ethereum address.
 
 ## Example
@@ -35,5 +35,9 @@ func main() {
 	fmt.Printf("TxHash: %v\n", txHash)
 }
 ```
+
+After the burning process is successful, the next step is to retrieve the burn proof and submit it to the corresponding smart contract. In this step, an EVM account is required to interact with the smart contract. 
+This step is out of the scope of this tutorial series. See example on the full flow of un-shielding [here](https://github.com/incognitochain/incognito-cli/blob/development/bridge_evm.go).
+
 ---
 Return to [the table of contents](../../../README.md).
