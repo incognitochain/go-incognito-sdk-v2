@@ -186,6 +186,8 @@ const (
 	getLatestBridgeSwapProof = "getlatestbridgeswapproof"
 	getBurnProof             = "getburnproof"
 	getBSCBurnProof          = "getbscburnproof"
+	getPRVERC20BurnProof     = "getprverc20burnproof"
+	getPRVBEP20BurnProof     = "getprvbep20burnproof"
 
 	// reward
 	CreateRawWithDrawTransaction = "withdrawreward"
