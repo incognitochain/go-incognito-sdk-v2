@@ -108,8 +108,8 @@ func TestIncClient_ShieldPRVPegging(t *testing.T) {
 }
 
 type TestCaseUnShieldPRVPegging struct {
-	isBSC        bool
-	unshieldAmt    uint64
+	isBSC           bool
+	unshieldAmt     uint64
 	externalAddress string
 }
 

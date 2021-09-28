@@ -11,7 +11,7 @@ import (
 	"github.com/incognitochain/go-incognito-sdk-v2/wallet"
 )
 
-// CreateIssuingPRVPeggingRequestTransaction creates an  shielding trading transaction. By EVM, it means either ETH or BSC.
+// CreateIssuingPRVPeggingRequestTransaction creates a shielding trading transaction. By EVM, it means either ETH or BSC.
 //
 // It returns the base58-encoded transaction, the transaction's hash, and an error (if any).
 func (client *IncClient) CreateIssuingPRVPeggingRequestTransaction(
@@ -38,7 +38,7 @@ func (client *IncClient) CreateIssuingPRVPeggingRequestTransaction(
 	return client.CreateRawTransaction(txParam, -1)
 }
 
-// CreateAndSendIssuingPRVPeggingRequestTransaction creates an PRV pegging shielding transaction,
+// CreateAndSendIssuingPRVPeggingRequestTransaction creates a PRV pegging shielding transaction,
 // and submits it to the Incognito network.
 //
 // It returns the transaction's hash, and an error (if any).
@@ -57,7 +57,7 @@ func (client *IncClient) CreateAndSendIssuingPRVPeggingRequestTransaction(
 	return txHash, nil
 }
 
-// CreateBurningRequestTransaction creates an PRV pegging burning transaction for exiting the Incognito network.
+// CreateBurningPRVPeggingRequestTransaction creates a PRV pegging burning transaction for exiting the Incognito network.
 //
 // It returns the base58-encoded transaction, the transaction's hash, and an error (if any).
 func (client *IncClient) CreateBurningPRVPeggingRequestTransaction(
@@ -99,7 +99,7 @@ func (client *IncClient) CreateBurningPRVPeggingRequestTransaction(
 	return client.CreateRawTransaction(txParam, -1)
 }
 
-// CreateAndSendBurningRequestTransaction creates an PRV pegging burning transaction for exiting the Incognito network,
+// CreateAndSendBurningPRVPeggingRequestTransaction creates a PRV pegging burning transaction for exiting the Incognito network,
 // and submits it to the network.
 //
 // It returns the transaction's hash, and an error (if any).
@@ -119,7 +119,7 @@ func (client *IncClient) CreateAndSendBurningPRVPeggingRequestTransaction(
 	return txHash, nil
 }
 
-// GetBurnProof retrieves the burning proof for the Incognito network for submitting to the smart contract later.
+// GetBurnPRVPeggingProof retrieves the burning proof for the Incognito network for submitting to the smart contract later.
 func (client *IncClient) GetBurnPRVPeggingProof(txHash string, isBSC ...bool) (*jsonresult.InstructionProof, error) {
 	responseInBytes, err := client.rpcServer.GetBurnPRVPeggingProof(txHash, isBSC...)
 	if err != nil {
