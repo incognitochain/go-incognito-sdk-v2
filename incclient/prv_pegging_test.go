@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-//UTILS
+// UTILS
 var PRVPeggingIncClient *IncClient
 var tokenId = common.PRVIDStr
 
@@ -23,9 +23,9 @@ func initPRVPeggingIncClient() error {
 	return nil
 }
 
-//END UTILS
+// END UTILS
 
-//TEST FUNCTIONS
+// TEST FUNCTIONS
 
 type TestCaseShieldPRVPegging struct {
 	externalTxID string
@@ -35,6 +35,7 @@ type TestCaseShieldPRVPegging struct {
 
 func TestIncClient_ShieldPRVPegging(t *testing.T) {
 	// init testcases
+	// INPUT YOUR TESTCASE
 	tcs := []TestCaseShieldPRVPegging{
 		{
 			externalTxID: "",
@@ -113,16 +114,17 @@ type TestCaseUnShieldPRVPegging struct {
 }
 
 func TestIncClient_UnShieldPRVPegging(t *testing.T) {
-	// init testcases 
+	// init testcases
+	// INPUT YOUR TESTCASE
 	tcs := []TestCaseUnShieldPRVPegging{
-		// {
-		// 	isBSC:           false,
-		// 	unshieldAmt:     1,
-		// 	externalAddress: "0xF91cEe2DE943733e338891Ef602c962eF4D7Eb81",
-		// },
+		{
+			isBSC:           false,
+			unshieldAmt:     2 * 1e9,
+			externalAddress: "0xF91cEe2DE943733e338891Ef602c962eF4D7Eb81",
+		},
 		{
 			isBSC:           true,
-			unshieldAmt:     1,
+			unshieldAmt:     1 * 1e9,
 			externalAddress: "0xF91cEe2DE943733e338891Ef602c962eF4D7Eb81",
 		},
 	}
