@@ -1,6 +1,7 @@
 package jsonresult
 
-type GetInstructionProof struct {
+// InstructionProof describes the proof of a instruction in the beacon chain.
+type InstructionProof struct {
 	Instruction  string // Hex-encoded swap inst
 	BeaconHeight string // Hex encoded height of the block contains the inst
 	BridgeHeight string
@@ -10,12 +11,12 @@ type GetInstructionProof struct {
 	BeaconInstRoot       string   // Hex encoded root of the inst merkle tree
 	BeaconBlkData        string   // Hex encoded hash of the block meta
 	BeaconSigs           []string // Hex encoded signature (r, s, v)
-	BeaconSigIdxs        []int    // Idxs of signer
+	BeaconSigIndices     []int    `json:"BeaconSigIdxs"` // Indices of signer
 
 	BridgeInstPath       []string
 	BridgeInstPathIsLeft []bool
 	BridgeInstRoot       string
 	BridgeBlkData        string
 	BridgeSigs           []string
-	BridgeSigIdxs        []int
+	BridgeSigIndices     []int `json:"BridgeSigIdxs"`
 }

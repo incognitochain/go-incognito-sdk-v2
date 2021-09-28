@@ -5,18 +5,18 @@ import (
 	"github.com/incognitochain/go-incognito-sdk-v2/privacy/utils"
 )
 
-// elGamalPublicKeyOld represents to public key in ElGamal encryption
+// elGamalPublicKey represents to public key in ElGamal encryption
 // H = G^X, X is private key
 type elGamalPublicKey struct {
 	h *crypto.Point
 }
 
-// elGamalPrivateKeyOld represents to private key in ElGamal encryption
+// elGamalPrivateKey represents to private key in ElGamal encryption
 type elGamalPrivateKey struct {
 	x *crypto.Scalar
 }
 
-// elGamalCipherTextOld represents to ciphertext in ElGamal encryption
+// elGamalCipherText represents to ciphertext in ElGamal encryption
 // in which C1 = G^k and C2 = H^k * message
 // k is a random number (32 bytes), message is an elliptic point
 type elGamalCipherText struct {
@@ -36,15 +36,15 @@ func (pub elGamalPublicKey) GetH() *crypto.Point {
 	return pub.h
 }
 
-func (priv *elGamalPrivateKey) set(x *crypto.Scalar) {
-	priv.x = x
+func (privateKey *elGamalPrivateKey) set(x *crypto.Scalar) {
+	privateKey.x = x
 }
 
-func (priv elGamalPrivateKey) GetX() *crypto.Scalar {
-	return priv.x
+func (privateKey elGamalPrivateKey) GetX() *crypto.Scalar {
+	return privateKey.x
 }
 
-// Bytes converts ciphertext to 66-byte array
+// Bytes converts an elGamalCipherText to a 66-byte array.
 func (ciphertext elGamalCipherText) Bytes() []byte {
 	if ciphertext.c1.IsIdentity() {
 		return []byte{}
@@ -59,10 +59,6 @@ func (ciphertext elGamalCipherText) Bytes() []byte {
 func (ciphertext *elGamalCipherText) SetBytes(bytes []byte) error {
 	if len(bytes) == 0 {
 		return utils.NewPrivacyErr(utils.InvalidInputToSetBytesErr, nil)
-	}
-
-	if ciphertext == nil {
-		ciphertext = new(elGamalCipherText)
 	}
 
 	var err error
@@ -97,11 +93,10 @@ func (pub elGamalPublicKey) encrypt(plaintext *crypto.Point) *elGamalCipherText 
 	return ciphertext
 }
 
-// decrypt receives a ciphertext and
-// decrypts it using private key ElGamal
-// and returns plain text in elliptic point
-func (priv elGamalPrivateKey) decrypt(ciphertext *elGamalCipherText) (*crypto.Point, error) {
-	S := new(crypto.Point).ScalarMult(ciphertext.c1, priv.x)
+// decrypt receives a ciphertext and decrypts it using a private key ElGamal,
+// and returns the plain text in an elliptic point.
+func (privateKey elGamalPrivateKey) decrypt(ciphertext *elGamalCipherText) (*crypto.Point, error) {
+	S := new(crypto.Point).ScalarMult(ciphertext.c1, privateKey.x)
 	plaintext := new(crypto.Point).Sub(ciphertext.c2, S)
 	return plaintext, nil
 }

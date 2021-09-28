@@ -1,7 +1,10 @@
 package metadata
 
 import (
+	"encoding/base64"
 	"encoding/json"
+	"fmt"
+
 	"github.com/pkg/errors"
 )
 
@@ -13,6 +16,8 @@ func calculateSize(meta Metadata) uint64 {
 	return uint64(len(metaBytes))
 }
 
+// ParseMetadata parses raw-byte data into a proper Metadata.
+// The input raw data is expected to be the JSON-marshalled data of a Metadata. Otherwise, this function will fail.
 func ParseMetadata(metaInBytes []byte) (Metadata, error) {
 	if len(metaInBytes) == 0 {
 		return nil, nil
@@ -25,8 +30,8 @@ func ParseMetadata(metaInBytes []byte) (Metadata, error) {
 	}
 
 	var md Metadata
-	typeFloat,ok := mtTemp["Type"].(float64)
-	if !ok{
+	typeFloat, ok := mtTemp["Type"].(float64)
+	if !ok {
 		return nil, errors.Errorf("Could not parse metadata with type: %v", mtTemp["Type"])
 	}
 	theType := int(typeFloat)
@@ -39,15 +44,33 @@ func ParseMetadata(metaInBytes []byte) (Metadata, error) {
 		md = &IssuingRequest{}
 	case IssuingResponseMeta:
 		md = &IssuingResponse{}
+	case IssuingPRVERC20RequestMeta:
+		md = &IssuingEVMRequest{}
+	case IssuingPRVBEP20RequestMeta:
+		md = &IssuingEVMRequest{}
 	case ContractingRequestMeta:
 		md = &ContractingRequest{}
 	case IssuingETHRequestMeta:
-		md = &IssuingETHRequest{}
+		md = &IssuingEVMRequest{}
 	case IssuingETHResponseMeta:
-		md = &IssuingETHResponse{}
+		md = &IssuingEVMResponse{}
+	case IssuingPRVERC20ResponseMeta:
+		md = &IssuingEVMResponse{}
+	case IssuingPRVBEP20ResponseMeta:
+		md = &IssuingEVMResponse{}
+	case IssuingBSCRequestMeta:
+		md = &IssuingEVMRequest{}
+	case IssuingBSCResponseMeta:
+		md = &IssuingEVMResponse{}
 	case BurningRequestMeta:
 		md = &BurningRequest{}
 	case BurningRequestMetaV2:
+		md = &BurningRequest{}
+	case BurningPBSCRequestMeta:
+		md = &BurningRequest{}
+	case BurningPRVBEP20RequestMeta:
+		md = &BurningRequest{}
+	case BurningPRVERC20RequestMeta:
 		md = &BurningRequest{}
 	case ShardStakingMeta:
 		md = &StakingMetadata{}
@@ -89,6 +112,22 @@ func ParseMetadata(metaInBytes []byte) (Metadata, error) {
 		md = &BurningRequest{}
 	case BurningForDepositToSCRequestMetaV2:
 		md = &BurningRequest{}
+	case RelayingBTCHeaderMeta:
+		md = &RelayingHeader{}
+	case PortalV4ShieldingRequestMeta:
+		md = &PortalShieldingRequest{}
+	case PortalV4ShieldingResponseMeta:
+		md = &PortalShieldingResponse{}
+	case PortalV4UnshieldingRequestMeta:
+		md = &PortalUnshieldRequest{}
+	case PortalV4UnshieldingResponseMeta:
+		md = &PortalUnshieldResponse{}
+	case PortalV4FeeReplacementRequestMeta:
+		md = &PortalReplacementFeeRequest{}
+	case PortalV4SubmitConfirmedTxMeta:
+		md = &PortalSubmitConfirmedTxRequest{}
+	case PortalV4ConvertVaultRequestMeta:
+		md = &PortalConvertVaultRequest{}
 	default:
 		return nil, errors.Errorf("Could not parse metadata with type: %d", theType)
 	}
@@ -96,6 +135,26 @@ func ParseMetadata(metaInBytes []byte) (Metadata, error) {
 	err = json.Unmarshal(metaInBytes, &md)
 	if err != nil {
 		return nil, err
+	}
+
+	switch theType {
+	case WithDrawRewardRequestMeta:
+		tmpMd, ok := md.(*WithDrawRewardRequest)
+		if !ok {
+			return nil, fmt.Errorf("cannot parse metadata")
+		}
+		if mtTemp["Sig"] != nil {
+			tmpSig := mtTemp["Sig"]
+			sig, ok := tmpSig.(string)
+			if !ok {
+				return nil, fmt.Errorf("cannot parse signature as a string")
+			}
+			tmpMd.Sig, err = base64.StdEncoding.DecodeString(sig)
+			if err != nil {
+				return nil, err
+			}
+		}
+
 	}
 
 	return md, nil

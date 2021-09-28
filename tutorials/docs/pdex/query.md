@@ -1,5 +1,5 @@
 ---
-description: Tutorial on how to query the pDEX.
+Description: Tutorial on how to query the pDEX.
 ---
 
 The Incognito client supports the following functions:
@@ -43,7 +43,7 @@ A state of the pDEX consists of
 
 ## Get all pDEX Pairs
 
-To retrieve all pairs in the pDEX, we call the function `` of the client. Similar to above, it receives as input a
+To retrieve all pairs in the pDEX, we call the function `GetAllPDEPoolPairs` of the client. Similar to above, it receives as input a
 beacon height.
 
 ```go

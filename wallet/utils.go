@@ -36,6 +36,17 @@ func NewSeedFromMnemonic(mnemonic string) ([]byte, error) {
 	return bip39.NewSeed(mnemonic, ""), nil
 }
 
+// GetBurningPublicKey returns the public key of the burning address.
+func GetBurningPublicKey() []byte {
+	// get burning address
+	w, err := Base58CheckDeserialize(common.BurningAddress2)
+	if err != nil {
+		return nil
+	}
+
+	return w.KeySet.PaymentAddress.Pk
+}
+
 // IsPublicKeyBurningAddress checks if a public key is a burning address in the Incognito network.
 func IsPublicKeyBurningAddress(publicKey []byte) bool {
 	// get burning address
@@ -59,9 +70,8 @@ func IsPublicKeyBurningAddress(publicKey []byte) bool {
 }
 
 // GetPaymentAddressV1 retrieves the payment address ver 1 from the payment address ver 2.
-//
-//	Payment Address V1 consists of: PK + TK
-//	Payment Address V2 consists of: PK + TK + PublicOTA
+//	- Payment Address V1 consists of: PK + TK
+//	- Payment Address V2 consists of: PK + TK + PublicOTA
 //
 // If the input is a payment address ver 2, try to retrieve the corresponding payment address ver 1.
 // Otherwise, return the input.

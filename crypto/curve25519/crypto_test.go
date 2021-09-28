@@ -210,7 +210,6 @@ func TestH(t *testing.T) {
 	}
 }
 
-
 func BenchmarkScalarMultH(b *testing.B) {
 
 }

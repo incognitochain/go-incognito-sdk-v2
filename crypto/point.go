@@ -2,32 +2,36 @@ package crypto
 
 import (
 	"crypto/subtle"
-	"encoding/hex"
 	"fmt"
 
 	C25519 "github.com/incognitochain/go-incognito-sdk-v2/crypto/curve25519"
 )
 
+// Point represents an elliptic curve point. It only needs 32 bytes to represent a point.
 type Point struct {
 	key C25519.Key
 }
 
+// RandomPoint returns a random Point on the elliptic curve.
 func RandomPoint() *Point {
 	sc := RandomScalar()
 	return new(Point).ScalarMultBase(sc)
 }
 
+// PointValid checks if a Point is valid.
 func (p Point) PointValid() bool {
 	var point C25519.ExtendedGroupElement
 	return point.FromBytes(&p.key)
 }
 
+// GetKey returns the key of a Point.
 func (p Point) GetKey() C25519.Key {
 	return p.key
 }
 
-func (p *Point) SetKey(a *C25519.Key) (*Point, error) {
-	p.key = *a
+// SetKey sets v as the key of a Point.
+func (p *Point) SetKey(v *C25519.Key) (*Point, error) {
+	p.key = *v
 
 	var point C25519.ExtendedGroupElement
 	if !point.FromBytes(&p.key) {
@@ -36,37 +40,29 @@ func (p *Point) SetKey(a *C25519.Key) (*Point, error) {
 	return p, nil
 }
 
+// Set sets p = q and returns p.
 func (p *Point) Set(q *Point) *Point {
 	p.key = q.key
 	return p
 }
 
+// String returns the hex-encoded string of a Point.
 func (p Point) String() string {
 	return fmt.Sprintf("%x", p.key[:])
 }
 
-func (p Point) MarshalText() []byte {
-	return []byte(fmt.Sprintf("%x", p.key[:]))
-}
-
-func (p *Point) UnmarshalText(data []byte) (*Point, error) {
-	byteSlice, _ := hex.DecodeString(string(data))
-	if len(byteSlice) != Ed25519KeySize {
-		return nil, fmt.Errorf("incorrect key size")
-	}
-	copy(p.key[:], byteSlice)
-	return p, nil
-}
-
+// ToBytes returns an 32-byte long array from a Point.
 func (p Point) ToBytes() [Ed25519KeySize]byte {
 	return p.key.ToBytes()
 }
 
+// ToBytesS returns a slice of bytes from a Point.
 func (p Point) ToBytesS() []byte {
 	slice := p.key.ToBytes()
 	return slice[:]
 }
 
+// FromBytes sets an array of 32 bytes to a Point.
 func (p *Point) FromBytes(b [Ed25519KeySize]byte) (*Point, error) {
 	p.key.FromBytes(b)
 
@@ -78,6 +74,7 @@ func (p *Point) FromBytes(b [Ed25519KeySize]byte) (*Point, error) {
 	return p, nil
 }
 
+// FromBytesS sets a slice of bytes to a Point.
 func (p *Point) FromBytesS(b []byte) (*Point, error) {
 	if len(b) != Ed25519KeySize {
 		return nil, fmt.Errorf("invalid Ed25519 Key Size")
@@ -95,11 +92,13 @@ func (p *Point) FromBytesS(b []byte) (*Point, error) {
 	return p, nil
 }
 
+// Identity sets p to the identity point and returns p.
 func (p *Point) Identity() *Point {
 	p.key = C25519.Identity
 	return p
 }
 
+// IsIdentity checks if p is the identity point.
 func (p Point) IsIdentity() bool {
 	if p.key == C25519.Identity {
 		return true
@@ -107,38 +106,24 @@ func (p Point) IsIdentity() bool {
 	return false
 }
 
-// ScalarMultBase does a * G where a is a scalar and G is the curve base point.
+// ScalarMultBase set p = a * G, where a is a scalar and G is the curve base point and returns p.
 func (p *Point) ScalarMultBase(a *Scalar) *Point {
 	key := C25519.ScalarmultBase(&a.key)
 	p.key = *key
 	return p
 }
 
+// ScalarMult sets p = a * pa and returns p.
 func (p *Point) ScalarMult(pa *Point, a *Scalar) *Point {
 	key := C25519.ScalarMultKey(&pa.key, &a.key)
 	p.key = *key
 	return p
 }
 
-func (p *Point) MultiScalarMultCached(scalarLs []*Scalar, pointPreComputedLs [][8]C25519.CachedGroupElement) *Point {
-	nSc := len(scalarLs)
-
-	if nSc != len(pointPreComputedLs) {
-		panic("cannot Multi-ScalarMult with different size inputs")
-	}
-
-	scalarKeyLs := make([]*C25519.Key, nSc)
-	for i := 0; i < nSc; i++ {
-		scalarKeyLs[i] = &scalarLs[i].key
-	}
-	key := C25519.MultiScalarMultKeyCached(pointPreComputedLs, scalarKeyLs)
-	res, _ := new(Point).SetKey(key)
-	return res
-}
-
-func (p *Point) MultiScalarMult(scalarLs []*Scalar, pointLs []*Point) *Point {
-	nSc := len(scalarLs)
-	nPoint := len(pointLs)
+// MultiScalarMult sets p = sum(sList[i] * pList[i]) and returns p.
+func (p *Point) MultiScalarMult(sList []*Scalar, pList []*Point) *Point {
+	nSc := len(sList)
+	nPoint := len(pList)
 
 	if nSc != nPoint {
 		panic("cannot Multi-ScalarMult with different size inputs")
@@ -147,8 +132,8 @@ func (p *Point) MultiScalarMult(scalarLs []*Scalar, pointLs []*Point) *Point {
 	scalarKeyLs := make([]*C25519.Key, nSc)
 	pointKeyLs := make([]*C25519.Key, nSc)
 	for i := 0; i < nSc; i++ {
-		scalarKeyLs[i] = &scalarLs[i].key
-		pointKeyLs[i] = &pointLs[i].key
+		scalarKeyLs[i] = &sList[i].key
+		pointKeyLs[i] = &pList[i].key
 	}
 	key := C25519.MultiScalarMultKey(pointKeyLs, scalarKeyLs)
 
@@ -156,23 +141,27 @@ func (p *Point) MultiScalarMult(scalarLs []*Scalar, pointLs []*Point) *Point {
 	return res
 }
 
+// InvertScalarMultBase sets p = (1/a) * G and returns p.
 func (p *Point) InvertScalarMultBase(a *Scalar) *Point {
 	inv := new(Scalar).Invert(a)
 	p.ScalarMultBase(inv)
 	return p
 }
 
+// InvertScalarMult sets p = (1/a) * pa and returns p.
 func (p *Point) InvertScalarMult(pa *Point, a *Scalar) *Point {
 	inv := new(Scalar).Invert(a)
 	p.ScalarMult(pa, inv)
 	return p
 }
 
+// Derive sets p = 1/(a+b) * pa and returns p.
 func (p *Point) Derive(pa *Point, a *Scalar, b *Scalar) *Point {
 	c := new(Scalar).Add(a, b)
 	return p.InvertScalarMult(pa, c)
 }
 
+// Add sets p = pa + pb and returns p.
 func (p *Point) Add(pa, pb *Point) *Point {
 	res := p.key
 	C25519.AddKeys(&res, &pa.key, &pb.key)
@@ -180,7 +169,7 @@ func (p *Point) Add(pa, pb *Point) *Point {
 	return p
 }
 
-// AddPedersen returns aA + bB.
+// AddPedersen sets p = aA + bB and returns p.
 func (p *Point) AddPedersen(a *Scalar, A *Point, b *Scalar, B *Point) *Point {
 	var precomputedA [8]C25519.CachedGroupElement
 	Ae := new(C25519.ExtendedGroupElement)
@@ -198,13 +187,7 @@ func (p *Point) AddPedersen(a *Scalar, A *Point, b *Scalar, B *Point) *Point {
 	return p
 }
 
-func (p *Point) AddPedersenCached(a *Scalar, APreCompute [8]C25519.CachedGroupElement, b *Scalar, BPreCompute [8]C25519.CachedGroupElement) *Point {
-	var key C25519.Key
-	C25519.AddKeys3_3(&key, &a.key, &APreCompute, &b.key, &BPreCompute)
-	p.key = key
-	return p
-}
-
+// Sub sets p = pa - pb and returns p.
 func (p *Point) Sub(pa, pb *Point) *Point {
 	res := p.key
 	C25519.SubKeys(&res, &pa.key, &pb.key)
@@ -212,12 +195,14 @@ func (p *Point) Sub(pa, pb *Point) *Point {
 	return p
 }
 
+// IsPointEqual checks if pa = pb.
 func IsPointEqual(pa *Point, pb *Point) bool {
 	tmpA := pa.ToBytesS()
 	tmpB := pb.ToBytesS()
 	return subtle.ConstantTimeCompare(tmpA, tmpB) == 1
 }
 
+// HashToPointFromIndex returns the hash of the concatenation of padStr and index.
 func HashToPointFromIndex(index int64, padStr string) *Point {
 	array := C25519.GBASE.ToBytes()
 	msg := array[:]
@@ -231,6 +216,7 @@ func HashToPointFromIndex(index int64, padStr string) *Point {
 	return p
 }
 
+// HashToPoint returns the Point value of the hash of b.
 func HashToPoint(b []byte) *Point {
 	keyHash := C25519.Key(C25519.Keccak256(b))
 	keyPoint := keyHash.HashToPoint()

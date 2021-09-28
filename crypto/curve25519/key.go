@@ -30,7 +30,7 @@ const KeyLength = 32
 // Key can be a Scalar or a Point
 type Key [KeyLength]byte
 
-func (k Key) MarshalText() ([]byte ) {
+func (k Key) MarshalText() []byte {
 	return []byte(fmt.Sprintf("%x", k[:]))
 }
 
@@ -274,6 +274,7 @@ func ScalarMultKey(Point *Key, scalar *Key) (result *Key) {
 	resultPoint.ToBytes(result)
 	return
 }
+
 // multiply a scalar by H (second curve point of Pedersen Commitment)
 func ScalarMultH(scalar *Key) (result *Key) {
 	h := new(ExtendedGroupElement)
@@ -463,7 +464,7 @@ func GenerateKeyImage(pub Key, private Key) Key {
 	return ki
 }
 
-func PreComputeForMultiScalar (p *Key) [8]CachedGroupElement {
+func PreComputeForMultiScalar(p *Key) [8]CachedGroupElement {
 	// A,2A,3A,4A,5A,6A,7A,8A
 	var Ai [8]CachedGroupElement
 	var A ExtendedGroupElement
@@ -480,12 +481,11 @@ func PreComputeForMultiScalar (p *Key) [8]CachedGroupElement {
 	return Ai
 }
 
-
-func MultiScalarMultKeyCached(AiLs [][8]CachedGroupElement, scalars []*Key, ) (result *Key) {
+func MultiScalarMultKeyCached(AiLs [][8]CachedGroupElement, scalars []*Key) (result *Key) {
 	r := new(ProjectiveGroupElement)
 
 	digitsLs := make([][64]int8, len(scalars))
-	for i:= range digitsLs {
+	for i := range digitsLs {
 		digitsLs[i] = scalars[i].SignedRadix16()
 	}
 
@@ -508,7 +508,7 @@ func MultiScalarMultKeyCached(AiLs [][8]CachedGroupElement, scalars []*Key, ) (r
 
 		cachedBase.Zero()
 		tmpt := new(CompletedGroupElement)
-		for j:= 0; j < len(scalars); j++ {
+		for j := 0; j < len(scalars); j++ {
 			cur.Zero()
 			b := digitsLs[j][i]
 			bNegative := int8(negative(int32(b)))
@@ -543,12 +543,12 @@ func MultiScalarMultKey(points []*Key, scalars []*Key) (result *Key) {
 	pointLs := make([]ExtendedGroupElement, len(points))
 
 	digitsLs := make([][64]int8, len(scalars))
-	for i:= range digitsLs {
+	for i := range digitsLs {
 		digitsLs[i] = scalars[i].SignedRadix16()
 	}
 
 	AiLs := make([][8]CachedGroupElement, len(scalars))
-	for i:= 0; i < len(scalars); i++ {
+	for i := 0; i < len(scalars); i++ {
 		// A,2A,3A,4A,5A,6A,7A,8A
 		t := new(CompletedGroupElement)
 		u := new(ExtendedGroupElement)
@@ -580,7 +580,7 @@ func MultiScalarMultKey(points []*Key, scalars []*Key) (result *Key) {
 
 		cachedBase.Zero()
 		tmpt := new(CompletedGroupElement)
-		for j:= 0; j < len(scalars); j++ {
+		for j := 0; j < len(scalars); j++ {
 			cur.Zero()
 			b := digitsLs[j][i]
 			bNegative := int8(negative(int32(b)))

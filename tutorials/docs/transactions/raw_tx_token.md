@@ -1,5 +1,5 @@
 ---
-description: Tutorial on how to create a token transaction in Incognito.
+Description: Tutorial on how to create a token transaction in Incognito.
 ---
 
 # Transferring Token

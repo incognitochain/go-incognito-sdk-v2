@@ -1,8 +1,8 @@
 ---
-description: Tutorial on how to add pairs to the pDEX.
+Description: Tutorial on how to add pairs to the pDEX.
 ---
 # pDEX Contribution
-Liquidity providers play an essential role in pDEX. They provide liquidity to various pools on pDEX and earn trading fees. The current pDEX consists of several pairs of tokens that helps accelerate trading activities. The more liquidity in the pDEX, the better experience the trading process gets. For a pair with high liquidity, the slippage rate will be small. On the other hand, trading with low-liquidity pair will result in a high slippage rate.
+Liquidity providers play an essential role in pDEX. They provide liquidity to various pools on pDEX and earn trading fees. The current pDEX consists of several pairs of tokens that help accelerate trading activities. The more liquidity in the pDEX, the better experience the trading process gets. For a pair with high liquidity, the slippage rate will be small. On the other hand, trading with low-liquidity pair will result in a high slippage rate.
 
 In this tutorial, we will see how we can provide liquidity for a pair in the pDEX. Please see this [post](https://github.com/incognitochain/incognito-chain/blob/production/specs/pdex.md) to understand how the pDEX works.
 
@@ -11,7 +11,7 @@ As usual, we need to specify the private key.
 ```go
 privateKey := "112t8rneWAhErTC8YUFTnfcKHvB1x6uAVdehy1S8GP2psgqDxK3RHouUcd69fz88oAL9XuMyQ8mBY5FmmGJdcyrpwXjWBXRpoWwgJXjsxi4j"
 ```
-Next, sepcify the two contributed tokenIDs, the amount for each token.
+Next, specify the two contributed tokenIDs, the amount for each token.
 ```go
 pairID := "newPairID"
 firstToken := common.PRVIDStr
@@ -23,7 +23,7 @@ expectedSecondAmount, err := client.CheckPrice(firstToken, secondToken, firstAmo
 if err == nil {
     secondAmount = expectedSecondAmount
 } else {
-    log.Println("pool has bot been initialized")
+    log.Println("pool has not been initialized")
 }
 ```
 
@@ -47,7 +47,7 @@ if err != nil {
 fmt.Printf("%v - %v\n", firstTx, secondTx)
 ```
 
-It is required that these two transactions must all be success. Any failed transaction will result in the other fund being locked in the pDEX.
+It is required that these two transactions must all be successful. Any failed transaction will result in the other fund being locked in the pDEX.
 
 ## Example
 [contribute.go](../../code/pdex/contribution/contribute.go)
@@ -82,7 +82,7 @@ func main() {
 	if err == nil {
 		secondAmount = expectedSecondAmount
 	} else {
-		log.Println("pool has bot been initialized")
+		log.Println("pool has not been initialized")
 	}
 
 	firstTx, err := client.CreateAndSendPDEContributeTransaction(privateKey, pairID, firstToken, firstAmount, 2)

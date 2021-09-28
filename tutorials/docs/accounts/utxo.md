@@ -1,5 +1,5 @@
 ---
-description: Tutorial on output coins in the Incognito network.
+Description: Tutorial on output coins in the Incognito network.
 ---
 # Output Coins in Incognito
 The most important aspect of a blockchain is transactions. Everything else in is intended to ensure that transactions can be created, broadcast to the network, validated, and finally added to the global transaction ledger (the blockchain). In most cases, a transaction refers to previous transaction outputs as new transaction inputs and converts all input values to new outputs. In this tutorial, we will look at UTXOs, which are the basic building blocks of an Incognito transaction.

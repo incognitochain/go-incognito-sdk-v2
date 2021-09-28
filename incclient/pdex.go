@@ -178,7 +178,7 @@ func (client *IncClient) CreatePDEContributeTransaction(privateKey, pairID, toke
 		}
 	}
 
-	md, err := metadata.NewPDEContribution(pairID, addr, amount, tokenID, metadata.PDEContributionMeta)
+	md, err := metadata.NewPDEContribution(pairID, addr, amount, tokenID, metadata.PDEPRVRequiredContributionRequestMeta)
 	if err != nil {
 		return nil, "", err
 	}

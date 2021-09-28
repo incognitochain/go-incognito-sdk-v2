@@ -15,23 +15,26 @@ const (
 	ProofVersion = 255
 )
 
-// For conversion proof, its version will be counted down from 255 -> 0
-// It should contain inputCoins of v1 and outputCoins of v2 because it convert v1 to v2
-type ConversionProofVer1ToVer2 struct {
+// ConversionProof represents a payment proof used in conversion transactions.
+// For a conversion proof, its version will be counted down from 255 -> 0
+// It should contain inputCoins of v1 and outputCoins of v2 because it convert v1 to v2.
+type ConversionProof struct {
 	Version                    uint8
 	inputCoins                 []*coin.PlainCoinV1
 	outputCoins                []*coin.CoinV2
 	serialNumberNoPrivacyProof []*serialnumbernoprivacy.SNNoPrivacyProof
 }
 
-func (proof ConversionProofVer1ToVer2) MarshalJSON() ([]byte, error) {
+// MarshalJSON returns the JSON-marshalled data of a ConversionProof.
+func (proof ConversionProof) MarshalJSON() ([]byte, error) {
 	data := proof.Bytes()
 	//temp := base58.Base58Check{}.Encode(data, common.ZeroByte)
 	temp := base64.StdEncoding.EncodeToString(data)
 	return json.Marshal(temp)
 }
 
-func (proof *ConversionProofVer1ToVer2) UnmarshalJSON(data []byte) error {
+// UnmarshalJSON un-marshals raw-byte data into a ConversionProof.
+func (proof *ConversionProof) UnmarshalJSON(data []byte) error {
 	dataStr := common.EmptyString
 	errJson := json.Unmarshal(data, &dataStr)
 	if errJson != nil {
@@ -48,24 +51,31 @@ func (proof *ConversionProofVer1ToVer2) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func (proof ConversionProofVer1ToVer2) Init() {
+// Init creates an empty ConversionProof.
+func (proof ConversionProof) Init() {
 	proof.Version = ProofVersion
 	proof.inputCoins = []*coin.PlainCoinV1{}
 	proof.outputCoins = []*coin.CoinV2{}
 	proof.serialNumberNoPrivacyProof = []*serialnumbernoprivacy.SNNoPrivacyProof{}
 }
 
-func (proof ConversionProofVer1ToVer2) GetVersion() uint8 { return ProofVersion }
-func (proof *ConversionProofVer1ToVer2) SetVersion(uint8) { proof.Version = ProofVersion }
+// GetVersion returns the version of a ConversionProof, which is 255.
+func (proof ConversionProof) GetVersion() uint8 { return ProofVersion }
 
-func (proof ConversionProofVer1ToVer2) GetInputCoins() []coin.PlainCoin {
+// SetVersion sets the version of a ConversionProof to 255.
+func (proof *ConversionProof) SetVersion(uint8) { proof.Version = ProofVersion }
+
+// GetInputCoins returns the input coins of a ConversionProof.
+func (proof ConversionProof) GetInputCoins() []coin.PlainCoin {
 	res := make([]coin.PlainCoin, len(proof.inputCoins))
 	for i := 0; i < len(proof.inputCoins); i += 1 {
 		res[i] = proof.inputCoins[i]
 	}
 	return res
 }
-func (proof ConversionProofVer1ToVer2) GetOutputCoins() []coin.Coin {
+
+// GetOutputCoins returns the output coins of a ConversionProof.
+func (proof ConversionProof) GetOutputCoins() []coin.Coin {
 	res := make([]coin.Coin, len(proof.outputCoins))
 	for i := 0; i < len(proof.outputCoins); i += 1 {
 		res[i] = proof.outputCoins[i]
@@ -73,8 +83,9 @@ func (proof ConversionProofVer1ToVer2) GetOutputCoins() []coin.Coin {
 	return res
 }
 
-// InputCoins should be all ver1, else it would crash
-func (proof *ConversionProofVer1ToVer2) SetInputCoins(v []coin.PlainCoin) error {
+// SetInputCoins sets v as the input coins of a ConversionProof.
+// All input coins must must be of version 1, otherwise, it would crash.
+func (proof *ConversionProof) SetInputCoins(v []coin.PlainCoin) error {
 	proof.inputCoins = make([]*coin.PlainCoinV1, len(v))
 	for i := 0; i < len(v); i += 1 {
 		c, ok := v[i].(*coin.PlainCoinV1)
@@ -86,8 +97,9 @@ func (proof *ConversionProofVer1ToVer2) SetInputCoins(v []coin.PlainCoin) error 
 	return nil
 }
 
-// v should be all coinv2 or else it would crash
-func (proof *ConversionProofVer1ToVer2) SetOutputCoins(v []coin.Coin) error {
+// SetOutputCoins sets v as the output coins of a ConversionProof.
+// All output coins must be of version 2, otherwise, it would crash.
+func (proof *ConversionProof) SetOutputCoins(v []coin.Coin) error {
 	proof.outputCoins = make([]*coin.CoinV2, len(v))
 	for i := 0; i < len(v); i += 1 {
 		c, ok := v[i].(*coin.CoinV2)
@@ -99,12 +111,14 @@ func (proof *ConversionProofVer1ToVer2) SetOutputCoins(v []coin.Coin) error {
 	return nil
 }
 
-// Conversion does not have range proof, everything is nonPrivacy
-func (proof ConversionProofVer1ToVer2) GetRangeProof() range_proof.RangeProof {
+// GetRangeProof returns the range proof of a ConversionProof.
+// A ConversionProof does not have range proof, everything is non-private.
+func (proof ConversionProof) GetRangeProof() range_proof.RangeProof {
 	return nil
 }
 
-func (proof ConversionProofVer1ToVer2) Bytes() []byte {
+// Bytes returns the byte-representation of a ConversionProof.
+func (proof ConversionProof) Bytes() []byte {
 	proofBytes := []byte{ProofVersion}
 
 	// InputCoins
@@ -142,7 +156,8 @@ func (proof ConversionProofVer1ToVer2) Bytes() []byte {
 	return proofBytes
 }
 
-func (proof *ConversionProofVer1ToVer2) SetBytes(proofBytes []byte) error {
+// SetBytes sets byte-representation data into a ConversionProof.
+func (proof *ConversionProof) SetBytes(proofBytes []byte) error {
 	if len(proofBytes) == 0 {
 		return fmt.Errorf("proof bytes = 0")
 	}
@@ -150,7 +165,7 @@ func (proof *ConversionProofVer1ToVer2) SetBytes(proofBytes []byte) error {
 		return fmt.Errorf("proof bytes version is not correct")
 	}
 	if proof == nil {
-		proof = new(ConversionProofVer1ToVer2)
+		proof = new(ConversionProof)
 	}
 	proof.SetVersion(ProofVersion)
 	offset := 1
@@ -254,13 +269,16 @@ func (proof *ConversionProofVer1ToVer2) SetBytes(proofBytes []byte) error {
 	return nil
 }
 
-func (proof *ConversionProofVer1ToVer2) IsPrivacy() bool {
+// IsPrivacy returns false.
+func (proof *ConversionProof) IsPrivacy() bool {
 	return false
 }
 
-func ProveConversion(inputCoins []coin.PlainCoin, outputCoins []*coin.CoinV2, snWitness []*serialnumbernoprivacy.SNNoPrivacyWitness) (*ConversionProofVer1ToVer2, error) {
+// ProveConversion returns a ConversionProof given a list of input coins, a list of output coins,
+// and a list of serial number witnesses.
+func ProveConversion(inputCoins []coin.PlainCoin, outputCoins []*coin.CoinV2, snWitness []*serialnumbernoprivacy.SNNoPrivacyWitness) (*ConversionProof, error) {
 	var err error
-	proof := new(ConversionProofVer1ToVer2)
+	proof := new(ConversionProof)
 	proof.SetVersion(ProofVersion)
 	if err = proof.SetInputCoins(inputCoins); err != nil {
 		return nil, err

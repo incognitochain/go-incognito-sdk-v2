@@ -1,5 +1,5 @@
 ---
-description: Tutorial on how to retrieve output coins V1.
+Description: Tutorial on how to retrieve output coins V1.
 ---
 
 # Retrieve Output Coins
@@ -26,7 +26,7 @@ We now present two ways a user can retrieve all of his output coins V1.
 	"id": 1
 }
 ```
-The first two parameters are deprecated, but they are still needed for old full-node. So you better do not change them. `PaymentAddress` is required to get all TXOs of the user while the `ReadonlyKey` is optional, which is used to decrypt these TXOs. For better privacy, we recommend you leave it empty.
+The first parameter is deprecated, but it is still needed for old full-node. So you better do not change it. The second parameter denotes the upper shard height you wish to retrieve output coins. `PaymentAddress` is required to get all TXOs of the user while the `ReadonlyKey` is optional, which is used to decrypt these TXOs. For better privacy, we recommend you leave it empty.
 * Via the go-sdk
 
 First, create a new client instance.
@@ -43,7 +43,7 @@ outCoinKey, err := incclient.NewOutCoinKeyFromPrivateKey(privateKey)
 if err != nil {
 	log.Fatal(err)
 }
-outCoinKey.SetReadonlyKey("") // call this if you do not want the remote full node to decrypt your coin
+outCoinKey.SetReadonlyKey("") // call this if you do not want the remote full-node to decrypt your coin
 ```
 
 ## Example
@@ -75,7 +75,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	outCoinKey.SetReadonlyKey("") // call this if you do not want the remote full node to decrypt your coin
+	outCoinKey.SetReadonlyKey("") // call this if you do not want the remote full-node to decrypt your coin
 
 	outCoinsV1, idxList, err := client.GetOutputCoins(outCoinKey, tokenID, 0)
 	for i, outCoin := range outCoinsV1 {

@@ -46,7 +46,7 @@ func (client *IncClient) CreateShardStakingTransaction(privateKey, privateSeed, 
 
 	committeePKBytes, err := committeePK.Bytes()
 	if err != nil {
-		return nil, "", fmt.Errorf("committe to bytes error: %v", err)
+		return nil, "", fmt.Errorf("committee to bytes error: %v", err)
 	}
 
 	stakingAmount := uint64(1750000000000)
@@ -108,7 +108,7 @@ func (client *IncClient) CreateUnStakingTransaction(privateKey, privateSeed, can
 
 	committeePKBytes, err := committeePK.Bytes()
 	if err != nil {
-		return nil, "", fmt.Errorf("committe to bytes error: %v", err)
+		return nil, "", fmt.Errorf("committee to bytes error: %v", err)
 	}
 
 	unStakingMetadata, err := metadata.NewStopAutoStakingMetadata(metadata.StopAutoStakingMeta, base58.Base58Check{}.Encode(committeePKBytes, common.ZeroByte))
@@ -134,28 +134,44 @@ func (client *IncClient) CreateAndSendUnStakingTransaction(privateKey, privateSe
 }
 
 // CreateWithDrawRewardTransaction creates a raw reward-withdrawing transaction.
-func (client *IncClient) CreateWithDrawRewardTransaction(privateKey, addr string) ([]byte, string, error) {
+func (client *IncClient) CreateWithDrawRewardTransaction(privateKey, addr, tokenIDStr string, version int8) ([]byte, string, error) {
+	if version != 1 && version != 2 {
+		return nil, "", fmt.Errorf("only support version 1 or 2")
+	}
+
 	senderWallet, err := wallet.Base58CheckDeserialize(privateKey)
 	if err != nil {
+		Logger.Printf("%v\n", err)
 		return nil, "", err
 	}
 
 	funderAddr := senderWallet.Base58CheckSerialize(wallet.PaymentAddressType)
-
 	if len(addr) == 0 {
 		addr = funderAddr
 	}
+	if version == 1 {
+		addr, err = wallet.GetPaymentAddressV1(addr, false)
+		if err != nil {
+			Logger.Printf("%v\n", err)
+			return nil, "", err
+		}
+	}
 
-	withdrawRewardMetadata, err := metadata.NewWithDrawRewardRequest(common.PRVIDStr, addr, 0, metadata.WithDrawRewardRequestMeta)
+	if len(tokenIDStr) == 0 {
+		Logger.Printf("No tokenID provided, using the default PRV\n")
+		tokenIDStr = common.PRVIDStr
+	}
+
+	withdrawRewardMetadata, err := metadata.NewWithDrawRewardRequest(tokenIDStr, addr, 0, metadata.WithDrawRewardRequestMeta)
 
 	txParam := NewTxParam(privateKey, []string{}, []uint64{}, 0, nil, withdrawRewardMetadata, nil)
 
-	return client.CreateRawTransaction(txParam, -1)
+	return client.CreateRawTransaction(txParam, version)
 }
 
 // CreateAndSendWithDrawRewardTransaction creates a raw reward-withdrawing transaction and broadcasts it to the blockchain.
-func (client *IncClient) CreateAndSendWithDrawRewardTransaction(privateKey, addr string) (string, error) {
-	encodedTx, txHash, err := client.CreateWithDrawRewardTransaction(privateKey, addr)
+func (client *IncClient) CreateAndSendWithDrawRewardTransaction(privateKey, addr, tokenIDStr string, version int8) (string, error) {
+	encodedTx, txHash, err := client.CreateWithDrawRewardTransaction(privateKey, addr, tokenIDStr, version)
 	if err != nil {
 		return "", err
 	}

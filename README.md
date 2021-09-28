@@ -1,3 +1,4 @@
+[![Go Report Card](https://goreportcard.com/badge/github.com/incognitochain/go-incognito-sdk-v2)](https://goreportcard.com/report/github.com/incognitochain/go-incognito-sdk-v2) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/incognitochain/go-incognito-sdk-v2/blob/master/LICENSE)
 # go-incognito
 ## Introduction
 A Golang SDK for interacting with the Incognito network.
@@ -6,6 +7,9 @@ A Golang SDK for interacting with the Incognito network.
 ```go
 go get github.com/incognitochain/go-incognito-sdk-v2
 ```
+
+## Dependencies
+See [go.mod](./go.mod)
 
 ## Import
 ```go
@@ -25,9 +29,12 @@ Following is a series of examples to help you get familiar with the Incognito ne
     * [Creating Accounts with HD Wallets](tutorials/docs/accounts/hdwallet_create.md)
     * [Importing Accounts with Mnemonic Strings](tutorials/docs/accounts/hdwallet_import.md)
     * [UTXOs](tutorials/docs/accounts/utxo.md)
-      * [Retrieving output coins V1](tutorials/docs/accounts/utxo_retrieve.md)
-      * [Key Submitting](tutorials/docs/accounts/submit_key.md)
+      * [Retrieving Output Coins V1](tutorials/docs/accounts/utxo_retrieve.md)
+      * [Key Submission](tutorials/docs/accounts/submit_key.md)
+      * [UTXO Retrieving without Key Submission](tutorials/docs/accounts/utxo_cache.md)
+      * [Consolidating](tutorials/docs/accounts/consolidate.md)
     * [Account Balances](tutorials/docs/accounts/balances.md)
+    * [Account History](tutorials/docs/accounts/tx_history.md)
 * [Transactions](tutorials/docs/transactions)
     * [Transaction Parameters](tutorials/docs/transactions/params.md)
     * [Transferring PRV](tutorials/docs/transactions/raw_tx.md)

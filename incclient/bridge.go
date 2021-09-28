@@ -12,31 +12,37 @@ import (
 	"github.com/incognitochain/go-incognito-sdk-v2/wallet"
 )
 
-type ETHDepositProof struct {
+// EVMDepositProof represents a proof for depositing tokens to the smart contracts.
+type EVMDepositProof struct {
 	blockNumber uint
 	blockHash   ethCommon.Hash
 	txIdx       uint
 	nodeList    []string
 }
 
-func (E ETHDepositProof) TxIdx() uint {
+// TxIdx returns the transaction index of an EVMDepositProof.
+func (E EVMDepositProof) TxIdx() uint {
 	return E.txIdx
 }
 
-func (E ETHDepositProof) BlockNumber() uint {
+// BlockNumber returns the block number of an EVMDepositProof.
+func (E EVMDepositProof) BlockNumber() uint {
 	return E.blockNumber
 }
 
-func (E ETHDepositProof) BlockHash() ethCommon.Hash {
+// BlockHash returns the block hash of an EVMDepositProof.
+func (E EVMDepositProof) BlockHash() ethCommon.Hash {
 	return E.blockHash
 }
 
-func (E ETHDepositProof) NodeList() []string {
+// NodeList returns the node list of an EVMDepositProof.
+func (E EVMDepositProof) NodeList() []string {
 	return E.nodeList
 }
 
-func NewETHDepositProof(blockNumber uint, blockHash ethCommon.Hash, txIdx uint, nodeList []string) *ETHDepositProof {
-	proof := ETHDepositProof{
+// NewETHDepositProof creates a new EVMDepositProof with the given parameters.
+func NewETHDepositProof(blockNumber uint, blockHash ethCommon.Hash, txIdx uint, nodeList []string) *EVMDepositProof {
+	proof := EVMDepositProof{
 		blockNumber: blockNumber,
 		blockHash:   blockHash,
 		txIdx:       txIdx,
@@ -46,24 +52,35 @@ func NewETHDepositProof(blockNumber uint, blockHash ethCommon.Hash, txIdx uint, 
 	return &proof
 }
 
-func (client *IncClient) CreateIssuingETHRequestTransaction(privateKey, tokenIDStr string, proof ETHDepositProof) ([]byte, string, error) {
+// CreateIssuingEVMRequestTransaction creates an EVM shielding trading transaction. By EVM, it means either ETH or BSC.
+//
+// It returns the base58-encoded transaction, the transaction's hash, and an error (if any).
+func (client *IncClient) CreateIssuingEVMRequestTransaction(privateKey, tokenIDStr string, proof EVMDepositProof, isBSC ...bool) ([]byte, string, error) {
 	tokenID, err := new(common.Hash).NewHashFromStr(tokenIDStr)
 	if err != nil {
 		return nil, "", err
 	}
 
-	var issuingETHRequestMeta *metadata.IssuingETHRequest
-	issuingETHRequestMeta, err = metadata.NewIssuingETHRequest(proof.blockHash, proof.txIdx, proof.nodeList, *tokenID, metadata.IssuingETHRequestMeta)
+	mdType := metadata.IssuingETHRequestMeta
+	if len(isBSC) > 0 && isBSC[0] {
+		mdType = metadata.IssuingBSCRequestMeta
+	}
+
+	var issuingETHRequestMeta *metadata.IssuingEVMRequest
+	issuingETHRequestMeta, err = metadata.NewIssuingEVMRequest(proof.blockHash, proof.txIdx, proof.nodeList, *tokenID, mdType)
 	if err != nil {
 		return nil, "", fmt.Errorf("cannot init issue eth request for %v, tokenID %v: %v", proof, tokenIDStr, err)
 	}
 
 	txParam := NewTxParam(privateKey, []string{}, []uint64{}, DefaultPRVFee, nil, issuingETHRequestMeta, nil)
-
 	return client.CreateRawTransaction(txParam, -1)
 }
-func (client *IncClient) CreateAndSendIssuingETHRequestTransaction(privateKey, tokenIDStr string, proof ETHDepositProof) (string, error) {
-	encodedTx, txHash, err := client.CreateIssuingETHRequestTransaction(privateKey, tokenIDStr, proof)
+
+// CreateAndSendIssuingEVMRequestTransaction creates an EVM shielding transaction, and submits it to the Incognito network.
+//
+// It returns the transaction's hash, and an error (if any).
+func (client *IncClient) CreateAndSendIssuingEVMRequestTransaction(privateKey, tokenIDStr string, proof EVMDepositProof, isBSC ...bool) (string, error) {
+	encodedTx, txHash, err := client.CreateIssuingEVMRequestTransaction(privateKey, tokenIDStr, proof, isBSC...)
 	if err != nil {
 		return "", err
 	}
@@ -76,7 +93,10 @@ func (client *IncClient) CreateAndSendIssuingETHRequestTransaction(privateKey, t
 	return txHash, nil
 }
 
-func (client *IncClient) CreateBurningRequestTransaction(privateKey, remoteAddress, tokenIDStr string, burnedAmount uint64) ([]byte, string, error) {
+// CreateBurningRequestTransaction creates an EVM burning transaction for exiting the Incognito network.
+//
+// It returns the base58-encoded transaction, the transaction's hash, and an error (if any).
+func (client *IncClient) CreateBurningRequestTransaction(privateKey, remoteAddress, tokenIDStr string, burnedAmount uint64, isBSC ...bool) ([]byte, string, error) {
 	if tokenIDStr == common.PRVIDStr {
 		return nil, "", fmt.Errorf("cannot burn PRV in a burning request transaction")
 	}
@@ -99,8 +119,13 @@ func (client *IncClient) CreateBurningRequestTransaction(privateKey, remoteAddre
 		remoteAddress = remoteAddress[2:]
 	}
 
+	mdType := metadata.BurningRequestMetaV2
+	if len(isBSC) > 0 && isBSC[0] {
+		mdType = metadata.BurningPBSCRequestMeta
+	}
+
 	var md *metadata.BurningRequest
-	md, err = metadata.NewBurningRequest(burnerAddress, burnedAmount, *tokenID, tokenIDStr, remoteAddress, metadata.BurningRequestMetaV2)
+	md, err = metadata.NewBurningRequest(burnerAddress, burnedAmount, *tokenID, tokenIDStr, remoteAddress, mdType)
 	if err != nil {
 		return nil, "", fmt.Errorf("cannot init burning request with tokenID %v, burnedAmount %v, remoteAddress %v: %v", tokenIDStr, burnedAmount, remoteAddress, err)
 	}
@@ -110,8 +135,12 @@ func (client *IncClient) CreateBurningRequestTransaction(privateKey, remoteAddre
 
 	return client.CreateRawTokenTransaction(txParam, -1)
 }
-func (client *IncClient) CreateAndSendBurningRequestTransaction(privateKey, remoteAddress, tokenIDStr string, burnedAmount uint64) (string, error) {
-	encodedTx, txHash, err := client.CreateBurningRequestTransaction(privateKey, remoteAddress, tokenIDStr, burnedAmount)
+
+// CreateAndSendBurningRequestTransaction creates an EVM burning transaction for exiting the Incognito network, and submits it to the network.
+//
+// It returns the transaction's hash, and an error (if any).
+func (client *IncClient) CreateAndSendBurningRequestTransaction(privateKey, remoteAddress, tokenIDStr string, burnedAmount uint64, isBSC ...bool) (string, error) {
+	encodedTx, txHash, err := client.CreateBurningRequestTransaction(privateKey, remoteAddress, tokenIDStr, burnedAmount, isBSC...)
 	if err != nil {
 		return "", err
 	}
@@ -125,19 +154,35 @@ func (client *IncClient) CreateAndSendBurningRequestTransaction(privateKey, remo
 }
 
 // GetBurnProof retrieves the burning proof for the Incognito network for submitting to the smart contract later.
-func (client *IncClient) GetBurnProof(txHash string) (*jsonresult.GetInstructionProof, error) {
-	responseInBytes, err := client.rpcServer.GetBurnProof(txHash)
+func (client *IncClient) GetBurnProof(txHash string, isBSC ...bool) (*jsonresult.InstructionProof, error) {
+	responseInBytes, err := client.rpcServer.GetBurnProof(txHash, isBSC...)
 	if err != nil {
 		return nil, err
 	}
 
-	var tmp jsonresult.GetInstructionProof
+	var tmp jsonresult.InstructionProof
 	err = rpchandler.ParseResponse(responseInBytes, &tmp)
 	if err != nil {
 		return nil, err
 	}
 
 	return &tmp, nil
+}
+
+// GetBridgeTokens returns all bridge tokens in the network.
+func (client *IncClient) GetBridgeTokens() ([]*BridgeTokenInfo, error) {
+	responseInBytes, err := client.rpcServer.GetAllBridgeTokens()
+	if err != nil {
+		return nil, err
+	}
+
+	res := make([]*BridgeTokenInfo, 0)
+	err = rpchandler.ParseResponse(responseInBytes, &res)
+	if err != nil {
+		return nil, err
+	}
+
+	return res, nil
 }
 
 // CheckShieldStatus returns the status of an eth-shielding request.

@@ -4,6 +4,7 @@ import (
 	"github.com/incognitochain/go-incognito-sdk-v2/common"
 )
 
+// PDEContributionResponse is the response for a PDEContributionRequest.
 type PDEContributionResponse struct {
 	MetadataBase
 	ContributionStatus string
@@ -12,6 +13,7 @@ type PDEContributionResponse struct {
 	SharedRandom       []byte `json:"SharedRandom,omitempty"`
 }
 
+// Hash overrides MetadataBase.Hash().
 func (iRes PDEContributionResponse) Hash() *common.Hash {
 	record := iRes.RequestedTxID.String()
 	record += iRes.TokenIDStr
@@ -25,7 +27,7 @@ func (iRes PDEContributionResponse) Hash() *common.Hash {
 	return &hash
 }
 
+// CalculateSize overrides MetadataBase.CalculateSize().
 func (iRes *PDEContributionResponse) CalculateSize() uint64 {
 	return calculateSize(iRes)
 }
-

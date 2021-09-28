@@ -20,13 +20,11 @@ const (
 	WithDrawRewardRequestMeta    = 44
 	WithDrawRewardResponseMeta   = 45
 
-	//statking
 	ShardStakingMeta    = 63
 	StopAutoStakingMeta = 127
 	BeaconStakingMeta   = 64
 	UnStakingMeta       = 210
 
-	// Incognito -> Ethereum bridge
 	BeaconSwapConfirmMeta = 70
 	BridgeSwapConfirmMeta = 71
 	BurningRequestMeta    = 27
@@ -34,7 +32,6 @@ const (
 	BurningConfirmMeta    = 72
 	BurningConfirmMetaV2  = 241
 
-	// pde
 	PDEContributionMeta                   = 90
 	PDETradeRequestMeta                   = 91
 	PDETradeResponseMeta                  = 92
@@ -48,7 +45,6 @@ const (
 	PDEFeeWithdrawalResponseMeta          = 208
 	PDETradingFeesDistributionMeta        = 209
 
-	// portal
 	PortalCustodianDepositMeta                  = 100
 	PortalRequestPortingMeta                    = 101
 	PortalUserRequestPTokenMeta                 = 102
@@ -69,16 +65,15 @@ const (
 	PortalRequestWithdrawRewardResponseMeta     = 119
 	PortalRedeemFromLiquidationPoolMeta         = 120
 	PortalRedeemFromLiquidationPoolResponseMeta = 121
-	PortalCustodianTopupMeta                    = 122
-	PortalCustodianTopupResponseMeta            = 123
+	PortalCustodianTopUpMeta                    = 122
+	PortalCustodianTopUpResponseMeta            = 123
 	PortalTotalRewardCustodianMeta              = 124
 	PortalPortingResponseMeta                   = 125
 	PortalReqMatchingRedeemMeta                 = 126
 	PortalPickMoreCustodianForRedeemMeta        = 128
-	PortalCustodianTopupMetaV2                  = 129
-	PortalCustodianTopupResponseMetaV2          = 130
+	PortalCustodianTopUpMetaV2                  = 129
+	PortalCustodianTopUpResponseMetaV2          = 130
 
-	// Portal v3
 	PortalCustodianDepositMetaV3                  = 131
 	PortalCustodianWithdrawRequestMetaV3          = 132
 	PortalRewardMetaV3                            = 133
@@ -87,35 +82,54 @@ const (
 	PortalLiquidateByRatesMetaV3                  = 136
 	PortalRedeemFromLiquidationPoolMetaV3         = 137
 	PortalRedeemFromLiquidationPoolResponseMetaV3 = 138
-	PortalCustodianTopupMetaV3                    = 139
+	PortalCustodianTopUpMetaV3                    = 139
 	PortalTopUpWaitingPortingRequestMetaV3        = 140
 	PortalRequestPortingMetaV3                    = 141
 	PortalRedeemRequestMetaV3                     = 142
 	PortalUnlockOverRateCollateralsMeta           = 143
 
-	// Incognito => Ethereum's SC for portal
 	PortalCustodianWithdrawConfirmMetaV3         = 170
 	PortalRedeemFromLiquidationPoolConfirmMetaV3 = 171
 	PortalLiquidateRunAwayCustodianConfirmMetaV3 = 172
 
-	//Note: don't use this metadata type for others
 	PortalResetPortalDBMeta = 199
 
-	// relaying
 	RelayingBNBHeaderMeta = 200
 	RelayingBTCHeaderMeta = 201
 
 	PortalTopUpWaitingPortingRequestMeta  = 202
 	PortalTopUpWaitingPortingResponseMeta = 203
 
-	// incognito mode for smart contract
 	BurningForDepositToSCRequestMeta   = 96
 	BurningForDepositToSCRequestMetaV2 = 242
 	BurningConfirmForDepositToSCMeta   = 97
 	BurningConfirmForDepositToSCMetaV2 = 243
 
+	PortalV4ShieldingRequestMeta      = 260
+	PortalV4ShieldingResponseMeta     = 261
+	PortalV4UnshieldingRequestMeta    = 262
+	PortalV4UnshieldingResponseMeta   = 263
+	PortalV4UnshieldBatchingMeta      = 264
+	PortalV4FeeReplacementRequestMeta = 265
+	PortalV4SubmitConfirmedTxMeta     = 266
+	PortalV4ConvertVaultRequestMeta   = 267
+
 	InitTokenRequestMeta  = 244
 	InitTokenResponseMeta = 245
+
+	IssuingBSCRequestMeta  = 250
+	IssuingBSCResponseMeta = 251
+	BurningPBSCRequestMeta = 252
+	BurningBSCConfirmMeta  = 253
+
+	IssuingPRVERC20RequestMeta = 270
+	IssuingPRVERC20ResponseMeta = 271
+	IssuingPRVBEP20RequestMeta = 272
+	IssuingPRVBEP20ResponseMeta = 273
+	BurningPRVERC20RequestMeta = 274
+	BurningPRVERC20ConfirmMeta  = 150
+	BurningPRVBEP20RequestMeta = 275
+	BurningPRVBEP20ConfirmMeta  = 151
 )
 
 var minerCreatedMetaTypes = []int{
@@ -137,37 +151,12 @@ var minerCreatedMetaTypes = []int{
 	PortalLiquidateCustodianResponseMeta,
 	PortalRequestWithdrawRewardResponseMeta,
 	PortalRedeemFromLiquidationPoolResponseMeta,
-	PortalCustodianTopupResponseMeta,
-	PortalCustodianTopupResponseMetaV2,
+	PortalCustodianTopUpResponseMeta,
+	PortalCustodianTopUpResponseMetaV2,
 	PortalPortingResponseMeta,
 	PortalTopUpWaitingPortingResponseMeta,
 	PortalRedeemFromLiquidationPoolResponseMetaV3,
 	InitTokenResponseMeta,
 }
-
-// Special rules for shardID: stored as 2nd param of instruction of BeaconBlock
-const (
-	AllShards  = -1
-	BeaconOnly = -2
-)
-
-// Kovan testnet
-//var (
-//	// if the blockchain is running in Docker container
-//	// then using GETH_NAME env's value (aka geth container name)
-//	// otherwise using localhost
-//	EthereumLightNodeHost     = common.GetENV("GETH_NAME", "kovan.infura.io/v3/93fe721349134964aa71071a713c5cef")
-//	EthereumLightNodeProtocol = common.GetENV("GETH_PROTOCOL", "https")
-//	EthereumLightNodePort     = common.GetENV("GETH_PORT", "")
-//)
-
-//const (
-//	EthereumLightNodeProtocol = "http"
-//	EthereumLightNodePort     = "8545"
-//)
-const (
-	StopAutoStakingAmount = 0
-	ETHConfirmationBlocks = 15
-)
 
 var AcceptedWithdrawRewardRequestVersion = []int{0, 1}

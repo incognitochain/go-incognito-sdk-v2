@@ -5,10 +5,18 @@ import (
 	"github.com/incognitochain/go-incognito-sdk-v2/rpchandler"
 )
 
-// SubmitKey submits an OTAKey to the full node.
+// SubmitKey submits an OTAKey to the full-node.
 func (client *IncClient) SubmitKey(otaKey string) error {
-	_, err := client.rpcServer.SubmitKey(otaKey)
-	return err
+	responseInBytes, err := client.rpcServer.SubmitKey(otaKey)
+	if err != nil {
+		return err
+	}
+
+	err = rpchandler.ParseResponse(responseInBytes, nil)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 // AuthorizedSubmitKey handles submitting OTA keys in an authorized manner.
@@ -23,6 +31,26 @@ func (client *IncClient) AuthorizedSubmitKey(otaKey string, accessToken string, 
 		return err
 	}
 	return nil
+}
+
+// GetKeySubmissionStatus returns the status of a submitted OTAKey.
+// The returned state could be:
+//	- 0: StatusNotSubmitted or ErrorOccurred
+//	- 1: StatusIndexing
+//	- 2: StatusKeySubmittedUsual
+//	- 3: StatusIndexingFinished
+func (client *IncClient) GetKeySubmissionStatus(otaKey string) (int, error) {
+	responseInBytes, err := client.rpcServer.GetKeySubmissionInfo(otaKey)
+	if err != nil {
+		return 0, err
+	}
+
+	var status int
+	err = rpchandler.ParseResponse(responseInBytes, &status)
+	if err != nil {
+		return 0, err
+	}
+	return status, nil
 }
 
 // NewRPCCall creates and sends a new RPC request based on the given method and parameters to the RPC server.

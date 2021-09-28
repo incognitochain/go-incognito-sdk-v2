@@ -2,52 +2,45 @@ package crypto
 
 import (
 	"crypto/subtle"
-	"encoding/hex"
 	"fmt"
 	"math/big"
 
 	C25519 "github.com/incognitochain/go-incognito-sdk-v2/crypto/curve25519"
 )
 
+// Scalar represents a scalar of an elliptic curve.
 type Scalar struct {
 	key C25519.Key
 }
 
+// GetKey returns the key of a Scalar.
 func (sc Scalar) GetKey() C25519.Key {
 	return sc.key
 }
 
+// String returns the hex-encoded string of a Scalar.
 func (sc Scalar) String() string {
 	return fmt.Sprintf("%x", sc.key[:])
 }
 
-func (sc Scalar) MarshalText() []byte {
-	return []byte(fmt.Sprintf("%x", sc.key[:]))
-}
-
-func (sc *Scalar) UnmarshalText(data []byte) (*Scalar, error) {
-	byteSlice, _ := hex.DecodeString(string(data))
-	if len(byteSlice) != Ed25519KeySize {
-		return nil, fmt.Errorf("incorrect key size")
-	}
-	copy(sc.key[:], byteSlice)
-	return sc, nil
-}
-
+// ToBytes returns an 32-byte long array from a Scalar.
 func (sc Scalar) ToBytes() [Ed25519KeySize]byte {
 	return sc.key.ToBytes()
 }
 
+// ToBytesS returns a slice of bytes from a Scalar.
 func (sc Scalar) ToBytesS() []byte {
 	slice := sc.key.ToBytes()
 	return slice[:]
 }
 
+// FromBytes sets an array of 32 bytes to a Scalar.
 func (sc *Scalar) FromBytes(b [Ed25519KeySize]byte) *Scalar {
 	sc.key.FromBytes(b)
 	return sc
 }
 
+// FromBytesS sets a slice of bytes to a Scalar.
 func (sc *Scalar) FromBytesS(b []byte) *Scalar {
 	var array [Ed25519KeySize]byte
 	copy(array[:], b)
@@ -56,13 +49,15 @@ func (sc *Scalar) FromBytesS(b []byte) *Scalar {
 	return sc
 }
 
-func (sc *Scalar) SetKeyUnsafe(a *C25519.Key) *Scalar {
-	sc.key = *a
+// SetKeyUnsafe sets v as the key of Scalar (without caching errors).
+func (sc *Scalar) SetKeyUnsafe(v *C25519.Key) *Scalar {
+	sc.key = *v
 	return sc
 }
 
-func (sc *Scalar) SetKey(a *C25519.Key) (*Scalar, error) {
-	sc.key = *a
+// SetKey sets v as the key of a Scalar.
+func (sc *Scalar) SetKey(v *C25519.Key) (*Scalar, error) {
+	sc.key = *v
 	if sc.ScalarValid() == false {
 		return nil, fmt.Errorf("invalid key value")
 	}

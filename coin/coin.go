@@ -6,6 +6,7 @@ import (
 	"github.com/incognitochain/go-incognito-sdk-v2/key"
 )
 
+// Coin represents a input or output coin of a transaction.
 type Coin interface {
 	GetVersion() uint8
 	GetCommitment() *crypto.Point
@@ -32,6 +33,7 @@ type Coin interface {
 	DoesCoinBelongToKeySet(keySet *key.KeySet) (bool, *crypto.Point)
 }
 
+// PlainCoin represents an un-encrypted coin of a transaction.
 type PlainCoin interface {
 	MarshalJSON() ([]byte, error)
 	UnmarshalJSON(data []byte) error
@@ -66,6 +68,8 @@ type PlainCoin interface {
 
 	Bytes() []byte
 	SetBytes([]byte) error
+
+	DoesCoinBelongToKeySet(keySet *key.KeySet) (bool, *crypto.Point)
 }
 
 // NewPlainCoinFromByte parse a new PlainCoin from its bytes.

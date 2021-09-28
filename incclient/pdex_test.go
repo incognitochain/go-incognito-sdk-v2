@@ -3,10 +3,27 @@ package incclient
 import (
 	"fmt"
 	"github.com/incognitochain/go-incognito-sdk-v2/common"
+	"github.com/incognitochain/go-incognito-sdk-v2/rpchandler/jsonresult"
 	"math"
+	"math/big"
 	"testing"
 	"time"
 )
+
+func calculatePoolAmount(pool *jsonresult.PoolInfo, totalShare uint64, shareAmount uint64) (uint64, uint64) {
+	shareBig := new(big.Int).SetUint64(shareAmount)
+	totalShareBig := new(big.Int).SetUint64(totalShare)
+
+	value1 := new(big.Int).SetUint64(pool.Token1PoolValue)
+	value1 = value1.Mul(value1, shareBig)
+	value1 = value1.Div(value1, totalShareBig)
+
+	value2 := new(big.Int).SetUint64(pool.Token2PoolValue)
+	value2 = value2.Mul(value2, shareBig)
+	value2 = value2.Div(value2, totalShareBig)
+
+	return value1.Uint64(), value2.Uint64()
+}
 
 func TestIncClient_CreateAndSendPDETradeTransaction(t *testing.T) {
 	ic, err := NewTestNet1Client()
@@ -14,7 +31,7 @@ func TestIncClient_CreateAndSendPDETradeTransaction(t *testing.T) {
 		panic(err)
 	}
 
-	privateKey := "112t8rneWAhErTC8YUFTnfcKHvB1x6uAVdehy1S8GP2psgqDxK3RHouUcd69fz88oAL9XuMyQ8mBY5FmmGJdcyrpwXjWBXRpoWwgJXjsxi4j"
+	privateKey := ""
 
 	//Trade PRV to tokens
 	tokenToSell := common.PRVIDStr
@@ -40,7 +57,7 @@ func TestIncClient_CreateAndSendCrossPDETradeTransaction(t *testing.T) {
 		panic(err)
 	}
 
-	privateKey := "112t8rneWAhErTC8YUFTnfcKHvB1x6uAVdehy1S8GP2psgqDxK3RHouUcd69fz88oAL9XuMyQ8mBY5FmmGJdcyrpwXjWBXRpoWwgJXjsxi4j"
+	privateKey := ""
 
 	//Trade token to token
 	tokenToBuy := "0795495cb9eb84ae7bd8c8494420663b9a1642c7bbc99e57b04d536db9001d0e"
@@ -68,11 +85,11 @@ func TestIncClient_CreateAndSendPDEContributeTransaction(t *testing.T) {
 	}
 
 	// init params
-	privateKey := "112t8rneWAhErTC8YUFTnfcKHvB1x6uAVdehy1S8GP2psgqDxK3RHouUcd69fz88oAL9XuMyQ8mBY5FmmGJdcyrpwXjWBXRpoWwgJXjsxi4j"
+	privateKey := ""
 	addr := PrivateKeyToPaymentAddress(privateKey, -1)
 	tokenID1 := common.PRVIDStr
 	tokenID2 := "00000000000000000000000000000000000000000000000000000000000000ff"
-	pairID := "INC" + randChars(10)
+	pairID := "INC" + common.RandChars(10)
 
 	oldBalance1, err := ic.GetBalance(privateKey, tokenID1)
 	if err != nil {
@@ -110,7 +127,7 @@ func TestIncClient_CreateAndSendPDEContributeTransaction(t *testing.T) {
 	pool, err := ic.GetPDEPoolPair(0, tokenID1, tokenID2)
 	contributedShare := uint64(0)
 	attempt := 0
-	for attempt < MaxAttempts {
+	for attempt < maxAttempts {
 		minAmount := uint64(math.Min(float64(oldBalance1), float64(oldBalance2)))
 		minAmount = uint64(math.Min(float64(minAmount), float64(oldTotalShares)))
 		contributedShare = 1 + common.RandUint64()%(minAmount/10)
@@ -130,7 +147,7 @@ func TestIncClient_CreateAndSendPDEContributeTransaction(t *testing.T) {
 		}
 		attempt += 1
 	}
-	if attempt > MaxAttempts {
+	if attempt > maxAttempts {
 		panic("cannot calculate contributed amounts")
 	}
 
@@ -157,7 +174,7 @@ func TestIncClient_CreateAndSendPDEContributeTransaction(t *testing.T) {
 	}
 
 	attempt = 0
-	for attempt < MaxAttempts {
+	for attempt < maxAttempts {
 		newTotalShares, err := ic.GetTotalSharesAmount(0, tokenID1, tokenID2)
 		if err != nil {
 			panic(err)
@@ -195,7 +212,7 @@ func TestIncClient_CreateAndSendPDEWithdrawalTransaction(t *testing.T) {
 	}
 
 	// init params
-	privateKey := "112t8rneWAhErTC8YUFTnfcKHvB1x6uAVdehy1S8GP2psgqDxK3RHouUcd69fz88oAL9XuMyQ8mBY5FmmGJdcyrpwXjWBXRpoWwgJXjsxi4j"
+	privateKey := ""
 	addr := PrivateKeyToPaymentAddress(privateKey, -1)
 	tokenID1 := common.PRVIDStr
 	tokenID2 := "00000000000000000000000000000000000000000000000000000000000000ff"
@@ -266,7 +283,7 @@ func TestIncClient_CreateAndSendPDEWithdrawalTransaction(t *testing.T) {
 	}
 
 	attempt := 0
-	for attempt < MaxAttempts {
+	for attempt < maxAttempts {
 		newBalance1, err := ic.GetBalance(privateKey, tokenID1)
 		if err != nil {
 			panic(err)

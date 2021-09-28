@@ -1,5 +1,5 @@
 ---
-description: Tutorial on key types in Incognito.
+Description: Tutorial on key types in Incognito.
 ---
 
 ## Keys

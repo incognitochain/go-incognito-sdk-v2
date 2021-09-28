@@ -6,6 +6,7 @@ import (
 	"github.com/incognitochain/go-incognito-sdk-v2/common"
 	"github.com/incognitochain/go-incognito-sdk-v2/key"
 	"github.com/incognitochain/go-incognito-sdk-v2/wallet"
+	"log"
 )
 
 // RPCError represents an error that is used as a part of a JSON-RPC JsonResponse
@@ -14,9 +15,10 @@ type RPCError struct {
 	Code       int    `json:"Code,omitempty"`
 	Message    string `json:"Message,omitempty"`
 	StackTrace string `json:"StackTrace"`
-	Err error `json:"Err"`
+	Err        error  `json:"Err"`
 }
 
+// JsonRequest represents a JSON-RPC request.
 type JsonRequest struct {
 	JsonRPC string      `json:"Jsonrpc"`
 	Method  string      `json:"Method"`
@@ -24,6 +26,7 @@ type JsonRequest struct {
 	Id      interface{} `json:"Id"`
 }
 
+// JsonResponse represents a JSON-RPC response.
 type JsonResponse struct {
 	Id      *interface{}    `json:"Id"`
 	Result  json.RawMessage `json:"Result"`
@@ -32,8 +35,6 @@ type JsonResponse struct {
 	Method  string          `json:"Method"`
 	JsonRPC string          `json:"Jsonrpc"`
 }
-
-var Server = new(RPCServer)
 
 // OldParseResponse parses a raw JSON-RPC response into a JsonResponse.
 //
@@ -45,7 +46,7 @@ func OldParseResponse(respondInBytes []byte) (*JsonResponse, error) {
 		return nil, err
 	}
 
-	if respond.Error != nil{
+	if respond.Error != nil {
 		return nil, fmt.Errorf("RPC returns an error: %v", respond.Error)
 	}
 
@@ -57,10 +58,14 @@ func ParseResponse(respondInBytes []byte, val interface{}) error {
 	var respond JsonResponse
 	err := json.Unmarshal(respondInBytes, &respond)
 	if err != nil {
-		return err
+		if len(respondInBytes) == 0 {
+			return fmt.Errorf("RPC response is empty")
+		}
+		log.Printf("%v, %v\n", len(respondInBytes), string(respondInBytes))
+		return fmt.Errorf("un-marshal RPC-response error: %v", err)
 	}
 
-	if respond.Error != nil{
+	if respond.Error != nil {
 		return fmt.Errorf("RPC returns an error: %v", respond.Error)
 	}
 
@@ -77,7 +82,7 @@ func ParseResponse(respondInBytes []byte, val interface{}) error {
 }
 
 // CreateJsonRequest creates a new JsonRequest given the method and parameters.
-func CreateJsonRequest(jsonRPC, method string, params []interface{}, id interface{}) *JsonRequest{
+func CreateJsonRequest(jsonRPC, method string, params []interface{}, id interface{}) *JsonRequest {
 	request := new(JsonRequest)
 	request.JsonRPC = jsonRPC
 	request.Method = method

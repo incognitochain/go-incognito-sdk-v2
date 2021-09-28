@@ -1,10 +1,12 @@
 package jsonresult
 
-type GetBestBlockResult struct {
-	BestBlocks map[int]GetBestBlockItem `json:"BestBlocks"`
+// BestBlockResult represents the best block detail of each shard chain and the beacon chain.
+type BestBlockResult struct {
+	BestBlocks map[int]BestBlockItem `json:"BestBlocks"`
 }
 
-type GetBestBlockItem struct {
+// BestBlockItem describes the information of a best block.
+type BestBlockItem struct {
 	Height              uint64 `json:"Height"`
 	Hash                string `json:"Hash"`
 	TotalTxs            uint64 `json:"TotalTxs"`
@@ -16,6 +18,7 @@ type GetBestBlockItem struct {
 	EpochBlock          uint64 `json:"EpochBlock"`
 }
 
-type GetBestBlockHashResult struct {
+// BlockHashResult represents the best block hash of each shard chain and the beacon chain.
+type BlockHashResult struct {
 	BestBlockHashes map[int]string `json:"BestBlockHashes"`
 }
