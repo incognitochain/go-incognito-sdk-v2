@@ -56,6 +56,7 @@ Following is a series of examples to help you get familiar with the Incognito ne
     * [Checking Shielding Status](tutorials/docs/bridge/shield_status.md)
     * [Un-Shielding Transactions](tutorials/docs/bridge/unshield.md)
     * [Un-Shielding PRV](tutorials/docs/bridge/unshield_prv.md)
+    * [Shielding PRV](tutorials/docs/bridge/shield_prv.md)
 * [Calling RPCs](tutorials/docs/rpc/rpc.md)
   
 ## TODOs
