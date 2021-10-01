@@ -144,7 +144,7 @@ func (client *IncClient) CreateAndSendPdexv3TradeTransaction(privateKey string, 
 //
 // It returns the base58-encoded transaction, the transaction's hash, and an error (if any).
 func (client *IncClient) CreatePdexv3AddOrder(privateKey, pairID string,
-	tokenIDToSellStr, nftIDStr string,
+	tokenIDToSellStr, tokenIDToBuyStr, nftIDStr string,
 	sellAmount, expectedBuy uint64,
 ) ([]byte, string, error) {
 	senderWallet, err := wallet.Base58CheckDeserialize(privateKey)
@@ -153,6 +153,10 @@ func (client *IncClient) CreatePdexv3AddOrder(privateKey, pairID string,
 	}
 
 	tokenSell, err := common.Hash{}.NewHashFromStr(tokenIDToSellStr)
+	if err != nil {
+		return nil, "", err
+	}
+	tokenBuy, err := common.Hash{}.NewHashFromStr(tokenIDToBuyStr)
 	if err != nil {
 		return nil, "", err
 	}
@@ -169,7 +173,7 @@ func (client *IncClient) CreatePdexv3AddOrder(privateKey, pairID string,
 	)
 	// create one-time receivers for response TX
 	isPRV := md.TokenToSell == common.PRVCoinID
-	tokenList := []common.Hash{md.TokenToSell}
+	tokenList := []common.Hash{md.TokenToSell, *tokenBuy}
 	md.Receiver, err = GenerateOTAReceivers(
 		tokenList, senderWallet.KeySet.PaymentAddress)
 	if err != nil {
@@ -190,10 +194,10 @@ func (client *IncClient) CreatePdexv3AddOrder(privateKey, pairID string,
 //
 // It returns the transaction's hash, and an error (if any).
 func (client *IncClient) CreateAndSendPdexv3AddOrderTransaction(privateKey, pairID string,
-	tokenIDToSellStr, nftIDStr string,
+	tokenIDToSellStr, tokenIDToBuyStr, nftIDStr string,
 	sellAmount, expectedBuy uint64,
 ) (string, error) {
-	encodedTx, txHash, err := client.CreatePdexv3AddOrder(privateKey, pairID, tokenIDToSellStr, nftIDStr, sellAmount, expectedBuy)
+	encodedTx, txHash, err := client.CreatePdexv3AddOrder(privateKey, pairID, tokenIDToSellStr, tokenIDToBuyStr, nftIDStr, sellAmount, expectedBuy)
 	if err != nil {
 		return "", err
 	}
