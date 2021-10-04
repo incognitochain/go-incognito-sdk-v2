@@ -22,7 +22,7 @@ type Share struct {
 
 // GetPdexState retrieves the state of pDEX at the provided beacon height.
 // If the beacon height is set to 0, it returns the latest pDEX state.
-func (client *IncClient) GetPdexState(beaconHeight uint64) (*jsonresult.CurrentPdexState, error) {
+func (client *IncClient) GetPdexState(beaconHeight uint64, filter map[string]interface{}) (*jsonresult.CurrentPdexState, error) {
 	if beaconHeight == 0 {
 		bestBlocks, err := client.GetBestBlock()
 		if err != nil {
@@ -31,7 +31,7 @@ func (client *IncClient) GetPdexState(beaconHeight uint64) (*jsonresult.CurrentP
 		beaconHeight = bestBlocks[-1]
 	}
 
-	responseInBytes, err := client.rpcServer.GetPdexState(beaconHeight)
+	responseInBytes, err := client.rpcServer.GetPdexState(beaconHeight, filter)
 	if err != nil {
 		return nil, err
 	}
@@ -48,7 +48,7 @@ func (client *IncClient) GetPdexState(beaconHeight uint64) (*jsonresult.CurrentP
 // GetAllPdexPoolPairs retrieves all pools in pDEX at the provided beacon height.
 // If the beacon height is set to 0, it returns the latest pDEX pool pairs.
 func (client *IncClient) GetAllPdexPoolPairs(beaconHeight uint64) (map[string]*jsonresult.Pdexv3PoolPairState, error) {
-	pdeState, err := client.GetPdexState(beaconHeight)
+	pdeState, err := client.GetPdexState(beaconHeight, nil)
 	if err != nil {
 		return nil, err
 	}

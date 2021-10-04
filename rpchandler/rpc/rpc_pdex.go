@@ -20,9 +20,13 @@ func (server *RPCServer) CheckTradeStatus(txHash string) ([]byte, error) {
 }
 
 // GetPdexState retrieves the pDEX state at the given beacon height.
-func (server *RPCServer) GetPdexState(beaconHeight uint64) ([]byte, error) {
+func (server *RPCServer) GetPdexState(beaconHeight uint64, filter map[string]interface{}) ([]byte, error) {
 	mapParams := make(map[string]interface{})
 	mapParams["BeaconHeight"] = beaconHeight
+	if filter == nil {
+		filter = make(map[string]interface{})
+	}
+	mapParams["Filter"] = filter
 
 	params := make([]interface{}, 0)
 	params = append(params, mapParams)

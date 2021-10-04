@@ -14,7 +14,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	pdeState, err := client.GetPdexState(0)
+	pdeState, err := client.GetPdexState(0, nil)
 	if err != nil {
 		log.Fatal(err)
 	}
