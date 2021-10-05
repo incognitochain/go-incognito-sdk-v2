@@ -1,14 +1,26 @@
 ---
 Description: Tutorial on how to create an EVM-shielding transaction
 ---
+
+# Before Going Further
+
+Please read through the tutorials on [key submission](../accounts/submit_key.md)
+and [UTXO cache](../accounts/utxo_cache.md) for proper balance and UTXO retrieval. Skip these parts if you're familiar
+with these notions.
+
 # Depositing ETH/BSC/ERC20/BEP20 to Incognito
-Suppose that we already have a transaction that deposited some ETH/ERC20 to the smart contract. To mint the same amount of pETH/pERC20 inside the Incognito network, we use the function [`CreateAndSendIssuingEVMRequestTransaction`](../../../incclient/bridge.go) with the following inputs:
+
+Suppose that we already have a transaction that deposited some ETH/ERC20 to the smart contract. To mint the same amount
+of pETH/pERC20 inside the Incognito network, we use the
+function [`CreateAndSendIssuingEVMRequestTransaction`](../../../incclient/bridge.go) with the following inputs:
+
 * `privateKey`: our private key to sign the transaction.
 * `tokenID`: the pETH/pBSC/pERC20/pBEP20 tokenID.
 * `depositProof`: the Ethereum/BSC receipt for the depositing transaction.
 * `isBSC`: whether to interact with BSC the smart contract, defaults to `false`.
 
 ## Example
+
 [shield.go](../../code/bridge/shield/shield.go)
 
 ```go
