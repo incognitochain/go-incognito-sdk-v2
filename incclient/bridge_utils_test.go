@@ -137,7 +137,7 @@ func TestIncClient_GetEVMTransactionStatus(t *testing.T) {
 
 func TestIncClient_GetBurnProof(t *testing.T) {
 	var err error
-	ic, err = NewDevNetClient()
+	ic, err = NewTestNetClient()
 	if err != nil {
 		panic(err)
 	}

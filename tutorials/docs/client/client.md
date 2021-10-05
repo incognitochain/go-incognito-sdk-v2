@@ -9,6 +9,8 @@ while the test-net end-point is located at `https://testnet.incognito.org/fullno
 
 To interact with the Incognito network, first import the `incclient` package and initialize an Incognito client by calling `NewMainNetClient` which by default connects to the mainnet end-point above. If you wish to connect to the testnet, try `NewTestNetClient`.
 
+To use the local [UTXO cache layer](../accounts/utxo_cache.md), try initializing a client with a post-fix `WithCache` (e.g, `NewMainNetClientWithCache`).
+
 ## Examples
 [client.go](../../code/client/client.go)
 
@@ -22,7 +24,7 @@ import (
 )
 
 func main() {
-	incClient, err := incclient.NewMainNetClient()
+	incClient, err := incclient.NewMainNetClient() // or use incclient.NewMainNetClientWithCache()
 	if err != nil {
 		log.Fatal(err)
 	}

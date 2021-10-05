@@ -89,6 +89,15 @@ const (
 	PDEFeeWithdrawalRequestMeta           = metadataCommon.PDEFeeWithdrawalRequestMeta
 	PDEFeeWithdrawalResponseMeta          = metadataCommon.PDEFeeWithdrawalResponseMeta
 	PDETradingFeesDistributionMeta        = metadataCommon.PDETradingFeesDistributionMeta
+	// erc20/bep20 for prv token
+	IssuingPRVERC20RequestMeta  = metadataCommon.IssuingPRVERC20RequestMeta
+	IssuingPRVERC20ResponseMeta = metadataCommon.IssuingPRVERC20ResponseMeta
+	IssuingPRVBEP20RequestMeta  = metadataCommon.IssuingPRVBEP20RequestMeta
+	IssuingPRVBEP20ResponseMeta = metadataCommon.IssuingPRVBEP20ResponseMeta
+	BurningPRVERC20RequestMeta  = metadataCommon.BurningPRVERC20RequestMeta
+	BurningPRVERC20ConfirmMeta  = metadataCommon.BurningPRVERC20ConfirmMeta
+	BurningPRVBEP20RequestMeta  = metadataCommon.BurningPRVBEP20RequestMeta
+	BurningPRVBEP20ConfirmMeta  = metadataCommon.BurningPRVBEP20ConfirmMeta
 	// pDEX v3
 	Pdexv3TradeRequestMeta          = metadataCommon.Pdexv3TradeRequestMeta
 	Pdexv3TradeResponseMeta         = metadataCommon.Pdexv3TradeResponseMeta

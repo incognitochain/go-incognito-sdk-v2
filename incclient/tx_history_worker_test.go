@@ -9,7 +9,7 @@ import (
 
 func TestTxHistoryProcessor_GetTxsIn(t *testing.T) {
 	var err error
-	ic, err = NewDevNetClient()
+	ic, err = NewTestNetClient()
 	if err != nil {
 		panic(err)
 	}
@@ -38,7 +38,7 @@ func TestTxHistoryProcessor_GetTxsIn(t *testing.T) {
 
 func TestTxHistoryProcessor_GetTxsOut(t *testing.T) {
 	var err error
-	ic, err = NewDevNetClient()
+	ic, err = NewTestNetClient()
 	if err != nil {
 		panic(err)
 	}

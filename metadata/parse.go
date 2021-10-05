@@ -36,11 +36,19 @@ func ParseMetadata(metaInBytes []byte) (Metadata, error) {
 		md = &IssuingRequest{}
 	case IssuingResponseMeta:
 		md = &IssuingResponse{}
+	case IssuingPRVERC20RequestMeta:
+		md = &IssuingEVMRequest{}
+	case IssuingPRVBEP20RequestMeta:
+		md = &IssuingEVMRequest{}
 	case ContractingRequestMeta:
 		md = &ContractingRequest{}
 	case IssuingETHRequestMeta:
 		md = &IssuingEVMRequest{}
 	case IssuingETHResponseMeta:
+		md = &IssuingEVMResponse{}
+	case IssuingPRVERC20ResponseMeta:
+		md = &IssuingEVMResponse{}
+	case IssuingPRVBEP20ResponseMeta:
 		md = &IssuingEVMResponse{}
 	case IssuingBSCRequestMeta:
 		md = &IssuingEVMRequest{}
@@ -51,6 +59,10 @@ func ParseMetadata(metaInBytes []byte) (Metadata, error) {
 	case BurningRequestMetaV2:
 		md = &BurningRequest{}
 	case BurningPBSCRequestMeta:
+		md = &BurningRequest{}
+	case BurningPRVBEP20RequestMeta:
+		md = &BurningRequest{}
+	case BurningPRVERC20RequestMeta:
 		md = &BurningRequest{}
 	case ShardStakingMeta:
 		md = &StakingMetadata{}

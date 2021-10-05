@@ -18,6 +18,17 @@ func (server *RPCServer) GetBurnProofForSC(txHash string) ([]byte, error) {
 	return server.SendQuery(getBurnProofForDepositToSC, params)
 }
 
+// GetBurnPRVPeggingProof retrieves the burning prv pegging proof of a transaction.
+func (server *RPCServer) GetBurnPRVPeggingProof(txHash string, isBSC ...bool) ([]byte, error) {
+	method := getPRVERC20BurnProof
+	if len(isBSC) > 0 && isBSC[0] {
+		method = getPRVBEP20BurnProof
+	}
+	params := make([]interface{}, 0)
+	params = append(params, txHash)
+	return server.SendQuery(method, params)
+}
+
 // CheckShieldStatus checks the status of a decentralized shielding transaction.
 func (server *RPCServer) CheckShieldStatus(txHash string) ([]byte, error) {
 	tmpParams := make(map[string]interface{})
