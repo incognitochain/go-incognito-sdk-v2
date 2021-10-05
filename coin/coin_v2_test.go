@@ -24,7 +24,7 @@ func newRandomCoinCA(info *key.PaymentInfo, tokenID *common.Hash) (*CoinV2, erro
 	c.SetSharedConcealRandom(crypto.RandomScalar())
 	c.SetInfo(info.Message)
 
-	targetShardID := common.GetShardIDFromLastByte(pkBytes[len(pkBytes) - 1])
+	targetShardID := common.GetShardIDFromLastByte(pkBytes[len(pkBytes)-1])
 	// Increase index until have the right shardID
 	index := uint32(0)
 	publicOTA := info.PaymentAddress.GetOTAPublicKey() // For generating one-time-address
@@ -96,7 +96,6 @@ func makeTokenID(numTokens int) ([]*common.Hash, map[string]*common.Hash) {
 func TestCoinV2_GetTokenId(t *testing.T) {
 	tokenIDList, rawAssetTags := makeTokenID(1000)
 
-
 	for i := 0; i < 1000; i++ {
 		shardID := byte(common.RandInt() % common.MaxShardNumber)
 		keyWallet, err := wallet.GenRandomWalletForShardID(shardID)
@@ -106,7 +105,7 @@ func TestCoinV2_GetTokenId(t *testing.T) {
 		keySet := keyWallet.KeySet
 
 		paymentInfo := key.InitPaymentInfo(keySet.PaymentAddress, common.RandUint64(), nil)
-		tokenId := tokenIDList[common.RandInt() % len(tokenIDList)]
+		tokenId := tokenIDList[common.RandInt()%len(tokenIDList)]
 
 		randomCoin, err := newRandomCoinCA(paymentInfo, tokenId)
 		if err != nil {
@@ -122,7 +121,7 @@ func TestCoinV2_GetTokenId(t *testing.T) {
 			panic(fmt.Errorf("require the tokenId to be %v, got %v", tokenId.String(), recoveredTokenId.String()))
 		}
 
-		if i % 10 == 0 {
+		if i%10 == 0 {
 			log.Printf("Finished %v\n", i)
 		}
 	}

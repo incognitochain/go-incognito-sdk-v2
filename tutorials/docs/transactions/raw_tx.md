@@ -1,6 +1,9 @@
 ---
 Description: Tutorial on how to create a PRV transaction in Incognito.
 ---
+# Before Going Further
+Please read through the tutorials on [key submission](../accounts/submit_key.md) and [UTXO cache](../accounts/utxo_cache.md) for proper
+balance and UTXO retrieval. Skip these parts if you're familiar with these notions.
 
 # Transferring PRV
 In this tutorial, we'll learn how to transfer PRV from one account to another account. 
@@ -10,7 +13,7 @@ step to create a PRV transaction.
 
 ## Get ourselves connected to the network
 ```go
-client, err := incclient.NewTestNet1Client()
+client, err := incclient.NewTestNet1Client() // use `NewTestNet1ClientWithCache()` if you prefer the local UTX cache
 if err != nil {
     log.Fatal(err)
 }

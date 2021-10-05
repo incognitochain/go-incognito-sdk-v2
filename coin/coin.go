@@ -68,6 +68,8 @@ type PlainCoin interface {
 
 	Bytes() []byte
 	SetBytes([]byte) error
+
+	DoesCoinBelongToKeySet(keySet *key.KeySet) (bool, *crypto.Point)
 }
 
 // NewPlainCoinFromByte parse a new PlainCoin from its bytes.

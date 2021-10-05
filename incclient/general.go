@@ -33,6 +33,26 @@ func (client *IncClient) AuthorizedSubmitKey(otaKey string, accessToken string, 
 	return nil
 }
 
+// GetKeySubmissionStatus returns the status of a submitted OTAKey.
+// The returned state could be:
+//	- 0: StatusNotSubmitted or ErrorOccurred
+//	- 1: StatusIndexing
+//	- 2: StatusKeySubmittedUsual
+//	- 3: StatusIndexingFinished
+func (client *IncClient) GetKeySubmissionStatus(otaKey string) (int, error) {
+	responseInBytes, err := client.rpcServer.GetKeySubmissionInfo(otaKey)
+	if err != nil {
+		return 0, err
+	}
+
+	var status int
+	err = rpchandler.ParseResponse(responseInBytes, &status)
+	if err != nil {
+		return 0, err
+	}
+	return status, nil
+}
+
 // NewRPCCall creates and sends a new RPC request based on the given method and parameters to the RPC server.
 //
 // Example call: NewRPCCall("1.0", "getbeaconbeststate", nil, 1)

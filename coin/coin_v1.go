@@ -317,6 +317,11 @@ func (pc *PlainCoinV1) SetBytes(coinBytes []byte) error {
 	return nil
 }
 
+// DoesCoinBelongToKeySet checks if a PlainCoinV1 belongs to the given key set.
+func (pc *PlainCoinV1) DoesCoinBelongToKeySet(keySet *key.KeySet) (bool, *crypto.Point) {
+	return crypto.IsPointEqual(keySet.PaymentAddress.GetPublicSpend(), pc.GetPublicKey()), nil
+}
+
 // CoinV1 implements the Coin interface. It is mainly used as an output coin of a transaction v1.
 //
 // It contains CoinDetails and CoinDetailsEncrypted (encrypted value and randomness).
@@ -574,4 +579,26 @@ func (c *CoinV1) CheckCoinValid(paymentAdd key.PaymentAddress, _ []byte, amount 
 // DoesCoinBelongToKeySet checks if a CoinV1 belongs to the given key set.
 func (c *CoinV1) DoesCoinBelongToKeySet(keySet *key.KeySet) (bool, *crypto.Point) {
 	return crypto.IsPointEqual(keySet.PaymentAddress.GetPublicSpend(), c.GetPublicKey()), nil
+}
+
+// MarshalJSON converts coin to a byte-array.
+func (c CoinV1) MarshalJSON() ([]byte, error) {
+	data := c.Bytes()
+	temp := base58.Base58Check{}.Encode(data, common.ZeroByte)
+	return json.Marshal(temp)
+}
+
+// UnmarshalJSON converts a slice of bytes (was Marshalled before) into a CoinV1 objects.
+func (c *CoinV1) UnmarshalJSON(data []byte) error {
+	dataStr := ""
+	_ = json.Unmarshal(data, &dataStr)
+	temp, _, err := base58.Base58Check{}.Decode(dataStr)
+	if err != nil {
+		return err
+	}
+	err = c.SetBytes(temp)
+	if err != nil {
+		return err
+	}
+	return nil
 }

@@ -5,8 +5,10 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"github.com/incognitochain/go-incognito-sdk-v2/common"
 	"math/big"
 	"strconv"
+	"sync"
 
 	rCommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
@@ -16,10 +18,32 @@ import (
 	"github.com/incognitochain/go-incognito-sdk-v2/rpchandler"
 )
 
+// BridgeTokenInfo describes the information of a bridge token.
+type BridgeTokenInfo struct {
+	TokenID         *common.Hash `json:"tokenId"`
+	Amount          uint64       `json:"amount"`
+	ExternalTokenID []byte       `json:"externalTokenId"`
+	Network         string       `json:"network"`
+	IsCentralized   bool         `json:"isCentralized"`
+}
+
 // GetEVMTxByHash retrieves an EVM transaction from its hash.
-func (client *IncClient) GetEVMTxByHash(tx string) (map[string]interface{}, error) {
+func (client *IncClient) GetEVMTxByHash(txHash string, isOnBSC ...bool) (map[string]interface{}, error) {
+	isBSC := false
+	if len(isOnBSC) > 0 && isOnBSC[0] {
+		isBSC = true
+	}
+
+	evmClient := client.ethServer
+	if isBSC {
+		evmClient = client.bscServer
+	}
+	if evmClient == nil {
+		return nil, fmt.Errorf("evmClient is nil")
+	}
+
 	method := "eth_getTransactionByHash"
-	params := []interface{}{tx}
+	params := []interface{}{txHash}
 
 	request := rpchandler.CreateJsonRequest("2.0", method, params, 1)
 	query, err := json.Marshal(request)
@@ -27,7 +51,7 @@ func (client *IncClient) GetEVMTxByHash(tx string) (map[string]interface{}, erro
 		return nil, err
 	}
 
-	responseInBytes, err := client.ethServer.SendPostRequestWithQuery(string(query))
+	responseInBytes, err := evmClient.SendPostRequestWithQuery(string(query))
 
 	if err != nil {
 		return nil, err
@@ -43,7 +67,20 @@ func (client *IncClient) GetEVMTxByHash(tx string) (map[string]interface{}, erro
 }
 
 // GetEVMBlockByHash retrieves an EVM block from its hash.
-func (client *IncClient) GetEVMBlockByHash(blockHash string) (map[string]interface{}, error) {
+func (client *IncClient) GetEVMBlockByHash(blockHash string, isOnBSC ...bool) (map[string]interface{}, error) {
+	isBSC := false
+	if len(isOnBSC) > 0 && isOnBSC[0] {
+		isBSC = true
+	}
+
+	evmClient := client.ethServer
+	if isBSC {
+		evmClient = client.bscServer
+	}
+	if evmClient == nil {
+		return nil, fmt.Errorf("evmClient is nil")
+	}
+
 	method := "eth_getBlockByHash"
 	params := []interface{}{blockHash, false}
 
@@ -53,7 +90,7 @@ func (client *IncClient) GetEVMBlockByHash(blockHash string) (map[string]interfa
 		return nil, err
 	}
 
-	responseInBytes, err := client.ethServer.SendPostRequestWithQuery(string(query))
+	responseInBytes, err := evmClient.SendPostRequestWithQuery(string(query))
 	if err != nil {
 		return nil, err
 	}
@@ -68,7 +105,20 @@ func (client *IncClient) GetEVMBlockByHash(blockHash string) (map[string]interfa
 }
 
 // GetEVMTxReceipt retrieves an EVM transaction receipt from its hash.
-func (client *IncClient) GetEVMTxReceipt(txHash string) (*types.Receipt, error) {
+func (client *IncClient) GetEVMTxReceipt(txHash string, isOnBSC ...bool) (*types.Receipt, error) {
+	isBSC := false
+	if len(isOnBSC) > 0 && isOnBSC[0] {
+		isBSC = true
+	}
+
+	evmClient := client.ethServer
+	if isBSC {
+		evmClient = client.bscServer
+	}
+	if evmClient == nil {
+		return nil, fmt.Errorf("evmClient is nil")
+	}
+
 	method := "eth_getTransactionReceipt"
 	params := []interface{}{txHash}
 
@@ -78,7 +128,7 @@ func (client *IncClient) GetEVMTxReceipt(txHash string) (*types.Receipt, error) 
 		return nil, err
 	}
 
-	responseInBytes, err := client.ethServer.SendPostRequestWithQuery(string(query))
+	responseInBytes, err := evmClient.SendPostRequestWithQuery(string(query))
 	if err != nil {
 		return nil, err
 	}
@@ -93,9 +143,14 @@ func (client *IncClient) GetEVMTxReceipt(txHash string) (*types.Receipt, error) 
 }
 
 // GetEVMDepositProof retrieves an EVM-depositing proof of a transaction hash.
-func (client *IncClient) GetEVMDepositProof(txHash string) (*EVMDepositProof, uint64, error) {
+func (client *IncClient) GetEVMDepositProof(txHash string, isOnBSC ...bool) (*EVMDepositProof, uint64, error) {
+	isBSC := false
+	if len(isOnBSC) > 0 && isOnBSC[0] {
+		isBSC = true
+	}
+
 	// Get tx content
-	txContent, err := client.GetEVMTxByHash(txHash)
+	txContent, err := client.GetEVMTxByHash(txHash, isBSC)
 	if err != nil {
 		Logger.Println("cannot get eth by hash", err)
 		return nil, 0, err
@@ -140,6 +195,7 @@ func (client *IncClient) GetEVMDepositProof(txHash string) (*EVMDepositProof, ui
 	if err != nil {
 		return nil, 0, err
 	}
+	Logger.Printf("txIndex: %v\n", txIndex)
 
 	// Get txs block for constructing receipt trie
 	_, ok = txContent["blockNumber"]
@@ -155,7 +211,7 @@ func (client *IncClient) GetEVMDepositProof(txHash string) (*EVMDepositProof, ui
 		return nil, 0, fmt.Errorf("cannot convert blockNumber into integer")
 	}
 
-	blockHeader, err := client.GetEVMBlockByHash(blockHashStr)
+	blockHeader, err := client.GetEVMBlockByHash(blockHashStr, isBSC)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -175,26 +231,43 @@ func (client *IncClient) GetEVMDepositProof(txHash string) (*EVMDepositProof, ui
 	// Constructing the receipt trie (source: go-ethereum/core/types/derive_sha.go)
 	keyBuf := new(bytes.Buffer)
 	receiptTrie := new(trie.Trie)
-	Logger.Println("Start creating receipt trie...")
-	for i, tx := range siblingTxs {
+	receipts := make([]*types.Receipt, 0)
+	for _, tx := range siblingTxs {
 		txStr, ok := tx.(string)
 		if !ok {
 			return nil, 0, fmt.Errorf("cannot parse sibling tx: %v", tx)
 		}
-		siblingReceipt, err := client.GetEVMTxReceipt(txStr)
+		siblingReceipt, err := client.GetEVMTxReceipt(txStr, isBSC)
 		if err != nil {
 			return nil, 0, err
 		}
-		keyBuf.Reset()
-		err = rlp.Encode(keyBuf, uint(i))
-		if err != nil {
-			return nil, 0, fmt.Errorf("rlp encode returns an error: %v", err)
-		}
-		encodedReceipt, err := rlp.EncodeToBytes(siblingReceipt)
-		if err != nil {
-			return nil, 0, err
-		}
-		receiptTrie.Update(keyBuf.Bytes(), encodedReceipt)
+		receipts = append(receipts, siblingReceipt)
+	}
+
+	receiptList := types.Receipts(receipts)
+	receiptTrie.Reset()
+
+	valueBuf := encodeBufferPool.Get().(*bytes.Buffer)
+	defer encodeBufferPool.Put(valueBuf)
+
+	// StackTrie requires values to be inserted in increasing hash order, which is not the
+	// order that `list` provides hashes in. This insertion sequence ensures that the
+	// order is correct.
+	var indexBuf []byte
+	for i := 1; i < receiptList.Len() && i <= 0x7f; i++ {
+		indexBuf = rlp.AppendUint64(indexBuf[:0], uint64(i))
+		value := encodeForDerive(receiptList, i, valueBuf)
+		receiptTrie.Update(indexBuf, value)
+	}
+	if receiptList.Len() > 0 {
+		indexBuf = rlp.AppendUint64(indexBuf[:0], 0)
+		value := encodeForDerive(receiptList, 0, valueBuf)
+		receiptTrie.Update(indexBuf, value)
+	}
+	for i := 0x80; i < receiptList.Len(); i++ {
+		indexBuf = rlp.AppendUint64(indexBuf[:0], uint64(i))
+		value := encodeForDerive(receiptList, i, valueBuf)
+		receiptTrie.Update(indexBuf, value)
 	}
 
 	Logger.Println("Finish creating receipt trie.")
@@ -224,7 +297,20 @@ func (client *IncClient) GetEVMDepositProof(txHash string) (*EVMDepositProof, ui
 }
 
 // GetMostRecentEVMBlockNumber retrieves the most recent EVM block number.
-func (client *IncClient) GetMostRecentEVMBlockNumber() (uint64, error) {
+func (client *IncClient) GetMostRecentEVMBlockNumber(isOnBSC ...bool) (uint64, error) {
+	isBSC := false
+	if len(isOnBSC) > 0 && isOnBSC[0] {
+		isBSC = true
+	}
+
+	evmClient := client.ethServer
+	if isBSC {
+		evmClient = client.bscServer
+	}
+	if evmClient == nil {
+		return 0, fmt.Errorf("evmClient is nil")
+	}
+
 	method := "eth_blockNumber"
 	params := make([]interface{}, 0)
 
@@ -234,7 +320,7 @@ func (client *IncClient) GetMostRecentEVMBlockNumber() (uint64, error) {
 		return 0, err
 	}
 
-	responseInBytes, err := client.ethServer.SendPostRequestWithQuery(string(query))
+	responseInBytes, err := evmClient.SendPostRequestWithQuery(string(query))
 
 	if err != nil {
 		return 0, err
@@ -255,11 +341,30 @@ func (client *IncClient) GetMostRecentEVMBlockNumber() (uint64, error) {
 }
 
 // GetEVMTransactionStatus returns the status of an EVM transaction.
-func (client *IncClient) GetEVMTransactionStatus(txHash string) (int, error) {
-	receipt, err := client.GetEVMTxReceipt(txHash)
+func (client *IncClient) GetEVMTransactionStatus(txHash string, isOnBSC ...bool) (int, error) {
+	isBSC := false
+	if len(isOnBSC) > 0 && isOnBSC[0] {
+		isBSC = true
+	}
+
+	receipt, err := client.GetEVMTxReceipt(txHash, isBSC)
 	if err != nil {
 		return -1, err
 	}
 
 	return int(receipt.Status), nil
+}
+
+func encodeForDerive(list types.DerivableList, i int, buf *bytes.Buffer) []byte {
+	buf.Reset()
+	list.EncodeIndex(i, buf)
+	// It's really unfortunate that we need to do perform this copy.
+	// StackTrie holds onto the values until Hash is called, so the values
+	// written to it must not alias.
+	return rCommon.CopyBytes(buf.Bytes())
+}
+
+// deriveBufferPool holds temporary encoder buffers for DeriveSha and TX encoding.
+var encodeBufferPool = sync.Pool{
+	New: func() interface{} { return new(bytes.Buffer) },
 }

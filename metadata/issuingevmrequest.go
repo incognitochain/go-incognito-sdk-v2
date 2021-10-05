@@ -10,7 +10,7 @@ import (
 type IssuingEVMRequest struct {
 	BlockHash  rCommon.Hash
 	TxIndex    uint
-	Proofs     []string
+	ProofStrs     []string
 	IncTokenID common.Hash
 	MetadataBase
 }
@@ -29,7 +29,7 @@ func NewIssuingEVMRequest(
 	issuingETHReq := &IssuingEVMRequest{
 		BlockHash:  blockHash,
 		TxIndex:    txIndex,
-		Proofs:     proofs,
+		ProofStrs:     proofs,
 		IncTokenID: incTokenID,
 	}
 	issuingETHReq.MetadataBase = metadataBase
@@ -40,7 +40,7 @@ func NewIssuingEVMRequest(
 func (iReq IssuingEVMRequest) Hash() *common.Hash {
 	record := iReq.BlockHash.String()
 	record += string(iReq.TxIndex)
-	proofs := iReq.Proofs
+	proofs := iReq.ProofStrs
 	for _, proofStr := range proofs {
 		record += proofStr
 	}

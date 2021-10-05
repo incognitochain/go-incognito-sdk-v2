@@ -103,3 +103,91 @@ func TestIncClient_GetSpentOutputCoins(t *testing.T) {
 			spentCoin.GetValue())
 	}
 }
+
+func TestIncClient_GetOTACoinsByIndices(t *testing.T) {
+	var err error
+	ic, err = NewMainNetClient()
+	if err != nil {
+		panic(err)
+	}
+
+	shardID := byte(0)
+	tokenID := common.PRVIDStr
+
+	for i := 0; i < 1; i++ {
+		lengths, err := ic.GetOTACoinLength()
+		if err != nil {
+			panic(err)
+		}
+
+		length := lengths[tokenID][shardID]
+		r := 1 + common.RandInt()%100
+		idxList := make([]uint64, 0)
+		for len(idxList) < r {
+			idxList = append(idxList, common.RandUint64()%length)
+		}
+
+		res, err := ic.GetOTACoinsByIndices(shardID, tokenID, idxList)
+		if err != nil {
+			panic(err)
+		}
+
+		Logger.Println(res)
+	}
+}
+
+func TestIncClient_GetOTACoinLength(t *testing.T) {
+	var err error
+	ic, err = NewMainNetClient()
+	if err != nil {
+		panic(err)
+	}
+
+	for i := 0; i < 100; i++ {
+		lengths, err := ic.GetOTACoinLength()
+		if err != nil {
+			panic(err)
+		}
+
+		Logger.Println(lengths)
+	}
+}
+
+func TestIncClient_GetOTACoinLengthByShard(t *testing.T) {
+	var err error
+	ic, err = NewMainNetClient()
+	if err != nil {
+		panic(err)
+	}
+
+	for i := 0; i < 10; i++ {
+		shardID := byte(common.RandInt() % common.MaxShardNumber)
+		isPRV := (common.RandInt() % 2) == 1
+		tokenID := common.PRVIDStr
+		if !isPRV {
+			tokenID = common.ConfidentialAssetID.String()
+		}
+
+		length, err := ic.GetOTACoinLengthByShard(shardID, tokenID)
+		if err != nil {
+			panic(err)
+		}
+
+		Logger.Println(shardID, tokenID, length)
+	}
+}
+
+func TestIncClient_BuildAssetTags(t *testing.T) {
+	var err error
+	ic, err = NewMainNetClient()
+	if err != nil {
+		panic(err)
+	}
+
+	assetTags, err := ic.GetAllAssetTags()
+	if err != nil {
+		panic(err)
+	}
+
+	Logger.Println(len(assetTags), assetTags)
+}

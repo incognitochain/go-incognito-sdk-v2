@@ -1,7 +1,9 @@
 package metadata
 
 import (
+	"encoding/base64"
 	"encoding/json"
+	"fmt"
 
 	"github.com/pkg/errors"
 )
@@ -42,11 +44,19 @@ func ParseMetadata(metaInBytes []byte) (Metadata, error) {
 		md = &IssuingRequest{}
 	case IssuingResponseMeta:
 		md = &IssuingResponse{}
+	case IssuingPRVERC20RequestMeta:
+		md = &IssuingEVMRequest{}
+	case IssuingPRVBEP20RequestMeta:
+		md = &IssuingEVMRequest{}
 	case ContractingRequestMeta:
 		md = &ContractingRequest{}
 	case IssuingETHRequestMeta:
 		md = &IssuingEVMRequest{}
 	case IssuingETHResponseMeta:
+		md = &IssuingEVMResponse{}
+	case IssuingPRVERC20ResponseMeta:
+		md = &IssuingEVMResponse{}
+	case IssuingPRVBEP20ResponseMeta:
 		md = &IssuingEVMResponse{}
 	case IssuingBSCRequestMeta:
 		md = &IssuingEVMRequest{}
@@ -57,6 +67,10 @@ func ParseMetadata(metaInBytes []byte) (Metadata, error) {
 	case BurningRequestMetaV2:
 		md = &BurningRequest{}
 	case BurningPBSCRequestMeta:
+		md = &BurningRequest{}
+	case BurningPRVBEP20RequestMeta:
+		md = &BurningRequest{}
+	case BurningPRVERC20RequestMeta:
 		md = &BurningRequest{}
 	case ShardStakingMeta:
 		md = &StakingMetadata{}
@@ -102,8 +116,12 @@ func ParseMetadata(metaInBytes []byte) (Metadata, error) {
 		md = &RelayingHeader{}
 	case PortalV4ShieldingRequestMeta:
 		md = &PortalShieldingRequest{}
-	case PortalV4UnShieldingRequestMeta:
+	case PortalV4ShieldingResponseMeta:
+		md = &PortalShieldingResponse{}
+	case PortalV4UnshieldingRequestMeta:
 		md = &PortalUnshieldRequest{}
+	case PortalV4UnshieldingResponseMeta:
+		md = &PortalUnshieldResponse{}
 	case PortalV4FeeReplacementRequestMeta:
 		md = &PortalReplacementFeeRequest{}
 	case PortalV4SubmitConfirmedTxMeta:
@@ -117,6 +135,26 @@ func ParseMetadata(metaInBytes []byte) (Metadata, error) {
 	err = json.Unmarshal(metaInBytes, &md)
 	if err != nil {
 		return nil, err
+	}
+
+	switch theType {
+	case WithDrawRewardRequestMeta:
+		tmpMd, ok := md.(*WithDrawRewardRequest)
+		if !ok {
+			return nil, fmt.Errorf("cannot parse metadata")
+		}
+		if mtTemp["Sig"] != nil {
+			tmpSig := mtTemp["Sig"]
+			sig, ok := tmpSig.(string)
+			if !ok {
+				return nil, fmt.Errorf("cannot parse signature as a string")
+			}
+			tmpMd.Sig, err = base64.StdEncoding.DecodeString(sig)
+			if err != nil {
+				return nil, err
+			}
+		}
+
 	}
 
 	return md, nil

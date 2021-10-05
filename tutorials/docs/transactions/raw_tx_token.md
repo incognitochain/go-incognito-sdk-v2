@@ -1,13 +1,16 @@
 ---
 Description: Tutorial on how to create a token transaction in Incognito.
 ---
+# Before Going Further
+Please read through the tutorials on [key submission](../accounts/submit_key.md) and [UTXO cache](../accounts/utxo_cache.md) for proper
+balance and UTXO retrieval. Skip these parts if you're familiar with these notions.
 
 # Transferring Token
 The processing of creating a token transaction is quite similar to that of creating a PRV transaction.
 
 ## Get ourselves connected to the network
 ```go
-client, err := incclient.NewTestNet1Client()
+client, err := incclient.NewTestNet1Client() // use `NewTestNet1ClientWithCache()` if you prefer the local UTX cache
 if err != nil {
     log.Fatal(err)
 }

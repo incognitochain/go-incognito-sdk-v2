@@ -16,6 +16,19 @@ type PortalUnshieldRequest struct {
 	UnshieldAmount uint64
 }
 
+// PortalUnshieldRequestStatus represents the status of an un-shield request on the Portal.
+type PortalUnshieldRequestStatus struct {
+	OTAPubKeyStr   string
+	TxRandomStr    string
+	RemoteAddress  string
+	TokenID        string
+	UnshieldAmount uint64
+	UnshieldID     string
+	ExternalTxID   string
+	ExternalFee    uint64
+	Status         int
+}
+
 // NewPortalUnshieldRequest creates a new PortalUnshieldRequest.
 func NewPortalUnshieldRequest(metaType int, otaPubKeyStr, txRandomStr string, tokenID, remoteAddress string, burnAmount uint64) (*PortalUnshieldRequest, error) {
 	portalUnshieldReq := &PortalUnshieldRequest{

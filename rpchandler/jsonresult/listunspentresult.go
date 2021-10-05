@@ -7,6 +7,7 @@ import (
 	"github.com/incognitochain/go-incognito-sdk-v2/common"
 	"github.com/incognitochain/go-incognito-sdk-v2/common/base58"
 	"github.com/incognitochain/go-incognito-sdk-v2/crypto"
+	"github.com/incognitochain/go-incognito-sdk-v2/key"
 	"github.com/incognitochain/go-incognito-sdk-v2/privacy"
 	"math/big"
 	"strconv"
@@ -29,6 +30,11 @@ type ICoinInfo interface {
 	GetSharedRandom() *crypto.Scalar
 	GetSharedConcealRandom() *crypto.Scalar
 	GetAssetTag() *crypto.Point
+	MarshalJSON() ([]byte, error)
+	UnmarshalJSON(data []byte) error
+	Bytes() []byte
+	SetBytes(bytes []byte) error
+	DoesCoinBelongToKeySet(keySet *key.KeySet) (bool, *crypto.Point)
 }
 
 // ListOutputCoins is a list of output coins returned by an RPC response.

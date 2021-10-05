@@ -11,12 +11,12 @@ type InstructionProof struct {
 	BeaconInstRoot       string   // Hex encoded root of the inst merkle tree
 	BeaconBlkData        string   // Hex encoded hash of the block meta
 	BeaconSigs           []string // Hex encoded signature (r, s, v)
-	BeaconSigIndices     []int    // Indices of signer
+	BeaconSigIndices     []int    `json:"BeaconSigIdxs"` // Indices of signer
 
 	BridgeInstPath       []string
 	BridgeInstPathIsLeft []bool
 	BridgeInstRoot       string
 	BridgeBlkData        string
 	BridgeSigs           []string
-	BridgeSigIndices     []int
+	BridgeSigIndices     []int `json:"BridgeSigIdxs"`
 }

@@ -17,7 +17,7 @@ func (server *RPCServer) GetListOutputCoinsByRPCV1(outCoinKey *OutCoinKey, token
 
 	params := make([]interface{}, 0)
 	params = append(params, 0)
-	params = append(params, 999999)
+	params = append(params, h)
 	params = append(params, []interface{}{keyParams})
 	params = append(params, tokenID)
 
@@ -39,6 +39,21 @@ func (server *RPCServer) GetListOutputCoinsByRPCV2(outCoinKey *OutCoinKey, token
 	params = append(params, tokenID)
 
 	return server.SendQuery(listOutputCoinsFromCache, params)
+}
+
+// GetOTACoinsByIndices returns the list of output coins given the indices.
+func (server *RPCServer) GetOTACoinsByIndices(shardID byte, tokenID string, idxList []uint64) ([]byte, error) {
+	mapParams := make(map[string]interface{})
+	mapParams["ShardID"] = shardID
+	mapParams["TokenID"] = tokenID
+	mapParams["Indices"] = idxList
+
+	return server.SendQuery(getOTACoinsByIndices, []interface{}{mapParams})
+}
+
+// GetOTACoinLength returns the number of OTA coins for each shard.
+func (server *RPCServer) GetOTACoinLength() ([]byte, error) {
+	return server.SendQuery(getOTACoinLength, []interface{}{})
 }
 
 // ListUnspentOutputCoinsByRPC retrieves list of output coins of an OutCoinKey and returns the result in raw json bytes.
@@ -144,6 +159,14 @@ func (server *RPCServer) AuthorizedSubmitKey(otaStr string, accessToken string, 
 	params = append(params, isReset)
 
 	return server.SendQuery(authorizedSubmitKey, params)
+}
+
+// GetKeySubmissionInfo returns the information of an OTAKey if it has been submitted.
+func (server *RPCServer) GetKeySubmissionInfo(otaStr string) ([]byte, error) {
+	params := make([]interface{}, 0)
+	params = append(params, otaStr)
+
+	return server.SendQuery(getKeySubmissionInfo, params)
 }
 
 // RandomCommitments gets a list of random commitments to create transactions of version 1.

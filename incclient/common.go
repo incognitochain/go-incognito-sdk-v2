@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/incognitochain/go-incognito-sdk-v2/common"
 	"github.com/incognitochain/go-incognito-sdk-v2/common/base58"
+	"github.com/incognitochain/go-incognito-sdk-v2/key"
 	"github.com/incognitochain/go-incognito-sdk-v2/metadata"
 	"github.com/incognitochain/go-incognito-sdk-v2/wallet"
 )
@@ -183,3 +184,66 @@ func GetShardIDFromPrivateKey(privateKey string) byte {
 	}
 	return common.GetShardIDFromLastByte(pubKey[len(pubKey)-1])
 }
+
+// GetShardIDFromPaymentAddress returns the shardID where the payment address resides in.
+//
+// If the private key is invalid, it returns 255.
+func GetShardIDFromPaymentAddress(addrStr string) (byte, error) {
+	keyWallet, err := wallet.Base58CheckDeserialize(addrStr)
+	if err != nil {
+		return 255, err
+	}
+
+	pubKey := keyWallet.KeySet.PaymentAddress.Pk
+	if pubKey == nil {
+		return 255, fmt.Errorf("publicKey is nil")
+	}
+	return common.GetShardIDFromLastByte(pubKey[len(pubKey)-1]), nil
+}
+
+// AssertPaymentAddressAndTxVersion checks if a string payment address is supported by the underlying transaction.
+func AssertPaymentAddressAndTxVersion(paymentAddress interface{}, version int8) (key.PaymentAddress, error) {
+	var addr key.PaymentAddress
+	var ok bool
+	//try to parse the payment address
+	if addr, ok = paymentAddress.(key.PaymentAddress); !ok {
+		//try the pointer
+		if tmpAddr, ok := paymentAddress.(*key.PaymentAddress); !ok {
+			//try the string one
+			addrStr, ok := paymentAddress.(string)
+			if !ok {
+				return key.PaymentAddress{}, fmt.Errorf("cannot parse payment address - %v: Not a payment address or string address (txversion %v)", paymentAddress, version)
+			}
+			keyWallet, err := wallet.Base58CheckDeserialize(addrStr)
+			if err != nil {
+				return key.PaymentAddress{}, err
+			}
+			addr = keyWallet.KeySet.PaymentAddress
+		} else {
+			addr = *tmpAddr
+		}
+	}
+
+	//Always check public spend and public view keys
+	if addr.GetPublicSpend() == nil || addr.GetPublicView() == nil {
+		return key.PaymentAddress{}, fmt.Errorf("PublicSpend or PublicView not found")
+	}
+
+	//If tx is in version 1, PublicOTAKey must be nil
+	if version == 1 {
+		if addr.GetOTAPublicKey() != nil {
+			return key.PaymentAddress{}, fmt.Errorf("PublicOTAKey must be nil")
+		}
+	}
+
+	//If tx is in version 2, PublicOTAKey must not be nil
+	if version == 2 {
+		if addr.GetOTAPublicKey() == nil {
+			return key.PaymentAddress{}, fmt.Errorf("PublicOTAKey not found")
+		}
+	}
+
+	return addr, nil
+}
+
+var rawAssetTags map[string]*common.Hash

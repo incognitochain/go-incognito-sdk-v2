@@ -290,7 +290,7 @@ func (client *IncClient) convertPRVs(id int, privateKey string,
 		return
 	}
 
-	Logger.Printf("[ID %v] TotalUTXOAmount: %v\n", totalAmount)
+	Logger.Printf("[ID %v] TotalUTXOAmount: %v\n", id, totalAmount)
 
 	encodedTx, txHash, err := client.CreateConversionTransactionWithInputCoins(privateKey, inputCoins)
 	if err != nil {
@@ -337,7 +337,7 @@ func (client *IncClient) convertTokens(id int, privateKey, tokenIDStr string,
 		return
 	}
 
-	Logger.Printf("[ID %v] TotalUTXOAmount: %v\n", totalAmount)
+	Logger.Printf("[ID %v] TotalUTXOAmount: %v\n", id, totalAmount)
 
 	encodedTx, txHash, err := client.CreateTokenConversionTransactionWithInputCoins(privateKey, tokenIDStr,
 		inputCoins, prvInputCoins, prvIndices)
