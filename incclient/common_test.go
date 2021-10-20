@@ -19,6 +19,8 @@ func init() {
 	Logger.Println("This runs before test!!")
 }
 
+var ic *IncClient
+
 // waitingCheckTxInBlock waits and checks until a transaction has been included in a block.
 //
 // In case the transaction is invalid, it stops.
