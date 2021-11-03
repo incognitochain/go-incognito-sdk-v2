@@ -6,7 +6,7 @@ const (
 	MainNetBSCContractAddressStr      = "0x43D037A562099A4C2c95b1E2120cc43054450629"
 	MainNetPRVERC20ContractAddressStr = "0xB64fde8f199F073F41c132B9eC7aD5b61De0B1B7"
 	MainNetPRVBEP20ContractAddressStr = "0xB64fde8f199F073F41c132B9eC7aD5b61De0B1B7"
-	MainNetFullNode                   = "https://beta-fullnode.incognito.org/fullnode"
+	MainNetFullNode                   = "https://testnet.incognito.org/fullnode"
 	MainNetETHHost                    = "https://mainnet.infura.io/v3/34918000975d4374a056ed78fe21c517"
 	MainNetBSCHost                    = "https://bsc-dataseed.binance.org"
 	MainNetPrivacyVersion             = 2
@@ -30,7 +30,7 @@ const (
 	TestNet1BSCContractAddressStr = "0x1ce57B254DC2DBB41e1aeA296Dc7dBD6fb549241"
 	TestNet1PRVERC20ContractAddressStr = "0x917637E3E1ee531231747690189e22C5FA38D88C"
 	TestNet1PRVBEP20ContractAddressStr = "0x3d2E0c1b0b2d81D1A76544E6cC08670af9b86531"
-	TestNet1FullNode              = "https://testnet1.incognito.org/fullnode"
+	TestNet1FullNode              = "https://testnet.incognito.org/fullnode"
 	TestNet1ETHHost               = "https://kovan.infura.io/v3/93fe721349134964aa71071a713c5cef"
 	TestNet1BSCHost               = "https://data-seed-prebsc-2-s1.binance.org:8545"
 	TestNet1PrivacyVersion        = 2
