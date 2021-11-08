@@ -132,90 +132,27 @@ func (client *IncClient) CheckPrice(pairID, tokenToSell string, sellAmount uint6
 	return buyAmount, nil
 }
 
-// GetShareAmount retrieves the share amount of a payment address in pDEX pool of tokenID1 and tokenID2.
-// func (client *IncClient) GetShareAmount(beaconHeight uint64, tokenID1, tokenID2, paymentAddress string) (uint64, error) {
-// 	if beaconHeight == 0 {
-// 		bestBlocks, err := client.GetBestBlock()
-// 		if err != nil {
-// 			return 0, fmt.Errorf("cannot get best blocks: %v", err)
-// 		}
-// 		beaconHeight = bestBlocks[-1]
-// 	}
+// CheckNFTMintingStatus retrieves the status of a (pDEX) NFT minting transaction.
+func (client *IncClient) CheckNFTMintingStatus(txHash string) (bool, string, error) {
+	responseInBytes, err := client.rpcServer.CheckNFTMintingStatus(txHash)
+	if err != nil {
+		return false, "", err
+	}
+	type TmpResult struct {
+		ID string `json:"NftID"`
+		Status int `json:"Status"`
+	}
+	var res TmpResult
+	err = rpchandler.ParseResponse(responseInBytes, &res)
+	if err != nil {
+		return false, "", err
+	}
+	if res.Status != 1 {
+		return false, "", fmt.Errorf("minting failed with status %v", res.Status)
+	}
 
-// 	pdeState, err := client.GetPDEState(beaconHeight)
-// 	if err != nil {
-// 		return 0, err
-// 	}
-
-// 	allShares := pdeState.Shares
-// 	shareKey, err := BuildPDEShareKey(beaconHeight, tokenID1, tokenID2, paymentAddress)
-// 	if err != nil {
-// 		return 0, fmt.Errorf("cannot build the pDEX share key")
-// 	}
-
-// 	if amount, ok := allShares[string(shareKey)]; ok {
-// 		return amount, nil
-// 	} else {
-// 		return 0, nil
-// 	}
-
-// }
-
-// GetAllShares retrieves all shares in pDEX a user has contributed.
-// func (client *IncClient) GetAllShares(beaconHeight uint64, paymentAddress string) ([]*Share, error) {
-// 	if beaconHeight == 0 {
-// 		bestBlocks, err := client.GetBestBlock()
-// 		if err != nil {
-// 			return nil, fmt.Errorf("cannot get best blocks: %v", err)
-// 		}
-// 		beaconHeight = bestBlocks[-1]
-// 	}
-
-// 	pdeState, err := client.GetPDEState(beaconHeight)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-
-// 	allShares := pdeState.PDEShares
-// 	keyAddr, err := wallet.GetPaymentAddressV1(paymentAddress, false)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-
-// 	res := make([]*Share, 0)
-// 	for key, value := range allShares {
-// 		if strings.Contains(key, keyAddr) {
-// 			sliceStrings := strings.Split(key, "-")
-// 			res = append(res, &Share{
-// 				TokenID1Str: sliceStrings[2],
-// 				TokenID2Str: sliceStrings[3],
-// 				ShareAmount: value,
-// 			})
-// 		}
-// 	}
-
-// 	return res, nil
-// }
-
-// GetTotalSharesAmount retrieves the total shares' amount of a pDEX pool.
-// func (client *IncClient) GetTotalSharesAmount(beaconHeight uint64, tokenID1, tokenID2 string) (uint64, error) {
-// 	pdeState, err := client.GetPDEState(beaconHeight)
-// 	if err != nil {
-// 		return 0, err
-// 	}
-
-// 	totalSharesAmount := uint64(0)
-
-// 	allShares := pdeState.PDEShares
-// 	poolKey := BuildPDEPoolKey(tokenID1, tokenID2)
-// 	for shareKey, amount := range allShares {
-// 		if strings.Contains(shareKey, poolKey) {
-// 			totalSharesAmount += amount
-// 		}
-// 	}
-
-// 	return totalSharesAmount, nil
-// }
+	return true, res.ID, nil
+}
 
 // CheckTradeStatus checks the status of a trading transaction.
 // It returns
