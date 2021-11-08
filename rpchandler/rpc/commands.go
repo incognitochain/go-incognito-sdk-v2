@@ -233,6 +233,8 @@ const (
 	convertPDEPrices                           = "convertpdeprices"
 	extractPDEInstsFromBeaconBlock             = "extractpdeinstsfrombeaconblock"
 
+	pdexv3GetState = "pdexv3_getState"
+
 	// get burning address
 	getBurningAddress = "getburningaddress"
 

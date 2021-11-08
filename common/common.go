@@ -3,6 +3,7 @@ package common
 import (
 	"encoding/binary"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	ethCrypto "github.com/ethereum/go-ethereum/crypto"
 	"math/big"
@@ -119,6 +120,11 @@ func B2ImN(bytes []byte) *big.Int {
 	return x
 }
 
+func PrintJson(obj interface{}, descFormat string, a ...interface{}) {
+	jsonEncoded, _ := json.MarshalIndent(obj, "", "  ")
+	fmt.Printf("%s:\n%s\n\n", fmt.Sprintf(descFormat, a...), string(jsonEncoded))
+}
+
 var (
 	MaxTxSize = uint64(100) // unit KB = 100KB
 )
@@ -126,6 +132,7 @@ var (
 var (
 	PRVCoinID           = Hash{4}
 	ConfidentialAssetID = Hash{5}
+	PDEXCoinID          = Hash{6}
 	MaxShardNumber      = 8 //programmatically config based on networkID
 	AddressVersion      = 1
 )

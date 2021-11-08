@@ -2,9 +2,9 @@ package main
 
 import (
 	"fmt"
-	"github.com/incognitochain/go-incognito-sdk-v2/common"
-	"github.com/incognitochain/go-incognito-sdk-v2/incclient"
 	"log"
+
+	"github.com/incognitochain/go-incognito-sdk-v2/incclient"
 )
 
 func main() {
@@ -13,19 +13,22 @@ func main() {
 		log.Fatal(err)
 	}
 
-	privateKey := "112t8rneWAhErTC8YUFTnfcKHvB1x6uAVdehy1S8GP2psgqDxK3RHouUcd69fz88oAL9XuMyQ8mBY5FmmGJdcyrpwXjWBXRpoWwgJXjsxi4j"
+	// replace with your network's data
+	privateKey := ""
+	// Trade between some tokens
+	tokenToSell := "fd0febf5a30be293a3e241aeb860ce843f49415ac5914e4e96b428e195af9d50"
+	tokenToBuy := "3609431c4404eb5fd91607f5afcb427afe02c9cf2ff64bf0970880eb56c03b48"
+	sellAmount := uint64(500)
+	expectedAmount := uint64(470)
+	tradePath := []string{"3609431c4404eb5fd91607f5afcb427afe02c9cf2ff64bf0970880eb56c03b48-fd0febf5a30be293a3e241aeb860ce843f49415ac5914e4e96b428e195af9d50-be93d713532275875bbe5d9411f7e1e2634355b8aeb1039b4b83e3468839c1c4"}
+	// expectedAmount, err := client.CheckXPrice(tokenToSell, tokenToBuy, sellAmount)
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+	tradingFee := uint64(50)
+	feeInPRV := false
 
-	//Trade PRV to tokens
-	tokenToSell := common.PRVIDStr
-	tokenToBuy := "0000000000000000000000000000000000000000000000000000000000000100"
-	sellAmount := uint64(500000000)
-	expectedAmount, err := client.CheckXPrice(tokenToSell, tokenToBuy, sellAmount)
-	if err != nil {
-		log.Fatal(err)
-	}
-	tradingFee := uint64(10)
-
-	txHash, err := client.CreateAndSendPDETradeTransaction(privateKey, tokenToSell, tokenToBuy, sellAmount, expectedAmount, tradingFee)
+	txHash, err := client.CreateAndSendPdexv3TradeTransaction(privateKey, tradePath, tokenToSell, tokenToBuy, sellAmount, expectedAmount, tradingFee, feeInPRV)
 	if err != nil {
 		log.Fatal(err)
 	}
