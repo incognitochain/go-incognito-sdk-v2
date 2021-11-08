@@ -8,15 +8,24 @@ type ConvertedPrice struct {
 	Price          uint64
 }
 
+// DEXTradeStatus represents the status of a pDEX v3 trade.
+type DEXTradeStatus struct {
+	// Status represents the status of the trade: 0 - trade not found or trade refunded; 1 - trade accepted.
+	Status     int    `json:"Status"`
+
+	// BuyAmount is the receiving amount of the trade (in case of failure, it equals to 0).
+	BuyAmount  uint64 `json:"BuyAmount"`
+
+	// TokenToBuy is the buying tokenId.
+	TokenToBuy string `json:"TokenToBuy"`
+}
+
 // CheckTradeStatus retrieves the status of a trading transaction.
 func (server *RPCServer) CheckTradeStatus(txHash string) ([]byte, error) {
-	mapParam := make(map[string]interface{})
-	mapParam["TxRequestIDStr"] = txHash
-
 	params := make([]interface{}, 0)
-	params = append(params, mapParam)
+	params = append(params, txHash)
 
-	return server.SendQuery(getPDETradeStatus, params)
+	return server.SendQuery(pdexv3GetTradeStatus, params)
 }
 
 // CheckNFTMintingStatus retrieves the status of an NFT minting transaction.

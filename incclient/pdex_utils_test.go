@@ -5,6 +5,22 @@ import (
 	"time"
 )
 
+func TestIncClient_CheckTradeStatus(t *testing.T) {
+	var err error
+	ic, err = NewTestNetClientWithCache()
+	if err != nil {
+		panic(err)
+	}
+
+	txHash := "e4c13e368eb4da34ebcd04aaf9da9a401d5f55df752f3d1c650331a19f69a53a"
+	status, err := ic.CheckTradeStatus(txHash)
+	if err != nil {
+		panic(err)
+	}
+
+	Logger.Printf("status: %v\n", status)
+}
+
 func TestIncClient_CheckNFTMintingStatus(t *testing.T) {
 	var err error
 	ic, err = NewTestNetClientWithCache()
