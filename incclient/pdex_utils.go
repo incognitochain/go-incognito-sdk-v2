@@ -2,6 +2,7 @@ package incclient
 
 import (
 	"fmt"
+	"github.com/incognitochain/go-incognito-sdk-v2/rpchandler/rpc"
 	"math/big"
 	"sort"
 	"strings"
@@ -165,13 +166,13 @@ func (client *IncClient) CheckTradeStatus(txHash string) (int, error) {
 		return -1, err
 	}
 
-	var tradeStatus int
+	var tradeStatus rpc.DEXTradeStatus
 	err = rpchandler.ParseResponse(responseInBytes, &tradeStatus)
 	if err != nil {
 		return -1, err
 	}
 
-	return tradeStatus, err
+	return tradeStatus.Status, nil
 }
 
 // BuildPdexShareKey constructs a key for retrieving contributed shares in pDEX.
