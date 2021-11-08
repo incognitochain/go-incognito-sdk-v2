@@ -19,6 +19,14 @@ func (server *RPCServer) CheckTradeStatus(txHash string) ([]byte, error) {
 	return server.SendQuery(getPDETradeStatus, params)
 }
 
+// CheckNFTMintingStatus retrieves the status of an NFT minting transaction.
+func (server *RPCServer) CheckNFTMintingStatus(txHash string) ([]byte, error) {
+	params := make([]interface{}, 0)
+	params = append(params, txHash)
+
+	return server.SendQuery(getPdexv3MintNftStatus, params)
+}
+
 // GetPdexState retrieves the pDEX state at the given beacon height.
 func (server *RPCServer) GetPdexState(beaconHeight uint64, filter map[string]interface{}) ([]byte, error) {
 	mapParams := make(map[string]interface{})
@@ -31,7 +39,7 @@ func (server *RPCServer) GetPdexState(beaconHeight uint64, filter map[string]int
 	params := make([]interface{}, 0)
 	params = append(params, mapParams)
 
-	return server.SendQuery(pdexv3GetState, params)
+	return server.SendQuery(getPdexv3State, params)
 }
 
 // ConvertPdexPrice gets the pDEX to check the price between to tokens.
