@@ -89,6 +89,37 @@ func (client *IncClient) GetPdexPoolPair(beaconHeight uint64, tokenID1, tokenID2
 	return results, nil
 }
 
+// GetPoolPairStateByID returns the pool pair state of a given poolID at the provided beacon height.
+// If the beacon height is set to 0, it returns the latest information.
+func (client *IncClient) GetPoolPairStateByID(beaconHeight uint64, poolID string) (*jsonresult.Pdexv3PoolPairState, error) {
+	allPoolPairs, err := client.GetAllPdexPoolPairs(beaconHeight)
+	if err != nil {
+		 return nil, err
+	}
+
+	poolPair, ok := allPoolPairs[poolID]
+	if !ok {
+		return nil, fmt.Errorf("poolID %v not found", poolID)
+	}
+
+	return poolPair, nil
+}
+
+// GetPoolShareAmount returns the share amount of a pDEX nftID with-in a given poolID.
+func (client *IncClient) GetPoolShareAmount(poolID, nftID string) (uint64, error) {
+	pool, err := client.GetPoolPairStateByID(0, poolID)
+	if err != nil {
+		return 0, err
+	}
+
+	share, ok := pool.Shares[nftID]
+	if !ok {
+		return 0, fmt.Errorf("share of nftID %v not found for poolID %v", nftID, poolID)
+	}
+
+	return share.Amount, nil
+}
+
 func calculateBuyAmount(amountIn uint64, virtualReserveIn *big.Int, virtualReserveOut *big.Int) (uint64, error) {
 	if amountIn <= 0 {
 		return 0, fmt.Errorf("invalid input amount %d", amountIn)
