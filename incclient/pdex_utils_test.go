@@ -47,3 +47,17 @@ func TestIncClient_CheckNFTMintingStatus(t *testing.T) {
 	}
 	Logger.Printf("status: %v, NftID: %v\n", status, ID)
 }
+
+func TestIncClient_GetListNftIDs(t *testing.T) {
+	var err error
+	ic, err = NewTestNetClient()
+	if err != nil {
+		panic(err)
+	}
+
+	nftList, err := ic.GetListNftIDs(0)
+	if err != nil {
+		panic(err)
+	}
+	Logger.Println(nftList)
+}
