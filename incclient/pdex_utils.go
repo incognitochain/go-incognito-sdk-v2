@@ -23,7 +23,7 @@ type Share struct {
 
 // GetPdexState retrieves the state of pDEX at the provided beacon height.
 // If the beacon height is set to 0, it returns the latest pDEX state.
-func (client *IncClient) GetPdexState(beaconHeight uint64, filter map[string]interface{}) (*jsonresult.CurrentPdexState, error) {
+func (client *IncClient) GetPdexState(beaconHeight uint64) (*jsonresult.CurrentPdexState, error) {
 	if beaconHeight == 0 {
 		bestBlocks, err := client.GetBestBlock()
 		if err != nil {
@@ -32,7 +32,7 @@ func (client *IncClient) GetPdexState(beaconHeight uint64, filter map[string]int
 		beaconHeight = bestBlocks[-1]
 	}
 
-	responseInBytes, err := client.rpcServer.GetPdexState(beaconHeight, filter)
+	responseInBytes, err := client.rpcServer.GetPdexState(beaconHeight)
 	if err != nil {
 		return nil, err
 	}
@@ -49,7 +49,7 @@ func (client *IncClient) GetPdexState(beaconHeight uint64, filter map[string]int
 // GetAllPdexPoolPairs retrieves all pools in pDEX at the provided beacon height.
 // If the beacon height is set to 0, it returns the latest pDEX pool pairs.
 func (client *IncClient) GetAllPdexPoolPairs(beaconHeight uint64) (map[string]*jsonresult.Pdexv3PoolPairState, error) {
-	pdeState, err := client.GetPdexState(beaconHeight, nil)
+	pdeState, err := client.GetPdexState(beaconHeight)
 	if err != nil {
 		return nil, err
 	}
@@ -173,6 +173,30 @@ func (client *IncClient) CheckTradeStatus(txHash string) (int, error) {
 	}
 
 	return tradeStatus.Status, nil
+}
+
+// GetListNftIDs returns the all pDEX minted nftIDs information till the given beacon block height.
+// If the beacon height is set to 0, it returns the latest information.
+func (client *IncClient) GetListNftIDs(beaconHeight uint64) (map[string]uint64, error) {
+	filter := make(map[string]interface{})
+	filter["Key"] = "NftIDs"
+	filter["Verbosity"] = 1
+	filter["ID"] = ""
+
+	responseInBytes, err := client.rpcServer.GetPdexState(beaconHeight, filter)
+	if err != nil {
+		return nil, err
+	}
+	type NftResults struct {
+		NftIDs map[string]uint64 `json:"NftIDs"`
+	}
+	var res NftResults
+	err = rpchandler.ParseResponse(responseInBytes, &res)
+	if err != nil {
+		return nil, err
+	}
+
+	return res.NftIDs, nil
 }
 
 // BuildPdexShareKey constructs a key for retrieving contributed shares in pDEX.

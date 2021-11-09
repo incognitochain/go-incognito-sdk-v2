@@ -37,12 +37,13 @@ func (server *RPCServer) CheckNFTMintingStatus(txHash string) ([]byte, error) {
 }
 
 // GetPdexState retrieves the pDEX state at the given beacon height.
-func (server *RPCServer) GetPdexState(beaconHeight uint64, filter map[string]interface{}) ([]byte, error) {
+func (server *RPCServer) GetPdexState(beaconHeight uint64, filters ...map[string]interface{}) ([]byte, error) {
+	filter := make(map[string]interface{})
+	if len(filters) > 0 {
+		filter = filters[0]
+	}
 	mapParams := make(map[string]interface{})
 	mapParams["BeaconHeight"] = beaconHeight
-	if filter == nil {
-		filter = make(map[string]interface{})
-	}
 	mapParams["Filter"] = filter
 
 	params := make([]interface{}, 0)
