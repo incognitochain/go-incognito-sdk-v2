@@ -86,6 +86,38 @@ func TestIncClient_CheckLiquidityWithdrawalStatus(t *testing.T) {
 	Logger.Printf("status: %v\n", status)
 }
 
+func TestIncClient_CheckOrderAddedStatus(t *testing.T) {
+	var err error
+	ic, err = NewTestNetClient()
+	if err != nil {
+		panic(err)
+	}
+
+	txHash := "91c1571bd0debf386f3c99c475b7d71394c531d6640d8cafc35515d7e2b0d568"
+	status, err := ic.CheckOrderAddingStatus(txHash)
+	if err != nil {
+		panic(err)
+	}
+
+	Logger.Printf("status: %v\n", status)
+}
+
+func TestIncClient_CheckOrderWithdrawalStatus(t *testing.T) {
+	var err error
+	ic, err = NewTestNetClient()
+	if err != nil {
+		panic(err)
+	}
+
+	txHash := "9e10c30df9a042290060561e0367ec21f6fce04c6a51c8f9276605a97643424a"
+	status, err := ic.CheckOrderWithdrawalStatus(txHash)
+	if err != nil {
+		panic(err)
+	}
+
+	Logger.Printf("status: %v\n", status)
+}
+
 func TestIncClient_CheckNFTMintingStatus(t *testing.T) {
 	var err error
 	ic, err = NewTestNetClientWithCache()

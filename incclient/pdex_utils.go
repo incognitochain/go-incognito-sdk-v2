@@ -231,6 +231,38 @@ func (client *IncClient) CheckDEXLiquidityWithdrawalStatus(txHash string) (*rpc.
 	return &res, nil
 }
 
+// CheckOrderAddingStatus checks the status of an order-book adding transaction.
+func (client *IncClient) CheckOrderAddingStatus(txHash string) (*rpc.AddOrderStatus, error) {
+	responseInBytes, err := client.rpcServer.CheckAddOrderStatus(txHash)
+	if err != nil {
+		return nil, err
+	}
+
+	var res rpc.AddOrderStatus
+	err = rpchandler.ParseResponse(responseInBytes, &res)
+	if err != nil {
+		return nil, err
+	}
+
+	return &res, nil
+}
+
+// CheckOrderWithdrawalStatus checks the status of an order-book withdrawing transaction.
+func (client *IncClient) CheckOrderWithdrawalStatus(txHash string) (*rpc.WithdrawOrderStatus, error) {
+	responseInBytes, err := client.rpcServer.CheckOrderWithdrawalStatus(txHash)
+	if err != nil {
+		return nil, err
+	}
+
+	var res rpc.WithdrawOrderStatus
+	err = rpchandler.ParseResponse(responseInBytes, &res)
+	if err != nil {
+		return nil, err
+	}
+
+	return &res, nil
+}
+
 // GetListNftIDs returns the all pDEX minted nftIDs information till the given beacon block height.
 // If the beacon height is set to 0, it returns the latest information.
 func (client *IncClient) GetListNftIDs(beaconHeight uint64) (map[string]uint64, error) {

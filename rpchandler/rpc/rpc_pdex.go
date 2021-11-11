@@ -56,8 +56,8 @@ type DEXAddLiquidityStatus struct {
 // DEXWithdrawLiquidityStatus represents the status of a pDEX v3 liquidity withdrawal.
 type DEXWithdrawLiquidityStatus struct {
 	// Status represents the status of the transaction, and should be understood as follows:
-	//	- 1: the withdrawal is accepted;
-	//	- 2: the withdrawal is rejected.
+	//	- 1: the request is accepted;
+	//	- 2: the request is rejected.
 	Status int `json:"Status"`
 
 	// Token0ID is the ID of the first token.
@@ -76,8 +76,8 @@ type DEXWithdrawLiquidityStatus struct {
 // MintNFTStatus represents the status of a pDEX nft minting transaction.
 type MintNFTStatus struct {
 	// Status represents the status of the transaction, and should be understood as follows:
-	//	- 1: the minting request is accepted;
-	//	- 2: the minting request is rejected.
+	//	- 1: the request is accepted;
+	//	- 2: the request is rejected.
 	Status int `json:"Status"`
 
 	// BurntAmount is the amount of PRV that was burned to mint this NFT.
@@ -85,6 +85,31 @@ type MintNFTStatus struct {
 
 	// NftID is the ID of the minted NFT.
 	NftID string `json:"NftID"`
+}
+
+// AddOrderStatus represents the status of a pDEX OB-adding transaction.
+type AddOrderStatus struct {
+	// Status represents the status of the transaction, and should be understood as follows:
+	//	- 0: the request is rejected;
+	//	- 1: the request is accepted.
+	Status int `json:"Status"`
+
+	// OrderID is the ID of the requesting order.
+	OrderID string `json:"OrderID"`
+}
+
+// WithdrawOrderStatus represents the status of a pDEX OB-withdrawing transaction.
+type WithdrawOrderStatus struct {
+	// Status represents the status of the transaction, and should be understood as follows:
+	//	- 1: the request is rejected;
+	//	- 1: the request is accepted.
+	Status int `json:"Status"`
+
+	// TokenID is the ID of the withdrawn token.
+	TokenID string `json:"TokenID"`
+
+	// Amount is the withdrawn amount.
+	Amount uint64 `json:"Amount"`
 }
 
 // CheckTradeStatus retrieves the status of a trading transaction.
@@ -124,7 +149,7 @@ func (server *RPCServer) CheckOrderWithdrawalStatus(txHash string) ([]byte, erro
 	params := make([]interface{}, 0)
 	params = append(params, txHash)
 
-	return server.SendQuery(pdexv3TxWithdrawOrder, params)
+	return server.SendQuery(pdexv3GetWithdrawOrderStatus, params)
 }
 
 // CheckNFTMintingStatus retrieves the status of an NFT minting transaction.
