@@ -40,13 +40,45 @@ func TestIncClient_GetPoolShareAmount(t *testing.T) {
 
 func TestIncClient_CheckTradeStatus(t *testing.T) {
 	var err error
-	ic, err = NewTestNetClientWithCache()
+	ic, err = NewTestNetClient()
 	if err != nil {
 		panic(err)
 	}
 
 	txHash := "e4c13e368eb4da34ebcd04aaf9da9a401d5f55df752f3d1c650331a19f69a53a"
 	status, err := ic.CheckTradeStatus(txHash)
+	if err != nil {
+		panic(err)
+	}
+
+	Logger.Printf("status: %v\n", status)
+}
+
+func TestIncClient_CheckAddLiquidityStatus(t *testing.T) {
+	var err error
+	ic, err = NewTestNetClient()
+	if err != nil {
+		panic(err)
+	}
+
+	txHash := "928ca5fef7f8274f025c5184240f3b5b13f310e2a11dd553b8fa656901e0827f"
+	status, err := ic.CheckDEXLiquidityWithdrawalStatus(txHash)
+	if err != nil {
+		panic(err)
+	}
+
+	Logger.Printf("status: %v\n", status)
+}
+
+func TestIncClient_CheckLiquidityWithdrawalStatus(t *testing.T) {
+	var err error
+	ic, err = NewTestNetClient()
+	if err != nil {
+		panic(err)
+	}
+
+	txHash := "13fd37a90bb838d3402c37fc4b11c3715ef847bfcc397d4fff3a04b351e12388"
+	status, err := ic.CheckDEXLiquidityWithdrawalStatus(txHash)
 	if err != nil {
 		panic(err)
 	}
