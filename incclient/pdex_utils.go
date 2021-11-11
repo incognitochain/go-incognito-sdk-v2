@@ -94,7 +94,7 @@ func (client *IncClient) GetPdexPoolPair(beaconHeight uint64, tokenID1, tokenID2
 func (client *IncClient) GetPoolPairStateByID(beaconHeight uint64, poolID string) (*jsonresult.Pdexv3PoolPairState, error) {
 	allPoolPairs, err := client.GetAllPdexPoolPairs(beaconHeight)
 	if err != nil {
-		 return nil, err
+		return nil, err
 	}
 
 	poolPair, ok := allPoolPairs[poolID]
@@ -165,45 +165,102 @@ func (client *IncClient) CheckPrice(pairID, tokenToSell string, sellAmount uint6
 }
 
 // CheckNFTMintingStatus retrieves the status of a (pDEX) NFT minting transaction.
-func (client *IncClient) CheckNFTMintingStatus(txHash string) (bool, string, error) {
+func (client *IncClient) CheckNFTMintingStatus(txHash string) (*rpc.MintNFTStatus, error) {
 	responseInBytes, err := client.rpcServer.CheckNFTMintingStatus(txHash)
 	if err != nil {
-		return false, "", err
+		return nil, err
 	}
 	type TmpResult struct {
-		ID string `json:"NftID"`
-		Status int `json:"Status"`
+		ID     string `json:"NftID"`
+		Status int    `json:"Status"`
 	}
-	var res TmpResult
+	var res rpc.MintNFTStatus
 	err = rpchandler.ParseResponse(responseInBytes, &res)
 	if err != nil {
-		return false, "", err
-	}
-	if res.Status != 1 {
-		return false, "", fmt.Errorf("minting failed with status %v", res.Status)
+		return nil, err
 	}
 
-	return true, res.ID, nil
+	return &res, nil
 }
 
 // CheckTradeStatus checks the status of a trading transaction.
-// It returns
-//	- -1: if an error occurred;
-//	- 1: if the trade is accepted;
-//	- 2: if the trade is not accepted.
-func (client *IncClient) CheckTradeStatus(txHash string) (int, error) {
+func (client *IncClient) CheckTradeStatus(txHash string) (*rpc.DEXTradeStatus, error) {
 	responseInBytes, err := client.rpcServer.CheckTradeStatus(txHash)
 	if err != nil {
-		return -1, err
+		return nil, err
 	}
 
-	var tradeStatus rpc.DEXTradeStatus
-	err = rpchandler.ParseResponse(responseInBytes, &tradeStatus)
+	var res rpc.DEXTradeStatus
+	err = rpchandler.ParseResponse(responseInBytes, &res)
 	if err != nil {
-		return -1, err
+		return nil, err
 	}
 
-	return tradeStatus.Status, nil
+	return &res, nil
+}
+
+// CheckDEXLiquidityContributionStatus checks the status of a liquidity-contributing transaction.
+func (client *IncClient) CheckDEXLiquidityContributionStatus(txHash string) (*rpc.DEXAddLiquidityStatus, error) {
+	responseInBytes, err := client.rpcServer.CheckDEXLiquidityContributionStatus(txHash)
+	if err != nil {
+		return nil, err
+	}
+
+	var res rpc.DEXAddLiquidityStatus
+	err = rpchandler.ParseResponse(responseInBytes, &res)
+	if err != nil {
+		return nil, err
+	}
+
+	return &res, nil
+}
+
+// CheckDEXLiquidityWithdrawalStatus checks the status of a liquidity-withdrawal transaction.
+func (client *IncClient) CheckDEXLiquidityWithdrawalStatus(txHash string) (*rpc.DEXWithdrawLiquidityStatus, error) {
+	responseInBytes, err := client.rpcServer.CheckDEXLiquidityWithdrawalStatus(txHash)
+	if err != nil {
+		return nil, err
+	}
+
+	var res rpc.DEXWithdrawLiquidityStatus
+	err = rpchandler.ParseResponse(responseInBytes, &res)
+	if err != nil {
+		return nil, err
+	}
+
+	return &res, nil
+}
+
+// CheckOrderAddingStatus checks the status of an order-book adding transaction.
+func (client *IncClient) CheckOrderAddingStatus(txHash string) (*rpc.AddOrderStatus, error) {
+	responseInBytes, err := client.rpcServer.CheckAddOrderStatus(txHash)
+	if err != nil {
+		return nil, err
+	}
+
+	var res rpc.AddOrderStatus
+	err = rpchandler.ParseResponse(responseInBytes, &res)
+	if err != nil {
+		return nil, err
+	}
+
+	return &res, nil
+}
+
+// CheckOrderWithdrawalStatus checks the status of an order-book withdrawing transaction.
+func (client *IncClient) CheckOrderWithdrawalStatus(txHash string) (*rpc.WithdrawOrderStatus, error) {
+	responseInBytes, err := client.rpcServer.CheckOrderWithdrawalStatus(txHash)
+	if err != nil {
+		return nil, err
+	}
+
+	var res rpc.WithdrawOrderStatus
+	err = rpchandler.ParseResponse(responseInBytes, &res)
+	if err != nil {
+		return nil, err
+	}
+
+	return &res, nil
 }
 
 // GetListNftIDs returns the all pDEX minted nftIDs information till the given beacon block height.

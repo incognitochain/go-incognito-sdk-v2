@@ -107,7 +107,6 @@ type Pdexv3StakingPoolState struct {
 	RewardsPerShare map[common.Hash]*big.Int
 }
 
-
 type Pdexv3Staker struct {
 	Liquidity           uint64
 	Rewards             map[common.Hash]uint64

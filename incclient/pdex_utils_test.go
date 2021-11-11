@@ -40,13 +40,77 @@ func TestIncClient_GetPoolShareAmount(t *testing.T) {
 
 func TestIncClient_CheckTradeStatus(t *testing.T) {
 	var err error
-	ic, err = NewTestNetClientWithCache()
+	ic, err = NewTestNetClient()
 	if err != nil {
 		panic(err)
 	}
 
 	txHash := "e4c13e368eb4da34ebcd04aaf9da9a401d5f55df752f3d1c650331a19f69a53a"
 	status, err := ic.CheckTradeStatus(txHash)
+	if err != nil {
+		panic(err)
+	}
+
+	Logger.Printf("status: %v\n", status)
+}
+
+func TestIncClient_CheckAddLiquidityStatus(t *testing.T) {
+	var err error
+	ic, err = NewTestNetClient()
+	if err != nil {
+		panic(err)
+	}
+
+	txHash := "928ca5fef7f8274f025c5184240f3b5b13f310e2a11dd553b8fa656901e0827f"
+	status, err := ic.CheckDEXLiquidityWithdrawalStatus(txHash)
+	if err != nil {
+		panic(err)
+	}
+
+	Logger.Printf("status: %v\n", status)
+}
+
+func TestIncClient_CheckLiquidityWithdrawalStatus(t *testing.T) {
+	var err error
+	ic, err = NewTestNetClient()
+	if err != nil {
+		panic(err)
+	}
+
+	txHash := "13fd37a90bb838d3402c37fc4b11c3715ef847bfcc397d4fff3a04b351e12388"
+	status, err := ic.CheckDEXLiquidityWithdrawalStatus(txHash)
+	if err != nil {
+		panic(err)
+	}
+
+	Logger.Printf("status: %v\n", status)
+}
+
+func TestIncClient_CheckOrderAddedStatus(t *testing.T) {
+	var err error
+	ic, err = NewTestNetClient()
+	if err != nil {
+		panic(err)
+	}
+
+	txHash := "91c1571bd0debf386f3c99c475b7d71394c531d6640d8cafc35515d7e2b0d568"
+	status, err := ic.CheckOrderAddingStatus(txHash)
+	if err != nil {
+		panic(err)
+	}
+
+	Logger.Printf("status: %v\n", status)
+}
+
+func TestIncClient_CheckOrderWithdrawalStatus(t *testing.T) {
+	var err error
+	ic, err = NewTestNetClient()
+	if err != nil {
+		panic(err)
+	}
+
+	txHash := "9e10c30df9a042290060561e0367ec21f6fce04c6a51c8f9276605a97643424a"
+	status, err := ic.CheckOrderWithdrawalStatus(txHash)
 	if err != nil {
 		panic(err)
 	}
@@ -74,11 +138,11 @@ func TestIncClient_CheckNFTMintingStatus(t *testing.T) {
 
 	time.Sleep(100 * time.Second)
 
-	status, ID, err := ic.CheckNFTMintingStatus(txHash)
+	status, err := ic.CheckNFTMintingStatus(txHash)
 	if err != nil {
 		panic(err)
 	}
-	Logger.Printf("status: %v, NftID: %v\n", status, ID)
+	Logger.Printf("status: %v\n", status)
 }
 
 func TestIncClient_GetListNftIDs(t *testing.T) {
