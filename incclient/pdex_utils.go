@@ -165,25 +165,22 @@ func (client *IncClient) CheckPrice(pairID, tokenToSell string, sellAmount uint6
 }
 
 // CheckNFTMintingStatus retrieves the status of a (pDEX) NFT minting transaction.
-func (client *IncClient) CheckNFTMintingStatus(txHash string) (bool, string, error) {
+func (client *IncClient) CheckNFTMintingStatus(txHash string) (*rpc.MintNFTStatus, error) {
 	responseInBytes, err := client.rpcServer.CheckNFTMintingStatus(txHash)
 	if err != nil {
-		return false, "", err
+		return nil, err
 	}
 	type TmpResult struct {
 		ID     string `json:"NftID"`
 		Status int    `json:"Status"`
 	}
-	var res TmpResult
+	var res rpc.MintNFTStatus
 	err = rpchandler.ParseResponse(responseInBytes, &res)
 	if err != nil {
-		return false, "", err
-	}
-	if res.Status != 1 {
-		return false, "", fmt.Errorf("minting failed with status %v", res.Status)
+		return nil, err
 	}
 
-	return true, res.ID, nil
+	return &res, nil
 }
 
 // CheckTradeStatus checks the status of a trading transaction.

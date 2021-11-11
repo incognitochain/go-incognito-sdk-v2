@@ -106,11 +106,11 @@ func TestIncClient_CheckNFTMintingStatus(t *testing.T) {
 
 	time.Sleep(100 * time.Second)
 
-	status, ID, err := ic.CheckNFTMintingStatus(txHash)
+	status, err := ic.CheckNFTMintingStatus(txHash)
 	if err != nil {
 		panic(err)
 	}
-	Logger.Printf("status: %v, NftID: %v\n", status, ID)
+	Logger.Printf("status: %v\n", status)
 }
 
 func TestIncClient_GetListNftIDs(t *testing.T) {

@@ -73,6 +73,20 @@ type DEXWithdrawLiquidityStatus struct {
 	Token1Amount uint64 `json:"Token1Amount"`
 }
 
+// MintNFTStatus represents the status of a pDEX nft minting transaction.
+type MintNFTStatus struct {
+	// Status represents the status of the transaction, and should be understood as follows:
+	//	- 1: the minting request is accepted;
+	//	- 2: the minting request is rejected.
+	Status int `json:"Status"`
+
+	// BurntAmount is the amount of PRV that was burned to mint this NFT.
+	BurntAmount uint64 `json:"BurntAmount"`
+
+	// NftID is the ID of the minted NFT.
+	NftID string `json:"NftID"`
+}
+
 // CheckTradeStatus retrieves the status of a trading transaction.
 func (server *RPCServer) CheckTradeStatus(txHash string) ([]byte, error) {
 	params := make([]interface{}, 0)
