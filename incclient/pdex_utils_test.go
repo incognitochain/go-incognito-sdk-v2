@@ -118,6 +118,38 @@ func TestIncClient_CheckOrderWithdrawalStatus(t *testing.T) {
 	Logger.Printf("status: %v\n", status)
 }
 
+func TestIncClient_CheckDexStakingStatus(t *testing.T) {
+	var err error
+	ic, err = NewTestNetClient()
+	if err != nil {
+		panic(err)
+	}
+
+	txHash := "c34e765399681aba33189498c37262eb1d4bb2568e0e60378a0428cbaa97f205"
+	status, err := ic.CheckDEXStakingStatus(txHash)
+	if err != nil {
+		panic(err)
+	}
+
+	Logger.Printf("status: %v\n", status)
+}
+
+func TestIncClient_CheckDexUnStakingStatus(t *testing.T) {
+	var err error
+	ic, err = NewTestNetClient()
+	if err != nil {
+		panic(err)
+	}
+
+	txHash := "6e2e6bb4a671c9d991cc48d211d57770a15ae90b1324b7da8552efcc57292df8"
+	status, err := ic.CheckDEXUnStakingStatus(txHash)
+	if err != nil {
+		panic(err)
+	}
+
+	Logger.Printf("status: %v\n", status)
+}
+
 func TestIncClient_CheckNFTMintingStatus(t *testing.T) {
 	var err error
 	ic, err = NewTestNetClientWithCache()

@@ -11,8 +11,8 @@ type ConvertedPrice struct {
 // DEXTradeStatus represents the status of a pDEX v3 trade.
 type DEXTradeStatus struct {
 	// Status represents the status of the trade, and should be understood as follows:
-	// 	- 0: trade not found or trade refunded;
-	//	- 1: trade accepted.
+	// 	- 0: the trade request is refunded;
+	//	- 1: the trade request is accepted.
 	Status int `json:"Status"`
 
 	// BuyAmount is the receiving amount of the trade (in case of failure, it equals to 0).
@@ -112,6 +112,40 @@ type WithdrawOrderStatus struct {
 	Amount uint64 `json:"Amount"`
 }
 
+// DEXStakeStatus represents the status of a pDEX staking transaction.
+type DEXStakeStatus struct {
+	// Status represents the status of the transaction, and should be understood as follows:
+	//	- 1: the request is rejected;
+	//	- 1: the request is accepted.
+	Status int `json:"Status"`
+
+	// NftID is the ID of the NFT associated with the action.
+	NftID string `json:"NftID"`
+
+	// StakingPoolID is the ID of the pool.
+	StakingPoolID string `json:"StakingPoolID"`
+
+	// Liquidity is the staked amount.
+	Liquidity uint64 `json:"Liquidity"`
+}
+
+// DEXUnStakeStatus represents the status of a pDEX un-staking transaction.
+type DEXUnStakeStatus struct {
+	// Status represents the status of the transaction, and should be understood as follows:
+	//	- 1: the request is rejected;
+	//	- 1: the request is accepted.
+	Status int `json:"Status"`
+
+	// NftID is the ID of the NFT associated with the action.
+	NftID string `json:"NftID"`
+
+	// StakingPoolID is the ID of the pool.
+	StakingPoolID string `json:"StakingPoolID"`
+
+	// Liquidity is the un-staked amount.
+	Liquidity uint64 `json:"Liquidity"`
+}
+
 // CheckTradeStatus retrieves the status of a trading transaction.
 func (server *RPCServer) CheckTradeStatus(txHash string) ([]byte, error) {
 	params := make([]interface{}, 0)
@@ -158,6 +192,22 @@ func (server *RPCServer) CheckNFTMintingStatus(txHash string) ([]byte, error) {
 	params = append(params, txHash)
 
 	return server.SendQuery(getPdexv3MintNftStatus, params)
+}
+
+// CheckDEXStakingStatus retrieves the status of a pDEX staking transaction.
+func (server *RPCServer) CheckDEXStakingStatus(txHash string) ([]byte, error) {
+	params := make([]interface{}, 0)
+	params = append(params, txHash)
+
+	return server.SendQuery(pdexv3GetStakingStatus, params)
+}
+
+// CheckDEXUnStakingStatus retrieves the status of a pDEX un-staking transaction.
+func (server *RPCServer) CheckDEXUnStakingStatus(txHash string) ([]byte, error) {
+	params := make([]interface{}, 0)
+	params = append(params, txHash)
+
+	return server.SendQuery(pdexv3GetUnstakingStatus, params)
 }
 
 // GetPdexState retrieves the pDEX state at the given beacon height.
