@@ -223,7 +223,7 @@ func (client *IncClient) CreateAndSendPdexv3AddOrderTransaction(privateKey, pair
 //
 // It returns the base58-encoded transaction, the transaction's hash, and an error (if any).
 func (client *IncClient) CreatePdexv3WithdrawOrder(privateKey, pairID, orderID string,
-	withdrawTokenIDs []string, nftIDStr string, amount uint64) ([]byte, string, error) {
+	nftIDStr string, amount uint64, withdrawTokenIDs ...string) ([]byte, string, error) {
 	senderWallet, err := wallet.Base58CheckDeserialize(privateKey)
 	if err != nil {
 		return nil, "", err
@@ -235,6 +235,12 @@ func (client *IncClient) CreatePdexv3WithdrawOrder(privateKey, pairID, orderID s
 	}
 
 	tokenList := []common.Hash{*nftID}
+	if len(withdrawTokenIDs) == 0 {
+		withdrawTokenIDs, err = getTokenIDsFromPairID(pairID)
+		if err != nil {
+			return nil, "", err
+		}
+	}
 	for _, v := range withdrawTokenIDs {
 		temp, err := common.Hash{}.NewHashFromStr(v)
 		if err != nil {
@@ -242,6 +248,7 @@ func (client *IncClient) CreatePdexv3WithdrawOrder(privateKey, pairID, orderID s
 		}
 		tokenList = append(tokenList, *temp)
 	}
+
 	otaReceivers, err := GenerateOTAReceivers(tokenList, senderWallet.KeySet.PaymentAddress)
 	if err != nil {
 		return nil, "", err
@@ -259,8 +266,8 @@ func (client *IncClient) CreatePdexv3WithdrawOrder(privateKey, pairID, orderID s
 //
 // It returns the transaction's hash, and an error (if any).
 func (client *IncClient) CreateAndSendPdexv3WithdrawOrderTransaction(privateKey, pairID, orderID string,
-	withdrawTokenIDs []string, nftIDStr string, amount uint64) (string, error) {
-	encodedTx, txHash, err := client.CreatePdexv3WithdrawOrder(privateKey, pairID, orderID, withdrawTokenIDs, nftIDStr, amount)
+	nftIDStr string, amount uint64, withdrawTokenIDs ...string) (string, error) {
+	encodedTx, txHash, err := client.CreatePdexv3WithdrawOrder(privateKey, pairID, orderID, nftIDStr, amount, withdrawTokenIDs...)
 	if err != nil {
 		return "", err
 	}
@@ -412,14 +419,13 @@ func (client *IncClient) CreatePdexv3WithdrawLPFee(privateKey, pairID string,
 		if err != nil {
 			return nil, "", err
 		}
-	} else {
-		for _, v := range withdrawTokenIDs {
-			temp, err := common.Hash{}.NewHashFromStr(v)
-			if err != nil {
-				return nil, "", err
-			}
-			tokenList = append(tokenList, *temp)
+	}
+	for _, v := range withdrawTokenIDs {
+		temp, err := common.Hash{}.NewHashFromStr(v)
+		if err != nil {
+			return nil, "", err
 		}
+		tokenList = append(tokenList, *temp)
 	}
 
 	otaReceivers, err := GenerateOTAReceivers(tokenList, senderWallet.KeySet.PaymentAddress)
