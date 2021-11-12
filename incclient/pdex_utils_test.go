@@ -118,6 +118,54 @@ func TestIncClient_CheckOrderWithdrawalStatus(t *testing.T) {
 	Logger.Printf("status: %v\n", status)
 }
 
+func TestIncClient_CheckDexStakingStatus(t *testing.T) {
+	var err error
+	ic, err = NewTestNetClient()
+	if err != nil {
+		panic(err)
+	}
+
+	txHash := "c34e765399681aba33189498c37262eb1d4bb2568e0e60378a0428cbaa97f205"
+	status, err := ic.CheckDEXStakingStatus(txHash)
+	if err != nil {
+		panic(err)
+	}
+
+	Logger.Printf("status: %v\n", status)
+}
+
+func TestIncClient_CheckDexUnStakingStatus(t *testing.T) {
+	var err error
+	ic, err = NewTestNetClient()
+	if err != nil {
+		panic(err)
+	}
+
+	txHash := "6e2e6bb4a671c9d991cc48d211d57770a15ae90b1324b7da8552efcc57292df8"
+	status, err := ic.CheckDEXUnStakingStatus(txHash)
+	if err != nil {
+		panic(err)
+	}
+
+	Logger.Printf("status: %v\n", status)
+}
+
+func TestIncClient_CheckDEXStakingRewardWithdrawalStatus(t *testing.T) {
+	var err error
+	ic, err = NewTestNetClient()
+	if err != nil {
+		panic(err)
+	}
+
+	txHash := "c657f36d7cf5058dc9df694e58ec5cf02509e611830968cb58f353480cf4baa6"
+	status, err := ic.CheckDEXStakingRewardWithdrawalStatus(txHash)
+	if err != nil {
+		panic(err)
+	}
+
+	Logger.Printf("status: %v\n", status)
+}
+
 func TestIncClient_CheckNFTMintingStatus(t *testing.T) {
 	var err error
 	ic, err = NewTestNetClientWithCache()
@@ -143,6 +191,25 @@ func TestIncClient_CheckNFTMintingStatus(t *testing.T) {
 		panic(err)
 	}
 	Logger.Printf("status: %v\n", status)
+}
+
+func TestIncClient_GetEstimatedDEXStakingReward(t *testing.T) {
+	var err error
+	ic, err = NewTestNetClient()
+	if err != nil {
+		panic(err)
+	}
+
+	stakingPoolID := "0000000000000000000000000000000000000000000000000000000000000004"
+	nftID := "eb1ec0987a37829831c8d947ef2c48f8ab6ada4b02d99e82039ca5977570bd0c"
+	beaconHeight := uint64(0)
+
+	res, err := ic.GetEstimatedDEXStakingReward(beaconHeight, stakingPoolID, nftID)
+	if err != nil {
+		panic(err)
+	}
+
+	Logger.Printf("status: %v\n", res)
 }
 
 func TestIncClient_GetListNftIDs(t *testing.T) {

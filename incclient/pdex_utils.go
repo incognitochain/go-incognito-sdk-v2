@@ -2,7 +2,7 @@ package incclient
 
 import (
 	"fmt"
-	"github.com/incognitochain/go-incognito-sdk-v2/rpchandler/rpc"
+	"github.com/incognitochain/go-incognito-sdk-v2/common"
 	"math/big"
 	"sort"
 	"strings"
@@ -165,7 +165,7 @@ func (client *IncClient) CheckPrice(pairID, tokenToSell string, sellAmount uint6
 }
 
 // CheckNFTMintingStatus retrieves the status of a (pDEX) NFT minting transaction.
-func (client *IncClient) CheckNFTMintingStatus(txHash string) (*rpc.MintNFTStatus, error) {
+func (client *IncClient) CheckNFTMintingStatus(txHash string) (*jsonresult.MintNFTStatus, error) {
 	responseInBytes, err := client.rpcServer.CheckNFTMintingStatus(txHash)
 	if err != nil {
 		return nil, err
@@ -174,7 +174,7 @@ func (client *IncClient) CheckNFTMintingStatus(txHash string) (*rpc.MintNFTStatu
 		ID     string `json:"NftID"`
 		Status int    `json:"Status"`
 	}
-	var res rpc.MintNFTStatus
+	var res jsonresult.MintNFTStatus
 	err = rpchandler.ParseResponse(responseInBytes, &res)
 	if err != nil {
 		return nil, err
@@ -184,13 +184,13 @@ func (client *IncClient) CheckNFTMintingStatus(txHash string) (*rpc.MintNFTStatu
 }
 
 // CheckTradeStatus checks the status of a trading transaction.
-func (client *IncClient) CheckTradeStatus(txHash string) (*rpc.DEXTradeStatus, error) {
+func (client *IncClient) CheckTradeStatus(txHash string) (*jsonresult.DEXTradeStatus, error) {
 	responseInBytes, err := client.rpcServer.CheckTradeStatus(txHash)
 	if err != nil {
 		return nil, err
 	}
 
-	var res rpc.DEXTradeStatus
+	var res jsonresult.DEXTradeStatus
 	err = rpchandler.ParseResponse(responseInBytes, &res)
 	if err != nil {
 		return nil, err
@@ -200,13 +200,13 @@ func (client *IncClient) CheckTradeStatus(txHash string) (*rpc.DEXTradeStatus, e
 }
 
 // CheckDEXLiquidityContributionStatus checks the status of a liquidity-contributing transaction.
-func (client *IncClient) CheckDEXLiquidityContributionStatus(txHash string) (*rpc.DEXAddLiquidityStatus, error) {
+func (client *IncClient) CheckDEXLiquidityContributionStatus(txHash string) (*jsonresult.DEXAddLiquidityStatus, error) {
 	responseInBytes, err := client.rpcServer.CheckDEXLiquidityContributionStatus(txHash)
 	if err != nil {
 		return nil, err
 	}
 
-	var res rpc.DEXAddLiquidityStatus
+	var res jsonresult.DEXAddLiquidityStatus
 	err = rpchandler.ParseResponse(responseInBytes, &res)
 	if err != nil {
 		return nil, err
@@ -216,13 +216,13 @@ func (client *IncClient) CheckDEXLiquidityContributionStatus(txHash string) (*rp
 }
 
 // CheckDEXLiquidityWithdrawalStatus checks the status of a liquidity-withdrawal transaction.
-func (client *IncClient) CheckDEXLiquidityWithdrawalStatus(txHash string) (*rpc.DEXWithdrawLiquidityStatus, error) {
+func (client *IncClient) CheckDEXLiquidityWithdrawalStatus(txHash string) (*jsonresult.DEXWithdrawLiquidityStatus, error) {
 	responseInBytes, err := client.rpcServer.CheckDEXLiquidityWithdrawalStatus(txHash)
 	if err != nil {
 		return nil, err
 	}
 
-	var res rpc.DEXWithdrawLiquidityStatus
+	var res jsonresult.DEXWithdrawLiquidityStatus
 	err = rpchandler.ParseResponse(responseInBytes, &res)
 	if err != nil {
 		return nil, err
@@ -232,13 +232,13 @@ func (client *IncClient) CheckDEXLiquidityWithdrawalStatus(txHash string) (*rpc.
 }
 
 // CheckOrderAddingStatus checks the status of an order-book adding transaction.
-func (client *IncClient) CheckOrderAddingStatus(txHash string) (*rpc.AddOrderStatus, error) {
+func (client *IncClient) CheckOrderAddingStatus(txHash string) (*jsonresult.AddOrderStatus, error) {
 	responseInBytes, err := client.rpcServer.CheckAddOrderStatus(txHash)
 	if err != nil {
 		return nil, err
 	}
 
-	var res rpc.AddOrderStatus
+	var res jsonresult.AddOrderStatus
 	err = rpchandler.ParseResponse(responseInBytes, &res)
 	if err != nil {
 		return nil, err
@@ -248,19 +248,115 @@ func (client *IncClient) CheckOrderAddingStatus(txHash string) (*rpc.AddOrderSta
 }
 
 // CheckOrderWithdrawalStatus checks the status of an order-book withdrawing transaction.
-func (client *IncClient) CheckOrderWithdrawalStatus(txHash string) (*rpc.WithdrawOrderStatus, error) {
+func (client *IncClient) CheckOrderWithdrawalStatus(txHash string) (*jsonresult.WithdrawOrderStatus, error) {
 	responseInBytes, err := client.rpcServer.CheckOrderWithdrawalStatus(txHash)
 	if err != nil {
 		return nil, err
 	}
 
-	var res rpc.WithdrawOrderStatus
+	var res jsonresult.WithdrawOrderStatus
 	err = rpchandler.ParseResponse(responseInBytes, &res)
 	if err != nil {
 		return nil, err
 	}
 
 	return &res, nil
+}
+
+// CheckDEXStakingStatus checks the status of a pDEX staking transaction.
+func (client *IncClient) CheckDEXStakingStatus(txHash string) (*jsonresult.DEXStakeStatus, error) {
+	responseInBytes, err := client.rpcServer.CheckDEXStakingStatus(txHash)
+	if err != nil {
+		return nil, err
+	}
+
+	var res jsonresult.DEXStakeStatus
+	err = rpchandler.ParseResponse(responseInBytes, &res)
+	if err != nil {
+		return nil, err
+	}
+
+	return &res, nil
+}
+
+// CheckDEXUnStakingStatus checks the status of a pDEX un-staking transaction.
+func (client *IncClient) CheckDEXUnStakingStatus(txHash string) (*jsonresult.DEXUnStakeStatus, error) {
+	responseInBytes, err := client.rpcServer.CheckDEXUnStakingStatus(txHash)
+	if err != nil {
+		return nil, err
+	}
+
+	var res jsonresult.DEXUnStakeStatus
+	err = rpchandler.ParseResponse(responseInBytes, &res)
+	if err != nil {
+		return nil, err
+	}
+
+	return &res, nil
+}
+
+// CheckDEXStakingRewardWithdrawalStatus retrieves the status of a pDEX staking-reward withdrawal transaction.
+func (client *IncClient) CheckDEXStakingRewardWithdrawalStatus(txHash string) (*jsonresult.DEXWithdrawStakingRewardStatus, error) {
+	responseInBytes, err := client.rpcServer.CheckDEXStakingRewardWithdrawalStatus(txHash)
+	if err != nil {
+		return nil, err
+	}
+
+	var res jsonresult.DEXWithdrawStakingRewardStatus
+	err = rpchandler.ParseResponse(responseInBytes, &res)
+	if err != nil {
+		return nil, err
+	}
+
+	return &res, nil
+}
+
+// CheckDEXLPFeeWithdrawalStatus retrieves the status of a pDEX LP fee withdrawal transaction.
+func (client *IncClient) CheckDEXLPFeeWithdrawalStatus(txHash string) (*jsonresult.DEXWithdrawLPFeeStatus, error) {
+	responseInBytes, err := client.rpcServer.CheckDEXStakingRewardWithdrawalStatus(txHash)
+	if err != nil {
+		return nil, err
+	}
+
+	var res jsonresult.DEXWithdrawLPFeeStatus
+	err = rpchandler.ParseResponse(responseInBytes, &res)
+	if err != nil {
+		return nil, err
+	}
+
+	return &res, nil
+}
+
+// CheckDEXProtocolFeeWithdrawalStatus retrieves the status of a pDEX protocol fee withdrawal transaction.
+func (client *IncClient) CheckDEXProtocolFeeWithdrawalStatus(txHash string) (*jsonresult.DEXWithdrawProtocolFeeStatus, error) {
+	responseInBytes, err := client.rpcServer.CheckDEXStakingRewardWithdrawalStatus(txHash)
+	if err != nil {
+		return nil, err
+	}
+
+	var res jsonresult.DEXWithdrawProtocolFeeStatus
+	err = rpchandler.ParseResponse(responseInBytes, &res)
+	if err != nil {
+		return nil, err
+	}
+
+	return &res, nil
+}
+
+// GetEstimatedDEXStakingReward returns the estimated pDEX staking rewards for an nftID with the given staking pool at a specific beacon height.
+// If the beacon height is set to 0, it returns the latest information.
+func (client *IncClient) GetEstimatedDEXStakingReward(beaconHeight uint64, stakingPoolID, nftID string) (map[string]uint64, error) {
+	responseInBytes, err := client.rpcServer.CheckDEXStakingReward(beaconHeight, stakingPoolID, nftID)
+	if err != nil {
+		return nil, err
+	}
+
+	var res map[string]uint64
+	err = rpchandler.ParseResponse(responseInBytes, &res)
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
 }
 
 // GetListNftIDs returns the all pDEX minted nftIDs information till the given beacon block height.
@@ -287,8 +383,19 @@ func (client *IncClient) GetListNftIDs(beaconHeight uint64) (map[string]uint64, 
 	return res.NftIDs, nil
 }
 
-// BuildPdexShareKey constructs a key for retrieving contributed shares in pDEX.
-func BuildPdexShareKey(beaconHeight uint64, token1ID string, token2ID string, contributorAddress string) ([]byte, error) {
+// GetListStakingRewardTokens returns the list of all available staking reward tokens at given beacon block height.
+// If the beacon height is set to 0, it returns the latest information.
+func (client *IncClient) GetListStakingRewardTokens(beaconHeight uint64) ([]common.Hash, error) {
+	pdeState, err := client.GetPdexState(beaconHeight)
+	if err != nil {
+		return nil, err
+	}
+
+	return pdeState.Params.StakingRewardTokens, nil
+}
+
+// BuildDEXShareKey constructs a key for retrieving contributed shares in pDEX.
+func BuildDEXShareKey(beaconHeight uint64, token1ID string, token2ID string, contributorAddress string) ([]byte, error) {
 	pdeSharePrefix := []byte("pdeshare-")
 	prefix := append(pdeSharePrefix, []byte(fmt.Sprintf("%d-", beaconHeight))...)
 	tokenIDs := []string{token1ID, token2ID}
@@ -308,8 +415,8 @@ func BuildPdexShareKey(beaconHeight uint64, token1ID string, token2ID string, co
 	return append(prefix, []byte(tokenIDs[0]+"-"+tokenIDs[1]+"-"+keyAddr)...), nil
 }
 
-// BuildPdexPoolKey constructs a key for a pool in pDEX.
-func BuildPdexPoolKey(token1ID string, token2ID string) string {
+// BuildDEXPoolKey constructs a key for a pool in pDEX.
+func BuildDEXPoolKey(token1ID string, token2ID string) string {
 	tokenIDs := []string{token1ID, token2ID}
 	sort.Strings(tokenIDs)
 
