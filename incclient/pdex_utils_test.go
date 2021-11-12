@@ -166,6 +166,22 @@ func TestIncClient_CheckDEXStakingRewardWithdrawalStatus(t *testing.T) {
 	Logger.Printf("status: %v\n", status)
 }
 
+func TestIncClient_CheckDEXLPFeeWithdrawalStatus(t *testing.T) {
+	var err error
+	ic, err = NewTestNetClient()
+	if err != nil {
+		panic(err)
+	}
+
+	txHash := "7201105e9746aeb9479092a9f47b81445c2bb343d13b8519ed29416c246968e4"
+	status, err := ic.CheckDEXLPFeeWithdrawalStatus(txHash)
+	if err != nil {
+		panic(err)
+	}
+
+	Logger.Printf("status: %v\n", status)
+}
+
 func TestIncClient_CheckNFTMintingStatus(t *testing.T) {
 	var err error
 	ic, err = NewTestNetClientWithCache()
