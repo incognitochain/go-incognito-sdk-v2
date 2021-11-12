@@ -292,3 +292,12 @@ type DEXWithdrawProtocolFeeStatus struct {
 		Amount  uint64 `json:"Amount"`
 	} `json:"Receivers"`
 }
+
+// DEXLPValue represents the LP value of an LP.
+type DEXLPValue struct {
+	// PoolValue represents the contributed liquidity in the pool of the LP.
+	PoolValue map[string]uint64 `json:"PoolValue"`
+
+	// TradingFee is the trading fee distributed to the LP.
+	TradingFee map[string]uint64 `json:"TradingFee"`
+}

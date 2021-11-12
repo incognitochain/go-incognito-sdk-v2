@@ -359,6 +359,23 @@ func (client *IncClient) GetEstimatedDEXStakingReward(beaconHeight uint64, staki
 	return res, nil
 }
 
+// GetEstimatedLPValue returns the estimated LP value in a pool pairID for a given nftID at a specific beacon height.
+// If the beacon height is set to 0, it returns the latest information.
+func (client *IncClient) GetEstimatedLPValue(beaconHeight uint64, pairID, nftIDStr string) (*jsonresult.DEXLPValue, error) {
+	responseInBytes, err := client.rpcServer.CheckDEXLPValue(beaconHeight, pairID, nftIDStr)
+	if err != nil {
+		return nil, err
+	}
+
+	var res jsonresult.DEXLPValue
+	err = rpchandler.ParseResponse(responseInBytes, &res)
+	if err != nil {
+		return nil, err
+	}
+
+	return &res, nil
+}
+
 // GetListNftIDs returns the all pDEX minted nftIDs information till the given beacon block height.
 // If the beacon height is set to 0, it returns the latest information.
 func (client *IncClient) GetListNftIDs(beaconHeight uint64) (map[string]uint64, error) {

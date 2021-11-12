@@ -228,6 +228,25 @@ func TestIncClient_GetEstimatedDEXStakingReward(t *testing.T) {
 	Logger.Printf("status: %v\n", res)
 }
 
+func TestIncClient_GetEstimatedLPValue(t *testing.T) {
+	var err error
+	ic, err = NewTestNetClient()
+	if err != nil {
+		panic(err)
+	}
+
+	poolPairID := "0000000000000000000000000000000000000000000000000000000000000004-00000000000000000000000000000000000000000000000000000000000115d7-768d95970886ef2eea617d2a0ef4aea80ca394db4f8f1ff1fd724c82955cd228"
+	nftID := "eb1ec0987a37829831c8d947ef2c48f8ab6ada4b02d99e82039ca5977570bd0c"
+	beaconHeight := uint64(0)
+
+	res, err := ic.GetEstimatedLPValue(beaconHeight, poolPairID, nftID)
+	if err != nil {
+		panic(err)
+	}
+
+	Logger.Printf("status: %v\n", res)
+}
+
 func TestIncClient_GetListNftIDs(t *testing.T) {
 	var err error
 	ic, err = NewTestNetClient()

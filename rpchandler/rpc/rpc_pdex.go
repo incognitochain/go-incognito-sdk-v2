@@ -114,6 +114,18 @@ func (server *RPCServer) CheckDEXProtocolFeeWithdrawalStatus(txHash string) ([]b
 	return server.SendQuery(getPdexv3WithdrawalProtocolFeeStatus, params)
 }
 
+// CheckDEXLPValue retrieves the estimated LP value in a pool pairID for a given nftID.
+func (server *RPCServer) CheckDEXLPValue(beaconHeight uint64, pairID, nftID string) ([]byte, error) {
+	params := make([]interface{}, 0)
+	mapParams := make(map[string]interface{})
+	mapParams["BeaconHeight"] = beaconHeight
+	mapParams["NftID"] = nftID
+	mapParams["PoolPairID"] = pairID
+	params = append(params, mapParams)
+
+	return server.SendQuery(getPdexv3EstimatedLPValue, params)
+}
+
 // GetPdexState retrieves the pDEX state at the given beacon height.
 func (server *RPCServer) GetPdexState(beaconHeight uint64, filters ...map[string]interface{}) ([]byte, error) {
 	filter := make(map[string]interface{})
