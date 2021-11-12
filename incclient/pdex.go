@@ -1,9 +1,12 @@
 package incclient
 
 import (
+	"fmt"
 	"github.com/incognitochain/go-incognito-sdk-v2/coin"
 	"github.com/incognitochain/go-incognito-sdk-v2/common"
 	"github.com/incognitochain/go-incognito-sdk-v2/key"
+	"strings"
+
 	// "github.com/incognitochain/go-incognito-sdk-v2/metadata"
 	metadataCommon "github.com/incognitochain/go-incognito-sdk-v2/metadata/common"
 	metadataPdexv3 "github.com/incognitochain/go-incognito-sdk-v2/metadata/pdexv3"
@@ -12,7 +15,7 @@ import (
 
 const MintNftRequiredAmount = 1000000000
 
-// CreatePdexv3WithdrawLPFee creates a transaction that withdraws all outstanding protocol fee in pdex v3 to Incognito's funds.
+// CreatePdexv3MintNFT creates a transaction minting a new pDEX NFT for the given private key.
 //
 // It returns the base58-encoded transaction, the transaction's hash, and an error (if any).
 func (client *IncClient) CreatePdexv3MintNFT(privateKey string) ([]byte, string, error) {
@@ -33,8 +36,7 @@ func (client *IncClient) CreatePdexv3MintNFT(privateKey string) ([]byte, string,
 	return client.CreateRawTransaction(txParam, 2)
 }
 
-// CreateAndSendPdexv3WithdrawLPFeeTransaction creates an protocol-fee-withdrawing transaction, and submits it to the Incognito network.
-// Version = -1 indicates that whichever version is accepted.
+// CreateAndSendPdexv3UserMintNFTransaction creates a transaction minting a new pDEX NFT for the given private key, and submits it to the Incognito network.
 //
 // It returns the transaction's hash, and an error (if any).
 func (client *IncClient) CreateAndSendPdexv3UserMintNFTransaction(privateKey string) (string, error) {
@@ -253,7 +255,7 @@ func (client *IncClient) CreatePdexv3WithdrawOrder(privateKey, pairID, orderID s
 	return client.CreateRawTokenTransaction(txParam, 2)
 }
 
-// CreateAndSendPdexv3WithdrawalTransaction creates an order-withdrawing transaction, and submits it to the Incognito network.
+// CreateAndSendPdexv3WithdrawOrderTransaction creates an order-withdrawing transaction, and submits it to the Incognito network.
 //
 // It returns the transaction's hash, and an error (if any).
 func (client *IncClient) CreateAndSendPdexv3WithdrawOrderTransaction(privateKey, pairID, orderID string,
@@ -388,11 +390,12 @@ func (client *IncClient) CreateAndSendPdexv3WithdrawLiquidityTransaction(private
 	return txHash, nil
 }
 
-// CreatePdexv3WithdrawLPFee creates a transaction that withdraws all rewards (from trading fees) earned by a liquidity provider in one pool in pdex v3.
+// CreatePdexv3WithdrawLPFee creates a transaction that withdraws all LP fee rewards earned by a liquidity provider in one pool in pdex v3.
+// If `withdrawTokenIDs` are not specified, it will get the tokenIDs from the given pairID.
 //
 // It returns the base58-encoded transaction, the transaction's hash, and an error (if any).
 func (client *IncClient) CreatePdexv3WithdrawLPFee(privateKey, pairID string,
-	withdrawTokenIDs []string, nftIDStr string) ([]byte, string, error) {
+	nftIDStr string, withdrawTokenIDs ...string) ([]byte, string, error) {
 	senderWallet, err := wallet.Base58CheckDeserialize(privateKey)
 	if err != nil {
 		return nil, "", err
@@ -404,14 +407,21 @@ func (client *IncClient) CreatePdexv3WithdrawLPFee(privateKey, pairID string,
 	}
 
 	tokenList := []common.Hash{*nftID, common.PRVCoinID, common.PDEXCoinID}
-	// expect withdrawTokenIDs to contain both tokens in this pool
-	for _, v := range withdrawTokenIDs {
-		temp, err := common.Hash{}.NewHashFromStr(v)
+	if len(withdrawTokenIDs) == 0 {
+		withdrawTokenIDs, err = getTokenIDsFromPairID(pairID)
 		if err != nil {
 			return nil, "", err
 		}
-		tokenList = append(tokenList, *temp)
+	} else {
+		for _, v := range withdrawTokenIDs {
+			temp, err := common.Hash{}.NewHashFromStr(v)
+			if err != nil {
+				return nil, "", err
+			}
+			tokenList = append(tokenList, *temp)
+		}
 	}
+
 	otaReceivers, err := GenerateOTAReceivers(tokenList, senderWallet.KeySet.PaymentAddress)
 	if err != nil {
 		return nil, "", err
@@ -430,12 +440,12 @@ func (client *IncClient) CreatePdexv3WithdrawLPFee(privateKey, pairID string,
 }
 
 // CreateAndSendPdexv3WithdrawLPFeeTransaction creates a transaction that withdraws a liquidity provider's reward in one pool, and submits it to the Incognito network.
-// Version = -1 indicates that whichever version is accepted.
+// If `withdrawTokenIDs` are not specified, it will get the tokenIDs from the given pairID.
 //
 // It returns the transaction's hash, and an error (if any).
 func (client *IncClient) CreateAndSendPdexv3WithdrawLPFeeTransaction(privateKey, pairID string,
-	withdrawTokenIDs []string, nftIDStr string) (string, error) {
-	encodedTx, txHash, err := client.CreatePdexv3WithdrawLPFee(privateKey, pairID, withdrawTokenIDs, nftIDStr)
+	nftIDStr string, withdrawTokenIDs ...string) (string, error) {
+	encodedTx, txHash, err := client.CreatePdexv3WithdrawLPFee(privateKey, pairID, nftIDStr, withdrawTokenIDs...)
 	if err != nil {
 		return "", err
 	}
@@ -448,7 +458,7 @@ func (client *IncClient) CreateAndSendPdexv3WithdrawLPFeeTransaction(privateKey,
 	return txHash, nil
 }
 
-// CreatePdexv3WithdrawLPFee creates a transaction that withdraws all outstanding protocol fee in pdex v3 to Incognito's funds.
+// CreatePdexv3WithdrawProtocolFee creates a transaction that withdraws all protocol fee rewards earned by a liquidity provider in one pool in pdex v3.
 //
 // It returns the base58-encoded transaction, the transaction's hash, and an error (if any).
 func (client *IncClient) CreatePdexv3WithdrawProtocolFee(privateKey, pairID string) ([]byte, string, error) {
@@ -462,8 +472,7 @@ func (client *IncClient) CreatePdexv3WithdrawProtocolFee(privateKey, pairID stri
 	return client.CreateRawTransaction(txParam, 2)
 }
 
-// CreateAndSendPdexv3WithdrawLPFeeTransaction creates an protocol-fee-withdrawing transaction, and submits it to the Incognito network.
-// Version = -1 indicates that whichever version is accepted.
+// CreateAndSendPdexv3WithdrawProtocolFeeTransaction creates a protocol-fee-withdrawing transaction, and submits it to the Incognito network.
 //
 // It returns the transaction's hash, and an error (if any).
 func (client *IncClient) CreateAndSendPdexv3WithdrawProtocolFeeTransaction(privateKey, pairID string) (string, error) {
@@ -480,7 +489,7 @@ func (client *IncClient) CreateAndSendPdexv3WithdrawProtocolFeeTransaction(priva
 	return txHash, nil
 }
 
-// CreatePdexv3Contribute creates a staking transaction in pdex v3.
+// CreatePdexv3Staking creates a staking transaction in pdex v3.
 //
 // It returns the base58-encoded transaction, the transaction's hash, and an error (if any).
 func (client *IncClient) CreatePdexv3Staking(privateKey, tokenIDStr, nftIDStr string, amount uint64) ([]byte, string, error) {
@@ -688,4 +697,20 @@ func toStringKeys(inputMap map[common.Hash]coin.OTAReceiver) map[string]string {
 		result[k.String()] = s
 	}
 	return result
+}
+
+func getTokenIDsFromPairID(pairID string) ([]string, error) {
+	res := strings.Split(pairID, "-")
+	if len(res) != 3 {
+		return nil, fmt.Errorf("invalid pairID %v", pairID)
+	}
+	res = res[:2]
+	for _, tokenIDStr := range res {
+		_, err := common.Hash{}.NewHashFromStr(tokenIDStr)
+		if err != nil {
+			return nil, fmt.Errorf("invalid tokenID %v in pairID %v", tokenIDStr, pairID)
+		}
+	}
+
+	return res, nil
 }
