@@ -295,6 +295,22 @@ func (client *IncClient) CheckDEXUnStakingStatus(txHash string) (*rpc.DEXUnStake
 	return &res, nil
 }
 
+// GetEstimatedDEXStakingReward returns the estimated pDEX staking rewards for an nftID with the given staking pool at a specific beacon height.
+// If the beacon height is set to 0, it returns the latest information.
+func (client *IncClient) GetEstimatedDEXStakingReward(beaconHeight uint64, stakingPoolID, nftID string) (map[string]uint64, error) {
+	responseInBytes, err := client.rpcServer.CheckDEXStakingReward(beaconHeight, stakingPoolID, nftID)
+	if err != nil {
+		return nil, err
+	}
+
+	var res map[string]uint64
+	err = rpchandler.ParseResponse(responseInBytes, &res)
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
+}
+
 // GetListNftIDs returns the all pDEX minted nftIDs information till the given beacon block height.
 // If the beacon height is set to 0, it returns the latest information.
 func (client *IncClient) GetListNftIDs(beaconHeight uint64) (map[string]uint64, error) {

@@ -177,6 +177,25 @@ func TestIncClient_CheckNFTMintingStatus(t *testing.T) {
 	Logger.Printf("status: %v\n", status)
 }
 
+func TestIncClient_GetEstimatedDEXStakingReward(t *testing.T) {
+	var err error
+	ic, err = NewTestNetClient()
+	if err != nil {
+		panic(err)
+	}
+
+	stakingPoolID := "0000000000000000000000000000000000000000000000000000000000000004"
+	nftID := "eb1ec0987a37829831c8d947ef2c48f8ab6ada4b02d99e82039ca5977570bd0c"
+	beaconHeight := uint64(0)
+
+	res, err := ic.GetEstimatedDEXStakingReward(beaconHeight, stakingPoolID, nftID)
+	if err != nil {
+		panic(err)
+	}
+
+	Logger.Printf("status: %v\n", res)
+}
+
 func TestIncClient_GetListNftIDs(t *testing.T) {
 	var err error
 	ic, err = NewTestNetClient()

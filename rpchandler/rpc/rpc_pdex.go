@@ -210,6 +210,26 @@ func (server *RPCServer) CheckDEXUnStakingStatus(txHash string) ([]byte, error) 
 	return server.SendQuery(pdexv3GetUnstakingStatus, params)
 }
 
+// CheckDEXStakingRewardWithdrawalStatus retrieves the status of a pDEX staking-reward withdrawal transaction.
+func (server *RPCServer) CheckDEXStakingRewardWithdrawalStatus(txHash string) ([]byte, error) {
+	params := make([]interface{}, 0)
+	params = append(params, txHash)
+
+	return server.SendQuery(getPdexv3WithdrawalStakingRewardStatus, params)
+}
+
+// CheckDEXStakingReward retrieves the status of a pDEX un-staking transaction.
+func (server *RPCServer) CheckDEXStakingReward(beaconHeight uint64, stakingPoolID, nftID string) ([]byte, error) {
+	params := make([]interface{}, 0)
+	mapParams := make(map[string]interface{})
+	mapParams["BeaconHeight"] = beaconHeight
+	mapParams["NftID"] = nftID
+	mapParams["StakingPoolID"] = stakingPoolID
+	params = append(params, mapParams)
+
+	return server.SendQuery(getPdexv3EstimatedStakingReward, params)
+}
+
 // GetPdexState retrieves the pDEX state at the given beacon height.
 func (server *RPCServer) GetPdexState(beaconHeight uint64, filters ...map[string]interface{}) ([]byte, error) {
 	filter := make(map[string]interface{})
