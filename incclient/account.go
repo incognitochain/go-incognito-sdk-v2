@@ -29,7 +29,7 @@ func (client *IncClient) GetAllNFTs(privateKey string) ([]string, error) {
 	}
 
 	res := make([]string, 0)
-	if client.cache.isRunning {
+	if client.cache != nil && client.cache.isRunning {
 		_, err := client.GetBalance(privateKey, common.ConfidentialAssetID.String())
 		if err != nil {
 			return nil, err

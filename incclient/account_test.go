@@ -25,7 +25,7 @@ func TestIncClient_GetBalance(t *testing.T) {
 }
 
 func TestIncClient_GetAllNFTs(t *testing.T) {
-	ic, err := NewTestNetClientWithCache()
+	ic, err := NewTestNetClient()
 	if err != nil {
 		panic(err)
 	}
