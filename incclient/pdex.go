@@ -464,10 +464,10 @@ func (client *IncClient) CreateAndSendPdexv3WithdrawLPFeeTransaction(privateKey,
 	return txHash, nil
 }
 
-// CreatePdexv3WithdrawProtocolFee creates a transaction that withdraws all protocol fee rewards earned by a liquidity provider in one pool in pdex v3.
+// CreatePdexv3WithdrawProtocolFeeTransaction creates a transaction that withdraws all protocol fee rewards in pdex v3.
 //
 // It returns the base58-encoded transaction, the transaction's hash, and an error (if any).
-func (client *IncClient) CreatePdexv3WithdrawProtocolFee(privateKey, pairID string) ([]byte, string, error) {
+func (client *IncClient) CreatePdexv3WithdrawProtocolFeeTransaction(privateKey, pairID string) ([]byte, string, error) {
 	md, _ := metadataPdexv3.NewPdexv3WithdrawalProtocolFeeRequest(
 		metadataCommon.Pdexv3WithdrawProtocolFeeRequestMeta,
 		pairID,
@@ -482,7 +482,7 @@ func (client *IncClient) CreatePdexv3WithdrawProtocolFee(privateKey, pairID stri
 //
 // It returns the transaction's hash, and an error (if any).
 func (client *IncClient) CreateAndSendPdexv3WithdrawProtocolFeeTransaction(privateKey, pairID string) (string, error) {
-	encodedTx, txHash, err := client.CreatePdexv3WithdrawProtocolFee(privateKey, pairID)
+	encodedTx, txHash, err := client.CreatePdexv3WithdrawProtocolFeeTransaction(privateKey, pairID)
 	if err != nil {
 		return "", err
 	}
