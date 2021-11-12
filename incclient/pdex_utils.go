@@ -281,7 +281,7 @@ func (client *IncClient) CheckDEXStakingStatus(txHash string) (*rpc.DEXStakeStat
 
 // CheckDEXUnStakingStatus checks the status of a pDEX un-staking transaction.
 func (client *IncClient) CheckDEXUnStakingStatus(txHash string) (*rpc.DEXUnStakeStatus, error) {
-	responseInBytes, err := client.rpcServer.CheckDEXStakingStatus(txHash)
+	responseInBytes, err := client.rpcServer.CheckDEXUnStakingStatus(txHash)
 	if err != nil {
 		return nil, err
 	}
