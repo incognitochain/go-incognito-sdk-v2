@@ -591,6 +591,80 @@ func (client *IncClient) CreateAndSendPdexv3UnstakingTransaction(privateKey, tok
 	return txHash, nil
 }
 
+// CreatePdexv3WithdrawStakeRewardTransaction creates a transaction that withdraws all rewards (from trading fees) earned by staking in one pool in pdex v3.
+// If `withdrawTokenIDs` are not specified, it will get all available staking tokens.
+//
+// It returns the base58-encoded transaction, the transaction's hash, and an error (if any).
+func (client *IncClient) CreatePdexv3WithdrawStakeRewardTransaction(
+	privateKey, stakingPoolIDStr, nftIDStr string, withdrawTokenIDs ...string) ([]byte, string, error) {
+	senderWallet, err := wallet.Base58CheckDeserialize(privateKey)
+	if err != nil {
+		return nil, "", err
+	}
+
+	nftID, err := common.Hash{}.NewHashFromStr(nftIDStr)
+	if err != nil {
+		return nil, "", err
+	}
+
+	stakingPoolID, err := common.Hash{}.NewHashFromStr(stakingPoolIDStr)
+	if err != nil {
+		return nil, "", err
+	}
+
+	tokenList := []common.Hash{*nftID, common.PRVCoinID, *stakingPoolID}
+	if len(withdrawTokenIDs) == 0 {
+		tmpTokenIDs, err := client.GetListStakingRewardTokens(0)
+		if err != nil {
+			return nil, "", err
+		}
+		tokenList = append(tokenList, tmpTokenIDs...)
+	} else {
+		for _, v := range withdrawTokenIDs {
+			temp, err := common.Hash{}.NewHashFromStr(v)
+			if err != nil {
+				return nil, "", err
+			}
+			tokenList = append(tokenList, *temp)
+		}
+	}
+
+	otaReceivers, err := GenerateOTAReceivers(tokenList, senderWallet.KeySet.PaymentAddress)
+	if err != nil {
+		return nil, "", err
+	}
+	md, _ := metadataPdexv3.NewPdexv3WithdrawalStakingRewardRequest(
+		metadataCommon.Pdexv3WithdrawStakingRewardRequestMeta,
+		stakingPoolIDStr,
+		*nftID,
+		otaReceivers,
+	)
+
+	tokenParam := NewTxTokenParam(nftIDStr, 1, []string{common.BurningAddress2}, []uint64{1}, false, 0, nil)
+	txParam := NewTxParam(privateKey, []string{}, []uint64{}, 0, tokenParam, md, nil)
+
+	return client.CreateRawTokenTransaction(txParam, 2)
+}
+
+// CreateAndSendPdexv3WithdrawStakeRewardTransaction creates a transaction that withdraws all rewards (from trading fees) earned by staking in one pool in pdex v3.
+//
+// It returns the transaction's hash, and an error (if any).
+func (client *IncClient) CreateAndSendPdexv3WithdrawStakeRewardTransaction(
+	privateKey, stakingPoolIDStr, nftIDStr string, withdrawTokenIDs ...string,
+) (string, error) {
+	encodedTx, txHash, err := client.CreatePdexv3WithdrawStakeRewardTransaction(privateKey, stakingPoolIDStr, nftIDStr, withdrawTokenIDs...)
+	if err != nil {
+		return "", err
+	}
+
+	err = client.SendRawTokenTx(encodedTx)
+	if err != nil {
+		return "", err
+	}
+
+	return txHash, nil
+}
+
 func GenerateOTAReceivers(
 	tokens []common.Hash, addr key.PaymentAddress,
 ) (map[common.Hash]coin.OTAReceiver, error) {

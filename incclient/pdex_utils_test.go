@@ -150,6 +150,22 @@ func TestIncClient_CheckDexUnStakingStatus(t *testing.T) {
 	Logger.Printf("status: %v\n", status)
 }
 
+func TestIncClient_CheckDEXStakingRewardWithdrawalStatus(t *testing.T) {
+	var err error
+	ic, err = NewTestNetClient()
+	if err != nil {
+		panic(err)
+	}
+
+	txHash := "c657f36d7cf5058dc9df694e58ec5cf02509e611830968cb58f353480cf4baa6"
+	status, err := ic.CheckDEXStakingRewardWithdrawalStatus(txHash)
+	if err != nil {
+		panic(err)
+	}
+
+	Logger.Printf("status: %v\n", status)
+}
+
 func TestIncClient_CheckNFTMintingStatus(t *testing.T) {
 	var err error
 	ic, err = NewTestNetClientWithCache()

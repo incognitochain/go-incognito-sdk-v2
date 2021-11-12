@@ -101,7 +101,7 @@ type AddOrderStatus struct {
 // WithdrawOrderStatus represents the status of a pDEX OB-withdrawing transaction.
 type WithdrawOrderStatus struct {
 	// Status represents the status of the transaction, and should be understood as follows:
-	//	- 1: the request is rejected;
+	//	- 0: the request is rejected;
 	//	- 1: the request is accepted.
 	Status int `json:"Status"`
 
@@ -115,7 +115,7 @@ type WithdrawOrderStatus struct {
 // DEXStakeStatus represents the status of a pDEX staking transaction.
 type DEXStakeStatus struct {
 	// Status represents the status of the transaction, and should be understood as follows:
-	//	- 1: the request is rejected;
+	//	- 0: the request is rejected;
 	//	- 1: the request is accepted.
 	Status int `json:"Status"`
 
@@ -132,7 +132,7 @@ type DEXStakeStatus struct {
 // DEXUnStakeStatus represents the status of a pDEX un-staking transaction.
 type DEXUnStakeStatus struct {
 	// Status represents the status of the transaction, and should be understood as follows:
-	//	- 1: the request is rejected;
+	//	- 0: the request is rejected;
 	//	- 1: the request is accepted.
 	Status int `json:"Status"`
 
@@ -144,6 +144,20 @@ type DEXUnStakeStatus struct {
 
 	// Liquidity is the un-staked amount.
 	Liquidity uint64 `json:"Liquidity"`
+}
+
+// DEXWithdrawStakingRewardStatus represents the status of a pDEX staking reward withdrawal transaction.
+type DEXWithdrawStakingRewardStatus struct {
+	// Status represents the status of the transaction, and should be understood as follows:
+	//	- 0: the request is rejected;
+	//	- 1: the request is accepted.
+	Status int `json:"Status"`
+
+	// Receivers is the receiving information.
+	Receivers map[string]struct {
+		Address string `json:"Address"`
+		Amount  uint64 `json:"Amount"`
+	} `json:"Receivers"`
 }
 
 // CheckTradeStatus retrieves the status of a trading transaction.
@@ -213,12 +227,14 @@ func (server *RPCServer) CheckDEXUnStakingStatus(txHash string) ([]byte, error) 
 // CheckDEXStakingRewardWithdrawalStatus retrieves the status of a pDEX staking-reward withdrawal transaction.
 func (server *RPCServer) CheckDEXStakingRewardWithdrawalStatus(txHash string) ([]byte, error) {
 	params := make([]interface{}, 0)
-	params = append(params, txHash)
+	mapParams := make(map[string]interface{})
+	mapParams["ReqTxID"] = txHash
+	params = append(params, mapParams)
 
 	return server.SendQuery(getPdexv3WithdrawalStakingRewardStatus, params)
 }
 
-// CheckDEXStakingReward retrieves the status of a pDEX un-staking transaction.
+// CheckDEXStakingReward retrieves the estimated amount of staking reward for a nftID.
 func (server *RPCServer) CheckDEXStakingReward(beaconHeight uint64, stakingPoolID, nftID string) ([]byte, error) {
 	params := make([]interface{}, 0)
 	mapParams := make(map[string]interface{})

@@ -2,6 +2,7 @@ package incclient
 
 import (
 	"fmt"
+	"github.com/incognitochain/go-incognito-sdk-v2/common"
 	"github.com/incognitochain/go-incognito-sdk-v2/rpchandler/rpc"
 	"math/big"
 	"sort"
@@ -295,6 +296,22 @@ func (client *IncClient) CheckDEXUnStakingStatus(txHash string) (*rpc.DEXUnStake
 	return &res, nil
 }
 
+// CheckDEXStakingRewardWithdrawalStatus retrieves the status of a pDEX staking-reward withdrawal transaction.
+func (client *IncClient) CheckDEXStakingRewardWithdrawalStatus(txHash string) (*rpc.DEXWithdrawStakingRewardStatus, error) {
+	responseInBytes, err := client.rpcServer.CheckDEXStakingRewardWithdrawalStatus(txHash)
+	if err != nil {
+		return nil, err
+	}
+
+	var res rpc.DEXWithdrawStakingRewardStatus
+	err = rpchandler.ParseResponse(responseInBytes, &res)
+	if err != nil {
+		return nil, err
+	}
+
+	return &res, nil
+}
+
 // GetEstimatedDEXStakingReward returns the estimated pDEX staking rewards for an nftID with the given staking pool at a specific beacon height.
 // If the beacon height is set to 0, it returns the latest information.
 func (client *IncClient) GetEstimatedDEXStakingReward(beaconHeight uint64, stakingPoolID, nftID string) (map[string]uint64, error) {
@@ -333,6 +350,17 @@ func (client *IncClient) GetListNftIDs(beaconHeight uint64) (map[string]uint64, 
 	}
 
 	return res.NftIDs, nil
+}
+
+// GetListStakingRewardTokens returns the list of all available staking reward tokens at given beacon block height.
+// If the beacon height is set to 0, it returns the latest information.
+func (client *IncClient) GetListStakingRewardTokens(beaconHeight uint64) ([]common.Hash, error) {
+	pdeState, err := client.GetPdexState(beaconHeight)
+	if err != nil {
+		return nil, err
+	}
+
+	return pdeState.Params.StakingRewardTokens, nil
 }
 
 // BuildPdexShareKey constructs a key for retrieving contributed shares in pDEX.
