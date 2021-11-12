@@ -313,7 +313,7 @@ func (client *IncClient) CheckDEXStakingRewardWithdrawalStatus(txHash string) (*
 
 // CheckDEXLPFeeWithdrawalStatus retrieves the status of a pDEX LP fee withdrawal transaction.
 func (client *IncClient) CheckDEXLPFeeWithdrawalStatus(txHash string) (*jsonresult.DEXWithdrawLPFeeStatus, error) {
-	responseInBytes, err := client.rpcServer.CheckDEXStakingRewardWithdrawalStatus(txHash)
+	responseInBytes, err := client.rpcServer.CheckDEXLPFeeWithdrawalStatus(txHash)
 	if err != nil {
 		return nil, err
 	}
@@ -329,7 +329,7 @@ func (client *IncClient) CheckDEXLPFeeWithdrawalStatus(txHash string) (*jsonresu
 
 // CheckDEXProtocolFeeWithdrawalStatus retrieves the status of a pDEX protocol fee withdrawal transaction.
 func (client *IncClient) CheckDEXProtocolFeeWithdrawalStatus(txHash string) (*jsonresult.DEXWithdrawProtocolFeeStatus, error) {
-	responseInBytes, err := client.rpcServer.CheckDEXStakingRewardWithdrawalStatus(txHash)
+	responseInBytes, err := client.rpcServer.CheckDEXProtocolFeeWithdrawalStatus(txHash)
 	if err != nil {
 		return nil, err
 	}
