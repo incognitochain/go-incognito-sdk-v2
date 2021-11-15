@@ -8,13 +8,13 @@ balance and UTXO retrieval. Skip these parts if you're familiar with these notio
 # pDEX Contribution
 Liquidity providers play an essential role in pDEX. They provide liquidity to various pools on pDEX and earn trading fees. The current pDEX consists of several pairs of tokens that help accelerate trading activities. The more liquidity in the pDEX, the better experience the trading process gets. For a pair with high liquidity, the slippage rate will be small. On the other hand, trading with low-liquidity pair will result in a high slippage rate.
 
-In this tutorial, we will see how we can provide liquidity for a pair in the pDEX. Please see this [post](https://github.com/incognitochain/incognito-chain/blob/production/specs/pdex.md) to understand how the pDEX works. There are basically 3 ways a user can provide liquidity for the pDEX:
+In this tutorial, we will see how we can provide liquidity for a pair in the pDEX. Please see this [post](https://github.com/incognitochain/incognito-chain/blob/production/specs/pdex.md) to understand how the pDEX works. There are 3 ways a user can provide liquidity for the pDEX:
 * 2-sided liquidity adding;
 * 1-sided liquidity contribution; and
 * order-book placing.
 
-This tutorial only focuses on the first method. Basically, a two-sided contribution contributes both tokens to the liquidity pool. A liquidity provider must create two separate metadata-transactions (one for each token) to burn the corresponding amount of the token. 
-This process is exactly like that in the previous pDEX version, except that the metadata is now slightly different. Instead of using the payment address as the identification, the LP now uses [a so-called NFT ID](./nft.md) for the contribution. In this way, his contributions will no longer linkable if they are created with different nftIDs.
+This tutorial only focuses on the first method. A two-sided contribution contributes both tokens to the liquidity pool. A liquidity provider must create two separate metadata transactions (one for each token) to burn the corresponding amount of the token.
+This process is exactly like that in the previous pDEX version, except that the metadata is now slightly different. Instead of using the payment address as the identification, the LP now uses [a so-called NFT ID](./nft.md) for the contribution. In this way, his contributions will no longer be linkable if they are created with different nftIDs.
 
 Here is the description of the metadata.
 ```go
@@ -40,14 +40,14 @@ type AddLiquidityRequest struct {
     tokenAmount uint64
     
     // amplifier is the amplifier of the pool. In the case of contributing to an existing pool, this value must match that of the existing pool. 
-    // The detail of this param can be found at the Uniswap's White-paper (https://uniswap.org/whitepaper-v3.pdf).
+    // The detail of this param can be found in Uniswap's White-paper (https://uniswap.org/whitepaper-v3.pdf).
     amplifier   uint
     
     metadataCommon.MetadataBase
 }
 ```
 
-Now, let's try to create a new pDEX pool using the SDK. 
+Now, let's try to create a new pDEX pool using the SDK.
 ## Create a new pDEX Pool
 ### Prepare out inputs
 As usual, we need to specify our private key.
@@ -60,8 +60,8 @@ poolPairID := ""       // for pool-initializing, leave it empty. Otherwise, inpu
 pairHash := "JUSTARANDOMSTRING" // a string to match the two transactions of the contribution
 firstToken := common.PRVIDStr
 secondToken := "00000000000000000000000000000000000000000000000000000000000115d7"
-firstAmount := uint64(10000)
-secondAmount := uint64(10000)
+firstAmount := uint64(3000)
+secondAmount := uint64(3000)
 nftIDStr := "54d488dae373d2dc4c7df4d653037c8d80087800cade4e961efb857c68b91a22"
 amplifier := uint64(15000)
 ```
@@ -106,7 +106,7 @@ Here, there's not much we can get from this except for `Status = 2` meaning that
 is the first contribution of the pool (see more about this [here](./query.md)).
 
 ## Add Liquidity to an Existing Pool
-This case is some-what similar to the case of initializing a pool, except:
+This case is somewhat similar to the case of initializing a pool, except:
 * Now we need to specify which pool we want to contribute liquidity to.
 * We must specify the amplifier exactly as that of the target pool.
 
@@ -137,15 +137,14 @@ This is done exactly like before. And we can see the status looks like the follo
     "PoolPairID": "0000000000000000000000000000000000000000000000000000000000000004-00000000000000000000000000000000000000000000000000000000000115d7-0868e6a074566d77c2ebdce49949352efbe69b0eda7da839bfc8985e7ed300f2"
 }
 ```
-`Status = 4` indicates that the contribution request has been accepted with associated information. In many case, one of the returned amount will be non-zero.
+`Status = 4` indicates that the contribution request has been accepted with associated information. In many cases, one of the returned amounts will be non-zero.
 This is because the beacon will calculate the contributing amounts based on the current pool rate, and therefore there might be some leftover for one of the tokens.
 
 
 ## NOTE
 In this tutorial, we use the same nftID for both of the contributions. Although this is allowed by the protocol,
 it is not RECOMMENDED because it results in the possibility of linking these two contributions together. In practice, the LP
-might want to generate a bunch of NFTs for his account, and for each contribution, he might use a different NFT. However, please 
-take minting fees into account since there is an amount of PRV required for minting a new NFT.
+might want to generate a bunch of NFTs for his account, and for each contribution, he might use a different NFT. However, please take minting fees into account since there is an amount of PRV required for minting a new NFT.
 
 ## Example
 [contribute](../../code/pdex/pdex_contribute/contribute.go)
@@ -167,7 +166,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	
+
 	// replace with your network's data
 	privateKey := "112t8rneWAhErTC8YUFTnfcKHvB1x6uAVdehy1S8GP2psgqDxK3RHouUcd69fz88oAL9XuMyQ8mBY5FmmGJdcyrpwXjWBXRpoWwgJXjsxi4j"
 	poolPairID := "" // for pool-initializing, leave it empty. Otherwise, input the poolPairID of the existing pool
