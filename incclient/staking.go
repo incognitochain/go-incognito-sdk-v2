@@ -110,8 +110,7 @@ func (client *IncClient) CreateUnStakingTransaction(privateKey, privateSeed, can
 	if err != nil {
 		return nil, "", fmt.Errorf("committee to bytes error: %v", err)
 	}
-
-	unStakingMetadata, err := metadata.NewStopAutoStakingMetadata(metadata.StopAutoStakingMeta, base58.Base58Check{}.Encode(committeePKBytes, common.ZeroByte))
+	unStakingMetadata, err := metadata.NewUnStakingMetadata(base58.Base58Check{}.Encode(committeePKBytes, common.ZeroByte))
 
 	txParam := NewTxParam(privateKey, []string{common.BurningAddress2}, []uint64{0}, 0, nil, unStakingMetadata, nil)
 
