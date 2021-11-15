@@ -25,21 +25,22 @@ So it seems like a hybrid approach of order-book and AMM will be a rescue for bo
 
 Looking into the following example to see how a trade works in the hybrid approach:
 
-Suppose we have a pool of ETH/USDT with an AMM pool size of 50 ETH + 100,000 USDT (`amplifier = 2`) so the amplified pool size is 100 ETH + 200,000 and the rate is 2000 USDT/ETH.
+Suppose we have a pool of ETH/USDT with an AMM pool size of 50 ETH + 100,000 USDT (amplifier = 2) so the amplified pool size is 100 ETH + 200,000 and the rate is 2000 USDT/ETH.
 
 An order-book with existing limit orders placed by users as follows:
+
 **Sell orders**
-rate (quantity in ETH)
-2011 (2)
-2019 (1.5)
-2025 (4.2)
-2034 (3.7)
+- rate (quantity in ETH)
+- 2011 (2)
+- 2019 (1.5)
+- 2025 (4.2)
+- 2034 (3.7)
 
 **Buy orders**
-rate (quantity in ETH)
-1998 (0.4)
-1956 (3.8)
-1912 (2.2)
+- rate (quantity in ETH)
+- 1998 (0.4)
+- 1956 (3.8)
+- 1912 (2.2)
 
 When a user makes a swap of 2.5 ETH for USDT, it will be executed by:
 
@@ -51,21 +52,21 @@ When a user makes a swap of 2.5 ETH for USDT, it will be executed by:
 After completing the swaps above, the virtual AMM pool will have 101.11849 ETH + 197,788.05 USDT with a rate of 1956 and the order book should look like this:
 
 **Sell orders**
-rate (quantity in ETH)
-2011 (2)
-2019 (1.5)
-2025 (4.2)
-2034 (3.7)
+- rate (quantity in ETH)
+- 2011 (2)
+- 2019 (1.5)
+- 2025 (4.2)
+- 2034 (3.7)
 
 **Buy orders**
-rate (quantity in ETH)
-1956 (2.81849)
-1912 (2.2)
+- rate (quantity in ETH)
+- 1956 (2.81849)
+- 1912 (2.2)
 
 So the user will get 4,930.98 USDT from the swap of 2.5 ETH at the rate of 1972.39. If solely swapped with the AMM pool, the user will only get 4,878 USDT. The hybrid approach of Amplified AMM and Order-Books will help significantly reduce the slippage.
 
 ## Place an Order Book
-To add an order book, a user must create a transaction with the following metadata:
+In this section, we'll learn how to add new order to an existing pool. To add an order book, a user must create a transaction with the following metadata:
 ```go
 type AddOrderRequest struct {
     // TokenToSell is the ID of the selling token.
@@ -91,7 +92,7 @@ type AddOrderRequest struct {
 ```
 
 It's fortunate that users do not need to create this metadata themselves. Instead, they just need to use the provided method
-`CreateAndSendPdexv3AddOrderTransaction` with the following parameters:
+`CreateAndSendPdexv3AddOrderTransaction` with the following (sample) parameters:
 ```go
 privateKey := "112t8rneWAhErTC8YUFTnfcKHvB1x6uAVdehy1S8GP2psgqDxK3RHouUcd69fz88oAL9XuMyQ8mBY5FmmGJdcyrpwXjWBXRpoWwgJXjsxi4j"
 poolPairID := "0000000000000000000000000000000000000000000000000000000000000004-00000000000000000000000000000000000000000000000000000000000115d7-0868e6a074566d77c2ebdce49949352efbe69b0eda7da839bfc8985e7ed300f2"
