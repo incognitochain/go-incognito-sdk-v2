@@ -29,7 +29,7 @@ type AddLiquidityRequest struct {
 	tokenAmount uint64
 
 	// amplifier is the amplifier of the pool. In the case of contributing to an existing pool, this value must match that of the existing pool.
-	// The detail of this param can be found in Uniswap's White-paper (https://uniswap.org/whitepaper-v3.pdf).
+	// The detail of this param can be found in the Kyber's White-paper (https://files.kyber.network/DMM-Feb21.pdf).
 	amplifier   uint
 
 	metadataCommon.MetadataBase

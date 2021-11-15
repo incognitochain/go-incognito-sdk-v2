@@ -38,9 +38,9 @@ type AddLiquidityRequest struct {
     
     // tokenAmount is the contributing amount of this token.
     tokenAmount uint64
-    
-    // amplifier is the amplifier of the pool. In the case of contributing to an existing pool, this value must match that of the existing pool. 
-    // The detail of this param can be found in Uniswap's White-paper (https://uniswap.org/whitepaper-v3.pdf).
+
+    // amplifier is the amplifier of the pool. In the case of contributing to an existing pool, this value must match that of the existing pool.
+    // The detail of this param can be found in the Kyber's White-paper (https://files.kyber.network/DMM-Feb21.pdf).
     amplifier   uint
     
     metadataCommon.MetadataBase
@@ -217,7 +217,7 @@ func main() {
 
 ```
 
-We have seen how to add a pair to the pDEX. Let's see how we can [withdraw liquidity](./withdrawal.md) from the pDEX.
+We have seen how to add a pair to the pDEX. Let's see how we can [withdraw liquidity](./withdraw.md) from the pDEX.
 
 ---
 Return to [the table of contents](../../../README.md).
