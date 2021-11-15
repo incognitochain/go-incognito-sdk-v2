@@ -69,7 +69,7 @@ So we are contributing a pair of tokens (PRV and `000000000000000000000000000000
 Since we are creating a new pool, the `poolPairID` is left empty.
 
 ### Create contributing transactions
-To create the contributing transactions, we use the method CreateAndSendPdexv3ContributeTransaction provided by the SDK supplied with the above-specified paramters.
+To create the contributing transactions, we use the method `CreateAndSendPdexv3ContributeTransaction` provided by the SDK supplied with the above-specified paramters.
 ```go
 firstTx, err := client.CreateAndSendPdexv3ContributeTransaction(privateKey, poolPairID, pairHash, firstToken, nftIDStr, firstAmount, amplifier)
 if err != nil {
