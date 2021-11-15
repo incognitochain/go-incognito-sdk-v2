@@ -16,7 +16,7 @@ type WithdrawLiquidityRequest struct {
 	// nftID is the ID of the NFT which he used to make contribution.
 	nftID        string
 
-	// otaReceivers is a mapping from a tokenID to the corresponding one-time address for receiving back the funds.
+	// otaReceivers is a mapping from a tokenID to the corresponding one-time address for receiving back the funds (different OTAs for different tokens).
 	otaReceivers map[string]string
 
 	// shareAmount is the amount of share he wants to withdraw from the target pool.

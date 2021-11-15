@@ -10,8 +10,14 @@ import (
 
 type WithdrawalLPFeeRequest struct {
 	metadataCommon.MetadataBase
+
+	// PoolPairID is the ID of the target pool pair.
 	PoolPairID string                           `json:"PoolPairID"`
+
+	// NftID is the ID of the NFT which he used to make contribution.
 	NftID      common.Hash                      `json:"NftID"`
+
+	// is a mapping from a tokenID to the corresponding one-time address for receiving back the funds (different OTAs for different tokens).
 	Receivers  map[common.Hash]coin.OTAReceiver `json:"Receivers"`
 }
 
