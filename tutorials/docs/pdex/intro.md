@@ -12,12 +12,13 @@ new pDEX. Basically, the category is divided into the following sections:
 * [NFT Minting](./nft.md)
 * AMM Liquidity
   * [Contribution](./contribute.md)
-  * [Withdrawal](./withdrawal.md)
-* AMM One-sided Liquidity (Staking)
-  * [Staking]
-  * [UnStaking]
+  * [Withdrawal](./withdraw.md)
+  * [LP Fee Withdrawal](./lp_fee_withdraw.md)
 * Order Book
   * [Adding an Order Book]
   * [Cancel an Order Book]
+* AMM One-sided Liquidity (Staking)
+  * [Staking]
+  * [UnStaking]
 * Trading
 
