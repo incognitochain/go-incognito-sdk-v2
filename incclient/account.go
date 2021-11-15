@@ -2,6 +2,7 @@ package incclient
 
 import (
 	"fmt"
+	"github.com/incognitochain/go-incognito-sdk-v2/common"
 	"github.com/incognitochain/go-incognito-sdk-v2/wallet"
 )
 
@@ -20,54 +21,61 @@ func (client *IncClient) GetBalance(privateKey, tokenID string) (uint64, error) 
 	return balance, nil
 }
 
-//// GetBalanceAll returns all non-zero balances (for all tokenIDs) of a private key.
-//func (client *IncClient) GetBalanceAll(privateKey string) (map[string]uint64, error) {
-//	res := make(map[string]uint64)
-//	prvBalance, err := client.GetBalance(privateKey, common.PRVIDStr)
-//	if err != nil {
-//		return nil, err
-//	}
-//	if prvBalance > 0 {
-//		res[common.PRVIDStr] = prvBalance
-//	}
-//
-//	tokenList, err := client.GetListToken()
-//	if err != nil {
-//		return nil, err
-//	}
-//
-//	if client.cache != nil && client.cache.isRunning {
-//		tokenCount := 0
-//		for tokenID := range tokenList {
-//			reSync := tokenCount == 0
-//			unspentCoins, _, err := client.GetUnspentOutputCoinsFromCache(privateKey, tokenID, 0, reSync)
-//			if err != nil {
-//				return nil, err
-//			}
-//			balance := uint64(0)
-//			for _, unspentCoin := range unspentCoins {
-//				balance += unspentCoin.GetValue()
-//			}
-//			if balance > 0 {
-//				res[tokenID] = balance
-//			}
-//			tokenCount++
-//		}
-//		return res, nil
-//	}
-//
-//	for tokenID := range tokenList {
-//		tmpBalance, err := client.GetBalance(privateKey, tokenID)
-//		if err != nil {
-//			return nil, err
-//		}
-//		if tmpBalance > 0 {
-//			res[tokenID] = tmpBalance
-//		}
-//	}
-//
-//	return res, nil
-//}
+// GetAllNFTs returns all NFTs belonging to a private key.
+func (client *IncClient) GetAllNFTs(privateKey string) ([]string, error) {
+	allNFTs, err := client.GetListNftIDs(0)
+	if err != nil {
+		return nil, err
+	}
+
+	res := make([]string, 0)
+	if client.cache != nil && client.cache.isRunning {
+		_, err := client.GetBalance(privateKey, common.ConfidentialAssetID.String())
+		if err != nil {
+			return nil, err
+		}
+
+		otaKey := PrivateKeyToPrivateOTAKey(privateKey)
+		cachedAccount := client.cache.getCachedAccount(otaKey)
+		if cachedAccount == nil {
+			return nil, fmt.Errorf("cachedAccount not found")
+		}
+		for tokenID := range cachedAccount.CachedTokens {
+			if _, ok := allNFTs[tokenID]; ok {
+				utxos, _, err := client.GetUnspentOutputCoinsFromCache(privateKey, tokenID, 0)
+				if err != nil {
+					return nil, err
+				}
+				if len(utxos) > 0 {
+					balance := uint64(0)
+					for _, utxo := range utxos {
+						balance += utxo.GetValue()
+					}
+					if balance == 1 {
+						res = append(res, tokenID)
+					}
+				}
+			}
+		}
+
+	} else {
+		for nftID := range allNFTs {
+			balance, err := client.GetBalance(privateKey, nftID)
+			if err != nil {
+				return nil, err
+			}
+			if balance == 1 {
+				res = append(res, nftID)
+			}
+		}
+	}
+
+	if len(res) == 0 {
+		return nil, fmt.Errorf("no NFT found")
+	}
+	return res, nil
+}
+
 
 // ImportAccount imports a BIP39 mnemonic string and finds all child keys derived from the mnemonic. The first return KeyWallet
 // is the master wallet, which is used to derive the rest of child KeyWallet.

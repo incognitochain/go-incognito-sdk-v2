@@ -2,6 +2,12 @@
 Description: Tutorial on how to shield pegged-PRV into the Incognito network
 ---
 
+# Before Going Further
+
+Please read through the tutorials on [key submission](../accounts/submit_key.md)
+and [UTXO cache](../accounts/utxo_cache.md) for proper balance and UTXO retrieval. Skip these parts if you're familiar
+with these notions.
+
 # Shielding pegged-PRV
 
 This is the same as shielding an EVM token except for the
@@ -61,5 +67,6 @@ func main() {
 	}
 }
 ```
+
 ---
 Return to [the table of contents](../../../README.md).

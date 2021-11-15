@@ -1,15 +1,32 @@
 ---
 Description: Tutorial on how to withdraw PRV to EVM networks
 ---
+
+# Before Going Further
+
+Please read through the tutorials on [key submission](../accounts/submit_key.md)
+and [UTXO cache](../accounts/utxo_cache.md) for proper balance and UTXO retrieval. Skip these parts if you're familiar
+with these notions.
+
 # Withdraw PRV to EVM networks
-By the end of September 2021, Incognito allows users to withdraw their PRV to the Ethereum/Binance Smart Chain networks. This is enabled by the implementations of two pegged-PRV tokens ([ERC20](https://etherscan.io/address/0xB64fde8f199F073F41c132B9eC7aD5b61De0B1B7#code) / [BEP20](https://bscscan.com/address/0xB64fde8f199F073F41c132B9eC7aD5b61De0B1B7)).
-The withdrawing procedure is pretty much the same as that of an EVM token:
-* The first step is to burn the PRV inside the Incognito network. This is done using the function [`CreateAndSendBurningPRVPeggingRequestTransaction`](../../../incclient/prv_pegging.go). This step also needs to specify which network will the PRV be withdrawn to (using param `isBSC`, defaults to `false`).
-* The second step is to retrieve the burn proof from the beacon chain. This is done via the function [`GetBurnPRVPeggingProof`](../../../incclient/prv_pegging.go).
+
+By the end of September 2021, Incognito allows users to withdraw their PRV to the Ethereum/Binance Smart Chain networks.
+This is enabled by the implementations of two pegged-PRV
+tokens ([ERC20](https://etherscan.io/address/0xB64fde8f199F073F41c132B9eC7aD5b61De0B1B7#code)
+/ [BEP20](https://bscscan.com/address/0xB64fde8f199F073F41c132B9eC7aD5b61De0B1B7)). The withdrawing procedure is pretty
+much the same as that of an EVM token:
+
+* The first step is to burn the PRV inside the Incognito network. This is done using the
+  function [`CreateAndSendBurningPRVPeggingRequestTransaction`](../../../incclient/prv_pegging.go). This step also needs
+  to specify which network will the PRV be withdrawn to (using param `isBSC`, defaults to `false`).
+* The second step is to retrieve the burn proof from the beacon chain. This is done via the
+  function [`GetBurnPRVPeggingProof`](../../../incclient/prv_pegging.go).
 * Finally, we submit the burn proof to the designated pegged-PRV smart contract.
 
 ## Example
+
 [unshield_prv.go](../../code/bridge/unshield_prv/unshield_prv.go)
+
 ```go
 package main
 

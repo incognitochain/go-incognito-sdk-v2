@@ -1,6 +1,13 @@
 ---
 Description: Tutorial on how to withdraw pairs from pDEX.
 ---
+
+# Before Going Further
+
+Please read through the tutorials on [key submission](../accounts/submit_key.md)
+and [UTXO cache](../accounts/utxo_cache.md) for proper balance and UTXO retrieval. Skip these parts if you're familiar
+with these notions.
+
 # pDEX Withdrawal
 Liquidity providers can withdraw their contributions at any time they want. The Client implements a transaction [`CreateAndSendPDEWithdrawalTransaction`](../../../incclient/pdex.go) to facilitate this operation.
 
