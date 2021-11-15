@@ -1,5 +1,5 @@
 ---
-Description: Tutorial on how to withdraw pairs from pDEX.
+Description: Tutorial on how to withdraw liquidity from the pDEX.
 ---
 
 # Before Going Further
@@ -9,31 +9,31 @@ and [UTXO cache](../accounts/utxo_cache.md) for proper balance and UTXO retrieva
 with these notions.
 
 # pDEX Withdrawal
-Liquidity providers can withdraw their contributions at any time they want. The Client implements a transaction [`CreateAndSendPDEWithdrawalTransaction`](../../../incclient/pdex.go) to facilitate this operation.
-
-## Prepare our inputs
+In the previous tutorial, we have learned how to create a new pool in the pDEX and contribute liquidity to it. In this tutorial,
+we'll walk through the withdrawal process. Liquidity providers can withdraw their contributions at any time they want by submitting a transaction
+which consists of the following metadata:
 ```go
-privateKey := "112t8rneWAhErTC8YUFTnfcKHvB1x6uAVdehy1S8GP2psgqDxK3RHouUcd69fz88oAL9XuMyQ8mBY5FmmGJdcyrpwXjWBXRpoWwgJXjsxi4j"
+type WithdrawLiquidityRequest struct {
+metadataCommon.MetadataBase
 
-firstToken := common.PRVIDStr
-secondToken := "0000000000000000000000000000000000000000000000000000000000000100"
-addr := incclient.PrivateKeyToPaymentAddress(privateKey, -1)
-sharedAmount, err := client.GetShareAmount(0, firstToken, secondToken, addr) // get our current shared amount
-```
-We need to specify the two tokenIDs we wish to withdraw, our payment address, and the withdrawal shared amount. In this case, we are withdrawing everything we have in the pDEX.
+// poolPairID is the ID of the target pool in which the user wants to withdraw his contribution from.
+poolPairID   string
 
-## Create and send the withdrawal transaction
-```go
-txHash, err := client.CreateAndSendPDEWithdrawalTransaction(privateKey, firstToken, secondToken, sharedAmount, 2)
-if err != nil {
-	log.Fatal(err)
+// nftID is the ID of the NFT which he used to contribute with.
+nftID        string
+
+// otaReceivers is a mapping from a tokenID to the corresponding one-time address for receiving back the funds.
+otaReceivers map[string]string
+
+// shareAmount is the amount of share he wants to withdraw from the target pool.
+shareAmount  uint64
 }
-
-fmt.Printf("Withdrawal transaction %v\n", txHash)
 ```
+
+An LP can create this type of transaction using the method `CreateAndSendPdexv3WithdrawLiquidityTransaction`. See the full example below.
 
 ## Example
-[withdraw.go](../../code/pdex/withdrawal/withdraw.go)
+[withdraw.go](../../code/pdex/pdex_withdraw/withdraw.go)
 
 ```go
 package main
@@ -41,12 +41,13 @@ package main
 import (
 	"fmt"
 	"github.com/incognitochain/go-incognito-sdk-v2/common"
-	"github.com/incognitochain/go-incognito-sdk-v2/incclient"
 	"log"
+
+	"github.com/incognitochain/go-incognito-sdk-v2/incclient"
 )
 
 func main() {
-	client, err := incclient.NewTestNet1Client()
+	client, err := incclient.NewTestNetClient()
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -54,11 +55,12 @@ func main() {
 	privateKey := "112t8rneWAhErTC8YUFTnfcKHvB1x6uAVdehy1S8GP2psgqDxK3RHouUcd69fz88oAL9XuMyQ8mBY5FmmGJdcyrpwXjWBXRpoWwgJXjsxi4j"
 
 	firstToken := common.PRVIDStr
-	secondToken := "0000000000000000000000000000000000000000000000000000000000000100"
-	addr := incclient.PrivateKeyToPaymentAddress(privateKey, -1)
-	sharedAmount, err := client.GetShareAmount(0, firstToken, secondToken, addr) // get our current shared amount
+	secondToken := "00000000000000000000000000000000000000000000000000000000000115d7"
+	pairID := "0000000000000000000000000000000000000000000000000000000000000004-00000000000000000000000000000000000000000000000000000000000115d7-0868e6a074566d77c2ebdce49949352efbe69b0eda7da839bfc8985e7ed300f2"
+	nftIDStr := "54d488dae373d2dc4c7df4d653037c8d80087800cade4e961efb857c68b91a22"
+	sharedAmount := uint64(5000)
 
-	txHash, err := client.CreateAndSendPDEWithdrawalTransaction(privateKey, firstToken, secondToken, sharedAmount, 2)
+	txHash, err := client.CreateAndSendPdexv3WithdrawLiquidityTransaction(privateKey, pairID, firstToken, secondToken, nftIDStr, sharedAmount)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -66,6 +68,8 @@ func main() {
 	fmt.Printf("Withdrawal transaction %v\n", txHash)
 }
 ```
+
+Next, we will see have to [withdraw LP fees](./lp_fee_withdraw.md) from the pDEX.
 
 ---
 Return to [the table of contents](../../../README.md).
