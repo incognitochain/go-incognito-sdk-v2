@@ -14,19 +14,19 @@ we'll walk through the withdrawal process. Liquidity providers can withdraw thei
 which consists of the following metadata:
 ```go
 type WithdrawLiquidityRequest struct {
-metadataCommon.MetadataBase
-
-// poolPairID is the ID of the target pool in which the user wants to withdraw his contribution from.
-poolPairID   string
-
-// nftID is the ID of the NFT which he used to contribute with.
-nftID        string
-
-// otaReceivers is a mapping from a tokenID to the corresponding one-time address for receiving back the funds.
-otaReceivers map[string]string
-
-// shareAmount is the amount of share he wants to withdraw from the target pool.
-shareAmount  uint64
+    metadataCommon.MetadataBase
+    
+    // poolPairID is the ID of the target pool in which the user wants to withdraw his contribution from.
+    poolPairID   string
+    
+    // nftID is the ID of the NFT which he used to contribute with.
+    nftID        string
+    
+    // otaReceivers is a mapping from a tokenID to the corresponding one-time address for receiving back the funds.
+    otaReceivers map[string]string
+    
+    // shareAmount is the amount of share he wants to withdraw from the target pool.
+    shareAmount  uint64
 }
 ```
 
