@@ -3,9 +3,9 @@ Description: Introduction to NFTs in pDEX v3
 ---
 
 ## What is an NFT?
-An NFT is a pDEX Access Token, introduced in the new pDEX v3 to enhance the privacy when interacting with the pDEX.
-You wonder if this NFT is the same as the Non-Fungible Token in the wild? The answer is no. In the context of pDEX v3, an NFT
-mainly represents the ownership of a person on the pDEX (e.g, liquidity, order books, etc.). It is required that the user must supply 
+An NFT is a pDEX Access Token, introduced in the new pDEX v3 to enhance privacy when interacting with the pDEX.
+Do you wonder if this NFT is the same as the Non-Fungible Token in the wild? The answer is no. In the context of pDEX v3, an NFT
+mainly represents the ownership of a person on the pDEX (e.g, liquidity, order books, etc.). It is required that the user must supply
 an NFT when performing one of these actions.
 
 ## Why NFTs?
@@ -32,11 +32,11 @@ And if this person makes another contribution, for example,
     "TxReqID": "dff913ce31224ad682b83d9804c037e4b2330b98b2c7f936d510a1734370a7ee"
 }
 ```
-the `ContributorAddressStr` stays the same. In this way, an observer can easily tell that these contributions are of the same person. As a consequence, 
+the `ContributorAddressStr` stays the same. In this way, an observer can easily tell that these contributions are of the same person. As a consequence,
 he can easily link any contributions (if they are related).
 
-Let's see how NFTs can help in this scenario. In the new pDEX, whenever a user want to perform a pDEX action (except for trading), he must send along an NFT, and a one-time address (OTA). If he wants to 
-make another contribution, he just needs to create another NFT and another OTA for it. 
+Let's see how NFTs can help in this scenario. In the new pDEX, whenever a user wants to perform a pDEX action (except for trading), he must send along an NFT, and a one-time address (OTA). If he wants to
+make another contribution, he just needs to create another NFT and another OTA for it.
 
 Now, let's see how contributions look like in the new pDEX with the following two examples.
 ```json
@@ -64,19 +64,19 @@ Now, let's see how contributions look like in the new pDEX with the following tw
     "ShardID": 0
 }
 ```
-The `ContributorAddressStr` in the previous example is now replaced with an `OtaReceiver` and an `NftID`. Here, the `NftID` represents the ownership while the `OtaReceiver` is used to received back the contributed token when withdrawing.
+The `ContributorAddressStr` in the previous example is now replaced with an `OtaReceiver` and an`NftID`. Here, the `NftID` represents the ownership while the `OtaReceiver` is used to receive back the contributed token when withdrawing.
 As we can see, although the two contributions are of the same person, there's no link between them.
 
 ## How to Mint an NFT?
 To mint a new NFT token, we need to create a transaction enclosed with the following metadata:
 ```go
 type UserMintNftRequest struct {
-	metadataCommon.MetadataBase
-	otaReceiver string
-	amount      uint64
+   metadataCommon.MetadataBase
+   otaReceiver string
+   amount      uint64
 }
 ```
-in which 
+in which
 * `otaReceiver`: the OTA address for receiving the NFT.
 * `amount`: the amount of burned PRV to mint the NFT. To prevent one from creating an infinite number of NFTs, an amount of PRV must be burned when minting a new NFT. This value is currently set to 1 PRV.
 
@@ -86,8 +86,8 @@ The status consists of the following information.
 // MintNFTStatus represents the status of a pDEX nft minting transaction.
 type MintNFTStatus struct {
     // Status represents the status of the transaction, and should be understood as follows:
-    //	- 1: the request is accepted;
-    //	- 2: the request is rejected.
+    // - 1: the request is accepted;
+    // - 2: the request is rejected.
     Status int `json:"Status"`
     
     // BurntAmount is the amount of PRV that was burned to mint this NFT.
@@ -97,49 +97,49 @@ type MintNFTStatus struct {
     NftID string `json:"NftID"`
 }
 ```
-where 
+where
 See the following example ([mint.go](../../code/pdex/nft/mint.go)).
 
 ```go
 package main
 
 import (
-	"encoding/json"
-	"fmt"
-	"github.com/incognitochain/go-incognito-sdk-v2/incclient"
-	"log"
-	"time"
+   "encoding/json"
+   "fmt"
+   "github.com/incognitochain/go-incognito-sdk-v2/incclient"
+   "log"
+   "time"
 )
 
 func main() {
-	client, err := incclient.NewTestNetClient()
-	if err != nil {
-		log.Fatal(err)
-	}
+   client, err := incclient.NewTestNetClient()
+   if err != nil {
+      log.Fatal(err)
+   }
 
-	// replace with your network's data
-	// burn some PRV to get your NFTID to use in pdex operations
-	privateKey := ""
+   // replace with your network's data
+   // burn some PRV to get your NFTID to use in pdex operations
+   privateKey := ""
 
-	txHash, err := client.CreateAndSendPdexv3UserMintNFTransaction(privateKey)
-	if err != nil {
-		log.Fatal(err)
-	}
+   txHash, err := client.CreateAndSendPdexv3UserMintNFTransaction(privateKey)
+   if err != nil {
+      log.Fatal(err)
+   }
 
-	fmt.Printf("Mint-NFT submitted in TX %v\n", txHash)
+   fmt.Printf("Mint-NFT submitted in TX %v\n", txHash)
 
-	// check the minting status
-	time.Sleep(100 * time.Second)
-	status, err := client.CheckNFTMintingStatus(txHash)
-	if err != nil {
-		log.Fatal(err)
-	}
+   // check the minting status
+   time.Sleep(100 * time.Second)
+   status, err := client.CheckNFTMintingStatus(txHash)
+   if err != nil {
+      log.Fatal(err)
+   }
 
-	jsb, err := json.MarshalIndent(status, "", "\t")
-	if err != nil {
-		log.Fatal(err)
-	}
-	fmt.Printf("status: %v\n", string(jsb))
+   jsb, err := json.MarshalIndent(status, "", "\t")
+   if err != nil {
+      log.Fatal(err)
+   }
+   fmt.Printf("status: %v\n", string(jsb))
 }
 
 ```
