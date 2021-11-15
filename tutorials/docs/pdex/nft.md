@@ -86,24 +86,7 @@ in which
 * `otaReceiver`: the OTA address for receiving the NFT.
 * `amount`: the amount of burned PRV to mint the NFT. To prevent one from creating an infinite number of NFTs, an amount of PRV must be burned when minting a new NFT. This value is currently set to 1 PRV.
 
-Luckily, you don't have to create the metadata yourself, the SDK provides a function called `CreateAndSendPdexv3UserMintNFTransaction`. With this function, all you need to do is to supply is your private key. And to check the status of an NFT-minting transaction, we use the function `CheckNFTMintingStatus` supplied with the created hash.
-The status consists of the following information.
-```go
-// MintNFTStatus represents the status of a pDEX nft minting transaction.
-type MintNFTStatus struct {
-    // Status represents the status of the transaction, and should be understood as follows:
-    // - 1: the request is accepted;
-    // - 2: the request is rejected.
-    Status int `json:"Status"`
-    
-    // BurntAmount is the amount of PRV that was burned to mint this NFT.
-    BurntAmount uint64 `json:"BurntAmount"`
-    
-    // NftID is the ID of the minted NFT.
-    NftID string `json:"NftID"`
-}
-```
-where
+Luckily, you don't have to create the metadata yourself, the SDK provides a function called `CreateAndSendPdexv3UserMintNFTransaction`. With this function, all you need to do is to supply is your private key. And to check the status of an NFT-minting transaction, we use the function `CheckNFTMintingStatus` supplied with the created hash (detail in [the query tutorial](./query.md)).
 See the following example ([mint.go](../../code/pdex/nft/mint.go)).
 
 ```go
@@ -147,7 +130,6 @@ func main() {
    }
    fmt.Printf("status: %v\n", string(jsb))
 }
-
 ```
 
 We have seen how to mint an NFT and check its status on the new pDEX. Next, we see how to use this NFT to perform a new pDEX action, i.e, [pDEX contribution](./contribute.md).

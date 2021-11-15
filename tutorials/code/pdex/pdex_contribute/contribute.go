@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/incognitochain/go-incognito-sdk-v2/common"
-
 	"github.com/incognitochain/go-incognito-sdk-v2/incclient"
 	"log"
 	"time"
@@ -18,28 +17,28 @@ func main() {
 
 	// replace with your network's data
 	privateKey := "112t8rneWAhErTC8YUFTnfcKHvB1x6uAVdehy1S8GP2psgqDxK3RHouUcd69fz88oAL9XuMyQ8mBY5FmmGJdcyrpwXjWBXRpoWwgJXjsxi4j"
-	// addr := incclient.PrivateKeyToPaymentAddress(privateKey, -1)
-	pairID := "MyContributionID"
-	pairHash := "PH1"
+	poolPairID := "" // for pool-initializing, leave it empty. Otherwise, input the poolPairID of the existing pool
+	pairHash := "JUSTARANDOMSTRING" // a string to match the two transactions of the contribution
 	firstToken := common.PRVIDStr
-	secondToken := "fd0febf5a30be293a3e241aeb860ce843f49415ac5914e4e96b428e195af9d50"
-	firstAmount := uint64(10000)
-	secondAmount := uint64(10000)
+	secondToken := "00000000000000000000000000000000000000000000000000000000000115d7"
+	firstAmount := uint64(3000)
+	secondAmount := uint64(3000)
 	nftIDStr := "54d488dae373d2dc4c7df4d653037c8d80087800cade4e961efb857c68b91a22"
-	amplifier := uint64(30000)
+	amplifier := uint64(15000)
 
-	firstTx, err := client.CreateAndSendPdexv3ContributeTransaction(privateKey, pairID, pairHash, firstToken, nftIDStr, firstAmount, amplifier)
+	firstTx, err := client.CreateAndSendPdexv3ContributeTransaction(privateKey, poolPairID, pairHash, firstToken, nftIDStr, firstAmount, amplifier)
 	if err != nil {
 		log.Fatal(err)
 	}
+	fmt.Printf("firstTx: %v\n", firstTx)
 
-	time.Sleep(60 * time.Second)	// expectedSecondAmount, err := client.CheckPrice(firstToken, secondToken, firstAmount)
-	secondTx, err := client.CreateAndSendPdexv3ContributeTransaction(privateKey, pairID, pairHash, secondToken, nftIDStr, secondAmount, amplifier)
+	// wait for the first transaction to be confirmed, so the nftID has been re-minted to proceed.
+	//time.Sleep(60 * time.Second)
+	secondTx, err := client.CreateAndSendPdexv3ContributeTransaction(privateKey, poolPairID, pairHash, secondToken, nftIDStr, secondAmount, amplifier)
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	fmt.Printf("%v - %v\n", firstTx, secondTx)
+	fmt.Printf("secondTx: %v\n", secondTx)
 
 	// check the minting status
 	time.Sleep(100 * time.Second)
