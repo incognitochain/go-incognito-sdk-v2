@@ -8,13 +8,30 @@ import (
 )
 
 type AddLiquidityRequest struct {
-	poolPairID  string // only "" for the first contribution of pool
+	// poolPairID is the ID of the target pool in which the LP wants to add liquidity to.
+	// If this is the first contribution (i.e, pool-initialization), the poolPairID must be left empty.
+	poolPairID  string
+
+	// pairHash is a string for matching the two contributing transactions. It can be anything as long as it is the same in
+	// both contributing transaction.
 	pairHash    string
-	otaReceiver string // refund pToken
+
+	// otaReceiver is a one-time address for receiving back the token in case of being refunded.
+	otaReceiver string
+
+	// tokenID is the ID of the contributing token.
 	tokenID     string
+
+	// nftID is the ID of the NFT associated with this contribution. This value must be the same in both contributing transactions.
 	nftID       string
+
+	// tokenAmount is the contributing amount of this token.
 	tokenAmount uint64
-	amplifier   uint // only set for the first contribution
+
+	// amplifier is the amplifier of the pool. In the case of contributing to an existing pool, this value must match that of the existing pool.
+	// The detail of this param can be found in Uniswap's White-paper (https://uniswap.org/whitepaper-v3.pdf).
+	amplifier   uint
+
 	metadataCommon.MetadataBase
 }
 
