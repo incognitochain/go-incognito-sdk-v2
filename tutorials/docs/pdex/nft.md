@@ -2,6 +2,12 @@
 Description: Introduction to NFTs in pDEX v3
 ---
 
+## Before Going Further
+
+Please read through the tutorials on [key submission](../accounts/submit_key.md)
+and [UTXO cache](../accounts/utxo_cache.md) for proper balance and UTXO retrieval. Skip these parts if you're familiar
+with these notions.
+
 ## What is an NFT?
 An NFT is a pDEX Access Token, introduced in the new pDEX v3 to enhance privacy when interacting with the pDEX.
 Do you wonder if this NFT is the same as the Non-Fungible Token in the wild? The answer is no. In the context of pDEX v3, an NFT

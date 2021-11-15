@@ -16,7 +16,7 @@ func main() {
 
 	// replace with your network's data
 	// burn some PRV to get your NFTID to use in pdex operations
-	privateKey := ""
+	privateKey := "112t8rneWAhErTC8YUFTnfcKHvB1x6uAVdehy1S8GP2psgqDxK3RHouUcd69fz88oAL9XuMyQ8mBY5FmmGJdcyrpwXjWBXRpoWwgJXjsxi4j"
 
 	txHash, err := client.CreateAndSendPdexv3UserMintNFTransaction(privateKey)
 	if err != nil {
