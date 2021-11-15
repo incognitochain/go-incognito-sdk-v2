@@ -60,8 +60,8 @@ poolPairID := ""       // for pool-initializing, leave it empty. Otherwise, inpu
 pairHash := "JUSTARANDOMSTRING" // a string to match the two transactions of the contribution
 firstToken := common.PRVIDStr
 secondToken := "00000000000000000000000000000000000000000000000000000000000115d7"
-firstAmount := uint64(3000)
-secondAmount := uint64(3000)
+firstAmount := uint64(10000)
+secondAmount := uint64(10000)
 nftIDStr := "54d488dae373d2dc4c7df4d653037c8d80087800cade4e961efb857c68b91a22"
 amplifier := uint64(15000)
 ```
@@ -118,8 +118,8 @@ poolPairID := "0000000000000000000000000000000000000000000000000000000000000004-
 pairHash := "JUSTANOTHERARANDOMSTRING" // a string to match the two transactions of the contribution
 firstToken := common.PRVIDStr
 secondToken := "00000000000000000000000000000000000000000000000000000000000115d7"
-firstAmount := uint64(3000)
-secondAmount := uint64(3000)
+firstAmount := uint64(10000)
+secondAmount := uint64(10000)
 nftIDStr := "54d488dae373d2dc4c7df4d653037c8d80087800cade4e961efb857c68b91a22"
 amplifier := uint64(15000)
 ```
