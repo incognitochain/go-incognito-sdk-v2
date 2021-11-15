@@ -16,7 +16,7 @@ depends solely on liquidity added to the pool. Similarly, another big trade (say
 Although the new AMM model allows [an amplifier for each pool](./contribute.md) to amplify the pool liquidity, the slippage is still considerable.
 
 This is why Incognito has introduced a hybrid approach combining both the Multiplied (or Amplified) AMM and Order-Books to utilize
-the best of both worlds. Moreover, from the user experience perspective, users do definitely have a demand of placing limit orders on desired prices.
+the best of both worlds. Moreover, from the user experience perspective, users do have a demand of placing limit orders on desired prices.
 
 ## How the Hybrid Approach Works
 So it seems like a hybrid approach of order-book and AMM will be a rescue for both issues above because:
@@ -66,28 +66,28 @@ After completing the swaps above, the virtual AMM pool will have 101.11849 ETH +
 So the user will get 4,930.98 USDT from the swap of 2.5 ETH at the rate of 1972.39. If solely swapped with the AMM pool, the user will only get 4,878 USDT. The hybrid approach of Amplified AMM and Order-Books will help significantly reduce the slippage.
 
 ## Place an Order Book
-In this section, we'll learn how to add new order to an existing pool. To add an order book, a user must create a transaction with the following metadata:
+In this section, we'll learn how to add a new order to an existing pool. To add an order book, a user must create a transaction with the following metadata:
 ```go
 type AddOrderRequest struct {
-    // TokenToSell is the ID of the selling token.
-    TokenToSell         common.Hash                      `json:"TokenToSell"`
-    
-    // PoolPairID is the ID of the pool pair where the order belongs to. In Incognito, an order book is subject to a specific pool.
-    PoolPairID          string                           `json:"PoolPairID"`
-    
-    // SellAmount is the amount of the `TokenToSell` the user wished to sell.
-    SellAmount          uint64                           `json:"SellAmount"`
-    
-    // MinAcceptableAmount is the minimum amount of the buying token the user wished to receive.
-    MinAcceptableAmount uint64                           `json:"MinAcceptableAmount"`
-    
-    // Receiver is a mapping from a tokenID to the corresponding one-time address for receiving back the funds (different OTAs for different tokens).
-    Receiver            map[common.Hash]coin.OTAReceiver `json:"Receiver"`
-    
-    // is the ID of the NFT associated with the order.
-    NftID               common.Hash                      `json:"NftID"`
-    
-    metadataCommon.MetadataBase
+// TokenToSell is the ID of the selling token.
+TokenToSell         common.Hash                      `json:"TokenToSell"`
+
+// PoolPairID is the ID of the pool pair where the order belongs to. In Incognito, an order book is subject to a specific pool.
+PoolPairID          string                           `json:"PoolPairID"`
+
+// SellAmount is the amount of the `TokenToSell` the user wished to sell.
+SellAmount          uint64                           `json:"SellAmount"`
+
+// MinAcceptableAmount is the minimum amount of the buying token the user wished to receive.
+MinAcceptableAmount uint64                           `json:"MinAcceptableAmount"`
+
+// Receiver is a mapping from a tokenID to the corresponding one-time address for receiving back the funds (different OTAs for different tokens).
+Receiver            map[common.Hash]coin.OTAReceiver `json:"Receiver"`
+
+// is the ID of the NFT associated with the order.
+NftID               common.Hash                      `json:"NftID"`
+
+metadataCommon.MetadataBase
 }
 ```
 
@@ -103,8 +103,8 @@ sellAmount := uint64(100000)
 minAcceptableAmount := uint64(100000)
 
 txHash, err := client.CreateAndSendPdexv3AddOrderTransaction(privateKey,
-    poolPairID, tokenToSell, tokenToBuy, nftIDStr,
-    sellAmount, minAcceptableAmount,
+poolPairID, tokenToSell, tokenToBuy, nftIDStr,
+sellAmount, minAcceptableAmount,
 )
 ```
 Please note that the `poolPairID` must consist of both the `tokenToSell` and `tokenToBuy`.
@@ -113,8 +113,8 @@ Please note that the `poolPairID` must consist of both the `tokenToSell` and `to
 After placing an order, we wish to know its status to see if it's accepted. For this, we use the method `CheckOrderAddingStatus`. An example result will look like the following,
 ```go
 {
-    "Status": 1,
-    "OrderID": "4d033bad4ae9ef2104feda1712e2b7b7ef215b25a4e58103e6f5a29bb63fd387"
+"Status": 1,
+"OrderID": "4d033bad4ae9ef2104feda1712e2b7b7ef215b25a4e58103e6f5a29bb63fd387"
 }
 ```
 where `Status = 1` indicates the order has been successfully added, and `OrderID` is the unique ID of the order.
@@ -126,48 +126,48 @@ where `Status = 1` indicates the order has been successfully added, and `OrderID
 package main
 
 import (
-   "encoding/json"
-   "fmt"
-   "github.com/incognitochain/go-incognito-sdk-v2/common"
-   "github.com/incognitochain/go-incognito-sdk-v2/incclient"
-   "log"
-   "time"
+	"encoding/json"
+	"fmt"
+	"github.com/incognitochain/go-incognito-sdk-v2/common"
+	"github.com/incognitochain/go-incognito-sdk-v2/incclient"
+	"log"
+	"time"
 )
 
 func main() {
-   client, err := incclient.NewTestNetClient()
-   if err != nil {
-      log.Fatal(err)
-   }
+	client, err := incclient.NewTestNetClient()
+	if err != nil {
+		log.Fatal(err)
+	}
 
-   // replace with your network's data
-   privateKey := "112t8rneWAhErTC8YUFTnfcKHvB1x6uAVdehy1S8GP2psgqDxK3RHouUcd69fz88oAL9XuMyQ8mBY5FmmGJdcyrpwXjWBXRpoWwgJXjsxi4j"
-   poolPairID := "0000000000000000000000000000000000000000000000000000000000000004-00000000000000000000000000000000000000000000000000000000000115d7-0868e6a074566d77c2ebdce49949352efbe69b0eda7da839bfc8985e7ed300f2"
-   tokenToSell := common.PRVIDStr
-   tokenToBuy := "00000000000000000000000000000000000000000000000000000000000115d7"
-   nftIDStr := "54d488dae373d2dc4c7df4d653037c8d80087800cade4e961efb857c68b91a22"
-   sellAmount := uint64(100000)
-   minAcceptableAmount := uint64(100000)
+	// replace with your network's data
+	privateKey := "112t8rneWAhErTC8YUFTnfcKHvB1x6uAVdehy1S8GP2psgqDxK3RHouUcd69fz88oAL9XuMyQ8mBY5FmmGJdcyrpwXjWBXRpoWwgJXjsxi4j"
+	poolPairID := "0000000000000000000000000000000000000000000000000000000000000004-00000000000000000000000000000000000000000000000000000000000115d7-0868e6a074566d77c2ebdce49949352efbe69b0eda7da839bfc8985e7ed300f2"
+	tokenToSell := common.PRVIDStr
+	tokenToBuy := "00000000000000000000000000000000000000000000000000000000000115d7"
+	nftIDStr := "54d488dae373d2dc4c7df4d653037c8d80087800cade4e961efb857c68b91a22"
+	sellAmount := uint64(100000)
+	minAcceptableAmount := uint64(100000)
 
-   txHash, err := client.CreateAndSendPdexv3AddOrderTransaction(privateKey,
-      poolPairID, tokenToSell, tokenToBuy, nftIDStr,
-      sellAmount, minAcceptableAmount,
-   )
-   if err != nil {
-      log.Fatal(err)
-   }
-   fmt.Printf("txHash: %v\n", txHash)
+	txHash, err := client.CreateAndSendPdexv3AddOrderTransaction(privateKey,
+		poolPairID, tokenToSell, tokenToBuy, nftIDStr,
+		sellAmount, minAcceptableAmount,
+	)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Printf("txHash: %v\n", txHash)
 
-   time.Sleep(100 * time.Second)
-   status, err := client.CheckOrderAddingStatus(txHash)
-   if err != nil {
-      log.Fatal(err)
-   }
-   jsb, err := json.MarshalIndent(status, "", "\t")
-   if err != nil {
-      log.Fatal(err)
-   }
-   fmt.Printf("status: %v\n", string(jsb))
+	time.Sleep(100 * time.Second)
+	status, err := client.CheckOrderAddingStatus(txHash)
+	if err != nil {
+		log.Fatal(err)
+	}
+	jsb, err := json.MarshalIndent(status, "", "\t")
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Printf("status: %v\n", string(jsb))
 }
 ```
 
