@@ -49,7 +49,7 @@ type AddLiquidityRequest struct {
 
 Now, let's try to create a new pDEX pool using the SDK.
 ## Create a new pDEX Pool
-### Prepare out inputs
+### Prepare our inputs
 As usual, we need to specify our private key.
 ```go
 privateKey := "112t8rneWAhErTC8YUFTnfcKHvB1x6uAVdehy1S8GP2psgqDxK3RHouUcd69fz88oAL9XuMyQ8mBY5FmmGJdcyrpwXjWBXRpoWwgJXjsxi4j"
@@ -112,7 +112,7 @@ This case is somewhat similar to the case of initializing a pool, except:
 
 Suppose that the previous contribution created a new pool with the `poolPairID` `0000000000000000000000000000000000000000000000000000000000000004-00000000000000000000000000000000000000000000000000000000000115d7-0868e6a074566d77c2ebdce49949352efbe69b0eda7da839bfc8985e7ed300f2`.
 We can add liquidity to this pool as follows.
-### Prepare out inputs
+### Prepare our inputs
 ```go
 poolPairID := "0000000000000000000000000000000000000000000000000000000000000004-00000000000000000000000000000000000000000000000000000000000115d7-0868e6a074566d77c2ebdce49949352efbe69b0eda7da839bfc8985e7ed300f2"       // for pool-initializing, leave it empty. Otherwise, input the poolPairID of the existing pool
 pairHash := "JUSTANOTHERARANDOMSTRING" // a string to match the two transactions of the contribution
