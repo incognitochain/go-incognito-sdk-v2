@@ -68,7 +68,7 @@ After submit a withdrawal request, we can use the method `CheckOrderWithdrawalSt
 where `Status = 1` indicates the order has been successfully added, etc.
 
 ## Example
-[add_order.go](../../code/pdex/ob_add/add_order.go)
+[cancel_order.go](../../code/pdex/ob_withdraw/withdraw.go)
 
 ```go
 package main
