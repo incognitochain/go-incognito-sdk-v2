@@ -44,7 +44,7 @@ Following is a series of examples to help you get familiar with the Incognito ne
 * [pDEX](tutorials/docs/pdex)
     * [Querying pDEX](tutorials/docs/pdex/query.md)
     * [Creating pDEX Contribution Transactions](tutorials/docs/pdex/contribute.md)
-    * [Creating pDEX Withdrawal Transactions](tutorials/docs/pdex/withdrawal.md)
+    * [Creating pDEX Withdrawal Transactions](tutorials/docs/pdex/withdraw.md)
     * [Creating pDEX Trading Transactions](tutorials/docs/pdex/trade.md)
 * [Staking](tutorials/docs/staking)
     * [Creating Staking Transactions](tutorials/docs/staking/stake.md)
