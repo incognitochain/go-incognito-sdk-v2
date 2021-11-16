@@ -1,8 +1,10 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/incognitochain/go-incognito-sdk-v2/incclient"
 )
@@ -14,19 +16,30 @@ func main() {
 	}
 
 	// replace with your network's data
-	privateKey := ""
+	privateKey := "112t8rneWAhErTC8YUFTnfcKHvB1x6uAVdehy1S8GP2psgqDxK3RHouUcd69fz88oAL9XuMyQ8mBY5FmmGJdcyrpwXjWBXRpoWwgJXjsxi4j"
 	// set withdrawn amount to 0 to withdraw all remaining balance
 	withdrawAmount := uint64(0)
-	// specify which token(s) in this pool to withdraw
-	withdrawTokenIDs := []string{"fd0febf5a30be293a3e241aeb860ce843f49415ac5914e4e96b428e195af9d50", "3609431c4404eb5fd91607f5afcb427afe02c9cf2ff64bf0970880eb56c03b48"}
-	pairID := "3609431c4404eb5fd91607f5afcb427afe02c9cf2ff64bf0970880eb56c03b48-fd0febf5a30be293a3e241aeb860ce843f49415ac5914e4e96b428e195af9d50-579050a8274e029a567debf87a17725baff195ed155d7f01d2bd62d8d77fdc3d"
-	nftIDStr := "941c5e6879c5f690d151b227e30bfee72e4cdbdd5709bc8ae22aa1c46b41a7df"
-	orderID := "b7ef57b7c2837934279036f70f57199bd02f17d4ade7626508434911b36056c9"
+	poolPairID := "0000000000000000000000000000000000000000000000000000000000000004-00000000000000000000000000000000000000000000000000000000000115d7-0868e6a074566d77c2ebdce49949352efbe69b0eda7da839bfc8985e7ed300f2"
+	nftIDStr := "54d488dae373d2dc4c7df4d653037c8d80087800cade4e961efb857c68b91a22"
+	orderID := "4d033bad4ae9ef2104feda1712e2b7b7ef215b25a4e58103e6f5a29bb63fd387"
+	// specify which token(s) in this pool to withdraw, leave it empty if withdrawing all tokens.
+	withdrawTokenIDs := make([]string, 0)
 
-	txHash, err := client.CreateAndSendPdexv3WithdrawOrderTransaction(privateKey, pairID, orderID, withdrawTokenIDs, nftIDStr, withdrawAmount)
+	txHash, err := client.CreateAndSendPdexv3WithdrawOrderTransaction(privateKey, poolPairID, orderID, nftIDStr, withdrawAmount, withdrawTokenIDs...)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	fmt.Printf("Withdraw Order %s...\nSubmitted in TX %v\n", orderID, txHash)
+
+	time.Sleep(100 * time.Second)
+	status, err := client.CheckOrderWithdrawalStatus(txHash)
+	if err != nil {
+		log.Fatal(err)
+	}
+	jsb, err := json.MarshalIndent(status, "", "\t")
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Printf("status: %v\n", string(jsb))
 }

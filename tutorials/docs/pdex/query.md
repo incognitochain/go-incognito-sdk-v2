@@ -95,60 +95,52 @@ fmt.Printf("Expected amount: %v\n", expectedAmount)
 
 Here, we are selling 1 PRV to buy `0000000000000000000000000000000000000000000000000000000000000100`.
 
-## Example
+## Query the Status
 
-[query.go](../../code/pdex/query/query.go)
-
+### Mint NFTs
 ```go
-package main
-
-import (
-	"fmt"
-	"github.com/incognitochain/go-incognito-sdk-v2/common"
-	"github.com/incognitochain/go-incognito-sdk-v2/incclient"
-	"log"
-)
-
-func main() {
-	client, err := incclient.NewTestNetClient()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	pdeState, err := client.GetPDEState(0)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	fmt.Printf("pdeState: \n%v\n", pdeState)
-
-	allPairs, err := client.GetAllPDEPoolPairs(0)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	fmt.Printf("allPairs: \n%v\n", allPairs)
-
-	tokenID1 := common.PRVIDStr
-	tokenID2 := "0000000000000000000000000000000000000000000000000000000000000100"
-	pair, err := client.GetPDEPoolPair(0, tokenID1, tokenID2)
-	if err != nil {
-		log.Fatal(err)
-	}
-	fmt.Printf("pair: %v\n", pair)
-
-	tokenToSell := common.PRVIDStr
-	tokenToBuy := "0000000000000000000000000000000000000000000000000000000000000100"
-	sellAmount := uint64(1000000000)
-	expectedAmount, err := client.CheckXPrice(tokenToSell, tokenToBuy, sellAmount)
-	if err != nil {
-		log.Fatal(err)
-	}
-	fmt.Printf("Expected amount: %v\n", expectedAmount)
+status, err := client.CheckNFTMintingStatus(txHash string)
+if err != nil {
+    log.Fatal(err)
+}
+```
+The status will consist of the following information.
+```go
+// MintNFTStatus represents the status of a pDEX nft minting transaction.
+type MintNFTStatus struct {
+    // Status represents the status of the transaction, and should be understood as follows:
+    //	- 1: the request is accepted;
+    //	- 2: the request is rejected.
+    Status int `json:"Status"`
+    
+    // BurntAmount is the amount of PRV that was burned to mint this NFT.
+    BurntAmount uint64 `json:"BurntAmount"`
+    
+    // NftID is the ID of the minted NFT.
+    NftID string `json:"NftID"`
 }
 ```
 
-Now, let's see how to [add a pair](../pdex/contribute.md) to the pDEX.
-
----
-Return to [the table of contents](../../../README.md).
+### Trade
+```go
+status, err := client.CheckTradeStatus(txHash string)
+if err != nil {
+    log.Fatal(err)
+}
+```
+The status will consist of the following information.
+```go
+// DEXTradeStatus represents the status of a pDEX v3 trade.
+type DEXTradeStatus struct {
+    // Status represents the status of the trade, and should be understood as follows:
+    // 	- 0: the trade request is refunded;
+    //	- 1: the trade request is accepted.
+    Status int `json:"Status"`
+    
+    // BuyAmount is the receiving amount of the trade (in case of failure, it equals to 0).
+    BuyAmount uint64 `json:"BuyAmount"`
+    
+    // TokenToBuy is the buying tokenId.
+    TokenToBuy string `json:"TokenToBuy"`
+}
+```
