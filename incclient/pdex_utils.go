@@ -400,6 +400,17 @@ func (client *IncClient) GetListNftIDs(beaconHeight uint64) (map[string]uint64, 
 	return res.NftIDs, nil
 }
 
+// GetListStakingPoolShares returns the list of all tokens (and their share) allowed to stake at given beacon block height.
+// If the beacon height is set to 0, it returns the latest information.
+func (client *IncClient) GetListStakingPoolShares(beaconHeight uint64) (map[string]uint, error) {
+	pdeState, err := client.GetPdexState(beaconHeight)
+	if err != nil {
+		return nil, err
+	}
+
+	return pdeState.Params.StakingPoolsShare, nil
+}
+
 // GetListStakingRewardTokens returns the list of all available staking reward tokens at given beacon block height.
 // If the beacon height is set to 0, it returns the latest information.
 func (client *IncClient) GetListStakingRewardTokens(beaconHeight uint64) ([]common.Hash, error) {
