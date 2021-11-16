@@ -120,7 +120,7 @@ After placing an order, we wish to know its status to see if it's accepted. For 
 where `Status = 1` indicates the order has been successfully added, and `OrderID` is the unique ID of the order.
 
 ## Example
-[add_order](../../code/pdex/ob_add/add_order.go)
+[add_order.go](../../code/pdex/ob_add/add_order.go)
 
 ```go
 package main

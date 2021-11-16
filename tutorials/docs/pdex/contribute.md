@@ -9,8 +9,7 @@ balance and UTXO retrieval. Skip these parts if you're familiar with these notio
 Liquidity providers play an essential role in pDEX. They provide liquidity to various pools on pDEX and earn trading fees. The current pDEX consists of several pairs of tokens that help accelerate trading activities. The more liquidity in the pDEX, the better experience the trading process gets. For a pair with high liquidity, the slippage rate will be small. On the other hand, trading with low-liquidity pair will result in a high slippage rate.
 
 In this tutorial, we will see how we can provide liquidity for a pair in the pDEX. Please see this [post](https://github.com/incognitochain/incognito-chain/blob/production/specs/pdex.md) to understand how the pDEX works. There are 3 ways a user can provide liquidity for the pDEX:
-* 2-sided liquidity adding;
-* 1-sided liquidity contribution; and
+* 2-sided liquidity adding; and
 * order-book placing.
 
 This tutorial only focuses on the first method. A two-sided contribution contributes both tokens to the liquidity pool. A liquidity provider must create two separate metadata transactions (one for each token) to burn the corresponding amount of the token.
@@ -147,7 +146,7 @@ it is not RECOMMENDED because it results in the possibility of linking these two
 might want to generate a bunch of NFTs for his account, and for each contribution, he might use a different NFT. However, please take minting fees into account since there is an amount of PRV required for minting a new NFT.
 
 ## Example
-[contribute](../../code/pdex/pdex_contribute/contribute.go)
+[contribute.go](../../code/pdex/pdex_contribute/contribute.go)
 
 ```go
 package main

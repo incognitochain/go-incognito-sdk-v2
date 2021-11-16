@@ -30,7 +30,7 @@ type WithdrawalLPFeeRequest struct {
 This is made possible via the method `CreateAndSendPdexv3WithdrawLPFeeTransaction`. See the example below.
 
 ### Example
-[lp_fee_withdraw](../../code/pdex/lp_fee_withdraw/lp_fee.go)
+[lp_fee_withdraw.go](../../code/pdex/lp_fee_withdraw/lp_fee.go)
 
 ```go
 package main

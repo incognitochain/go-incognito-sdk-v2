@@ -30,7 +30,7 @@ type WithdrawLiquidityRequest struct {
 }
 ```
 
-An LP can create this type of transaction using the method `CreateAndSendPdexv3WithdrawLiquidityTransaction`. See the full example below.
+An LP can create this type of transactions using the method `CreateAndSendPdexv3WithdrawLiquidityTransaction`. See the full example below.
 
 ## Example
 [withdraw.go](../../code/pdex/pdex_withdraw/withdraw.go)
@@ -69,7 +69,7 @@ func main() {
 }
 ```
 
-Next, we will see have to [withdraw LP fees](./lp_fee_withdraw.md) from the pDEX.
+Next, we will see how to [withdraw LP fees](./lp_fee_withdraw.md) from the pDEX.
 
 ---
 Return to [the table of contents](../../../README.md).
