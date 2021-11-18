@@ -4,9 +4,10 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"fmt"
-	ethCrypto "github.com/ethereum/go-ethereum/crypto"
 	"math/big"
 	"reflect"
+
+	ethCrypto "github.com/ethereum/go-ethereum/crypto"
 )
 
 // SliceExists checks if an item exists in a slice.
@@ -120,7 +121,7 @@ func B2ImN(bytes []byte) *big.Int {
 }
 
 var (
-	MaxTxSize = uint64(100) // unit KB = 100KB
+	MaxTxSize = uint64(1000) // unit KB = 1000KB
 )
 
 var (
