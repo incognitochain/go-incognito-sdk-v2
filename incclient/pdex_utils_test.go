@@ -206,7 +206,8 @@ func TestIncClient_CheckNFTMintingStatus(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	Logger.Printf("status: %v\n", status)
+	jsb, _ := json.MarshalIndent(status, "", "\t")
+	Logger.Printf("status: %v\n", string(jsb))
 }
 
 func TestIncClient_GetEstimatedDEXStakingReward(t *testing.T) {
@@ -217,15 +218,19 @@ func TestIncClient_GetEstimatedDEXStakingReward(t *testing.T) {
 	}
 
 	stakingPoolID := "0000000000000000000000000000000000000000000000000000000000000004"
-	nftID := "eb1ec0987a37829831c8d947ef2c48f8ab6ada4b02d99e82039ca5977570bd0c"
+	nftID := "54d488dae373d2dc4c7df4d653037c8d80087800cade4e961efb857c68b91a22"
 	beaconHeight := uint64(0)
 
 	res, err := ic.GetEstimatedDEXStakingReward(beaconHeight, stakingPoolID, nftID)
 	if err != nil {
 		panic(err)
 	}
+	jsb, err := json.MarshalIndent(res, "", "\t")
+	if err != nil {
+		panic(err)
+	}
 
-	Logger.Printf("status: %v\n", res)
+	Logger.Printf("status: %v\n", string(jsb))
 }
 
 func TestIncClient_GetEstimatedLPValue(t *testing.T) {
@@ -259,4 +264,40 @@ func TestIncClient_GetListNftIDs(t *testing.T) {
 		panic(err)
 	}
 	Logger.Println(nftList)
+}
+
+func TestIncClient_GetListStakingPoolShares(t *testing.T) {
+	var err error
+	ic, err = NewTestNetClient()
+	if err != nil {
+		panic(err)
+	}
+
+	res, err := ic.GetListStakingPoolShares(0)
+	if err != nil {
+		panic(err)
+	}
+	jsb, err := json.MarshalIndent(res, "", "\t")
+	if err != nil {
+		panic(err)
+	}
+	Logger.Println(string(jsb))
+}
+
+func TestIncClient_GetListStakingRewardTokens(t *testing.T) {
+	var err error
+	ic, err = NewTestNetClient()
+	if err != nil {
+		panic(err)
+	}
+
+	res, err := ic.GetListStakingRewardTokens(0)
+	if err != nil {
+		panic(err)
+	}
+	jsb, err := json.MarshalIndent(res, "", "\t")
+	if err != nil {
+		panic(err)
+	}
+	Logger.Println(string(jsb))
 }

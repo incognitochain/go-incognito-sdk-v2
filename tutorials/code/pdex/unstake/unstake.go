@@ -1,8 +1,10 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/incognitochain/go-incognito-sdk-v2/common"
 	"github.com/incognitochain/go-incognito-sdk-v2/incclient"
@@ -15,10 +17,10 @@ func main() {
 	}
 
 	// replace with your network's data
-	privateKey := ""
+	privateKey := "112t8rneWAhErTC8YUFTnfcKHvB1x6uAVdehy1S8GP2psgqDxK3RHouUcd69fz88oAL9XuMyQ8mBY5FmmGJdcyrpwXjWBXRpoWwgJXjsxi4j"
 	tokenIDStr := common.PRVIDStr
-	nftIDStr := "941c5e6879c5f690d151b227e30bfee72e4cdbdd5709bc8ae22aa1c46b41a7df"
-	amount := uint64(2300)
+	nftIDStr := "54d488dae373d2dc4c7df4d653037c8d80087800cade4e961efb857c68b91a22"
+	amount := uint64(23000)
 
 	txHash, err := client.CreateAndSendPdexv3UnstakingTransaction(privateKey, tokenIDStr, nftIDStr, amount)
 	if err != nil {
@@ -26,4 +28,14 @@ func main() {
 	}
 
 	fmt.Printf("Unstaking TX for pool %s submitted %v\n", tokenIDStr, txHash)
+	time.Sleep(100 * time.Second)
+	status, err := client.CheckDEXUnStakingStatus(txHash)
+	if err != nil {
+		log.Fatal(err)
+	}
+	jsb, err := json.MarshalIndent(status, "", "\t")
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Printf("status: %v\n", string(jsb))
 }
