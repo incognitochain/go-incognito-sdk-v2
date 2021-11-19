@@ -17,7 +17,7 @@ func main() {
 
 	// replace with your network's data
 	privateKey := "112t8rneWAhErTC8YUFTnfcKHvB1x6uAVdehy1S8GP2psgqDxK3RHouUcd69fz88oAL9XuMyQ8mBY5FmmGJdcyrpwXjWBXRpoWwgJXjsxi4j"
-	poolPairID := "" // for pool-initializing, leave it empty. Otherwise, input the poolPairID of the existing pool
+	poolPairID := ""                // for pool-initializing, leave it empty. Otherwise, input the poolPairID of the existing pool
 	pairHash := "JUSTARANDOMSTRING" // a string to match the two transactions of the contribution
 	firstToken := common.PRVIDStr
 	secondToken := "00000000000000000000000000000000000000000000000000000000000115d7"

@@ -3,8 +3,8 @@ package incclient
 import (
 	"github.com/incognitochain/go-incognito-sdk-v2/coin"
 	"github.com/incognitochain/go-incognito-sdk-v2/common"
-	metadataCommon "github.com/incognitochain/go-incognito-sdk-v2/metadata/common"
 	"github.com/incognitochain/go-incognito-sdk-v2/metadata"
+	metadataCommon "github.com/incognitochain/go-incognito-sdk-v2/metadata/common"
 	"github.com/incognitochain/go-incognito-sdk-v2/wallet"
 )
 

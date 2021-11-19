@@ -2,7 +2,6 @@ package common
 
 import (
 	"strconv"
-
 	// "github.com/incognitochain/go-incognito-sdk-v2/common"
 )
 

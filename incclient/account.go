@@ -76,7 +76,6 @@ func (client *IncClient) GetAllNFTs(privateKey string) ([]string, error) {
 	return res, nil
 }
 
-
 // ImportAccount imports a BIP39 mnemonic string and finds all child keys derived from the mnemonic. The first return KeyWallet
 // is the master wallet, which is used to derive the rest of child KeyWallet.
 // For child KeyWallets, we start with childIdx = 1 and stops at the index when there is no transaction found for the child key.

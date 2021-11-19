@@ -11,16 +11,16 @@ type WithdrawLiquidityRequest struct {
 	metadataCommon.MetadataBase
 
 	// poolPairID is the ID of the target pool in which the user wants to withdraw his contribution from.
-	poolPairID   string
+	poolPairID string
 
 	// nftID is the ID of the NFT which he used to make contribution.
-	nftID        string
+	nftID string
 
 	// otaReceivers is a mapping from a tokenID to the corresponding one-time address for receiving back the funds (different OTAs for different tokens).
 	otaReceivers map[string]string
 
 	// shareAmount is the amount of share he wants to withdraw from the target pool.
-	shareAmount  uint64
+	shareAmount uint64
 }
 
 func NewWithdrawLiquidityRequest() *WithdrawLiquidityRequest {
