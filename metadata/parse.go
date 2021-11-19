@@ -156,6 +156,20 @@ func ParseMetadata(metaInBytes []byte) (Metadata, error) {
 		md = &metadataPdexv3.WithdrawalStakingRewardRequest{}
 	case metadataCommon.Pdexv3WithdrawStakingRewardResponseMeta:
 		md = &metadataPdexv3.WithdrawalStakingRewardResponse{}
+	case PortalV4ShieldingRequestMeta:
+		md = &PortalShieldingRequest{}
+	case PortalV4ShieldingResponseMeta:
+		md = &PortalShieldingResponse{}
+	case PortalV4UnshieldingRequestMeta:
+		md = &PortalUnshieldRequest{}
+	case PortalV4UnshieldingResponseMeta:
+		md = &PortalUnshieldResponse{}
+	case PortalV4FeeReplacementRequestMeta:
+		md = &PortalReplacementFeeRequest{}
+	case PortalV4SubmitConfirmedTxMeta:
+		md = &PortalSubmitConfirmedTxRequest{}
+	case PortalV4ConvertVaultRequestMeta:
+		md = &PortalConvertVaultRequest{}
 	default:
 		return nil, errors.Errorf("Could not parse metadata with type: %d", theType)
 	}
