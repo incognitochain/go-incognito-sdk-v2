@@ -2,7 +2,9 @@ package incclient
 
 import (
 	"fmt"
+	"github.com/incognitochain/go-incognito-sdk-v2/coin"
 	"github.com/incognitochain/go-incognito-sdk-v2/common"
+	"github.com/incognitochain/go-incognito-sdk-v2/common/base58"
 	"github.com/incognitochain/go-incognito-sdk-v2/wallet"
 )
 
@@ -19,6 +21,75 @@ func (client *IncClient) GetBalance(privateKey, tokenID string) (uint64, error) 
 	}
 
 	return balance, nil
+}
+
+// GetAllBalances returns all non-zero balances of a private key. This function is only supported if the UTXO cache is used.
+// `v1Include` indicates whether we should add v1 UTXOs to the total balances. With `v1Include = true`, the function will
+// take much longer time to process.
+//
+// By default, this function only returns the balances calculated with v2 coins (except for PRV).
+func (client *IncClient) GetAllBalances(privateKey string, v1Included ...bool) (map[string]uint64, error) {
+	if client.cache == nil || !client.cache.isRunning {
+		return nil, fmt.Errorf("method not supported by this configuration, try running the client with a cache layer instead")
+	}
+
+	withV1 := false
+	if len(v1Included) != 0 {
+		withV1 = v1Included[0]
+	}
+
+	w, err := wallet.Base58CheckDeserialize(privateKey)
+	if err != nil {
+		return nil, err
+	}
+
+	res := make(map[string]uint64)
+	prvBalance, err := client.GetBalance(privateKey, common.PRVIDStr)
+	if err != nil {
+		return nil, err
+	}
+	if prvBalance > 0 {
+		res[common.PRVIDStr] = prvBalance
+	}
+
+	rawAssetTags, err = client.GetAllAssetTags()
+	if err != nil {
+		return nil, err
+	}
+
+	if withV1 {
+		for tokenID, _ := range rawAssetTags {
+			balance, err := client.GetBalance(privateKey, tokenID)
+			if err != nil {
+				return nil, err
+			}
+			if balance > 0 {
+				res[tokenID] = balance
+			}
+		}
+	} else {
+		unspentTokens, _, err := client.GetUnspentOutputCoins(privateKey, common.ConfidentialAssetID.String(), 0)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, utxo := range unspentTokens {
+			if utxo.GetValue() == 0 {
+				continue
+			}
+			v2Coin, ok := utxo.(*coin.CoinV2)
+			if !ok {
+				return nil, fmt.Errorf("cannot cast UTXO %v to a CoinV2", base58.Base58Check{}.Encode(utxo.GetPublicKey().ToBytesS(), 0))
+			}
+			tokenID, err := v2Coin.GetTokenId(&(w.KeySet), rawAssetTags)
+			if err != nil || tokenID == nil {
+				return nil, err
+			}
+			res[tokenID.String()] = res[tokenID.String()] + utxo.GetValue()
+		}
+	}
+
+	return res, nil
 }
 
 // GetAllNFTs returns all NFTs belonging to a private key.
