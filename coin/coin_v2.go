@@ -110,6 +110,8 @@ type CoinV2 struct {
 	amount *crypto.Scalar
 	// tag is nil unless confidential asset
 	assetTag *crypto.Point
+	// the hash of the tokenID
+	rawAssetTag *crypto.Point
 }
 
 // ParsePrivateKeyOfCoin sets privateKey as the private key of a CoinV2.
@@ -612,7 +614,8 @@ func (c *CoinV2) CheckCoinValid(paymentAdd key.PaymentAddress, sharedRandom []by
 	return bytes.Equal(tmpPubKey.ToBytesS(), c.publicKey.ToBytesS())
 }
 
-// DoesCoinBelongToKeySet checks if a CoinV2 belongs to the given key set.
+// DoesCoinBelongToKeySet checks if a CoinV2 belongs to the given key set. If so, it will also try to calculate the raw
+// asset tag associated with the coin.
 func (c *CoinV2) DoesCoinBelongToKeySet(keySet *key.KeySet) (bool, *crypto.Point) {
 	_, txOTARandomPoint, index, err1 := c.GetTxRandomDetail()
 	if err1 != nil {
@@ -629,7 +632,22 @@ func (c *CoinV2) DoesCoinBelongToKeySet(keySet *key.KeySet) (bool, *crypto.Point
 	HnG := new(crypto.Point).ScalarMultBase(hashed)
 	KCheck := new(crypto.Point).Sub(c.GetPublicKey(), HnG)
 
-	return crypto.IsPointEqual(KCheck, keySet.OTAKey.GetPublicSpend()), rK
+	belongs := crypto.IsPointEqual(KCheck, keySet.OTAKey.GetPublicSpend())
+	if !belongs {
+		return false, nil
+	}
+
+	// try to calculate the raw asset tag (i.e, the hash of the real tokenID)
+	if c.GetAssetTag() != nil && c.rawAssetTag == nil {
+		blinder := crypto.HashToScalar(append(rK.ToBytesS(), []byte("assettag")...))
+		rawAssetTag := new(crypto.Point).Sub(
+			c.GetAssetTag(),
+			new(crypto.Point).ScalarMult(crypto.PedCom.G[PedersenRandomnessIndex], blinder),
+		)
+		c.rawAssetTag = rawAssetTag
+	}
+
+	return true, rK
 }
 
 // GetTokenId attempts to retrieve the asset a CoinV2.
@@ -637,6 +655,12 @@ func (c *CoinV2) DoesCoinBelongToKeySet(keySet *key.KeySet) (bool, *crypto.Point
 // 	- keySet: the key set of the user, must contain an OTAKey
 //	- rawAssetTags: a pre-computed mapping from a raw assetTag to the tokenId (e.g, HashToPoint(PRV) => PRV).
 func (c *CoinV2) GetTokenId(keySet *key.KeySet, rawAssetTags map[string]*common.Hash) (*common.Hash, error) {
+	if c.rawAssetTag != nil {
+		if asset, ok := rawAssetTags[c.rawAssetTag.String()]; ok {
+			return asset, nil
+		}
+	}
+
 	if c.GetAssetTag() == nil {
 		return &common.PRVCoinID, nil
 	}
@@ -645,17 +669,15 @@ func (c *CoinV2) GetTokenId(keySet *key.KeySet, rawAssetTags map[string]*common.
 		return asset, nil
 	}
 
-	belong, sharedSecret := c.DoesCoinBelongToKeySet(keySet)
+	belong, _ := c.DoesCoinBelongToKeySet(keySet)
 	if !belong {
 		return nil, fmt.Errorf("coin does not belong to the keyset")
 	}
 
-	blinder := crypto.HashToScalar(append(sharedSecret.ToBytesS(), []byte("assettag")...))
-	rawAssetTag := new(crypto.Point).Sub(
-		c.GetAssetTag(),
-		new(crypto.Point).ScalarMult(crypto.PedCom.G[PedersenRandomnessIndex], blinder),
-	)
-
+	rawAssetTag := c.rawAssetTag
+	if rawAssetTag == nil {
+		return nil, fmt.Errorf("cannot calculate the raw asset tag")
+	}
 	if asset, ok := rawAssetTags[rawAssetTag.String()]; ok {
 		return asset, nil
 	}
