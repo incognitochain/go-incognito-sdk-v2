@@ -26,12 +26,13 @@ func TestIncClient_GetBalance(t *testing.T) {
 }
 
 func TestIncClient_GetAllNFTs(t *testing.T) {
-	ic, err := NewTestNetClient()
+	ic, err := NewTestNetClientWithCache()
 	if err != nil {
 		panic(err)
 	}
 
 	privateKey := "112t8rneWAhErTC8YUFTnfcKHvB1x6uAVdehy1S8GP2psgqDxK3RHouUcd69fz88oAL9XuMyQ8mBY5FmmGJdcyrpwXjWBXRpoWwgJXjsxi4j" // input the private key
+	start := time.Now()
 	myNFTs, err := ic.GetAllNFTs(privateKey)
 	if err != nil {
 		panic(err)
@@ -40,7 +41,20 @@ func TestIncClient_GetAllNFTs(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	Logger.Println(string(jsb))
+	Logger.Log.Println(string(jsb))
+	Logger.Printf("timeElapsed: %v\n", time.Since(start).Seconds())
+
+	start = time.Now()
+	myNFTs, err = ic.GetAllNFTs(privateKey)
+	if err != nil {
+		panic(err)
+	}
+	jsb, err = json.MarshalIndent(myNFTs, "", "\t")
+	if err != nil {
+		panic(err)
+	}
+	Logger.Log.Println(string(jsb))
+	Logger.Printf("timeElapsed (second call): %v\n", time.Since(start).Seconds())
 }
 
 func TestGetAccountInfoFromPrivateKey(t *testing.T) {
@@ -54,7 +68,7 @@ func TestGetAccountInfoFromPrivateKey(t *testing.T) {
 	fmt.Printf("%v\n", keyInfo.String())
 }
 
-func TestIncClient_GetAllBalances(t *testing.T) {
+func TestIncClient_GetAllBalancesV2(t *testing.T) {
 	ic, err := NewTestNetClientWithCache()
 	if err != nil {
 		panic(err)
@@ -62,20 +76,25 @@ func TestIncClient_GetAllBalances(t *testing.T) {
 
 	privateKey := "112t8rneWAhErTC8YUFTnfcKHvB1x6uAVdehy1S8GP2psgqDxK3RHouUcd69fz88oAL9XuMyQ8mBY5FmmGJdcyrpwXjWBXRpoWwgJXjsxi4j" // input the private key
 	start := time.Now()
-	allBalances, err := ic.GetAllBalances(privateKey, false)
+	allBalances, err := ic.GetAllBalancesV2(privateKey)
 	if err != nil {
 		panic(err)
 	}
 	jsb, _ := json.MarshalIndent(allBalances, "", "\t")
 	Logger.Log.Printf("AllBalances: %v\n", string(jsb))
-	Logger.Log.Printf("TimeElapsed without v1: %v\n", time.Since(start).Seconds())
+	Logger.Log.Printf("TimeElapsed with cache: %v\n", time.Since(start).Seconds())
+
+	ic, err = NewTestNetClient()
+	if err != nil {
+		panic(err)
+	}
 
 	start = time.Now()
-	allBalances, err = ic.GetAllBalances(privateKey, true)
+	allBalances, err = ic.GetAllBalancesV2(privateKey)
 	if err != nil {
 		panic(err)
 	}
 	jsb, _ = json.MarshalIndent(allBalances, "", "\t")
 	Logger.Log.Printf("AllBalances: %v\n", string(jsb))
-	Logger.Log.Printf("TimeElapsed with v1: %v\n", time.Since(start).Seconds())
+	Logger.Log.Printf("TimeElapsed without cache: %v\n", time.Since(start).Seconds())
 }

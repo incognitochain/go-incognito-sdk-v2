@@ -6,6 +6,7 @@ import (
 	"github.com/incognitochain/go-incognito-sdk-v2/common"
 	"github.com/incognitochain/go-incognito-sdk-v2/common/base58"
 	"github.com/incognitochain/go-incognito-sdk-v2/wallet"
+	"time"
 )
 
 // GetBalance retrieves the current tokenID balance of a private key.
@@ -23,69 +24,23 @@ func (client *IncClient) GetBalance(privateKey, tokenID string) (uint64, error) 
 	return balance, nil
 }
 
-// GetAllBalances returns all non-zero balances of a private key. This function is only supported if the UTXO cache is used.
-// `v1Include` indicates whether we should add v1 UTXOs to the total balances. With `v1Include = true`, the function will
-// take much longer time to process.
-//
-// By default, this function only returns the balances calculated with v2 coins (except for PRV).
-func (client *IncClient) GetAllBalances(privateKey string, v1Included ...bool) (map[string]uint64, error) {
-	if client.cache == nil || !client.cache.isRunning {
-		return nil, fmt.Errorf("method not supported by this configuration, try running the client with a cache layer instead")
-	}
-
-	withV1 := false
-	if len(v1Included) != 0 {
-		withV1 = v1Included[0]
-	}
-
-	w, err := wallet.Base58CheckDeserialize(privateKey)
-	if err != nil {
-		return nil, err
-	}
-
+// GetAllBalancesV2 returns all non-zero balances of a private key.
+// This function assumes that all v1 output coins have been converted to v1, and only returns the balances calculated with
+// v2 coins (except for PRV). In case you still have v1 UTXOs, try using the regular `GetBalance` function.
+func (client *IncClient) GetAllBalancesV2(privateKey string) (map[string]uint64, error) {
 	res := make(map[string]uint64)
-	prvBalance, err := client.GetBalance(privateKey, common.PRVIDStr)
-	if err != nil {
-		return nil, err
-	}
-	if prvBalance > 0 {
-		res[common.PRVIDStr] = prvBalance
-	}
-
-	rawAssetTags, err = client.GetAllAssetTags()
+	allUTXOs, _, err := client.GetAllUTXOsV2(privateKey)
 	if err != nil {
 		return nil, err
 	}
 
-	if withV1 {
-		for tokenID, _ := range rawAssetTags {
-			balance, err := client.GetBalance(privateKey, tokenID)
-			if err != nil {
-				return nil, err
-			}
-			if balance > 0 {
-				res[tokenID] = balance
-			}
+	for tokenID, utxoList := range allUTXOs {
+		balance := uint64(0)
+		for _, utxo := range utxoList {
+			balance += utxo.GetValue()
 		}
-	} else {
-		unspentTokens, _, err := client.GetUnspentOutputCoins(privateKey, common.ConfidentialAssetID.String(), 0)
-		if err != nil {
-			return nil, err
-		}
-
-		for _, utxo := range unspentTokens {
-			if utxo.GetValue() == 0 {
-				continue
-			}
-			v2Coin, ok := utxo.(*coin.CoinV2)
-			if !ok {
-				return nil, fmt.Errorf("cannot cast UTXO %v to a CoinV2", base58.Base58Check{}.Encode(utxo.GetPublicKey().ToBytesS(), 0))
-			}
-			tokenID, err := v2Coin.GetTokenId(&(w.KeySet), rawAssetTags)
-			if err != nil || tokenID == nil {
-				return nil, err
-			}
-			res[tokenID.String()] = res[tokenID.String()] + utxo.GetValue()
+		if balance > 0 {
+			res[tokenID] = balance
 		}
 	}
 
@@ -94,52 +49,60 @@ func (client *IncClient) GetAllBalances(privateKey string, v1Included ...bool) (
 
 // GetAllNFTs returns all NFTs belonging to a private key.
 func (client *IncClient) GetAllNFTs(privateKey string) ([]string, error) {
+	start := time.Now()
+	utxoList, _, err := client.GetUnspentOutputCoins(privateKey, common.ConfidentialAssetID.String(), 0)
+	if err != nil {
+		return nil, err
+	}
+	if len(utxoList) == 0 {
+		return nil, fmt.Errorf("no UTXO found")
+	}
+	Logger.Printf("#UTXOs: %v\n", len(utxoList))
+	Logger.Printf("getUTXOs timeElapsed: %v\n", time.Since(start).Seconds())
+
+	start = time.Now()
 	allNFTs, err := client.GetListNftIDs(0)
+	if err != nil {
+		return nil, err
+	}
+	nftList := make([]string, 0)
+	for tokenID, _ := range allNFTs {
+		nftList = append(nftList, tokenID)
+	}
+	Logger.Printf("#Nfts: %v\n", len(allNFTs))
+	Logger.Printf("getNFT timeElapsed: %v\n", time.Since(start).Seconds())
+
+	start = time.Now()
+	rawAssetTags, err = BuildAssetTags(nftList)
+	if err != nil {
+		return nil, err
+	}
+	Logger.Printf("getNFT GetAllAssetTags: %v\n", time.Since(start).Seconds())
+
+	w, err := wallet.Base58CheckDeserialize(privateKey)
 	if err != nil {
 		return nil, err
 	}
 
 	res := make([]string, 0)
-	if client.cache != nil && client.cache.isRunning {
-		_, err := client.GetBalance(privateKey, common.ConfidentialAssetID.String())
-		if err != nil {
-			return nil, err
+	start = time.Now()
+	for _, utxo := range utxoList {
+		if utxo.GetValue() != 1 {
+			continue
 		}
-
-		otaKey := PrivateKeyToPrivateOTAKey(privateKey)
-		cachedAccount := client.cache.getCachedAccount(otaKey)
-		if cachedAccount == nil {
-			return nil, fmt.Errorf("cachedAccount not found")
+		v2Coin, ok := utxo.(*coin.CoinV2)
+		if !ok {
+			return nil, fmt.Errorf("cannot cast UTXO %v to a CoinV2", base58.Base58Check{}.Encode(utxo.GetPublicKey().ToBytesS(), 0))
 		}
-		for tokenID := range cachedAccount.CachedTokens {
-			if _, ok := allNFTs[tokenID]; ok {
-				utxos, _, err := client.GetUnspentOutputCoinsFromCache(privateKey, tokenID, 0)
-				if err != nil {
-					return nil, err
-				}
-				if len(utxos) > 0 {
-					balance := uint64(0)
-					for _, utxo := range utxos {
-						balance += utxo.GetValue()
-					}
-					if balance == 1 {
-						res = append(res, tokenID)
-					}
-				}
-			}
+		tokenId, _ := v2Coin.GetTokenId(&(w.KeySet), rawAssetTags)
+		if tokenId == nil {
+			continue
 		}
-
-	} else {
-		for nftID := range allNFTs {
-			balance, err := client.GetBalance(privateKey, nftID)
-			if err != nil {
-				return nil, err
-			}
-			if balance == 1 {
-				res = append(res, nftID)
-			}
+		if _, ok := allNFTs[tokenId.String()]; ok {
+			res = append(res, tokenId.String())
 		}
 	}
+	Logger.Printf("getNFT ParseUTXOs: %v\n", time.Since(start).Seconds())
 
 	if len(res) == 0 {
 		return nil, fmt.Errorf("no NFT found")
