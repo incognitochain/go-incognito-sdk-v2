@@ -6,7 +6,6 @@ import (
 	"github.com/incognitochain/go-incognito-sdk-v2/common"
 	"github.com/incognitochain/go-incognito-sdk-v2/common/base58"
 	"github.com/incognitochain/go-incognito-sdk-v2/wallet"
-	"time"
 )
 
 // GetBalance retrieves the current tokenID balance of a private key.
@@ -49,7 +48,6 @@ func (client *IncClient) GetAllBalancesV2(privateKey string) (map[string]uint64,
 
 // GetAllNFTs returns all NFTs belonging to a private key.
 func (client *IncClient) GetAllNFTs(privateKey string) ([]string, error) {
-	start := time.Now()
 	utxoList, _, err := client.GetUnspentOutputCoins(privateKey, common.ConfidentialAssetID.String(), 0)
 	if err != nil {
 		return nil, err
@@ -58,9 +56,7 @@ func (client *IncClient) GetAllNFTs(privateKey string) ([]string, error) {
 		return nil, fmt.Errorf("no UTXO found")
 	}
 	Logger.Printf("#UTXOs: %v\n", len(utxoList))
-	Logger.Printf("getUTXOs timeElapsed: %v\n", time.Since(start).Seconds())
 
-	start = time.Now()
 	allNFTs, err := client.GetListNftIDs(0)
 	if err != nil {
 		return nil, err
@@ -70,14 +66,11 @@ func (client *IncClient) GetAllNFTs(privateKey string) ([]string, error) {
 		nftList = append(nftList, tokenID)
 	}
 	Logger.Printf("#Nfts: %v\n", len(allNFTs))
-	Logger.Printf("getNFT timeElapsed: %v\n", time.Since(start).Seconds())
 
-	start = time.Now()
 	rawAssetTags, err = BuildAssetTags(nftList)
 	if err != nil {
 		return nil, err
 	}
-	Logger.Printf("getNFT GetAllAssetTags: %v\n", time.Since(start).Seconds())
 
 	w, err := wallet.Base58CheckDeserialize(privateKey)
 	if err != nil {
@@ -85,7 +78,6 @@ func (client *IncClient) GetAllNFTs(privateKey string) ([]string, error) {
 	}
 
 	res := make([]string, 0)
-	start = time.Now()
 	for _, utxo := range utxoList {
 		if utxo.GetValue() != 1 {
 			continue
@@ -102,7 +94,6 @@ func (client *IncClient) GetAllNFTs(privateKey string) ([]string, error) {
 			res = append(res, tokenId.String())
 		}
 	}
-	Logger.Printf("getNFT ParseUTXOs: %v\n", time.Since(start).Seconds())
 
 	if len(res) == 0 {
 		return nil, fmt.Errorf("no NFT found")
