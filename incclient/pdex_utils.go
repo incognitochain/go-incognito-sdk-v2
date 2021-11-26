@@ -198,6 +198,35 @@ func (client *IncClient) GetTotalSharesAmount(beaconHeight uint64, tokenID1, tok
 	return totalSharesAmount, nil
 }
 
+// GetLPFeeAmount retrieves the LP trading fee of a payment address in pDEX pool of tokenID1 and tokenID2.
+func (client *IncClient) GetLPFeeAmount(beaconHeight uint64, tokenID1, tokenID2, paymentAddress string) (uint64, error) {
+	if beaconHeight == 0 {
+		bestBlocks, err := client.GetBestBlock()
+		if err != nil {
+			return 0, fmt.Errorf("cannot get best blocks: %v", err)
+		}
+		beaconHeight = bestBlocks[-1]
+	}
+
+	pdeState, err := client.GetPDEState(beaconHeight)
+	if err != nil {
+		return 0, err
+	}
+
+	allTradingFees := pdeState.PDETradingFees
+	shareKey, err := BuildPDETradingFeeKey(beaconHeight, tokenID1, tokenID2, paymentAddress)
+	if err != nil {
+		return 0, fmt.Errorf("cannot build the pDEX share key")
+	}
+
+	if amount, ok := allTradingFees[string(shareKey)]; ok {
+		return amount, nil
+	} else {
+		return 0, nil
+	}
+
+}
+
 // CheckTradeStatus checks the status of a trading transaction.
 // It returns
 //	- -1: if an error occurred;
@@ -221,6 +250,27 @@ func (client *IncClient) CheckTradeStatus(txHash string) (int, error) {
 // BuildPDEShareKey constructs a key for retrieving contributed shares in pDEX.
 func BuildPDEShareKey(beaconHeight uint64, token1ID string, token2ID string, contributorAddress string) ([]byte, error) {
 	pdeSharePrefix := []byte("pdeshare-")
+	prefix := append(pdeSharePrefix, []byte(fmt.Sprintf("%d-", beaconHeight))...)
+	tokenIDs := []string{token1ID, token2ID}
+	sort.Strings(tokenIDs)
+
+	var keyAddr string
+	var err error
+	if len(contributorAddress) == 0 {
+		keyAddr = contributorAddress
+	} else {
+		//Always parse the contributor address into the oldest version for compatibility
+		keyAddr, err = wallet.GetPaymentAddressV1(contributorAddress, false)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return append(prefix, []byte(tokenIDs[0]+"-"+tokenIDs[1]+"-"+keyAddr)...), nil
+}
+
+// BuildPDETradingFeeKey constructs a key for retrieving trading fees in pDEX.
+func BuildPDETradingFeeKey(beaconHeight uint64, token1ID string, token2ID string, contributorAddress string) ([]byte, error) {
+	pdeSharePrefix := []byte("pdetradingfee-")
 	prefix := append(pdeSharePrefix, []byte(fmt.Sprintf("%d-", beaconHeight))...)
 	tokenIDs := []string{token1ID, token2ID}
 	sort.Strings(tokenIDs)
