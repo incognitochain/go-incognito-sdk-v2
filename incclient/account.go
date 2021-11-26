@@ -46,8 +46,8 @@ func (client *IncClient) GetAllBalancesV2(privateKey string) (map[string]uint64,
 	return res, nil
 }
 
-// GetAllNFTs returns all NFTs belonging to a private key.
-func (client *IncClient) GetAllNFTs(privateKey string) ([]string, error) {
+// GetMyNFTs returns all NFTs belonging to a private key.
+func (client *IncClient) GetMyNFTs(privateKey string) ([]string, error) {
 	utxoList, _, err := client.GetUnspentOutputCoins(privateKey, common.ConfidentialAssetID.String(), 0)
 	if err != nil {
 		return nil, err

@@ -33,7 +33,7 @@ func TestIncClient_GetAllNFTs(t *testing.T) {
 
 	privateKey := "112t8rneWAhErTC8YUFTnfcKHvB1x6uAVdehy1S8GP2psgqDxK3RHouUcd69fz88oAL9XuMyQ8mBY5FmmGJdcyrpwXjWBXRpoWwgJXjsxi4j" // input the private key
 	start := time.Now()
-	myNFTs, err := ic.GetAllNFTs(privateKey)
+	myNFTs, err := ic.GetMyNFTs(privateKey)
 	if err != nil {
 		panic(err)
 	}
@@ -45,7 +45,7 @@ func TestIncClient_GetAllNFTs(t *testing.T) {
 	Logger.Printf("timeElapsed: %v\n", time.Since(start).Seconds())
 
 	start = time.Now()
-	myNFTs, err = ic.GetAllNFTs(privateKey)
+	myNFTs, err = ic.GetMyNFTs(privateKey)
 	if err != nil {
 		panic(err)
 	}
