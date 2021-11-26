@@ -12,14 +12,14 @@ The more a user stakes, the more portion of trading fees he will earn. We could 
 However, the number of tokens allowed for staking, as well as the number of reward tokens are limited. In other words, a user is only allowed
 to stake a token in the staking token list, and when a trade pays the trading fee in a token in the list of reward tokens, the user receives a portion of the trading fee.
 
-### Staking pool reward percent
-We can get staking pool reward percent from pdex v3 param handler with key and value format such as
+### Staking pool reward percentage
+We can get staking pool reward percentage from pdex v3 param handler with key and value format such as
 
 `"TradingStakingPoolRewardPercent": 10`
 
-It presents for 10% of trading fee when a trade is executed will be distribute to staking pool
+It presents for 10% of trading fee when a trade is executed will be distributed to staking pool
 
-### Available Staking Tokens
+### Available staking tokens
 We can see the list of available staking tokens by calling the function `GetListStakingPoolShares` on input the beacon height.
 If the beacon height is set to 0, it will retrieve the latest information.
 ```go

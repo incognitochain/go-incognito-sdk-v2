@@ -85,7 +85,7 @@ func main() {
 }
 ```
 
-Enough with basic transactions, let's move on to a more interesting part, [pDEX](../pdex/query.md).
+Enough with basic transactions, let's move on to a more interesting part, [pDEX](../pdex/intro.md).
 
 ---
 Return to [the table of contents](../../../README.md).
