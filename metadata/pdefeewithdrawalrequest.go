@@ -46,3 +46,21 @@ func (pc PDEFeeWithdrawalRequest) HashWithoutSig() *common.Hash {
 func (pc *PDEFeeWithdrawalRequest) CalculateSize() uint64 {
 	return calculateSize(pc)
 }
+
+func NewPDEFeeWithdrawalRequest(
+	withdrawerAddressStr string,
+	withdrawalToken1IDStr string,
+	withdrawalToken2IDStr string,
+	withdrawalFeeAmt uint64,
+	metaType int,
+) (*PDEFeeWithdrawalRequest, error) {
+	metadataBase := NewMetadataBaseWithSignature(metaType)
+	pdeFeeWithdrawalRequest := &PDEFeeWithdrawalRequest{
+		WithdrawerAddressStr:  withdrawerAddressStr,
+		WithdrawalToken1IDStr: withdrawalToken1IDStr,
+		WithdrawalToken2IDStr: withdrawalToken2IDStr,
+		WithdrawalFeeAmt:      withdrawalFeeAmt,
+	}
+	pdeFeeWithdrawalRequest.MetadataBaseWithSignature = *metadataBase
+	return pdeFeeWithdrawalRequest, nil
+}

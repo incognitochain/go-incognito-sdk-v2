@@ -261,3 +261,46 @@ func (client *IncClient) CreateAndSendPDEWithdrawalTransaction(privateKey, token
 
 	return txHash, nil
 }
+
+// CreatePDEFeeWithdrawalTransaction creates a withdrawing transaction which withdraws pDEX LP fee.
+// Version = -1 indicates that whichever version is accepted.
+//
+// It returns the base58-encoded transaction, the transaction's hash, and an error (if any).
+func (client *IncClient) CreatePDEFeeWithdrawalTransaction(privateKey, tokenID1, tokenID2 string, withdrawnAmount uint64, version int8) ([]byte, string, error) {
+	senderWallet, err := wallet.Base58CheckDeserialize(privateKey)
+	if err != nil {
+		return nil, "", err
+	}
+
+	addr := senderWallet.Base58CheckSerialize(wallet.PaymentAddressType)
+	if version == 1 {
+		addr, err = wallet.GetPaymentAddressV1(addr, false)
+		if err != nil {
+			return nil, "", err
+		}
+	}
+
+	md, err := metadata.NewPDEFeeWithdrawalRequest(addr, tokenID2, tokenID1, withdrawnAmount, metadata.PDEFeeWithdrawalRequestMeta)
+
+	txParam := NewTxParam(privateKey, []string{}, []uint64{}, 0, nil, md, nil)
+
+	return client.CreateRawTransaction(txParam, version)
+}
+
+// CreateAndSendPDEFeeWithdrawalTransaction creates a withdrawing transaction which withdraws pDEX LP fees, and submits it to the Incognito network.
+// Version = -1 indicates that whichever version is accepted.
+//
+// It returns the transaction's hash, and an error (if any).
+func (client *IncClient) CreateAndSendPDEFeeWithdrawalTransaction(privateKey, tokenID1, tokenID2 string, withdrawnAmount uint64, version int8) (string, error) {
+	encodedTx, txHash, err := client.CreatePDEFeeWithdrawalTransaction(privateKey, tokenID1, tokenID2, withdrawnAmount, version)
+	if err != nil {
+		return "", err
+	}
+
+	err = client.SendRawTx(encodedTx)
+	if err != nil {
+		return "", err
+	}
+
+	return txHash, nil
+}
