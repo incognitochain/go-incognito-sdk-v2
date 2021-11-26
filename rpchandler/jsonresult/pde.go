@@ -78,6 +78,7 @@ type Pdexv3Orderbook struct {
 }
 
 type Pdexv3Order struct {
+	PoolID         string `json:"PoolID,omitempty"`
 	Id             string
 	NftID          common.Hash
 	Token0Rate     uint64

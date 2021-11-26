@@ -309,7 +309,7 @@ func TestIncClient_GetOrderByID(t *testing.T) {
 		panic(err)
 	}
 
-	orderID := "e16109f5b96bd86fd4a1148b084d0b1caeb6dce2d5904d5ff3261e996585fceb"
+	orderID := "33b280c945fb4485ecce61192f6a4cd00d538cedb32c022c36792f20c6d0d529"
 	res, err := ic.GetOrderByID(0, orderID)
 	if err != nil {
 		panic(err)
