@@ -424,7 +424,7 @@ func (client *IncClient) GetListStakingRewardTokens(beaconHeight uint64) ([]comm
 
 // GetOrderByID returns the detail of an order given its id. The data is subject to the given beacon block height.
 // If the beacon height is set to 0, it returns the latest information.
-func (client *IncClient) GetOrderByID(beaconHeight uint64, orderID string) (*jsonresult.Pdexv3Order, error){
+func (client *IncClient) GetOrderByID(beaconHeight uint64, orderID string) (*jsonresult.Pdexv3Order, error) {
 	dexState, err := client.GetPdexState(beaconHeight)
 	if err != nil {
 		return nil, err

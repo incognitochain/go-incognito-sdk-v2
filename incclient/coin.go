@@ -169,7 +169,7 @@ func (client *IncClient) GetUnspentOutputCoins(privateKey, tokenID string, heigh
 }
 
 // GetAllUTXOsV2 returns all v2 UTXOs (and associated tokenIDs) of a private key.
-func (client *IncClient) GetAllUTXOsV2(privateKey string,) (map[string][]coin.PlainCoin, map[string][]*big.Int, error) {
+func (client *IncClient) GetAllUTXOsV2(privateKey string) (map[string][]coin.PlainCoin, map[string][]*big.Int, error) {
 	utxoRes := make(map[string][]coin.PlainCoin)
 	idxRes := make(map[string][]*big.Int)
 	w, err := wallet.Base58CheckDeserialize(privateKey)

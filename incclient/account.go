@@ -62,7 +62,7 @@ func (client *IncClient) GetMyNFTs(privateKey string) ([]string, error) {
 		return nil, err
 	}
 	nftList := make([]string, 0)
-	for tokenID, _ := range allNFTs {
+	for tokenID := range allNFTs {
 		nftList = append(nftList, tokenID)
 	}
 	Logger.Printf("#Nfts: %v\n", len(allNFTs))
