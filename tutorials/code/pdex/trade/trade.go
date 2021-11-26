@@ -2,29 +2,27 @@ package main
 
 import (
 	"fmt"
+	"github.com/incognitochain/go-incognito-sdk-v2/common"
 	"log"
+	"time"
 
 	"github.com/incognitochain/go-incognito-sdk-v2/incclient"
 )
 
 func main() {
-	client, err := incclient.NewTestNet1Client()
+	client, err := incclient.NewTestNetClient()
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	// replace with your network's data
-	privateKey := ""
+	privateKey := "112t8rneWAhErTC8YUFTnfcKHvB1x6uAVdehy1S8GP2psgqDxK3RHouUcd69fz88oAL9XuMyQ8mBY5FmmGJdcyrpwXjWBXRpoWwgJXjsxi4j"
 	// Trade between some tokens
-	tokenToSell := "fd0febf5a30be293a3e241aeb860ce843f49415ac5914e4e96b428e195af9d50"
-	tokenToBuy := "3609431c4404eb5fd91607f5afcb427afe02c9cf2ff64bf0970880eb56c03b48"
-	sellAmount := uint64(500)
-	expectedAmount := uint64(470)
-	tradePath := []string{"3609431c4404eb5fd91607f5afcb427afe02c9cf2ff64bf0970880eb56c03b48-fd0febf5a30be293a3e241aeb860ce843f49415ac5914e4e96b428e195af9d50-be93d713532275875bbe5d9411f7e1e2634355b8aeb1039b4b83e3468839c1c4"}
-	// expectedAmount, err := client.CheckXPrice(tokenToSell, tokenToBuy, sellAmount)
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
+	tokenToSell := "00000000000000000000000000000000000000000000000000000000000115d7"
+	tokenToBuy := common.PRVIDStr
+	sellAmount := uint64(10000)
+	expectedAmount := uint64(7000000)
+	tradePath := []string{"00000000000000000000000000000000000000000000000000000000000115d7-00000000000000000000000000000000000000000000000000000000000115dc-aeb37b2be73b62b6b5b95086e47687767950e66772e14db6daeef01e40344dd5", "0000000000000000000000000000000000000000000000000000000000000004-00000000000000000000000000000000000000000000000000000000000115dc-03696365b2ff79bb9ef35bf43a74e655ffadae0fa139b8016148d7a036716c5c"}
 	tradingFee := uint64(50)
 	feeInPRV := false
 
@@ -32,6 +30,12 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	fmt.Printf("txHash: %v\n", txHash)
 
-	fmt.Printf("txHash %v\n", txHash)
+	time.Sleep(100 * time.Second)
+	status, err := client.CheckTradeStatus(txHash)
+	if err != nil {
+		log.Fatal(err)
+	}
+	common.PrintJson(status, "TradeStatus")
 }

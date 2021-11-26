@@ -20,6 +20,6 @@ new pDEX. Basically, the category is divided into the following sections:
   * [Staking](./stake.md)
   * [UnStaking](./unstake.md)
   * [Withdrawing the Staking Reward](./staking_reward_withdraw.md)
-* Trading
+* [Trading](./trade.md)
 * [Querying the pDEX](./query.md)
 
