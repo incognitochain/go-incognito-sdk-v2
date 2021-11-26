@@ -433,7 +433,7 @@ func (client *IncClient) GetOrderByID(beaconHeight uint64, orderID string) (*jso
 	for id, pair := range dexState.PoolPairs {
 		for _, order := range pair.Orderbook.Orders {
 			if order.Id == orderID {
-				order.PairID = id
+				order.PoolID = id
 				return order, nil
 			}
 		}
