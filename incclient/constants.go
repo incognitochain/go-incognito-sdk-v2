@@ -26,14 +26,14 @@ const (
 
 // TestNet1 config
 const (
-	TestNet1ETHContractAddressStr = "0xE0D5e7217c6C4bc475404b26d763fAD3F14D2b86"
-	TestNet1BSCContractAddressStr = "0x1ce57B254DC2DBB41e1aeA296Dc7dBD6fb549241"
+	TestNet1ETHContractAddressStr      = "0xE0D5e7217c6C4bc475404b26d763fAD3F14D2b86"
+	TestNet1BSCContractAddressStr      = "0x1ce57B254DC2DBB41e1aeA296Dc7dBD6fb549241"
 	TestNet1PRVERC20ContractAddressStr = "0x917637E3E1ee531231747690189e22C5FA38D88C"
 	TestNet1PRVBEP20ContractAddressStr = "0x3d2E0c1b0b2d81D1A76544E6cC08670af9b86531"
-	TestNet1FullNode              = "https://testnet1.incognito.org/fullnode"
-	TestNet1ETHHost               = "https://kovan.infura.io/v3/93fe721349134964aa71071a713c5cef"
-	TestNet1BSCHost               = "https://data-seed-prebsc-2-s1.binance.org:8545"
-	TestNet1PrivacyVersion        = 2
+	TestNet1FullNode                   = "https://testnet1.incognito.org/fullnode"
+	TestNet1ETHHost                    = "https://kovan.infura.io/v3/93fe721349134964aa71071a713c5cef"
+	TestNet1BSCHost                    = "https://data-seed-prebsc-2-s1.binance.org:8545"
+	TestNet1PrivacyVersion             = 2
 )
 
 // Local config

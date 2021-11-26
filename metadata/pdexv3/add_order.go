@@ -11,22 +11,22 @@ import (
 // AddOrderRequest represents a request for adding an order book to a pool.
 type AddOrderRequest struct {
 	// TokenToSell is the ID of the selling token.
-	TokenToSell         common.Hash                      `json:"TokenToSell"`
+	TokenToSell common.Hash `json:"TokenToSell"`
 
 	// PoolPairID is the ID of the pool pair where the order belongs to. In Incognito, an order book is subject to a specific pool.
-	PoolPairID          string                           `json:"PoolPairID"`
+	PoolPairID string `json:"PoolPairID"`
 
 	// SellAmount is the amount of the `TokenToSell` the user wished to sell.
-	SellAmount          uint64                           `json:"SellAmount"`
+	SellAmount uint64 `json:"SellAmount"`
 
 	// MinAcceptableAmount is the minimum amount of the buying token the user wished to receive.
-	MinAcceptableAmount uint64                           `json:"MinAcceptableAmount"`
+	MinAcceptableAmount uint64 `json:"MinAcceptableAmount"`
 
 	// Receiver is a mapping from a tokenID to the corresponding one-time address for receiving back the funds (different OTAs for different tokens).
-	Receiver            map[common.Hash]coin.OTAReceiver `json:"Receiver"`
+	Receiver map[common.Hash]coin.OTAReceiver `json:"Receiver"`
 
 	// is the ID of the NFT associated with order.
-	NftID               common.Hash                      `json:"NftID"`
+	NftID common.Hash `json:"NftID"`
 
 	metadataCommon.MetadataBase
 }

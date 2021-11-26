@@ -12,7 +12,14 @@ The more a user stakes, the more portion of trading fees he will earn. We could 
 However, the number of tokens allowed for staking, as well as the number of reward tokens are limited. In other words, a user is only allowed
 to stake a token in the staking token list, and when a trade pays the trading fee in a token in the list of reward tokens, the user receives a portion of the trading fee.
 
-### Available Staking Tokens
+### Staking pool reward percentage
+We can get staking pool reward percentage from pdex v3 param handler with key and value format such as
+
+`"TradingStakingPoolRewardPercent": 10`
+
+It presents for 10% of trading fee when a trade is executed will be distributed to staking pool
+
+### Available staking tokens
 We can see the list of available staking tokens by calling the function `GetListStakingPoolShares` on input the beacon height.
 If the beacon height is set to 0, it will retrieve the latest information.
 ```go
@@ -28,7 +35,10 @@ And the result will look like this:
     "0000000000000000000000000000000000000000000000000000000000000006": 100
 }
 ```
-The numbers indicate how much the trading fees are distributed to the pools.
+The numbers indicate how much the trading fees are distributed to the pools. 200 and 100 in this case will be share amount of staking pool. reward amount for each pool will be calculate by formula 
+`reward(i) = share(i) / sumAllShare * totalReward`
+
+For example 200 and 100 in this case will be share amount of staking pool, total reward will be 30 so that prv pool will receive 20, and pdex pool will receive 10
 
 ### Available Reward Tokens
 To list all the reward tokens, we use the method `GetListStakingRewardTokens` supplied with a beacon height.
@@ -50,9 +60,11 @@ and the result will look like this:
 
 What we can understand from these examples is that a user is only allowed to stake tokens with ID `0000000000000000000000000000000000000000000000000000000000000004` or `0000000000000000000000000000000000000000000000000000000000000006`;
 and whenever there is a trade that pays the trading fee in one of the token `(0000000000000000000000000000000000000000000000000000000000000004, a7e1e12fab9fdee4d96ee5c930f75c608ef3e96cd7c0468f2033533b5cb12a8f, ffd8d42dc40a8d166ea4848baf8b5f6e9fe0e9c30d60062eb7d44a8df9e00854)`, he will receive
-an amount of the trading fee. This amount is calculated based on his staking amount, and the percentage of the pool. For example, if a user stakes PRV and his staking accounts for 20% of the staking pool, and the trading fee is 100 PRV then:
-- 2 PRV (2%) is distributed to the PRV staking pool; and
-- 0.4 PRV (20%) is distributed to the user.
+an amount of the trading fee. This amount is calculated based on his staking amount, and the percentage of the pool. 
+For example, if a user stakes PRV and his staking accounts for 20% of the staking pool, and the trading fee is 300 PRV, trading staking pool reward and staking share amount is similar to above then:
+- Trading reward divide to staking pools will be 30 PRV
+- PRV staking pool will receive 200 / (200 + 100) * 30 = 20 PRV
+- 4 PRV (20% of total PRV staking pool reward) is distributed to the user.
 
 ## Stake
 Just like other types of transactions, in this case, we need to create a transaction with the following metadata:

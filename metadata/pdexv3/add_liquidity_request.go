@@ -10,27 +10,27 @@ import (
 type AddLiquidityRequest struct {
 	// poolPairID is the ID of the target pool in which the LP wants to add liquidity to.
 	// If this is the first contribution (i.e, pool-initialization), the poolPairID must be left empty.
-	poolPairID  string
+	poolPairID string
 
 	// pairHash is a string for matching the two contributing transactions. It can be anything as long as it is the same in
 	// both contributing transaction.
-	pairHash    string
+	pairHash string
 
 	// otaReceiver is a one-time address for receiving back the token in case of being refunded.
 	otaReceiver string
 
 	// tokenID is the ID of the contributing token.
-	tokenID     string
+	tokenID string
 
 	// nftID is the ID of the NFT associated with this contribution. This value must be the same in both contributing transactions.
-	nftID       string
+	nftID string
 
 	// tokenAmount is the contributing amount of this token.
 	tokenAmount uint64
 
 	// amplifier is the amplifier of the pool. In the case of contributing to an existing pool, this value must match that of the existing pool.
 	// The detail of this param can be found in the Kyber's White-paper (https://files.kyber.network/DMM-Feb21.pdf).
-	amplifier   uint
+	amplifier uint
 
 	metadataCommon.MetadataBase
 }

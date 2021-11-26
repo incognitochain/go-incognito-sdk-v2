@@ -301,3 +301,22 @@ func TestIncClient_GetListStakingRewardTokens(t *testing.T) {
 	}
 	Logger.Println(string(jsb))
 }
+
+func TestIncClient_GetOrderByID(t *testing.T) {
+	var err error
+	ic, err = NewTestNetClient()
+	if err != nil {
+		panic(err)
+	}
+
+	orderID := "e16109f5b96bd86fd4a1148b084d0b1caeb6dce2d5904d5ff3261e996585fceb"
+	res, err := ic.GetOrderByID(0, orderID)
+	if err != nil {
+		panic(err)
+	}
+	jsb, err := json.MarshalIndent(res, "", "\t")
+	if err != nil {
+		panic(err)
+	}
+	Logger.Println(string(jsb))
+}

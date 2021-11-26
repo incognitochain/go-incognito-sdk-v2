@@ -44,4 +44,3 @@ func main() {
 	}
 	fmt.Printf("status: %v\n", string(jsb))
 }
-

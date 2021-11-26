@@ -422,6 +422,25 @@ func (client *IncClient) GetListStakingRewardTokens(beaconHeight uint64) ([]comm
 	return pdeState.Params.StakingRewardTokens, nil
 }
 
+// GetOrderByID returns the detail of an order given its id. The data is subject to the given beacon block height.
+// If the beacon height is set to 0, it returns the latest information.
+func (client *IncClient) GetOrderByID(beaconHeight uint64, orderID string) (*jsonresult.Pdexv3Order, error) {
+	dexState, err := client.GetPdexState(beaconHeight)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, pair := range dexState.PoolPairs {
+		for _, order := range pair.Orderbook.Orders {
+			if order.Id == orderID {
+				return order, nil
+			}
+		}
+	}
+
+	return nil, fmt.Errorf("order not found")
+}
+
 // BuildDEXShareKey constructs a key for retrieving contributed shares in pDEX.
 func BuildDEXShareKey(beaconHeight uint64, token1ID string, token2ID string, contributorAddress string) ([]byte, error) {
 	pdeSharePrefix := []byte("pdeshare-")

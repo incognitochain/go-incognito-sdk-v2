@@ -32,7 +32,7 @@ func NewPortalV4UnshieldResponse(
 		ReqTxID:        reqTxID,
 		MetadataBase:   metadataBase,
 		OTAPubKeyStr:   requesterAddressStr,
-		TxRandomStr: txRandomStr,
+		TxRandomStr:    txRandomStr,
 		UnshieldAmount: amount,
 		IncTokenID:     tokenID,
 	}

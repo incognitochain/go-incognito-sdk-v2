@@ -11,13 +11,13 @@ type StakingRequest struct {
 	metadataCommon.MetadataBase
 
 	// tokenID is the token we wish to stake. This token must be in the list of allowed staking tokens.
-	tokenID     string
+	tokenID string
 
 	// otaReceiver is a mapping from a tokenID to the corresponding one-time address for receiving back the funds (different OTAs for different tokens).
 	otaReceiver string
 
 	// nftID is the ID of the NFT associated with the staking request.
-	nftID       string
+	nftID string
 
 	// tokenAmount is the staking amount.
 	tokenAmount uint64
