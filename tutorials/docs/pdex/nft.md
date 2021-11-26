@@ -86,7 +86,7 @@ in which
 * `otaReceiver`: the OTA address for receiving the NFT.
 * `amount`: the amount of burned PRV to mint the NFT. To prevent one from creating an infinite number of NFTs, an amount of PRV must be burned when minting a new NFT. This value is currently set to 1 PRV.
 
-Luckily, you don't have to create the metadata yourself, the SDK provides a function called `CreateAndSendPdexv3UserMintNFTransaction`. With this function, all you need to do is to supply is your private key. And to check the status of an NFT-minting transaction, we use the function `CheckNFTMintingStatus` supplied with the created hash (detail in [the query tutorial](./query.md)).
+Luckily, you don't have to create the metadata yourself, the SDK provides a function called `CreateAndSendPdexv3UserMintNFTransaction`. With this function, all you need to do is to supply is your private key. And to check the status of an NFT-minting transaction, we use the function `CheckNFTMintingStatus` supplied with the created hash (see [the query tutorial](./query.md)).
 See the following example ([mint.go](../../code/pdex/nft/mint.go)).
 
 ```go

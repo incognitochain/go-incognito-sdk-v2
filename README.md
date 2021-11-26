@@ -50,6 +50,7 @@ capabilities of the SDK, we will try to cover them as much as possible.
     * [Initializing Custom Tokens](tutorials/docs/transactions/init_token.md)
     * [Converting UTXOs](tutorials/docs/transactions/convert.md)
 * [pDEX](tutorials/docs/pdex/intro.md)
+    * [Querying the pDEX](tutorials/docs/pdex/query.md)
     * [NFT Minting](tutorials/docs/pdex/nft.md)
     * AMM Liquidity
         * [Contribution](tutorials/docs/pdex/contribute.md)
@@ -63,7 +64,6 @@ capabilities of the SDK, we will try to cover them as much as possible.
         * [UnStaking](tutorials/docs/pdex/unstake.md)
         * [Withdrawing the Staking Reward](tutorials/docs/pdex/staking_reward_withdraw.md)
     * [Trading](tutorials/docs/pdex/trade.md)
-    * [Querying the pDEX](tutorials/docs/pdex/query.md)
 * [Staking](tutorials/docs/staking)
     * [Creating Staking Transactions](tutorials/docs/staking/stake.md)
     * [Creating UnStaking Transactions](tutorials/docs/staking/unstake.md)
