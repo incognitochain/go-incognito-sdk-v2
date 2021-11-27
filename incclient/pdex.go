@@ -13,8 +13,6 @@ import (
 	"github.com/incognitochain/go-incognito-sdk-v2/wallet"
 )
 
-const MintNftRequiredAmount = 1000000000
-
 // CreatePdexv3MintNFT creates a transaction minting a new pDEX NFT for the given private key.
 //
 // It returns the base58-encoded transaction, the transaction's hash, and an error (if any).
@@ -29,9 +27,9 @@ func (client *IncClient) CreatePdexv3MintNFT(privateKey string) ([]byte, string,
 		return nil, "", err
 	}
 	otaReceiveStr, err := otaReceiver.String()
-	md := metadataPdexv3.NewUserMintNftRequestWithValue(otaReceiveStr, MintNftRequiredAmount)
+	md := metadataPdexv3.NewUserMintNftRequestWithValue(otaReceiveStr, client.GetMinPRVRequiredToMintNFT(0))
 
-	txParam := NewTxParam(privateKey, []string{common.BurningAddress2}, []uint64{MintNftRequiredAmount}, 0, nil, md, nil)
+	txParam := NewTxParam(privateKey, []string{common.BurningAddress2}, []uint64{defaultNftRequiredAmount}, 0, nil, md, nil)
 
 	return client.CreateRawTransaction(txParam, 2)
 }

@@ -442,6 +442,16 @@ func (client *IncClient) GetOrderByID(beaconHeight uint64, orderID string) (*jso
 	return nil, fmt.Errorf("order not found")
 }
 
+// GetMinPRVRequiredToMintNFT returns the minimum PRV amount required to mint an NFT.
+// If the beacon height is set to 0, it returns the latest information.
+func (client *IncClient) GetMinPRVRequiredToMintNFT(beaconHeight uint64) uint64 {
+	state, err := client.GetPdexState(beaconHeight)
+	if err != nil {
+		return defaultNftRequiredAmount
+	}
+	return state.Params.MintNftRequireAmount
+}
+
 // BuildDEXShareKey constructs a key for retrieving contributed shares in pDEX.
 func BuildDEXShareKey(beaconHeight uint64, token1ID string, token2ID string, contributorAddress string) ([]byte, error) {
 	pdeSharePrefix := []byte("pdeshare-")

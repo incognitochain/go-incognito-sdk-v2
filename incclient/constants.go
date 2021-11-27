@@ -45,10 +45,11 @@ const (
 )
 
 const (
-	DefaultPRVFee         = uint64(100)
-	MaxInputSize          = 30
-	MaxOutputSize         = 30
-	prvInCoinKey          = "PRVInputCoins"
-	tokenInCoinKey        = "TokenInputCoins"
-	defaultCacheDirectory = ".cache"
+	DefaultPRVFee            = uint64(100)
+	defaultNftRequiredAmount = 1000000000
+	MaxInputSize             = 30
+	MaxOutputSize            = 30
+	prvInCoinKey             = "PRVInputCoins"
+	tokenInCoinKey           = "TokenInputCoins"
+	defaultCacheDirectory    = ".cache"
 )
