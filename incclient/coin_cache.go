@@ -285,7 +285,7 @@ func (client *IncClient) syncOutCoinV2(outCoinKey *rpc.OutCoinKey, tokenIDStr st
 		}
 
 		// add account to cache and save to file.
-		go client.cache.addAccount(outCoinKey.OtaKey(), cachedAccount, true)
+		client.cache.addAccount(outCoinKey.OtaKey(), cachedAccount, true)
 	}
 
 	Logger.Printf("FINISHED SYNCING OUTPUT COINS OF TOKEN %v AFTER %v SECOND\n", tokenIDStr, time.Since(start).Seconds())
