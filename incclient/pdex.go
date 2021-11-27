@@ -27,9 +27,10 @@ func (client *IncClient) CreatePdexv3MintNFT(privateKey string) ([]byte, string,
 		return nil, "", err
 	}
 	otaReceiveStr, err := otaReceiver.String()
-	md := metadataPdexv3.NewUserMintNftRequestWithValue(otaReceiveStr, client.GetMinPRVRequiredToMintNFT(0))
+	prvRequiredToMintNFT := client.GetMinPRVRequiredToMintNFT(0)
+	md := metadataPdexv3.NewUserMintNftRequestWithValue(otaReceiveStr, prvRequiredToMintNFT)
 
-	txParam := NewTxParam(privateKey, []string{common.BurningAddress2}, []uint64{defaultNftRequiredAmount}, 0, nil, md, nil)
+	txParam := NewTxParam(privateKey, []string{common.BurningAddress2}, []uint64{prvRequiredToMintNFT}, 0, nil, md, nil)
 
 	return client.CreateRawTransaction(txParam, 2)
 }
