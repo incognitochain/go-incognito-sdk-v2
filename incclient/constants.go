@@ -46,7 +46,7 @@ const (
 
 const (
 	DefaultPRVFee            = uint64(100)
-	defaultNftRequiredAmount = 1000000000
+	defaultNftRequiredAmount = 100
 	MaxInputSize             = 30
 	MaxOutputSize            = 30
 	prvInCoinKey             = "PRVInputCoins"
