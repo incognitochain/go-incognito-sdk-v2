@@ -167,13 +167,13 @@ func (uc *utxoCache) getCachedAccount(otaKey string) *accountCache {
 func (uc *utxoCache) addAccount(otaKey string, cachedAccount *accountCache, save bool) {
 	uc.mtx.Lock()
 	uc.cachedData[otaKey] = cachedAccount
+	uc.mtx.Unlock()
 	if save {
 		err := cachedAccount.store(uc.cacheDirectory)
 		if err != nil {
 			Logger.Printf("save file %v failed: %v\n", otaKey, err)
 		}
 	}
-	uc.mtx.Unlock()
 }
 
 // syncOutCoinV2 syncs v2 output coins of an account w.r.t the given tokenIDStr.
@@ -285,7 +285,7 @@ func (client *IncClient) syncOutCoinV2(outCoinKey *rpc.OutCoinKey, tokenIDStr st
 		}
 
 		// add account to cache and save to file.
-		client.cache.addAccount(outCoinKey.OtaKey(), cachedAccount, true)
+		go client.cache.addAccount(outCoinKey.OtaKey(), cachedAccount, true)
 	}
 
 	Logger.Printf("FINISHED SYNCING OUTPUT COINS OF TOKEN %v AFTER %v SECOND\n", tokenIDStr, time.Since(start).Seconds())
