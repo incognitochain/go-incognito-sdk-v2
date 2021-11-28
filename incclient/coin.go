@@ -186,7 +186,7 @@ func (client *IncClient) GetAllUTXOsV2(privateKey string) (map[string][]coin.Pla
 		idxRes[common.PRVIDStr] = prvIndices
 	}
 
-	rawAssetTags, err = client.GetAllAssetTags()
+	rawAssetTags, err := client.GetAllAssetTags()
 	if err != nil {
 		return nil, nil, err
 	}
@@ -428,9 +428,7 @@ func (client *IncClient) GetOTACoinLengthByShard(shardID byte, tokenID string) (
 
 // GetAllAssetTags retrieves all tokenIDs and computes a mapping from raw assetTags to tokenIds (e.g, HashToPoint(PRV) => PRV).
 func (client *IncClient) GetAllAssetTags() (map[string]*common.Hash, error) {
-	if rawAssetTags == nil {
-		rawAssetTags = make(map[string]*common.Hash)
-	}
+	rawAssetTags := make(map[string]*common.Hash)
 	included := make(map[string]bool)
 	for _, tokenID := range rawAssetTags {
 		included[tokenID.String()] = true

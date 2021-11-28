@@ -271,11 +271,9 @@ func (client *IncClient) syncOutCoinV2(outCoinKey *rpc.OutCoinKey, tokenIDStr st
 			cachedAccount.update(common.PRVIDStr, coinLength-1, *res)
 		} else {
 			// update cached data for each token
-			if rawAssetTags == nil {
-				rawAssetTags, err = client.GetAllAssetTags()
-				if err != nil {
-					return err
-				}
+			rawAssetTags, err := client.GetAllAssetTags()
+			if err != nil {
+				return err
 			}
 
 			err = cachedAccount.updateAllTokens(coinLength-1, *res, rawAssetTags)
