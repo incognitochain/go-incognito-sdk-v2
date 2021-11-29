@@ -178,8 +178,8 @@ func (uc *utxoCache) addAccount(otaKey string, cachedAccount *accountCache, save
 		err := cachedAccount.store(uc.cacheDirectory)
 		if err != nil {
 			Logger.Printf("save file %v failed: %v\n", otaKey, err)
+			delete(uc.cachedData, otaKey)
 		}
-		delete(uc.cachedData, otaKey)
 	}
 }
 
