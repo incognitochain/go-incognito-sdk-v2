@@ -88,6 +88,9 @@ func (uc *utxoCache) save(otaKeys ...string) error {
 
 	var err error
 	uc.mtx.Lock()
+	defer func() {
+		uc.mtx.Unlock()
+	}()
 	for otaKey, cachedData := range uc.cachedData {
 		if otaKeyStr != "" && otaKey != otaKeyStr {
 			continue
@@ -97,7 +100,6 @@ func (uc *utxoCache) save(otaKeys ...string) error {
 			return err
 		}
 	}
-	uc.mtx.Unlock()
 
 	return nil
 }
@@ -128,6 +130,9 @@ func (uc *utxoCache) load(otaKeys ...string) error {
 	cachedData := make(map[string]*accountCache)
 
 	uc.mtx.Lock()
+	defer func() {
+		uc.mtx.Unlock()
+	}()
 	for _, f := range files {
 		fileNameSplit := strings.Split(f.Name(), "/")
 		otaKey := fileNameSplit[len(fileNameSplit)-1]
@@ -148,7 +153,6 @@ func (uc *utxoCache) load(otaKeys ...string) error {
 		}
 	}
 	uc.cachedData = cachedData
-	uc.mtx.Unlock()
 
 	Logger.Printf("Loading cache successfully!\n")
 	Logger.Printf("Current cache size: %v\n", len(uc.cachedData))
@@ -166,13 +170,16 @@ func (uc *utxoCache) getCachedAccount(otaKey string) *accountCache {
 // addAccount adds an account to the cache, and saves it into a temp file if needed.
 func (uc *utxoCache) addAccount(otaKey string, cachedAccount *accountCache, save bool) {
 	uc.mtx.Lock()
+	defer func() {
+		uc.mtx.Unlock()
+	}()
 	uc.cachedData[otaKey] = cachedAccount
-	uc.mtx.Unlock()
 	if save {
 		err := cachedAccount.store(uc.cacheDirectory)
 		if err != nil {
 			Logger.Printf("save file %v failed: %v\n", otaKey, err)
 		}
+		delete(uc.cachedData, otaKey)
 	}
 }
 
