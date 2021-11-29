@@ -85,6 +85,7 @@ const (
 	gettransactionbypublickey                  = "gettransactionbypublickey"
 	listCustomToken                            = "listcustomtoken"
 	listPrivacyCustomToken                     = "listprivacycustomtoken"
+	listPrivacyCustomTokenIDs                  = "listprivacycustomtokenids"
 	getPrivacyCustomToken                      = "getprivacycustomtoken"
 	listPrivacyCustomTokenByShard              = "listprivacycustomtokenbyshard"
 	getBalancePrivacyCustomToken               = "getbalanceprivacycustomtoken"
