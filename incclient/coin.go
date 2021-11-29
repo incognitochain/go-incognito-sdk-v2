@@ -569,7 +569,7 @@ func GetListDecryptedCoins(privateKey string, listOutputCoins []jsonresult.ICoin
 			decryptedCoin, err := tmpCoinV2.Decrypt(&keyWallet.KeySet)
 			if err != nil {
 				log.Printf("Decrypt %v error: %v\n", base58.Base58Check{}.Encode(outCoin.GetPublicKey().ToBytesS(), 0), err)
-				return nil, nil, err
+				continue
 			}
 			keyImage := decryptedCoin.GetKeyImage()
 			keyImageString := base58.Base58Check{}.Encode(keyImage.ToBytesS(), common.ZeroByte)
