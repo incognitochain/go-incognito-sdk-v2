@@ -187,12 +187,12 @@ func (client *IncClient) GetAllUTXOsV2(privateKey string) (map[string][]coin.Pla
 		idxRes[common.PRVIDStr] = prvIndices
 	}
 
-	rawAssetTags, err := client.GetAllAssetTags()
+	tokenUTXOs, tokenIndices, err := client.GetUnspentOutputCoins(privateKey, common.ConfidentialAssetID.String(), 0)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	tokenUTXOs, tokenIndices, err := client.GetUnspentOutputCoins(privateKey, common.ConfidentialAssetID.String(), 0)
+	rawAssetTags, err := client.GetAllAssetTags()
 	if err != nil {
 		return nil, nil, err
 	}
@@ -436,11 +436,11 @@ func (client *IncClient) GetAllAssetTags() (map[string]*common.Hash, error) {
 	}
 
 	rawAssetTags[crypto.HashToPoint(common.PRVCoinID[:]).String()] = &common.PRVCoinID
-	listTokens, err := client.GetListToken()
+	listTokens, err := client.GetListTokenIDs()
 	if err != nil {
 		return nil, err
 	}
-	for tokenIdStr := range listTokens {
+	for _, tokenIdStr := range listTokens {
 		if included[tokenIdStr] {
 			continue
 		}
