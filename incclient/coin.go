@@ -13,6 +13,7 @@ import (
 	"github.com/incognitochain/go-incognito-sdk-v2/wallet"
 	"log"
 	"math/big"
+	"time"
 )
 
 // GetOutputCoins calls the remote server to get all the output tokens for an output coin key.
@@ -192,10 +193,15 @@ func (client *IncClient) GetAllUTXOsV2(privateKey string) (map[string][]coin.Pla
 		return nil, nil, err
 	}
 
-	rawAssetTags, err := client.GetAllAssetTags()
-	if err != nil {
-		return nil, nil, err
+	var rawAssetTags map[string]*common.Hash
+	// only get rawAssetTags when we have token UTXOs to improve response time
+	if len(tokenUTXOs) > 0 {
+		rawAssetTags, err = client.GetAllAssetTags()
+		if err != nil {
+			return nil, nil, err
+		}
 	}
+
 	for i, utxo := range tokenUTXOs {
 		if utxo.GetValue() == 0 {
 			continue
@@ -429,6 +435,7 @@ func (client *IncClient) GetOTACoinLengthByShard(shardID byte, tokenID string) (
 
 // GetAllAssetTags retrieves all tokenIDs and computes a mapping from raw assetTags to tokenIds (e.g, HashToPoint(PRV) => PRV).
 func (client *IncClient) GetAllAssetTags() (map[string]*common.Hash, error) {
+	start := time.Now()
 	rawAssetTags := make(map[string]*common.Hash)
 	included := make(map[string]bool)
 	for _, tokenID := range rawAssetTags {
@@ -450,6 +457,7 @@ func (client *IncClient) GetAllAssetTags() (map[string]*common.Hash, error) {
 		}
 		rawAssetTags[crypto.HashToPoint(tokenHash[:]).String()] = tokenHash
 	}
+	Logger.Printf("GetAllAssetTags FINISHED: %v\n", time.Since(start).Seconds())
 
 	return rawAssetTags, nil
 }

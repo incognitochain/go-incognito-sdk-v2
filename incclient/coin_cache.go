@@ -238,14 +238,6 @@ func (client *IncClient) syncOutCoinV2(outCoinKey *rpc.OutCoinKey, tokenIDStr st
 	Logger.Printf("Current LatestIndex for token %v: %v\n", tokenIDStr, cachedToken.LatestIndex)
 	var rawAssetTags map[string]*common.Hash
 	if currentIndex < coinLength {
-		if tokenIDStr != common.PRVIDStr {
-			// update cached data for each token
-			rawAssetTags, err = client.GetAllAssetTags()
-			if err != nil {
-				return err
-			}
-		}
-
 		for currentIndex < coinLength {
 			idxList := make([]uint64, 0)
 
@@ -279,6 +271,14 @@ func (client *IncClient) syncOutCoinV2(outCoinKey *rpc.OutCoinKey, tokenIDStr st
 			}
 			Logger.Printf("Found %v output coins (%v) for heights from %v to %v with time %v\n", found, tokenIDStr, currentIndex, nextIndex-1, time.Since(start).Seconds())
 			currentIndex = nextIndex
+		}
+
+		if tokenIDStr != common.PRVIDStr && rawAssetTags == nil && len(res.Data) > 0 {
+			// update cached data for each token
+			rawAssetTags, err = client.GetAllAssetTags()
+			if err != nil {
+				return err
+			}
 		}
 
 		Logger.Printf("newOutCoins: %v\n", len(res.Data))
