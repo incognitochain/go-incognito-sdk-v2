@@ -2,23 +2,25 @@ package incclient
 
 import (
 	"fmt"
-	"github.com/incognitochain/go-incognito-sdk-v2/crypto"
-	"math/big"
-
 	"github.com/incognitochain/go-incognito-sdk-v2/coin"
 	"github.com/incognitochain/go-incognito-sdk-v2/common"
 	"github.com/incognitochain/go-incognito-sdk-v2/common/base58"
+	"github.com/incognitochain/go-incognito-sdk-v2/crypto"
 	"github.com/incognitochain/go-incognito-sdk-v2/key"
 	"github.com/incognitochain/go-incognito-sdk-v2/rpchandler"
 	"github.com/incognitochain/go-incognito-sdk-v2/rpchandler/jsonresult"
 	"github.com/incognitochain/go-incognito-sdk-v2/rpchandler/rpc"
 	"github.com/incognitochain/go-incognito-sdk-v2/wallet"
+	"log"
+	"math/big"
+	"time"
 )
 
 // GetOutputCoins calls the remote server to get all the output tokens for an output coin key.
 // `isFromCache` indicates whether the client should retrieve output tokens from the local cache.
-// In case this value is not set, the client uses the regular `GetOutputCoins` method.
+// In case this value is set to `false`, the client uses the regular `GetOutputCoins` method.
 // If multiple values are passed to `isFromCache`, only the first one is used.
+//
 // For better user experience, if the cache is not running and isFromCache holds true, the client still automatically
 // switches to the non-cache method.
 //
@@ -168,9 +170,135 @@ func (client *IncClient) GetUnspentOutputCoins(privateKey, tokenID string, heigh
 	return listUnspentOutputCoins, listUnspentIndices, nil
 }
 
-// GetUnspentOutputCoinsFromCache retrieves all unspent coins of a private key, without sending the private key to the remote full-node.
-func (client *IncClient) GetUnspentOutputCoinsFromCache(privateKey, tokenID string, height uint64) ([]coin.PlainCoin, []*big.Int, error) {
-	return client.GetUnspentOutputCoins(privateKey, tokenID, height)
+// GetAllUTXOsV2 returns all v2 UTXOs (and associated tokenIDs) of a private key.
+func (client *IncClient) GetAllUTXOsV2(privateKey string) (map[string][]coin.PlainCoin, map[string][]*big.Int, error) {
+	utxoRes := make(map[string][]coin.PlainCoin)
+	idxRes := make(map[string][]*big.Int)
+	w, err := wallet.Base58CheckDeserialize(privateKey)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	prvUTXOs, prvIndices, err := client.GetUnspentOutputCoins(privateKey, common.PRVIDStr, 0)
+	if err != nil {
+		return nil, nil, err
+	}
+	if len(prvUTXOs) > 0 {
+		utxoRes[common.PRVIDStr] = prvUTXOs
+		idxRes[common.PRVIDStr] = prvIndices
+	}
+
+	tokenUTXOs, tokenIndices, err := client.GetUnspentOutputCoins(privateKey, common.ConfidentialAssetID.String(), 0)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	var rawAssetTags map[string]*common.Hash
+	// only get rawAssetTags when we have token UTXOs to improve response time
+	if len(tokenUTXOs) > 0 {
+		rawAssetTags, err = client.GetAllAssetTags()
+		if err != nil {
+			return nil, nil, err
+		}
+	}
+
+	for i, utxo := range tokenUTXOs {
+		if utxo.GetValue() == 0 {
+			continue
+		}
+		v2Coin, ok := utxo.(*coin.CoinV2)
+		if !ok {
+			return nil, nil, fmt.Errorf("cannot cast UTXO %v to a CoinV2", base58.Base58Check{}.Encode(utxo.GetPublicKey().ToBytesS(), 0))
+		}
+		tokenID, err := v2Coin.GetTokenId(&(w.KeySet), rawAssetTags)
+		if err != nil || tokenID == nil {
+			Logger.Printf("GetTokenId error: %v\n", err)
+			continue
+		}
+		if _, ok := utxoRes[tokenID.String()]; !ok {
+			utxoRes[tokenID.String()] = make([]coin.PlainCoin, 0)
+			idxRes[tokenID.String()] = make([]*big.Int, 0)
+		}
+		utxoRes[tokenID.String()] = append(utxoRes[tokenID.String()], utxo)
+		idxRes[tokenID.String()] = append(idxRes[tokenID.String()], tokenIndices[i])
+	}
+
+	return utxoRes, idxRes, nil
+}
+
+// GetUnspentOutputCoinsFromCache retrieves all unspent coins from the local cache (if possible).
+func (client *IncClient) GetUnspentOutputCoinsFromCache(privateKey, tokenID string, height uint64, reSync ...bool) ([]coin.PlainCoin, []*big.Int, error) {
+	if client.cache == nil || !client.cache.isRunning {
+		return client.GetUnspentOutputCoins(privateKey, tokenID, height)
+	}
+
+	outCoinKey, err := NewOutCoinKeyFromPrivateKey(privateKey)
+	if len(reSync) > 0 && reSync[0] {
+		err = client.syncOutCoinV2(outCoinKey, tokenID)
+		if err != nil {
+			return nil, nil, err
+		}
+	}
+
+	cachedAccount := client.cache.getCachedAccount(outCoinKey.OtaKey())
+	if cachedAccount == nil {
+		return nil, nil, fmt.Errorf("otaKey %v has not been cached", outCoinKey.OtaKey())
+	}
+	cached := cachedAccount.CachedTokens[tokenID]
+
+	outCoins := make([]jsonresult.ICoinInfo, 0)
+	indices := make([]*big.Int, 0)
+	if cached != nil {
+		for idx, outCoin := range cached.OutCoins.Data {
+			outCoins = append(outCoins, outCoin)
+			idxBig := new(big.Int).SetUint64(idx)
+			indices = append(indices, idxBig)
+		}
+	} else {
+		Logger.Printf("No cached found for tokenID %v\n", tokenID)
+	}
+
+	// query v1 output coins
+	outCoinKey.SetOTAKey("") // set this to empty so that the full-node only query v1 output coins.
+	v1OutCoins, _, err := client.GetOutputCoinsV1(outCoinKey, tokenID, 0)
+	if err != nil {
+		return nil, nil, err
+	}
+	for _, v1OutCoin := range v1OutCoins {
+		if v1OutCoin.GetVersion() != 1 {
+			continue
+		}
+		outCoins = append(outCoins, v1OutCoin)
+		idxBig := new(big.Int).SetInt64(-1)
+		indices = append(indices, idxBig)
+	}
+
+	if len(outCoins) == 0 {
+		return nil, nil, nil
+	}
+
+	// decrypt and check spent
+	listDecryptedOutCoins, listKeyImages, err := GetListDecryptedCoins(privateKey, outCoins)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	shardID := GetShardIDFromPrivateKey(privateKey)
+	checkSpentList, err := client.CheckCoinsSpent(shardID, tokenID, listKeyImages)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	listUnspentOutputCoins := make([]coin.PlainCoin, 0)
+	listUnspentIndices := make([]*big.Int, 0)
+	for i, decryptedCoin := range listDecryptedOutCoins {
+		if !checkSpentList[i] && decryptedCoin.GetValue() != 0 {
+			listUnspentOutputCoins = append(listUnspentOutputCoins, decryptedCoin)
+			listUnspentIndices = append(listUnspentIndices, indices[i])
+		}
+	}
+
+	return listUnspentOutputCoins, listUnspentIndices, nil
 }
 
 // GetSpentOutputCoins retrieves all spent coins of a private key, without sending the private key to the remote full node.
@@ -305,23 +433,47 @@ func (client *IncClient) GetOTACoinLengthByShard(shardID byte, tokenID string) (
 	}
 }
 
-// GetAllAssetTags computes a mapping from raw assetTags to tokenIds (e.g, HashToPoint(PRV) => PRV).
+// GetAllAssetTags retrieves all tokenIDs and computes a mapping from raw assetTags to tokenIds (e.g, HashToPoint(PRV) => PRV).
 func (client *IncClient) GetAllAssetTags() (map[string]*common.Hash, error) {
-	assetTags := make(map[string]*common.Hash)
-	assetTags[crypto.HashToPoint(common.PRVCoinID[:]).String()] = &common.PRVCoinID
-	listTokens, err := client.GetListToken()
+	start := time.Now()
+	rawAssetTags := make(map[string]*common.Hash)
+	included := make(map[string]bool)
+	for _, tokenID := range rawAssetTags {
+		included[tokenID.String()] = true
+	}
+
+	rawAssetTags[crypto.HashToPoint(common.PRVCoinID[:]).String()] = &common.PRVCoinID
+	listTokens, err := client.GetListTokenIDs()
 	if err != nil {
 		return nil, err
 	}
-	for tokenIdStr := range listTokens {
+	for _, tokenIdStr := range listTokens {
+		if included[tokenIdStr] {
+			continue
+		}
 		tokenHash, err := new(common.Hash).NewHashFromStr(tokenIdStr)
 		if err != nil {
 			return nil, err
 		}
-		assetTags[crypto.HashToPoint(tokenHash[:]).String()] = tokenHash
+		rawAssetTags[crypto.HashToPoint(tokenHash[:]).String()] = tokenHash
+	}
+	Logger.Printf("GetAllAssetTags FINISHED: %v\n", time.Since(start).Seconds())
+
+	return rawAssetTags, nil
+}
+
+// BuildAssetTags computes raw asset tags (i.e, Hash(tokenID)) of a given list of tokenIDs.
+func BuildAssetTags(tokenIDs []string) (map[string]*common.Hash, error) {
+	res := make(map[string]*common.Hash)
+	for _, tokenIdStr := range tokenIDs {
+		tokenHash, err := new(common.Hash).NewHashFromStr(tokenIdStr)
+		if err != nil {
+			return nil, err
+		}
+		res[crypto.HashToPoint(tokenHash[:]).String()] = tokenHash
 	}
 
-	return assetTags, nil
+	return res, nil
 }
 
 // NewOutCoinKeyFromPrivateKey creates a new rpc.OutCoinKey given the private key.
@@ -424,7 +576,8 @@ func GetListDecryptedCoins(privateKey string, listOutputCoins []jsonresult.ICoin
 			}
 			decryptedCoin, err := tmpCoinV2.Decrypt(&keyWallet.KeySet)
 			if err != nil {
-				return nil, nil, err
+				log.Printf("Decrypt %v error: %v\n", base58.Base58Check{}.Encode(outCoin.GetPublicKey().ToBytesS(), 0), err)
+				continue
 			}
 			keyImage := decryptedCoin.GetKeyImage()
 			keyImageString := base58.Base58Check{}.Encode(keyImage.ToBytesS(), common.ZeroByte)

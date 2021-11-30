@@ -1,6 +1,10 @@
 ---
 Description: Tutorial on how to withdraw staking rewards.
 ---
+# Before Going Further
+Please read through the tutorials on [key submission](../accounts/submit_key.md) and [UTXO cache](../accounts/utxo_cache.md) for proper
+balance and UTXO retrieval. Skip these parts if you're familiar with these notions.
+
 # Reward Withdrawal
 Withdrawing staking rewards is as easy as un-staking a node. Just supply the reward address to the function [`CreateAndSendWithDrawRewardTransaction`](../../../incclient/staking.go).
 

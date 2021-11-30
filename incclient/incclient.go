@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/incognitochain/go-incognito-sdk-v2/common"
 	"github.com/incognitochain/go-incognito-sdk-v2/rpchandler/rpc"
+	"strings"
 )
 
 // IncClient defines the environment with which users want to interact.
@@ -15,6 +16,12 @@ type IncClient struct {
 
 	// the Ethereum-RPC server
 	ethServer *rpc.RPCServer
+
+	// the BSC-RPC server
+	bscServer *rpc.RPCServer
+
+	// the parameters used in the v4 portal for BTC
+	btcPortalParams *BTCPortalV4Params
 
 	// the version of the client
 	version int
@@ -27,8 +34,15 @@ type IncClient struct {
 func NewTestNetClient() (*IncClient, error) {
 	rpcServer := rpc.NewRPCServer(TestNetFullNode)
 	ethServer := rpc.NewRPCServer(TestNetETHHost)
+	bscServer := rpc.NewRPCServer(TestNetBSCHost)
 
-	incClient := IncClient{rpcServer: rpcServer, ethServer: ethServer, version: TestNetPrivacyVersion}
+	incClient := IncClient{
+		rpcServer:       rpcServer,
+		ethServer:       ethServer,
+		bscServer:       bscServer,
+		btcPortalParams: &testNetBTCPortalV4Params,
+		version:         TestNetPrivacyVersion,
+	}
 
 	activeShards, err := incClient.GetActiveShard()
 	if err != nil {
@@ -59,11 +73,7 @@ func NewTestNetClientWithCache() (*IncClient, error) {
 	if err != nil {
 		return nil, err
 	}
-	go incClient.cache.start()
-	rawAssetTags, err = incClient.GetAllAssetTags()
-	if err != nil {
-		Logger.Printf("Cannot get raw asset tags: %v\n", err)
-	}
+	incClient.cache.start()
 
 	return incClient, nil
 }
@@ -72,8 +82,14 @@ func NewTestNetClientWithCache() (*IncClient, error) {
 func NewTestNet1Client() (*IncClient, error) {
 	rpcServer := rpc.NewRPCServer(TestNet1FullNode)
 	ethServer := rpc.NewRPCServer(TestNet1ETHHost)
+	bscServer := rpc.NewRPCServer(TestNet1BSCHost)
 
-	incClient := IncClient{rpcServer: rpcServer, ethServer: ethServer, version: TestNet1PrivacyVersion}
+	incClient := IncClient{
+		rpcServer:       rpcServer,
+		ethServer:       ethServer,
+		bscServer:       bscServer,
+		btcPortalParams: &testNet1BTCPortalV4Params,
+		version:         TestNet1PrivacyVersion}
 
 	activeShards, err := incClient.GetActiveShard()
 	if err != nil {
@@ -104,11 +120,7 @@ func NewTestNet1ClientWithCache() (*IncClient, error) {
 	if err != nil {
 		return nil, err
 	}
-	go incClient.cache.start()
-	rawAssetTags, err = incClient.GetAllAssetTags()
-	if err != nil {
-		Logger.Printf("Cannot get raw asset tags: %v\n", err)
-	}
+	incClient.cache.start()
 
 	return incClient, nil
 }
@@ -117,8 +129,14 @@ func NewTestNet1ClientWithCache() (*IncClient, error) {
 func NewMainNetClient() (*IncClient, error) {
 	rpcServer := rpc.NewRPCServer(MainNetFullNode)
 	ethServer := rpc.NewRPCServer(MainNetETHHost)
+	bscServer := rpc.NewRPCServer(MainNetBSCHost)
 
-	incClient := IncClient{rpcServer: rpcServer, ethServer: ethServer, version: MainNetPrivacyVersion}
+	incClient := IncClient{
+		rpcServer:       rpcServer,
+		ethServer:       ethServer,
+		bscServer:       bscServer,
+		btcPortalParams: &mainNetBTCPortalV4Params,
+		version:         MainNetPrivacyVersion}
 
 	activeShards, err := incClient.GetActiveShard()
 	if err != nil {
@@ -149,11 +167,7 @@ func NewMainNetClientWithCache() (*IncClient, error) {
 	if err != nil {
 		return nil, err
 	}
-	go incClient.cache.start()
-	rawAssetTags, err = incClient.GetAllAssetTags()
-	if err != nil {
-		Logger.Printf("Cannot get raw asset tags: %v\n", err)
-	}
+	incClient.cache.start()
 
 	return incClient, nil
 }
@@ -163,7 +177,11 @@ func NewLocalClient(port string) (*IncClient, error) {
 	rpcServer := rpc.NewRPCServer(LocalFullNode)
 	ethServer := rpc.NewRPCServer(LocalETHHost)
 
-	incClient := IncClient{rpcServer: rpcServer, ethServer: ethServer, version: LocalPrivacyVersion}
+	incClient := IncClient{
+		rpcServer:       rpcServer,
+		ethServer:       ethServer,
+		btcPortalParams: &localBTCPortalV4Params,
+		version:         LocalPrivacyVersion}
 	if port != "" {
 		incClient.rpcServer = rpc.NewRPCServer(fmt.Sprintf("http://127.0.0.1:%v", port))
 	}
@@ -197,45 +215,43 @@ func NewLocalClientWithCache() (*IncClient, error) {
 	if err != nil {
 		return nil, err
 	}
-	go incClient.cache.start()
-	rawAssetTags, err = incClient.GetAllAssetTags()
-	if err != nil {
-		Logger.Printf("Cannot get raw asset tags: %v\n", err)
-	}
+	incClient.cache.start()
 
 	return incClient, nil
 }
 
-// NewDevNetClient creates a new IncClient with the dev-net environment.
-func NewDevNetClient() (*IncClient, error) {
-	rpcServer := rpc.NewRPCServer(DevNetFullNode)
-	ethServer := rpc.NewRPCServer(DevNetETHHost)
-
-	incClient := IncClient{rpcServer: rpcServer, ethServer: ethServer, version: DevNetPrivacyVersion}
-
-	activeShards, err := incClient.GetActiveShard()
-	if err != nil {
-		return nil, err
-	}
-
-	Logger.Printf("Init to %v, activeShards: %v\n", DevNetFullNode, activeShards)
-
-	common.MaxShardNumber = activeShards
-	if incClient.version == 1 {
-		common.AddressVersion = 0
-	} else if incClient.version == 2 {
-		common.AddressVersion = 1
-	}
-
-	return &incClient, nil
-}
-
 // NewIncClient creates a new IncClient from given parameters.
-func NewIncClient(fullNode, ethNode string, version int) (*IncClient, error) {
+//
+// Specify which network the client is interacting with by the parameter `networks`.
+// A valid network is one of the following: mainnet, testnet, testnet1, local. By default, this function will initialize
+// a main-net client if no value is assigned to `networks`.
+// Note that only the first value passed to `networks` is processed.
+func NewIncClient(fullNode, ethNode string, version int, networks ...string) (*IncClient, error) {
 	rpcServer := rpc.NewRPCServer(fullNode)
 	ethServer := rpc.NewRPCServer(ethNode)
 
-	incClient := IncClient{rpcServer: rpcServer, ethServer: ethServer, version: version}
+	incClient := IncClient{
+		rpcServer:       rpcServer,
+		ethServer:       ethServer,
+		bscServer:       rpc.NewRPCServer(MainNetBSCHost),
+		btcPortalParams: &mainNetBTCPortalV4Params,
+		version:         version,
+	}
+	if len(networks) > 0 {
+		switch strings.ToLower(networks[0]) {
+		case "testnet":
+			incClient.btcPortalParams = &testNetBTCPortalV4Params
+			incClient.bscServer = rpc.NewRPCServer(TestNetBSCHost)
+		case "testnet1":
+			incClient.btcPortalParams = &testNet1BTCPortalV4Params
+			incClient.bscServer = rpc.NewRPCServer(TestNet1BSCHost)
+		case "local":
+			incClient.btcPortalParams = &localBTCPortalV4Params
+		case "mainnet":
+		default:
+			return nil, fmt.Errorf("network %v not valid", networks[0])
+		}
+	}
 
 	activeShards, err := incClient.GetActiveShard()
 	if err != nil {
@@ -258,36 +274,22 @@ func NewIncClient(fullNode, ethNode string, version int) (*IncClient, error) {
 
 // NewIncClientWithCache creates a new IncClient from given parameters.
 // It also creates a cache instance for locally saving UTXOs.
-func NewIncClientWithCache(fullNode, ethNode string, version int) (*IncClient, error) {
-	rpcServer := rpc.NewRPCServer(fullNode)
-	ethServer := rpc.NewRPCServer(ethNode)
-
-	incClient := IncClient{rpcServer: rpcServer, ethServer: ethServer, version: version}
-	activeShards, err := incClient.GetActiveShard()
+//
+// Specify which network the client is interacting with by the parameter `networks`.
+// A valid network is one of the following: mainnet, testnet, testnet1, local. By default, this function will initialize
+// a main-net client if no value is assigned to `networks`.
+// Note that only the first value passed to `networks` is processed.
+func NewIncClientWithCache(fullNode, ethNode string, version int, networks ...string) (*IncClient, error) {
+	incClient, err := NewIncClient(fullNode, ethNode, version, networks...)
 	if err != nil {
 		return nil, err
 	}
-
-	Logger.Printf("Init to %v, activeShards: %v\n", fullNode, activeShards)
 
 	incClient.cache, err = newUTXOCache(fmt.Sprintf("%v/%v", defaultCacheDirectory, "custom"))
 	if err != nil {
 		return nil, err
 	}
-	go incClient.cache.start()
-	rawAssetTags, err = incClient.GetAllAssetTags()
-	if err != nil {
-		Logger.Printf("Cannot get raw asset tags: %v\n", err)
-	}
+	incClient.cache.start()
 
-	common.MaxShardNumber = activeShards
-	if incClient.version == 1 {
-		common.AddressVersion = 0
-	} else if incClient.version == 2 {
-		common.AddressVersion = 1
-	} else {
-		return nil, fmt.Errorf("version %v not supported", version)
-	}
-
-	return &incClient, nil
+	return incClient, nil
 }

@@ -8,7 +8,6 @@ import (
 	"github.com/incognitochain/go-incognito-sdk-v2/rpchandler/rpc"
 	"github.com/incognitochain/go-incognito-sdk-v2/wallet"
 	"io/ioutil"
-	"log"
 	"math/big"
 	"os"
 	"strings"
@@ -38,12 +37,6 @@ func newUTXOCache(cacheDirectory string) (*utxoCache, error) {
 	cachedData := make(map[string]*accountCache)
 	mtx := new(sync.Mutex)
 
-	currentDir, err := os.Getwd()
-	if err != nil {
-		return nil, err
-	}
-	fmt.Printf("cacheDirectory: %v/%v\n", currentDir, cacheDirectory)
-
 	// if the cache directory does not exist, create one.
 	if _, err := os.Stat(cacheDirectory); os.IsNotExist(err) {
 		err = os.MkdirAll(cacheDirectory, os.ModePerm)
@@ -53,6 +46,12 @@ func newUTXOCache(cacheDirectory string) (*utxoCache, error) {
 		}
 	}
 
+	currentDir, err := os.Getwd()
+	if err != nil {
+		return nil, err
+	}
+	fmt.Printf("cacheDirectory: %v/%v\n", currentDir, cacheDirectory)
+
 	return &utxoCache{
 		cacheDirectory: cacheDirectory,
 		cachedData:     cachedData,
@@ -61,11 +60,6 @@ func newUTXOCache(cacheDirectory string) (*utxoCache, error) {
 }
 
 func (uc *utxoCache) start() {
-	err := uc.load()
-	if err != nil {
-		log.Fatal(err)
-	}
-
 	uc.isRunning = true
 }
 
@@ -79,22 +73,55 @@ func (uc *utxoCache) saveAndStop() error {
 	return nil
 }
 
-func (uc *utxoCache) save() error {
+// save either backs up the whole cache or a specific otaKey.
+// Only the first value of `otaKeys` is processed.
+func (uc *utxoCache) save(otaKeys ...string) error {
 	Logger.Println("Storing cached data...")
+
+	var otaKeyStr string
+	if len(otaKeys) > 0 {
+		otaKeyStr = otaKeys[0]
+		if otaKeyStr == "" {
+			return fmt.Errorf("invalid OTAKey")
+		}
+	}
+
 	var err error
 	uc.mtx.Lock()
-	for _, cachedData := range uc.cachedData {
+	defer func() {
+		uc.mtx.Unlock()
+	}()
+	for otaKey, cachedData := range uc.cachedData {
+		if otaKeyStr != "" && otaKey != otaKeyStr {
+			continue
+		}
 		err = cachedData.store(uc.cacheDirectory)
 		if err != nil {
 			return err
 		}
 	}
-	uc.mtx.Unlock()
 
 	return nil
 }
 
-func (uc *utxoCache) load() error {
+// load either loads the whole cache or a specific otaKey.
+// Only the first value of `otaKeys` is processed.
+func (uc *utxoCache) load(otaKeys ...string) error {
+	var otaKeyStr string
+	if len(otaKeys) > 0 {
+		otaKeyStr = otaKeys[0]
+		if otaKeyStr == "" {
+			return fmt.Errorf("invalid OTAKey")
+		}
+	}
+
+	if uc.cachedData != nil && otaKeyStr != "" {
+		if _, ok := uc.cachedData[otaKeyStr]; ok {
+			Logger.Printf("otaKey %v has already been loaded\n", otaKeyStr)
+			return nil
+		}
+	}
+
 	files, err := ioutil.ReadDir(uc.cacheDirectory)
 	if err != nil {
 		return err
@@ -103,18 +130,29 @@ func (uc *utxoCache) load() error {
 	cachedData := make(map[string]*accountCache)
 
 	uc.mtx.Lock()
+	defer func() {
+		uc.mtx.Unlock()
+	}()
 	for _, f := range files {
 		fileNameSplit := strings.Split(f.Name(), "/")
 		otaKey := fileNameSplit[len(fileNameSplit)-1]
+		if otaKeyStr != "" && otaKey != otaKeyStr {
+			continue
+		}
 		ac := newAccountCache(otaKey)
 		err = ac.load(uc.cacheDirectory)
 		if err != nil {
+			Logger.Printf("loadCacheUTXO fail for ota %v: %v", fileNameSplit, err)
 			return err
 		}
 		cachedData[otaKey] = ac
 	}
+	if otaKeyStr != "" {
+		if _, ok := cachedData[otaKeyStr]; !ok {
+			Logger.Printf("otaKey %v not found in cache\n", otaKeyStr)
+		}
+	}
 	uc.cachedData = cachedData
-	uc.mtx.Unlock()
 
 	Logger.Printf("Loading cache successfully!\n")
 	Logger.Printf("Current cache size: %v\n", len(uc.cachedData))
@@ -132,20 +170,29 @@ func (uc *utxoCache) getCachedAccount(otaKey string) *accountCache {
 // addAccount adds an account to the cache, and saves it into a temp file if needed.
 func (uc *utxoCache) addAccount(otaKey string, cachedAccount *accountCache, save bool) {
 	uc.mtx.Lock()
+	defer func() {
+		uc.mtx.Unlock()
+	}()
 	uc.cachedData[otaKey] = cachedAccount
 	if save {
 		err := cachedAccount.store(uc.cacheDirectory)
 		if err != nil {
 			Logger.Printf("save file %v failed: %v\n", otaKey, err)
+			delete(uc.cachedData, otaKey)
 		}
 	}
-	uc.mtx.Unlock()
 }
 
 // syncOutCoinV2 syncs v2 output coins of an account w.r.t the given tokenIDStr.
 func (client *IncClient) syncOutCoinV2(outCoinKey *rpc.OutCoinKey, tokenIDStr string) error {
 	if tokenIDStr != common.PRVIDStr {
 		tokenIDStr = common.ConfidentialAssetID.String()
+	}
+
+	// load the cache for the otaKey (if possible)
+	err := client.cache.load(outCoinKey.OtaKey())
+	if err != nil {
+		return err
 	}
 
 	shardID, err := GetShardIDFromPaymentAddress(outCoinKey.PaymentAddress())
@@ -189,62 +236,66 @@ func (client *IncClient) syncOutCoinV2(outCoinKey *rpc.OutCoinKey, tokenIDStr st
 		currentIndex = 0
 	}
 	Logger.Printf("Current LatestIndex for token %v: %v\n", tokenIDStr, cachedToken.LatestIndex)
-	for currentIndex < coinLength {
-		idxList := make([]uint64, 0)
+	var rawAssetTags map[string]*common.Hash
+	if currentIndex < coinLength {
+		for currentIndex < coinLength {
+			idxList := make([]uint64, 0)
 
-		nextIndex := currentIndex + uint64(batchSize)
-		if nextIndex > coinLength {
-			nextIndex = coinLength
-		}
-		for i := currentIndex; i < nextIndex; i++ {
-			idxList = append(idxList, i)
-		}
-		if len(idxList) == 0 {
-			break
-		}
-
-		Logger.Printf("Get output coins of indices from %v to %v\n", currentIndex, nextIndex-1)
-
-		tmpOutCoins, err := client.GetOTACoinsByIndices(shardID, tokenIDStr, idxList)
-		if err != nil {
-			return err
-		}
-		found := 0
-		for idx, outCoin := range tmpOutCoins {
-			if bytes.Equal(outCoin.Bytes(), burningPubKey) {
-				continue
+			nextIndex := currentIndex + uint64(batchSize)
+			if nextIndex > coinLength {
+				nextIndex = coinLength
 			}
-			belongs, _ := outCoin.DoesCoinBelongToKeySet(&keySet)
-			if belongs {
-				res.Data[idx] = outCoin
-				found += 1
+			for i := currentIndex; i < nextIndex; i++ {
+				idxList = append(idxList, i)
 			}
+			if len(idxList) == 0 {
+				break
+			}
+
+			Logger.Printf("Get output coins of indices from %v to %v\n", currentIndex, nextIndex-1)
+
+			tmpOutCoins, err := client.GetOTACoinsByIndices(shardID, tokenIDStr, idxList)
+			if err != nil {
+				return err
+			}
+			found := 0
+			for idx, outCoin := range tmpOutCoins {
+				if bytes.Equal(outCoin.Bytes(), burningPubKey) {
+					continue
+				}
+				belongs, _ := outCoin.DoesCoinBelongToKeySet(&keySet)
+				if belongs {
+					res.Data[idx] = outCoin
+					found += 1
+				}
+			}
+			Logger.Printf("Found %v output coins (%v) for heights from %v to %v with time %v\n", found, tokenIDStr, currentIndex, nextIndex-1, time.Since(start).Seconds())
+			currentIndex = nextIndex
 		}
-		Logger.Printf("Found %v output coins (%v) for heights from %v to %v with time %v\n", found, tokenIDStr, currentIndex, nextIndex-1, time.Since(start).Seconds())
-		currentIndex = nextIndex
-	}
 
-	Logger.Printf("newOutCoins: %v\n", len(res.Data))
-
-	if tokenIDStr == common.PRVIDStr {
-		cachedAccount.update(common.PRVIDStr, coinLength-1, *res)
-	} else {
-		// update cached data for each token
-		if rawAssetTags == nil {
+		if tokenIDStr != common.PRVIDStr && rawAssetTags == nil && len(res.Data) > 0 {
+			// update cached data for each token
 			rawAssetTags, err = client.GetAllAssetTags()
 			if err != nil {
 				return err
 			}
 		}
 
-		err = cachedAccount.updateAllTokens(coinLength-1, *res, rawAssetTags)
-		if err != nil {
-			return err
+		Logger.Printf("newOutCoins: %v\n", len(res.Data))
+
+		if tokenIDStr == common.PRVIDStr {
+			cachedAccount.update(common.PRVIDStr, coinLength-1, *res)
+		} else {
+			err = cachedAccount.updateAllTokens(coinLength-1, *res, rawAssetTags)
+			if err != nil {
+				return err
+			}
 		}
+
+		// add account to cache and save to file.
+		client.cache.addAccount(outCoinKey.OtaKey(), cachedAccount, true)
 	}
 
-	// add account to cache and save to file.
-	client.cache.addAccount(outCoinKey.OtaKey(), cachedAccount, true)
 	Logger.Printf("FINISHED SYNCING OUTPUT COINS OF TOKEN %v AFTER %v SECOND\n", tokenIDStr, time.Since(start).Seconds())
 
 	return nil

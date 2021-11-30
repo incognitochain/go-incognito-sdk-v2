@@ -4,6 +4,7 @@ import (
 	"github.com/incognitochain/go-incognito-sdk-v2/coin"
 	"github.com/incognitochain/go-incognito-sdk-v2/common"
 	"github.com/incognitochain/go-incognito-sdk-v2/metadata"
+	metadataCommon "github.com/incognitochain/go-incognito-sdk-v2/metadata/common"
 	"github.com/incognitochain/go-incognito-sdk-v2/wallet"
 )
 
@@ -14,7 +15,7 @@ func (client *IncClient) CreatePortalShieldTransaction(
 	privateKey, tokenID, paymentAddr, shieldingProof string, inputCoins []coin.PlainCoin, coinIndices []uint64,
 ) ([]byte, string, error) {
 	portalShieldingMetadata, err := metadata.NewPortalShieldingRequest(
-		metadata.PortalV4ShieldingRequestMeta,
+		metadataCommon.PortalV4ShieldingRequestMeta,
 		tokenID,
 		paymentAddr,
 		shieldingProof,
@@ -55,7 +56,7 @@ func (client *IncClient) CreatePortalReplaceByFeeTransaction(
 	privateKey, tokenID, batchID string, fee uint, inputCoins []coin.PlainCoin, coinIndices []uint64,
 ) ([]byte, string, error) {
 	portalRBFMetadata, err := metadata.NewPortalReplacementFeeRequest(
-		metadata.PortalV4FeeReplacementRequestMeta,
+		metadataCommon.PortalV4FeeReplacementRequestMeta,
 		tokenID,
 		batchID,
 		fee,
@@ -96,7 +97,7 @@ func (client *IncClient) CreatePortalSubmitConfirmationTransaction(
 	privateKey, tokenID, unShieldProof, batchID string, inputCoins []coin.PlainCoin, coinIndices []uint64,
 ) ([]byte, string, error) {
 	portalSubmitConfirmationMetadata, err := metadata.NewPortalSubmitConfirmedTxRequest(
-		metadata.PortalV4SubmitConfirmedTxMeta,
+		metadataCommon.PortalV4SubmitConfirmedTxMeta,
 		unShieldProof,
 		tokenID,
 		batchID,
@@ -138,7 +139,7 @@ func (client *IncClient) CreatePortalConvertVaultTransaction(
 	privateKey, tokenID, paymentAddr, convertingProof string, inputCoins []coin.PlainCoin, coinIndices []uint64,
 ) ([]byte, string, error) {
 	portalConvertVaultMetadata, err := metadata.NewPortalConvertVaultRequest(
-		metadata.PortalV4ConvertVaultRequestMeta,
+		metadataCommon.PortalV4ConvertVaultRequestMeta,
 		tokenID,
 		convertingProof,
 		paymentAddr,
@@ -191,7 +192,7 @@ func (client *IncClient) CreatePortalUnShieldTransaction(
 	}
 
 	portalUnShieldingMetadata, err := metadata.NewPortalUnshieldRequest(
-		metadata.PortalV4UnShieldingRequestMeta,
+		metadataCommon.PortalV4UnshieldingRequestMeta,
 		pubKeyStr,
 		txRandomStr,
 		tokenID,

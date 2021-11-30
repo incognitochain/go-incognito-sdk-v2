@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"time"
 )
 
 // RPCServer represents a RPC host server.
@@ -55,6 +56,7 @@ func (server *RPCServer) SendPostRequestWithQuery(query string) ([]byte, error) 
 	req, _ := http.NewRequest("POST", server.url, bytes.NewBuffer(jsonStr))
 	req.Header.Set("Content-Type", "application/json")
 	client := &http.Client{}
+	client.Timeout = 10 * time.Minute
 	resp, err := client.Do(req)
 	if err != nil {
 		log.Printf("DoReq %v\n", err)

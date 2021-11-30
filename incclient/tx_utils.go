@@ -423,7 +423,7 @@ func (client *IncClient) initParams(privateKey string, tokenIDStr string, totalA
 
 	//fmt.Printf("Getting UTXOs for tokenID %v...\n", tokenIDStr)
 	//Get list of UTXOs
-	utxoList, idxList, err := client.GetUnspentOutputCoinsFromCache(privateKey, tokenIDStr, 0)
+	utxoList, idxList, err := client.GetUnspentOutputCoins(privateKey, tokenIDStr, 0)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -511,7 +511,7 @@ func (client *IncClient) initParamsV1(txParam *TxParam, tokenIDStr string, total
 
 	if coinsToSpend == nil {
 		//Get list of UTXOs
-		utxoList, idxList, err := client.GetUnspentOutputCoinsFromCache(privateKey, tokenIDStr, 0)
+		utxoList, idxList, err := client.GetUnspentOutputCoins(privateKey, tokenIDStr, 0)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -584,7 +584,7 @@ func (client *IncClient) initParamsV2(txParam *TxParam, tokenIDStr string, total
 
 	if coinsToSpend == nil {
 		//Get list of UTXOs
-		utxoList, idxList, err := client.GetUnspentOutputCoinsFromCache(privateKey, tokenIDStr, 0)
+		utxoList, idxList, err := client.GetUnspentOutputCoins(privateKey, tokenIDStr, 0)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -665,7 +665,8 @@ func (client *IncClient) GetTx(txHash string) (metadata.Transaction, error) {
 }
 
 // GetTxs retrieves transactions and parses them to transaction objects given their hashes.
-func (client *IncClient) GetTxs(txHashList []string) (map[string]metadata.Transaction, error) {
+// By default, it will not re-calculate the hashes of the transactions. Set `hashReCheck` to true to re-check the hashes.
+func (client *IncClient) GetTxs(txHashList []string, hashReCheck ...bool) (map[string]metadata.Transaction, error) {
 	responseInBytes, err := client.rpcServer.GetEncodedTransactionsByHashes(txHashList)
 	if err != nil {
 		return nil, err
@@ -678,6 +679,10 @@ func (client *IncClient) GetTxs(txHashList []string) (map[string]metadata.Transa
 	}
 
 	res := make(map[string]metadata.Transaction)
+	doubleCheck := false
+	if len(hashReCheck) > 0 {
+		doubleCheck = hashReCheck[0]
+	}
 	for txHash, encodedTx := range mapRes {
 		txBytes, _, err := base58.Base58Check{}.Decode(encodedTx)
 		if err != nil {
@@ -692,10 +697,10 @@ func (client *IncClient) GetTxs(txHashList []string) (map[string]metadata.Transa
 		}
 		tx := txChoice.ToTx()
 
-		//if tx.Hash().String() != txHash {
-		//	Logger.Printf("txParseFail: %v\n", string(txBytes))
-		//	return nil, fmt.Errorf("txHash changes after unmarshalling, expect %v, got %v", txHash, tx.Hash().String())
-		//}
+		if doubleCheck && tx.Hash().String() != txHash {
+			Logger.Printf("txParseFail: %v\n", string(txBytes))
+			return nil, fmt.Errorf("txHash changes after unmarshalling, expect %v, got %v", txHash, tx.Hash().String())
+		}
 		res[txHash] = tx
 	}
 

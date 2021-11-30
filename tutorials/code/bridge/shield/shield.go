@@ -15,15 +15,16 @@ func main() {
 
 	privateKey := "112t8rneWAhErTC8YUFTnfcKHvB1x6uAVdehy1S8GP2psgqDxK3RHouUcd69fz88oAL9XuMyQ8mBY5FmmGJdcyrpwXjWBXRpoWwgJXjsxi4j"
 	tokenIDStr := "ffd8d42dc40a8d166ea4848baf8b5f6e9fe0e9c30d60062eb7d44a8df9e00854"
-	ethTxHash := "0xb31d963b3f183d60532ca60d534e0113ca56070af795fde450dd456945a7be42"
+	evmTxHash := "0xb31d963b3f183d60532ca60d534e0113ca56070af795fde450dd456945a7be42"
+	isBSC := false
 
-	ethProof, depositAmount, err := ic.GetEVMDepositProof(ethTxHash)
+	evmProof, depositAmount, err := ic.GetEVMDepositProof(evmTxHash, isBSC)
 	if err != nil {
 		log.Fatal(err)
 	}
 	fmt.Printf("Deposited amount: %v\n", depositAmount)
 
-	txHashStr, err := ic.CreateAndSendIssuingEVMRequestTransaction(privateKey, tokenIDStr, *ethProof)
+	txHashStr, err := ic.CreateAndSendIssuingEVMRequestTransaction(privateKey, tokenIDStr, *evmProof, isBSC)
 	if err != nil {
 		log.Fatal(err)
 	}

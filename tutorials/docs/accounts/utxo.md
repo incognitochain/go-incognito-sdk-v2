@@ -68,7 +68,7 @@ A CoinV2 shares a lot of common fields with a CoinV1. We will only explain some 
 
 ## Convert a CoinV1 to a CoinV2
 
-There is a special type of transactions which helps convert a CoinV1 into a CoinV2, called **ConversionTransaction**. Please see this [tutorial](../transactions/convert.md) for more detail. In the next [tutorial](../), we will learn how to retrieve our output coins from the network.
+There is a special type of transactions which helps convert a CoinV1 into a CoinV2, called **ConversionTransaction**. Please see this [tutorial](../transactions/convert.md) for more detail. In the next [tutorial](./utxo_retrieve.md), we will learn how to retrieve our output coins from the network.
 
 --- 
 Return to [the table of contents](../../../README.md).

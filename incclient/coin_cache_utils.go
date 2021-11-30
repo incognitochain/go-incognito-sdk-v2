@@ -216,9 +216,12 @@ func (ac *accountCache) load(cacheDirectory string) error {
 		cacheDirectory = defaultCacheDirectory
 	}
 
+	Logger.Printf("Loading cache for %v\n", ac.OtaKey)
+
 	filePath := fmt.Sprintf("%v/%v", cacheDirectory, ac.OtaKey)
 	f, err := os.OpenFile(filePath, os.O_RDONLY, 0644)
 	if err != nil {
+		Logger.Println(err)
 		return err
 	}
 	defer func() {
@@ -230,11 +233,12 @@ func (ac *accountCache) load(cacheDirectory string) error {
 
 	rawData, err := ioutil.ReadAll(f)
 	if err != nil {
+		Logger.Println(err)
 		return err
 	}
-
 	err = ac.fromBytes(rawData)
 	if err != nil {
+		Logger.Println(err)
 		return err
 	}
 

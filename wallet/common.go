@@ -8,10 +8,11 @@ const (
 )
 
 const (
-	PrivateKeyType     = byte(0x0) // Serialize wallet account key into string with only PRIVATE KEY of account key set
-	PaymentAddressType = byte(0x1) // Serialize wallet account key into string with only PAYMENT ADDRESS of account key set
-	ReadonlyKeyType    = byte(0x2) // Serialize wallet account key into string with only READONLY KEY of account key set
-	OTAKeyType         = byte(0x3) // Serialize wallet account key into string with only OTA KEY of account key set
+	PrivateKeyType              = byte(0x0) // Serialize wallet account key into string with only PRIVATE KEY of account key set
+	PaymentAddressType          = byte(0x1) // Serialize wallet account key into string with only PAYMENT ADDRESS of account key set
+	ReadonlyKeyType             = byte(0x2) // Serialize wallet account key into string with only READONLY KEY of account key set
+	OTAKeyType                  = byte(0x3) // Serialize wallet account key into string with only OTA KEY of account key set
+	PrivateReceivingAddressType = byte(0x04)
 )
 
 const (

@@ -13,7 +13,7 @@ func (client *IncClient) getUTXOsListByVersion(privateKey string,
 	tokenIDStr string,
 	version uint8,
 ) ([]coin.PlainCoin, []uint64, error) {
-	allUTXOList, allIdxList, err := client.GetUnspentOutputCoinsFromCache(privateKey, tokenIDStr, 0)
+	allUTXOList, allIdxList, err := client.GetUnspentOutputCoins(privateKey, tokenIDStr, 0)
 	if err != nil {
 		return nil, nil, err
 	}

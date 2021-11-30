@@ -1,6 +1,10 @@
 ---
 Description: Tutorial on how to create an un-staking transaction.
 ---
+# Before Going Further
+Please read through the tutorials on [key submission](../accounts/submit_key.md) and [UTXO cache](../accounts/utxo_cache.md) for proper
+balance and UTXO retrieval. Skip these parts if you're familiar with these notions.
+
 # Node UnStaking
 To un-stake a node, call the [`CreateAndSendUnStakingTransaction`](../../../incclient/staking.go) function with our private key, mining private key, and the candidate address.
 

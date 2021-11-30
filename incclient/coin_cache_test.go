@@ -88,7 +88,7 @@ func TestIncClient_GetAndCacheOutCoins(t *testing.T) {
 		Logger.Printf("GetOutputCoinsFromLocalCache time %v\n", time.Since(start).Seconds())
 
 		start = time.Now()
-		firstOutCoins, firstIndices, err := ic.GetOutputCoins(outCoinKey, testTokenIDStr, 0)
+		firstOutCoins, firstIndices, err := ic.GetOutputCoins(outCoinKey, testTokenIDStr, 0, false)
 		if err != nil {
 			panic(err)
 		}

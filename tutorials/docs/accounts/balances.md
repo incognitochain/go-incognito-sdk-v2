@@ -5,7 +5,7 @@ Description: Tutorial on how to retrieve balances of an Incognito account.
 ## Balances
 
 To retrieve the balance of either PRV or any token on the Incognito network, we first need to get ourselves connected to the network
-using the `incclient` package as described in [Client](../client/client.md).
+using the `incclient` package as described in [Client](../client/client.md). Please make sure that you have properly [submit your key](./submit_key.md) to the remote host.
 
 ```go
 client, err := incclient.NewTestNet1Client()
@@ -23,6 +23,10 @@ fmt.Printf("balance: %v\n", balance)
 ```
 
 Note that the private key is required to check if a TXO has been spent or not. The private key will never leave your local machine.
+
+The SDK also provides a method for checking all v2 balances (i.e, balances calculated based only on v2 UTXOs) for all tokens, `GetAllBalancesV2`.
+This is useful in practice because we do not need to iterate through each token to check what we have. However, if you still have v1 UTXOs left,
+the function will not take them into account. It assumes all v1 UTXOs have been converted to v2.
 
 ## Example
 [balances.go](../../code/accounts/balances/balances.go)
@@ -49,7 +53,6 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-
 	fmt.Printf("balancePRV: %v\n", balancePRV)
 
 	tokenID := "0000000000000000000000000000000000000000000000000000000000000100"
@@ -57,8 +60,13 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-
 	fmt.Printf("balanceToken: %v\n", balanceToken)
+
+	allBalances, err := incClient.GetAllBalancesV2(privateKey)
+	if err != nil {
+		log.Fatal(err)
+	}
+	common.PrintJson(allBalances, "All Balances")
 }
 ```
 ---
