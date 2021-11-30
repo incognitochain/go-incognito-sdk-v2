@@ -444,19 +444,37 @@ func (client *IncClient) GetAllAssetTags() (map[string]*common.Hash, error) {
 
 	rawAssetTags[crypto.HashToPoint(common.PRVCoinID[:]).String()] = &common.PRVCoinID
 	listTokens, err := client.GetListTokenIDs()
+	var mapToken map[string]CustomToken
 	if err != nil {
-		return nil, err
-	}
-	for _, tokenIdStr := range listTokens {
-		if included[tokenIdStr] {
-			continue
-		}
-		tokenHash, err := new(common.Hash).NewHashFromStr(tokenIdStr)
+		mapToken, err = client.GetListToken()
 		if err != nil {
 			return nil, err
 		}
-		rawAssetTags[crypto.HashToPoint(tokenHash[:]).String()] = tokenHash
 	}
+	if listTokens == nil {
+		for tokenIdStr, _ := range mapToken {
+			if included[tokenIdStr] {
+				continue
+			}
+			tokenHash, err := new(common.Hash).NewHashFromStr(tokenIdStr)
+			if err != nil {
+				return nil, err
+			}
+			rawAssetTags[crypto.HashToPoint(tokenHash[:]).String()] = tokenHash
+		}
+	} else {
+		for _, tokenIdStr := range listTokens {
+			if included[tokenIdStr] {
+				continue
+			}
+			tokenHash, err := new(common.Hash).NewHashFromStr(tokenIdStr)
+			if err != nil {
+				return nil, err
+			}
+			rawAssetTags[crypto.HashToPoint(tokenHash[:]).String()] = tokenHash
+		}
+	}
+
 	Logger.Printf("GetAllAssetTags FINISHED: %v\n", time.Since(start).Seconds())
 
 	return rawAssetTags, nil
