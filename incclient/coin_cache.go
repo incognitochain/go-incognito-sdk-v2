@@ -4,18 +4,24 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/incognitochain/go-incognito-sdk-v2/common"
+	"github.com/incognitochain/go-incognito-sdk-v2/key"
 	"github.com/incognitochain/go-incognito-sdk-v2/rpchandler/jsonresult"
 	"github.com/incognitochain/go-incognito-sdk-v2/rpchandler/rpc"
 	"github.com/incognitochain/go-incognito-sdk-v2/wallet"
 	"io/ioutil"
+	"math"
 	"math/big"
 	"os"
+	"runtime"
 	"strings"
 	"sync"
 	"time"
 )
 
-var batchSize = 5000
+var (
+	batchSize         = 5000
+	maxGetCoinThreads = 2 * runtime.NumCPU()
+)
 
 // utxoCache implements a simple UTXO cache for the incclient.
 type utxoCache struct {
@@ -30,6 +36,14 @@ type utxoCache struct {
 
 	// a simple mutex
 	mtx *sync.Mutex
+}
+
+// getCoinStatus manages the status of a thread for getting output coins by indices.
+type getCoinStatus struct {
+	data      map[uint64]jsonresult.ICoinInfo
+	err       error
+	fromIndex uint64
+	toIndex   uint64
 }
 
 // newUTXOCache creates a new utxoCache instance.
@@ -228,9 +242,8 @@ func (client *IncClient) syncOutCoinV2(outCoinKey *rpc.OutCoinKey, tokenIDStr st
 	}
 
 	res := NewCachedOutCoins()
-	burningPubKey := wallet.GetBurningPublicKey()
-
 	start := time.Now()
+
 	currentIndex := cachedToken.LatestIndex + 1
 	if currentIndex == 1 {
 		currentIndex = 0
@@ -238,39 +251,51 @@ func (client *IncClient) syncOutCoinV2(outCoinKey *rpc.OutCoinKey, tokenIDStr st
 	Logger.Printf("Current LatestIndex for token %v: %v\n", tokenIDStr, cachedToken.LatestIndex)
 	var rawAssetTags map[string]*common.Hash
 	if currentIndex < coinLength {
-		for currentIndex < coinLength {
-			idxList := make([]uint64, 0)
-
-			nextIndex := currentIndex + uint64(batchSize)
-			if nextIndex > coinLength {
-				nextIndex = coinLength
+		Logger.Printf("maxGetCoinThreads: %v\n", maxGetCoinThreads)
+		statusChan := make(chan getCoinStatus, maxGetCoinThreads)
+		doneCount := 0
+		mtx := new(sync.Mutex)
+		numWorking := 0
+		numThreads := math.Ceil(float64(coinLength - currentIndex) / float64(batchSize))
+		for {
+			select {
+			case status := <-statusChan:
+				if status.err != nil {
+					err = fmt.Errorf("getCoinsByIndices FAILED at indices [%v-%v]: %v", status.fromIndex, status.toIndex, status.err)
+					Logger.Println(err)
+					return err
+				} else {
+					mtx.Lock()
+					for idx, tmpCoin := range status.data {
+						res.Data[idx] = tmpCoin
+					}
+					doneCount++
+					numWorking--
+					Logger.Printf("syncOutCoinV2 doneCount: %v/%v\n", doneCount, numThreads)
+					mtx.Unlock()
+				}
+			default:
+				if doneCount == int(numThreads) {
+					break
+				}
+				if numWorking < maxGetCoinThreads && currentIndex < coinLength {
+					nextIndex := currentIndex + uint64(batchSize)
+					if nextIndex > coinLength {
+						nextIndex = coinLength
+					}
+					go client.getCoinsByIndices(keySet, shardID, tokenIDStr, currentIndex, nextIndex-1, statusChan)
+					currentIndex = nextIndex
+					mtx.Lock()
+					numWorking++
+					mtx.Unlock()
+					Logger.Printf("syncOutCoinV2 timeElapsed: %v\n", time.Since(start).Seconds())
+				} else {
+					time.Sleep(100 * time.Millisecond)
+				}
 			}
-			for i := currentIndex; i < nextIndex; i++ {
-				idxList = append(idxList, i)
-			}
-			if len(idxList) == 0 {
+			if doneCount == int(numThreads) {
 				break
 			}
-
-			Logger.Printf("Get output coins of indices from %v to %v\n", currentIndex, nextIndex-1)
-
-			tmpOutCoins, err := client.GetOTACoinsByIndices(shardID, tokenIDStr, idxList)
-			if err != nil {
-				return err
-			}
-			found := 0
-			for idx, outCoin := range tmpOutCoins {
-				if bytes.Equal(outCoin.Bytes(), burningPubKey) {
-					continue
-				}
-				belongs, _ := outCoin.DoesCoinBelongToKeySet(&keySet)
-				if belongs {
-					res.Data[idx] = outCoin
-					found += 1
-				}
-			}
-			Logger.Printf("Found %v output coins (%v) for heights from %v to %v with time %v\n", found, tokenIDStr, currentIndex, nextIndex-1, time.Since(start).Seconds())
-			currentIndex = nextIndex
 		}
 
 		if tokenIDStr != common.PRVIDStr && rawAssetTags == nil && len(res.Data) > 0 {
@@ -299,6 +324,48 @@ func (client *IncClient) syncOutCoinV2(outCoinKey *rpc.OutCoinKey, tokenIDStr st
 	Logger.Printf("FINISHED SYNCING OUTPUT COINS OF TOKEN %v AFTER %v SECOND\n", tokenIDStr, time.Since(start).Seconds())
 
 	return nil
+}
+
+func (client *IncClient) getCoinsByIndices(
+	keySet key.KeySet,
+	shardID byte,
+	tokenIDStr string,
+	fromIndex, toIndex uint64,
+	statusChan chan getCoinStatus,
+) {
+	res := make(map[uint64]jsonresult.ICoinInfo)
+	start := time.Now()
+	Logger.Printf("Get output coins of indices from %v to %v\n", fromIndex, toIndex)
+
+	status := getCoinStatus{fromIndex: fromIndex, toIndex: toIndex}
+	idxList := make([]uint64, 0)
+	for i := fromIndex; i <= toIndex; i++ {
+		idxList = append(idxList, i)
+	}
+
+	tmpOutCoins, err := client.GetOTACoinsByIndices(shardID, tokenIDStr, idxList)
+	if err != nil {
+		status.err = err
+		statusChan <- status
+		return
+	}
+
+	found := 0
+	burningPubKey := wallet.GetBurningPublicKey()
+	for idx, outCoin := range tmpOutCoins {
+		if bytes.Equal(outCoin.Bytes(), burningPubKey) {
+			continue
+		}
+		belongs, _ := outCoin.DoesCoinBelongToKeySet(&keySet)
+		if belongs {
+			res[idx] = outCoin
+			found += 1
+		}
+	}
+
+	Logger.Printf("Found %v output coins (%v) for heights from %v to %v with time %v\n", found, tokenIDStr, fromIndex, toIndex, time.Since(start).Seconds())
+	status.data = res
+	statusChan <- status
 }
 
 // GetAndCacheOutCoins retrieves the list of output coins and caches them for faster retrieval later.
