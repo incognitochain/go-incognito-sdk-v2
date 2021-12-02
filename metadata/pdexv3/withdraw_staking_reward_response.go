@@ -26,4 +26,3 @@ func (withdrawalResponse WithdrawalStakingRewardResponse) Hash() *common.Hash {
 func (withdrawalResponse *WithdrawalStakingRewardResponse) CalculateSize() uint64 {
 	return metadataCommon.CalculateSize(withdrawalResponse)
 }
-

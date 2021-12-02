@@ -10,11 +10,21 @@ import (
 
 // WithdrawOrderRequest
 type WithdrawOrderRequest struct {
-	PoolPairID string                           `json:"PoolPairID"`
-	OrderID    string                           `json:"OrderID"`
-	Amount     uint64                           `json:"Amount"`
-	Receiver   map[common.Hash]coin.OTAReceiver `json:"Receiver"`
-	NftID      common.Hash                      `json:"NftID"`
+	// PoolPairID is the ID of the target pool from which the user wants to withdraw his order.
+	PoolPairID string `json:"PoolPairID"`
+
+	// OrderID is the ID of the added order.
+	OrderID string `json:"OrderID"`
+
+	// Amount is the amount in which we want to withdraw (0 for all).
+	Amount uint64 `json:"Amount"`
+
+	// Receiver is a mapping from a tokenID to the corresponding one-time address for receiving back the funds (different OTAs for different tokens).
+	Receiver map[common.Hash]coin.OTAReceiver `json:"Receiver"`
+
+	// NftID is the ID of the NFT associated with the order.
+	NftID common.Hash `json:"NftID"`
+
 	metadataCommon.MetadataBase
 }
 
