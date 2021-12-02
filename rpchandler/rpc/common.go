@@ -59,7 +59,7 @@ func (server *RPCServer) SendPostRequestWithQuery(query string) ([]byte, error) 
 	client.Timeout = 10 * time.Minute
 	resp, err := client.Do(req)
 	if err != nil {
-		log.Printf("DoReq %v\n", err)
+		log.Printf("DoReq %v error: %v\n", query, err)
 		return []byte{}, err
 	} else if resp.StatusCode != 200 {
 		return nil, fmt.Errorf("%v", resp.Status)
