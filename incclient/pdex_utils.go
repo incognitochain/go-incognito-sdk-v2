@@ -14,6 +14,21 @@ import (
 	"github.com/incognitochain/go-incognito-sdk-v2/wallet"
 )
 
+const (
+	WaitingContributions = "WaitingContributions"
+	PoolPairs            = "PoolPairs"
+	PoolPair             = "PoolPair"
+	PoolPairShares       = "PoolPairShares"
+	PoolPairOrders       = "PoolPairOrders"
+	Params               = "Params"
+	StakingPools         = "StakingPools"
+	StakingPool          = "StakingPool"
+	NftIDs               = "NftIDs"
+	All                  = "All"
+	SimpleVerbosity      = 1
+	FullVerbosity        = 2
+)
+
 // Share represents a pDEX contribution share.
 type Share struct {
 	TokenID1Str string
@@ -24,14 +39,6 @@ type Share struct {
 // GetPdexState retrieves the state of pDEX at the provided beacon height.
 // If the beacon height is set to 0, it returns the latest pDEX state.
 func (client *IncClient) GetPdexState(beaconHeight uint64) (*jsonresult.CurrentPdexState, error) {
-	if beaconHeight == 0 {
-		bestBlocks, err := client.GetBestBlock()
-		if err != nil {
-			return nil, fmt.Errorf("cannot get best blocks: %v", err)
-		}
-		beaconHeight = bestBlocks[-1]
-	}
-
 	responseInBytes, err := client.rpcServer.GetPdexState(beaconHeight)
 	if err != nil {
 		return nil, err
@@ -49,25 +56,28 @@ func (client *IncClient) GetPdexState(beaconHeight uint64) (*jsonresult.CurrentP
 // GetAllPdexPoolPairs retrieves all pools in pDEX at the provided beacon height.
 // If the beacon height is set to 0, it returns the latest pDEX pool pairs.
 func (client *IncClient) GetAllPdexPoolPairs(beaconHeight uint64) (map[string]*jsonresult.Pdexv3PoolPairState, error) {
-	pdeState, err := client.GetPdexState(beaconHeight)
+	filter := make(map[string]interface{})
+	filter["Key"] = PoolPairs
+	filter["Verbosity"] = FullVerbosity
+	filter["ID"] = ""
+
+	responseInBytes, err := client.rpcServer.GetPdexState(beaconHeight, filter)
 	if err != nil {
 		return nil, err
 	}
 
-	return pdeState.PoolPairs, nil
+	var res jsonresult.CurrentPdexState
+	err = rpchandler.ParseResponse(responseInBytes, &res)
+	if err != nil {
+		return nil, err
+	}
+
+	return res.PoolPairs, nil
 }
 
 // GetPdexPoolPair retrieves the pDEX pool information for pair tokenID1-tokenID2 at the provided beacon height.
 // If the beacon height is set to 0, it returns the latest information.
 func (client *IncClient) GetPdexPoolPair(beaconHeight uint64, tokenID1, tokenID2 string) (map[string]*jsonresult.Pdexv3PoolPairState, error) {
-	if beaconHeight == 0 {
-		bestBlocks, err := client.GetBestBlock()
-		if err != nil {
-			return nil, fmt.Errorf("cannot get best blocks: %v", err)
-		}
-		beaconHeight = bestBlocks[-1]
-	}
-
 	allPoolPairs, err := client.GetAllPdexPoolPairs(beaconHeight)
 	if err != nil {
 		return nil, err
@@ -92,17 +102,23 @@ func (client *IncClient) GetPdexPoolPair(beaconHeight uint64, tokenID1, tokenID2
 // GetPoolPairStateByID returns the pool pair state of a given poolID at the provided beacon height.
 // If the beacon height is set to 0, it returns the latest information.
 func (client *IncClient) GetPoolPairStateByID(beaconHeight uint64, poolID string) (*jsonresult.Pdexv3PoolPairState, error) {
-	allPoolPairs, err := client.GetAllPdexPoolPairs(beaconHeight)
+	filter := make(map[string]interface{})
+	filter["Key"] = PoolPair
+	filter["Verbosity"] = FullVerbosity
+	filter["ID"] = poolID
+
+	responseInBytes, err := client.rpcServer.GetPdexState(beaconHeight, filter)
 	if err != nil {
 		return nil, err
 	}
 
-	poolPair, ok := allPoolPairs[poolID]
-	if !ok {
-		return nil, fmt.Errorf("poolID %v not found", poolID)
+	var res jsonresult.Pdexv3PoolPairState
+	err = rpchandler.ParseResponse(responseInBytes, &res)
+	if err != nil {
+		return nil, err
 	}
 
-	return poolPair, nil
+	return &res, nil
 }
 
 // GetPoolShareAmount returns the share amount of a pDEX nftID with-in a given poolID.
@@ -380,8 +396,8 @@ func (client *IncClient) GetEstimatedLPValue(beaconHeight uint64, pairID, nftIDS
 // If the beacon height is set to 0, it returns the latest information.
 func (client *IncClient) GetListNftIDs(beaconHeight uint64) (map[string]uint64, error) {
 	filter := make(map[string]interface{})
-	filter["Key"] = "NftIDs"
-	filter["Verbosity"] = 1
+	filter["Key"] = NftIDs
+	filter["Verbosity"] = SimpleVerbosity
 	filter["ID"] = ""
 
 	responseInBytes, err := client.rpcServer.GetPdexState(beaconHeight, filter)
@@ -398,6 +414,28 @@ func (client *IncClient) GetListNftIDs(beaconHeight uint64) (map[string]uint64, 
 	}
 
 	return res.NftIDs, nil
+}
+
+// GetDexParams returns the pDEX parameters at given beacon block height.
+// If the beacon height is set to 0, it returns the latest information.
+func (client *IncClient) GetDexParams(beaconHeight uint64) (*jsonresult.Pdexv3Params, error) {
+	filter := make(map[string]interface{})
+	filter["Key"] = Params
+	filter["Verbosity"] = SimpleVerbosity
+	filter["ID"] = ""
+
+	responseInBytes, err := client.rpcServer.GetPdexState(beaconHeight, filter)
+	if err != nil {
+		return nil, err
+	}
+
+	var res jsonresult.CurrentPdexState
+	err = rpchandler.ParseResponse(responseInBytes, &res)
+	if err != nil {
+		return nil, err
+	}
+
+	return res.Params, nil
 }
 
 // GetListStakingPoolShares returns the list of all tokens (and their share) allowed to stake at given beacon block height.

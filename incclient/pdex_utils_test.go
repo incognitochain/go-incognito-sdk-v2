@@ -6,6 +6,21 @@ import (
 	"time"
 )
 
+func TestIncClient_GetAllPdexPoolPairs(t *testing.T) {
+	var err error
+	ic, err = NewTestNetClient()
+	if err != nil {
+		panic(err)
+	}
+
+	allPoolPairs, err := ic.GetAllPdexPoolPairs(0)
+	if err != nil {
+		panic(err)
+	}
+	jsb, _ := json.MarshalIndent(allPoolPairs, "", "\t")
+	Logger.Printf("state: %v\n", string(jsb))
+}
+
 func TestIncClient_GetPoolPairStateByID(t *testing.T) {
 	var err error
 	ic, err = NewTestNetClient()
@@ -264,6 +279,22 @@ func TestIncClient_GetListNftIDs(t *testing.T) {
 		panic(err)
 	}
 	Logger.Println(nftList)
+}
+
+func TestIncClient_GetDexParams(t *testing.T) {
+	var err error
+	ic, err = NewTestNetClient()
+	if err != nil {
+		panic(err)
+	}
+
+	res, err := ic.GetDexParams(0)
+	if err != nil {
+		panic(err)
+	}
+
+	jsb, _ := json.MarshalIndent(res, "", "\t")
+	Logger.Printf("state: %v\n", string(jsb))
 }
 
 func TestIncClient_GetListStakingPoolShares(t *testing.T) {
