@@ -2,6 +2,8 @@ package incclient
 
 import (
 	"encoding/json"
+	"github.com/stretchr/testify/assert"
+	"reflect"
 	"testing"
 	"time"
 )
@@ -350,4 +352,20 @@ func TestIncClient_GetOrderByID(t *testing.T) {
 		panic(err)
 	}
 	Logger.Println(string(jsb))
+}
+
+func TestIncClient_CloneDEXState(t *testing.T) {
+	var err error
+	ic, err = NewTestNetClient()
+	if err != nil {
+		panic(err)
+	}
+
+	currentState, err := ic.GetPdexState(0)
+	if err != nil {
+		panic(err)
+	}
+	clonedState := currentState.Clone()
+
+	assert.Equal(t, true, reflect.DeepEqual(clonedState, currentState), "cloned and original states mismatch")
 }
