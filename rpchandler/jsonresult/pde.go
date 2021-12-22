@@ -312,6 +312,9 @@ type Pdexv3Params struct {
 	StakingRewardTokens             []common.Hash   // list of staking reward tokens
 	MintNftRequireAmount            uint64          // amount prv for depositing to pdex
 	MaxOrdersPerNft                 uint            // max orders per nft
+	AutoWithdrawOrderLimitAmount    uint            // max orders will be auto withdraw each shard for each blocks
+	MinPRVReserveTradingRate        uint64          // min prv reserve for checking price of trading fee paid by PRV
+	OrderMiningRewardRatioBPS       map[string]uint // map: pool ID -> ratio of LOP rewards compare with LP rewards (0.1% ~ 10 BPS)
 }
 
 // Clone returns a cloned version of a Pdexv3Params.
@@ -323,18 +326,26 @@ func (p Pdexv3Params) Clone() *Pdexv3Params {
 	for k, v := range p.FeeRateBPS {
 		clonedFeeRateBPS[k] = v
 	}
+
 	clonedPDEXRewardPoolPairsShare := map[string]uint{}
 	for k, v := range p.PDEXRewardPoolPairsShare {
 		clonedPDEXRewardPoolPairsShare[k] = v
 	}
+
 	clonedStakingPoolsShare := map[string]uint{}
 	for k, v := range p.StakingPoolsShare {
 		clonedStakingPoolsShare[k] = v
 	}
 
+	clonedOrderMiningRewardRatioBPS := map[string]uint{}
+	for k, v := range p.OrderMiningRewardRatioBPS {
+		clonedOrderMiningRewardRatioBPS[k] = v
+	}
+
 	result.FeeRateBPS = clonedFeeRateBPS
 	result.PDEXRewardPoolPairsShare = clonedPDEXRewardPoolPairsShare
 	result.StakingPoolsShare = clonedStakingPoolsShare
+	result.OrderMiningRewardRatioBPS = clonedOrderMiningRewardRatioBPS
 
 	return result
 }
