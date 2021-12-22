@@ -32,7 +32,7 @@ type CurrentPdexState struct {
 	DeletedWaitingContributions map[string]Pdexv3Contribution
 	PoolPairs                   map[string]*Pdexv3PoolPairState
 	Params                      *Pdexv3Params
-	StakingPoolStates           map[string]*Pdexv3StakingPoolState // tokenID -> StakingPoolState
+	StakingPoolStates           map[string]*Pdexv3StakingPoolState `json:"StakingPools"` // tokenID -> StakingPoolState
 	NftIDs                      map[string]uint64
 }
 
