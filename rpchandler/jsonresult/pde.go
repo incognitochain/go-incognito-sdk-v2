@@ -240,19 +240,24 @@ type Pdexv3Share struct {
 // Clone returns a cloned version of a Pdexv3Share.
 func (s Pdexv3Share) Clone() *Pdexv3Share {
 	res := &Pdexv3Share{
-		Amount:             0,
-		TradingFees:        map[common.Hash]uint64{},
-		LastLPFeesPerShare: map[common.Hash]*big.Int{},
+		Amount: 0,
 	}
 	res.Amount = s.Amount
-	res.TradingFees = map[common.Hash]uint64{}
-	for k, v := range s.TradingFees {
-		res.TradingFees[k] = v
+
+	if s.TradingFees != nil {
+		res.TradingFees = map[common.Hash]uint64{}
+		for k, v := range s.TradingFees {
+			res.TradingFees[k] = v
+		}
 	}
-	res.LastLPFeesPerShare = map[common.Hash]*big.Int{}
-	for k, v := range s.LastLPFeesPerShare {
-		res.LastLPFeesPerShare[k] = new(big.Int).Set(v)
+
+	if s.LastLPFeesPerShare != nil {
+		res.LastLPFeesPerShare = map[common.Hash]*big.Int{}
+		for k, v := range s.LastLPFeesPerShare {
+			res.LastLPFeesPerShare[k] = new(big.Int).Set(v)
+		}
 	}
+
 	return res
 }
 
@@ -358,17 +363,22 @@ type Pdexv3StakingPoolState struct {
 
 // Clone returns a cloned version of a Pdexv3Params.
 func (s Pdexv3StakingPoolState) Clone() *Pdexv3StakingPoolState {
-	res := &Pdexv3StakingPoolState{
-		Stakers:         make(map[string]*Pdexv3Staker),
-		RewardsPerShare: make(map[common.Hash]*big.Int),
-	}
+	res := &Pdexv3StakingPoolState{}
 	res.Liquidity = s.Liquidity
-	for k, v := range s.Stakers {
-		res.Stakers[k] = v.Clone()
+	if s.Stakers != nil {
+		res.Stakers = make(map[string]*Pdexv3Staker)
+		for k, v := range s.Stakers {
+			res.Stakers[k] = v.Clone()
+		}
 	}
-	for k, v := range s.RewardsPerShare {
-		res.RewardsPerShare[k] = new(big.Int).Set(v)
+
+	if s.RewardsPerShare != nil {
+		res.RewardsPerShare = make(map[common.Hash]*big.Int)
+		for k, v := range s.RewardsPerShare {
+			res.RewardsPerShare[k] = new(big.Int).Set(v)
+		}
 	}
+
 	return res
 }
 
@@ -380,17 +390,22 @@ type Pdexv3Staker struct {
 
 // Clone returns a cloned version of a Pdexv3Staker.
 func (s Pdexv3Staker) Clone() *Pdexv3Staker {
-	res := &Pdexv3Staker{
-		Rewards:             make(map[common.Hash]uint64),
-		LastRewardsPerShare: make(map[common.Hash]*big.Int),
-	}
+	res := &Pdexv3Staker{}
 	res.Liquidity = s.Liquidity
-	for k, v := range s.Rewards {
-		res.Rewards[k] = v
+	if s.Rewards != nil {
+		res.Rewards = make(map[common.Hash]uint64)
+		for k, v := range s.Rewards {
+			res.Rewards[k] = v
+		}
 	}
-	for k, v := range s.LastRewardsPerShare {
-		res.LastRewardsPerShare[k] = new(big.Int).Set(v)
+
+	if s.LastRewardsPerShare != nil {
+		res.LastRewardsPerShare = make(map[common.Hash]*big.Int)
+		for k, v := range s.LastRewardsPerShare {
+			res.LastRewardsPerShare[k] = new(big.Int).Set(v)
+		}
 	}
+
 	return res
 }
 
