@@ -19,11 +19,11 @@ import (
 )
 
 var (
-	batchSize         = 5000
+	batchSize = 5000
 
 	// MaxGetCoinThreads is the maximum number of threads running simultaneously to retrieve output coins in the cache layer.
-	// By default, it is set to the number of CPUs of the running machine.
-	MaxGetCoinThreads = 2 * runtime.NumCPU()
+	// By default, it is set to the maximum of 4 and the number of CPUs of the running machine.
+	MaxGetCoinThreads = int(math.Max(float64(runtime.NumCPU()), 4))
 )
 
 // utxoCache implements a simple UTXO cache for the incclient.
@@ -259,7 +259,7 @@ func (client *IncClient) syncOutCoinV2(outCoinKey *rpc.OutCoinKey, tokenIDStr st
 		doneCount := 0
 		mtx := new(sync.Mutex)
 		numWorking := 0
-		numThreads := math.Ceil(float64(coinLength - currentIndex) / float64(batchSize))
+		numThreads := math.Ceil(float64(coinLength-currentIndex) / float64(batchSize))
 		for {
 			select {
 			case status := <-statusChan:

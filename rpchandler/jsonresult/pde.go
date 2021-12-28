@@ -26,14 +26,68 @@ type PoolInfo struct {
 	Token2PoolValue uint64
 }
 
-// CurrentPDEState describes the state of the pDEX at a specific beacon height.
+// CurrentPdexState describes the state of the pDEX at a specific beacon height.
 type CurrentPdexState struct {
 	WaitingContributions        map[string]Pdexv3Contribution
 	DeletedWaitingContributions map[string]Pdexv3Contribution
 	PoolPairs                   map[string]*Pdexv3PoolPairState
 	Params                      *Pdexv3Params
-	StakingPoolStates           map[string]*Pdexv3StakingPoolState // tokenID -> StakingPoolState
+	StakingPoolStates           map[string]*Pdexv3StakingPoolState `json:"StakingPools"` // tokenID -> StakingPoolState
 	NftIDs                      map[string]uint64
+}
+
+// Clone returns a cloned version of the CurrentPdexState.
+func (s CurrentPdexState) Clone() *CurrentPdexState {
+	var waitingContributions map[string]Pdexv3Contribution
+	if s.WaitingContributions != nil {
+		waitingContributions = make(map[string]Pdexv3Contribution)
+		for k, v := range s.WaitingContributions {
+			waitingContributions[k] = *v.Clone()
+		}
+	}
+
+	var deletedWaitingContributions map[string]Pdexv3Contribution
+	if s.DeletedWaitingContributions != nil {
+		deletedWaitingContributions = make(map[string]Pdexv3Contribution)
+		for k, v := range s.DeletedWaitingContributions {
+			deletedWaitingContributions[k] = *v.Clone()
+		}
+	}
+
+	var poolPairs map[string]*Pdexv3PoolPairState
+	if s.PoolPairs != nil {
+		poolPairs = make(map[string]*Pdexv3PoolPairState)
+		for k, v := range s.PoolPairs {
+			poolPairs[k] = v.Clone()
+		}
+	}
+
+	params := s.Params.Clone()
+
+	var stakingPoolStates map[string]*Pdexv3StakingPoolState
+	if s.StakingPoolStates != nil {
+		stakingPoolStates = make(map[string]*Pdexv3StakingPoolState)
+		for k, v := range s.StakingPoolStates {
+			stakingPoolStates[k] = v.Clone()
+		}
+	}
+
+	var nftIDs map[string]uint64
+	if s.NftIDs != nil {
+		nftIDs = make(map[string]uint64)
+		for k, v := range s.NftIDs {
+			nftIDs[k] = v
+		}
+	}
+
+	return &CurrentPdexState{
+		WaitingContributions:        waitingContributions,
+		DeletedWaitingContributions: deletedWaitingContributions,
+		PoolPairs:                   poolPairs,
+		Params:                      params,
+		StakingPoolStates:           stakingPoolStates,
+		NftIDs:                      nftIDs,
+	}
 }
 
 type Pdexv3Contribution struct {
@@ -47,13 +101,106 @@ type Pdexv3Contribution struct {
 	ShardID     byte
 }
 
+// Clone returns a cloned version of the Pdexv3Contribution.
+func (c Pdexv3Contribution) Clone() *Pdexv3Contribution {
+	return &Pdexv3Contribution{
+		PoolPairID:  c.PoolPairID,
+		OtaReceiver: c.OtaReceiver,
+		TokenID:     c.TokenID,
+		Amount:      c.Amount,
+		TxReqID:     c.TxReqID,
+		NftID:       c.NftID,
+		Amplifier:   c.Amplifier,
+		ShardID:     c.ShardID,
+	}
+}
+
 type Pdexv3PoolPairState struct {
+	MakingVolume    map[common.Hash]*Pdexv3MakingVolume
 	State           Pdexv3PoolPair
 	Shares          map[string]*Pdexv3Share
+	OrderRewards    map[string]*Pdexv3OrderReward
 	Orderbook       Pdexv3Orderbook
 	LpFeesPerShare  map[common.Hash]*big.Int
 	ProtocolFees    map[common.Hash]uint64
 	StakingPoolFees map[common.Hash]uint64
+}
+
+type Pdexv3MakingVolume struct {
+	Volume map[string]*big.Int
+}
+
+// Clone returns a cloned version of a Pdexv3MakingVolume.
+func (makingVolume *Pdexv3MakingVolume) Clone() *Pdexv3MakingVolume {
+	res := &Pdexv3MakingVolume{Volume: make(map[string]*big.Int)}
+	for k, v := range makingVolume.Volume {
+		res.Volume[k] = new(big.Int).Set(v)
+	}
+	return res
+}
+
+type Pdexv3OrderReward struct {
+	UncollectedRewards map[common.Hash]uint64
+}
+
+// Clone returns a cloned version of an Pdexv3OrderReward.
+func (orderReward *Pdexv3OrderReward) Clone() *Pdexv3OrderReward {
+	res := &Pdexv3OrderReward{UncollectedRewards: make(map[common.Hash]uint64)}
+	for k, v := range orderReward.UncollectedRewards {
+		res.UncollectedRewards[k] = v
+	}
+	return res
+}
+
+// Clone returns a cloned version of a Pdexv3PoolPairState.
+func (s Pdexv3PoolPairState) Clone() *Pdexv3PoolPairState {
+	res := &Pdexv3PoolPairState{}
+	res.State = *s.State.Clone()
+
+	if s.Shares != nil {
+		res.Shares = make(map[string]*Pdexv3Share)
+		for k, v := range s.Shares {
+			res.Shares[k] = v.Clone()
+		}
+	}
+
+	if s.LpFeesPerShare != nil {
+		res.LpFeesPerShare = make(map[common.Hash]*big.Int)
+		for k, v := range s.LpFeesPerShare {
+			res.LpFeesPerShare[k] = big.NewInt(0).Set(v)
+		}
+	}
+
+	if s.ProtocolFees != nil {
+		res.ProtocolFees = make(map[common.Hash]uint64)
+		for k, v := range s.ProtocolFees {
+			res.ProtocolFees[k] = v
+		}
+	}
+
+	if s.StakingPoolFees != nil {
+		res.StakingPoolFees = make(map[common.Hash]uint64)
+		for k, v := range s.StakingPoolFees {
+			res.StakingPoolFees[k] = v
+		}
+	}
+
+	if s.MakingVolume != nil {
+		res.MakingVolume = make(map[common.Hash]*Pdexv3MakingVolume)
+		for k, v := range s.MakingVolume {
+			res.MakingVolume[k] = v.Clone()
+		}
+	}
+
+	if s.OrderRewards != nil {
+		res.OrderRewards = make(map[string]*Pdexv3OrderReward)
+		for k, v := range s.OrderRewards {
+			res.OrderRewards[k] = v.Clone()
+		}
+	}
+
+	res.Orderbook = *(s.Orderbook.Clone())
+	return res
 }
 
 type Pdexv3PoolPair struct {
@@ -67,14 +214,69 @@ type Pdexv3PoolPair struct {
 	Amplifier           uint
 }
 
+// Clone returns a cloned version of a Pdexv3PoolPair.
+func (p Pdexv3PoolPair) Clone() *Pdexv3PoolPair {
+	res := &Pdexv3PoolPair{
+		Token0ID:            p.Token0ID,
+		Token1ID:            p.Token1ID,
+		Token0RealAmount:    p.Token0RealAmount,
+		Token1RealAmount:    p.Token1RealAmount,
+		Token0VirtualAmount: p.Token0VirtualAmount,
+		Token1VirtualAmount: p.Token1VirtualAmount,
+		Amplifier:           p.Amplifier,
+		ShareAmount:         p.ShareAmount,
+	}
+	res.Token0VirtualAmount = new(big.Int).Set(p.Token0VirtualAmount)
+	res.Token1VirtualAmount = new(big.Int).Set(p.Token1VirtualAmount)
+	return res
+}
+
 type Pdexv3Share struct {
 	Amount             uint64
 	TradingFees        map[common.Hash]uint64
 	LastLPFeesPerShare map[common.Hash]*big.Int
 }
 
+// Clone returns a cloned version of a Pdexv3Share.
+func (s Pdexv3Share) Clone() *Pdexv3Share {
+	res := &Pdexv3Share{
+		Amount: 0,
+	}
+	res.Amount = s.Amount
+
+	if s.TradingFees != nil {
+		res.TradingFees = map[common.Hash]uint64{}
+		for k, v := range s.TradingFees {
+			res.TradingFees[k] = v
+		}
+	}
+
+	if s.LastLPFeesPerShare != nil {
+		res.LastLPFeesPerShare = map[common.Hash]*big.Int{}
+		for k, v := range s.LastLPFeesPerShare {
+			res.LastLPFeesPerShare[k] = new(big.Int).Set(v)
+		}
+	}
+
+	return res
+}
+
 type Pdexv3Orderbook struct {
 	Orders []*Pdexv3Order `json:"orders"`
+}
+
+// Clone returns a cloned version of a Pdexv3Orderbook.
+func (ob Pdexv3Orderbook) Clone() *Pdexv3Orderbook {
+	result := &Pdexv3Orderbook{}
+	if ob.Orders != nil {
+		result.Orders = make([]*Pdexv3Order, len(ob.Orders))
+		for index, item := range ob.Orders {
+			var temp = item.Clone()
+			result.Orders[index] = temp
+		}
+	}
+
+	return result
 }
 
 type Pdexv3Order struct {
@@ -89,6 +291,21 @@ type Pdexv3Order struct {
 	Fee            uint64
 }
 
+// Clone returns a cloned version of a Pdexv3Order.
+func (o Pdexv3Order) Clone() *Pdexv3Order {
+	return &Pdexv3Order{
+		PoolID:         o.PoolID,
+		Id:             o.Id,
+		NftID:          o.NftID,
+		Token0Rate:     o.Token0Rate,
+		Token1Rate:     o.Token1Rate,
+		Token0Balance:  o.Token0Balance,
+		Token1Balance:  o.Token1Balance,
+		TradeDirection: o.TradeDirection,
+		Fee:            o.Fee,
+	}
+}
+
 type Pdexv3Params struct {
 	DefaultFeeRateBPS               uint            // the default value if fee rate is not specific in FeeRateBPS (default 0.3% ~ 30 BPS)
 	FeeRateBPS                      map[string]uint // map: pool ID -> fee rate (0.1% ~ 10 BPS)
@@ -100,6 +317,42 @@ type Pdexv3Params struct {
 	StakingRewardTokens             []common.Hash   // list of staking reward tokens
 	MintNftRequireAmount            uint64          // amount prv for depositing to pdex
 	MaxOrdersPerNft                 uint            // max orders per nft
+	AutoWithdrawOrderLimitAmount    uint            // max orders will be auto withdraw each shard for each blocks
+	MinPRVReserveTradingRate        uint64          // min prv reserve for checking price of trading fee paid by PRV
+	OrderMiningRewardRatioBPS       map[string]uint // map: pool ID -> ratio of LOP rewards compare with LP rewards (0.1% ~ 10 BPS)
+}
+
+// Clone returns a cloned version of a Pdexv3Params.
+func (p Pdexv3Params) Clone() *Pdexv3Params {
+	result := &Pdexv3Params{}
+	*result = p
+
+	clonedFeeRateBPS := map[string]uint{}
+	for k, v := range p.FeeRateBPS {
+		clonedFeeRateBPS[k] = v
+	}
+
+	clonedPDEXRewardPoolPairsShare := map[string]uint{}
+	for k, v := range p.PDEXRewardPoolPairsShare {
+		clonedPDEXRewardPoolPairsShare[k] = v
+	}
+
+	clonedStakingPoolsShare := map[string]uint{}
+	for k, v := range p.StakingPoolsShare {
+		clonedStakingPoolsShare[k] = v
+	}
+
+	clonedOrderMiningRewardRatioBPS := map[string]uint{}
+	for k, v := range p.OrderMiningRewardRatioBPS {
+		clonedOrderMiningRewardRatioBPS[k] = v
+	}
+
+	result.FeeRateBPS = clonedFeeRateBPS
+	result.PDEXRewardPoolPairsShare = clonedPDEXRewardPoolPairsShare
+	result.StakingPoolsShare = clonedStakingPoolsShare
+	result.OrderMiningRewardRatioBPS = clonedOrderMiningRewardRatioBPS
+
+	return result
 }
 
 type Pdexv3StakingPoolState struct {
@@ -108,10 +361,52 @@ type Pdexv3StakingPoolState struct {
 	RewardsPerShare map[common.Hash]*big.Int
 }
 
+// Clone returns a cloned version of a Pdexv3Params.
+func (s Pdexv3StakingPoolState) Clone() *Pdexv3StakingPoolState {
+	res := &Pdexv3StakingPoolState{}
+	res.Liquidity = s.Liquidity
+	if s.Stakers != nil {
+		res.Stakers = make(map[string]*Pdexv3Staker)
+		for k, v := range s.Stakers {
+			res.Stakers[k] = v.Clone()
+		}
+	}
+
+	if s.RewardsPerShare != nil {
+		res.RewardsPerShare = make(map[common.Hash]*big.Int)
+		for k, v := range s.RewardsPerShare {
+			res.RewardsPerShare[k] = new(big.Int).Set(v)
+		}
+	}
+
+	return res
+}
+
 type Pdexv3Staker struct {
 	Liquidity           uint64
 	Rewards             map[common.Hash]uint64
 	LastRewardsPerShare map[common.Hash]*big.Int
+}
+
+// Clone returns a cloned version of a Pdexv3Staker.
+func (s Pdexv3Staker) Clone() *Pdexv3Staker {
+	res := &Pdexv3Staker{}
+	res.Liquidity = s.Liquidity
+	if s.Rewards != nil {
+		res.Rewards = make(map[common.Hash]uint64)
+		for k, v := range s.Rewards {
+			res.Rewards[k] = v
+		}
+	}
+
+	if s.LastRewardsPerShare != nil {
+		res.LastRewardsPerShare = make(map[common.Hash]*big.Int)
+		for k, v := range s.LastRewardsPerShare {
+			res.LastRewardsPerShare[k] = new(big.Int).Set(v)
+		}
+	}
+
+	return res
 }
 
 // DEXTradeStatus represents the status of a pDEX v3 trade.
