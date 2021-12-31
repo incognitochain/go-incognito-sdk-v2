@@ -265,8 +265,12 @@ func (client *IncClient) CheckOrderAddingStatus(txHash string) (*jsonresult.AddO
 }
 
 // CheckOrderWithdrawalStatus checks the status of an order-book withdrawing transaction.
-func (client *IncClient) CheckOrderWithdrawalStatus(txHash string) (*jsonresult.WithdrawOrderStatus, error) {
-	responseInBytes, err := client.rpcServer.CheckOrderWithdrawalStatus(txHash)
+// There are at most two statuses for an order (in case of partially-filled). If `tokenIDs` is not provided, the function
+// will automatically return one of them.
+//
+// NOTE: only the first value of `tokenIDs` is used.
+func (client *IncClient) CheckOrderWithdrawalStatus(txHash string, tokenIDs ...string) (*jsonresult.WithdrawOrderStatus, error) {
+	responseInBytes, err := client.rpcServer.CheckOrderWithdrawalStatus(txHash, tokenIDs...)
 	if err != nil {
 		return nil, err
 	}
