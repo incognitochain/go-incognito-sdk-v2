@@ -113,13 +113,13 @@ func (client *IncClient) GetPoolPairStateByID(beaconHeight uint64, poolID string
 		return nil, err
 	}
 
-	var res jsonresult.Pdexv3PoolPairState
+	var res jsonresult.CurrentPdexState
 	err = rpchandler.ParseResponse(responseInBytes, &res)
 	if err != nil {
 		return nil, err
 	}
 
-	return &res, nil
+	return res.PoolPairs[poolID], nil
 }
 
 // GetPoolShareAmount returns the share amount of a pDEX nftID with-in a given poolID.
