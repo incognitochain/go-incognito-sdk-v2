@@ -156,7 +156,7 @@ func (tx *TxBase) InitializeTxAndParams(params *TxPrivacyInitParams) error {
 	tx.sigPrivateKey = *params.SenderSK
 	// Tx: initialize some values
 	if tx.LockTime == 0 {
-		tx.LockTime = time.Now().Unix()
+		tx.LockTime = time.Now().Unix() - (1 + common.RandInt64()%40)
 	}
 	tx.Fee = params.Fee
 	tx.Type = common.TxNormalType
