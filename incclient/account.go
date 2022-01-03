@@ -2,6 +2,9 @@ package incclient
 
 import (
 	"fmt"
+	"github.com/incognitochain/go-incognito-sdk-v2/coin"
+	"github.com/incognitochain/go-incognito-sdk-v2/common"
+	"github.com/incognitochain/go-incognito-sdk-v2/common/base58"
 	"github.com/incognitochain/go-incognito-sdk-v2/wallet"
 )
 
@@ -20,54 +23,83 @@ func (client *IncClient) GetBalance(privateKey, tokenID string) (uint64, error) 
 	return balance, nil
 }
 
-//// GetBalanceAll returns all non-zero balances (for all tokenIDs) of a private key.
-//func (client *IncClient) GetBalanceAll(privateKey string) (map[string]uint64, error) {
-//	res := make(map[string]uint64)
-//	prvBalance, err := client.GetBalance(privateKey, common.PRVIDStr)
-//	if err != nil {
-//		return nil, err
-//	}
-//	if prvBalance > 0 {
-//		res[common.PRVIDStr] = prvBalance
-//	}
-//
-//	tokenList, err := client.GetListToken()
-//	if err != nil {
-//		return nil, err
-//	}
-//
-//	if client.cache != nil && client.cache.isRunning {
-//		tokenCount := 0
-//		for tokenID := range tokenList {
-//			reSync := tokenCount == 0
-//			unspentCoins, _, err := client.GetUnspentOutputCoinsFromCache(privateKey, tokenID, 0, reSync)
-//			if err != nil {
-//				return nil, err
-//			}
-//			balance := uint64(0)
-//			for _, unspentCoin := range unspentCoins {
-//				balance += unspentCoin.GetValue()
-//			}
-//			if balance > 0 {
-//				res[tokenID] = balance
-//			}
-//			tokenCount++
-//		}
-//		return res, nil
-//	}
-//
-//	for tokenID := range tokenList {
-//		tmpBalance, err := client.GetBalance(privateKey, tokenID)
-//		if err != nil {
-//			return nil, err
-//		}
-//		if tmpBalance > 0 {
-//			res[tokenID] = tmpBalance
-//		}
-//	}
-//
-//	return res, nil
-//}
+// GetAllBalancesV2 returns all non-zero balances of a private key.
+// This function assumes that all v1 output coins have been converted to v1, and only returns the balances calculated with
+// v2 coins (except for PRV). In case you still have v1 UTXOs, try using the regular `GetBalance` function.
+func (client *IncClient) GetAllBalancesV2(privateKey string) (map[string]uint64, error) {
+	res := make(map[string]uint64)
+	allUTXOs, _, err := client.GetAllUTXOsV2(privateKey)
+	if err != nil {
+		return nil, err
+	}
+
+	for tokenID, utxoList := range allUTXOs {
+		balance := uint64(0)
+		for _, utxo := range utxoList {
+			balance += utxo.GetValue()
+		}
+		if balance > 0 {
+			res[tokenID] = balance
+		}
+	}
+
+	return res, nil
+}
+
+// GetMyNFTs returns all NFTs belonging to a private key.
+func (client *IncClient) GetMyNFTs(privateKey string) ([]string, error) {
+	utxoList, _, err := client.GetUnspentOutputCoins(privateKey, common.ConfidentialAssetID.String(), 0)
+	if err != nil {
+		return nil, err
+	}
+	if len(utxoList) == 0 {
+		return nil, fmt.Errorf("no UTXO found")
+	}
+	Logger.Printf("#UTXOs: %v\n", len(utxoList))
+
+	allNFTs, err := client.GetListNftIDs(0)
+	if err != nil {
+		return nil, err
+	}
+	nftList := make([]string, 0)
+	for tokenID := range allNFTs {
+		nftList = append(nftList, tokenID)
+	}
+	Logger.Printf("#Nfts: %v\n", len(allNFTs))
+
+	rawAssetTags, err := BuildAssetTags(nftList)
+	if err != nil {
+		return nil, err
+	}
+
+	w, err := wallet.Base58CheckDeserialize(privateKey)
+	if err != nil {
+		return nil, err
+	}
+
+	res := make([]string, 0)
+	for _, utxo := range utxoList {
+		if utxo.GetValue() != 1 {
+			continue
+		}
+		v2Coin, ok := utxo.(*coin.CoinV2)
+		if !ok {
+			return nil, fmt.Errorf("cannot cast UTXO %v to a CoinV2", base58.Base58Check{}.Encode(utxo.GetPublicKey().ToBytesS(), 0))
+		}
+		tokenId, _ := v2Coin.GetTokenId(&(w.KeySet), rawAssetTags)
+		if tokenId == nil {
+			continue
+		}
+		if _, ok := allNFTs[tokenId.String()]; ok {
+			res = append(res, tokenId.String())
+		}
+	}
+
+	if len(res) == 0 {
+		return nil, fmt.Errorf("no NFT found")
+	}
+	return res, nil
+}
 
 // ImportAccount imports a BIP39 mnemonic string and finds all child keys derived from the mnemonic. The first return KeyWallet
 // is the master wallet, which is used to derive the rest of child KeyWallet.

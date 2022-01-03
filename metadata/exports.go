@@ -10,6 +10,7 @@ type Metadata = metadataCommon.Metadata
 type MetadataBase = metadataCommon.MetadataBase
 type MetadataBaseWithSignature = metadataCommon.MetadataBaseWithSignature
 type Transaction = metadataCommon.Transaction
+
 // type ChainRetriever = metadataCommon.ChainRetriever
 // type ShardViewRetriever = metadataCommon.ShardViewRetriever
 // type BeaconViewRetriever = metadataCommon.BeaconViewRetriever
@@ -19,6 +20,7 @@ type Transaction = metadataCommon.Transaction
 
 // export structs
 type OTADeclaration = metadataCommon.OTADeclaration
+
 // type MintData = metadataCommon.MintData
 // type AccumulatedValues = metadataCommon.AccumulatedValues
 
@@ -29,6 +31,7 @@ var AssertPaymentAddressAndTxVersion = metadataCommon.AssertPaymentAddressAndTxV
 var GenTokenIDFromRequest = metadataCommon.GenTokenIDFromRequest
 var NewMetadataBase = metadataCommon.NewMetadataBase
 var NewMetadataBaseWithSignature = metadataCommon.NewMetadataBaseWithSignature
+
 // var ValidatePortalExternalAddress = metadataCommon.ValidatePortalExternalAddress
 // var NewMetadataTxError = metadataCommon.NewMetadataTxError
 var IsAvailableMetaInTxType = metadataCommon.IsAvailableMetaInTxType
@@ -37,8 +40,10 @@ var NoInputHasOutput = metadataCommon.NoInputHasOutput
 var IsPortalRelayingMetaType = metadataCommon.IsPortalRelayingMetaType
 var IsPortalMetaTypeV3 = metadataCommon.IsPortalMetaTypeV3
 var GetMetaAction = metadataCommon.GetMetaAction
+
 // var IsPDEType = metadataCommon.IsPDEType
 var GetLimitOfMeta = metadataCommon.GetLimitOfMeta
+
 // var IsPDETx = metadataCommon.IsPDETx
 // var IsPdexv3Tx = metadataCommon.IsPdexv3Tx
 // var ConvertPrivacyTokenToNativeToken = metadataCommon.ConvertPrivacyTokenToNativeToken
@@ -178,4 +183,13 @@ const (
 	NoAction                 = metadataCommon.NoAction
 	MetaRequestBeaconMintTxs = metadataCommon.MetaRequestBeaconMintTxs
 	MetaRequestShardMintTxs  = metadataCommon.MetaRequestShardMintTxs
+
+	PortalV4ShieldingRequestMeta      = metadataCommon.PortalV4ShieldingRequestMeta
+	PortalV4ShieldingResponseMeta     = metadataCommon.PortalV4ShieldingResponseMeta
+	PortalV4UnshieldingRequestMeta    = metadataCommon.PortalV4UnshieldingRequestMeta
+	PortalV4UnshieldingResponseMeta   = metadataCommon.PortalV4UnshieldingResponseMeta
+	PortalV4UnshieldBatchingMeta      = metadataCommon.PortalV4UnshieldBatchingMeta
+	PortalV4FeeReplacementRequestMeta = metadataCommon.PortalV4FeeReplacementRequestMeta
+	PortalV4SubmitConfirmedTxMeta     = metadataCommon.PortalV4SubmitConfirmedTxMeta
+	PortalV4ConvertVaultRequestMeta   = metadataCommon.PortalV4ConvertVaultRequestMeta
 )

@@ -10,9 +10,15 @@ import (
 
 type WithdrawalStakingRewardRequest struct {
 	metadataCommon.MetadataBase
-	StakingPoolID string                           `json:"StakingPoolID"`
-	NftID         common.Hash                      `json:"NftID"`
-	Receivers     map[common.Hash]coin.OTAReceiver `json:"Receivers"`
+
+	// StakingPoolID
+	StakingPoolID string `json:"StakingPoolID"`
+
+	// NftID is theID of the NFT associated with the staking request.
+	NftID common.Hash `json:"NftID"`
+
+	// Receivers is a mapping from a tokenID to the corresponding one-time address for receiving back the funds (different OTAs for different tokens).
+	Receivers map[common.Hash]coin.OTAReceiver `json:"Receivers"`
 }
 
 type WithdrawalStakingRewardContent struct {

@@ -9,9 +9,17 @@ import (
 
 type UnstakingRequest struct {
 	metadataCommon.MetadataBase
-	stakingPoolID   string
-	otaReceivers    map[string]string
-	nftID           string
+
+	// stakingPoolID is the ID of the target staking pool (or the tokenID) wished to un-stake from.
+	stakingPoolID string
+
+	// otaReceivers is a mapping from a tokenID to the corresponding one-time address for receiving back the funds (different OTAs for different tokens).
+	otaReceivers map[string]string
+
+	// nftID is theID of the NFT associated with the staking request.
+	nftID string
+
+	// unstakingAmount is the amount wished to un-stake.
 	unstakingAmount uint64
 }
 

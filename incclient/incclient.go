@@ -74,10 +74,6 @@ func NewTestNetClientWithCache() (*IncClient, error) {
 		return nil, err
 	}
 	incClient.cache.start()
-	rawAssetTags, err = incClient.GetAllAssetTags()
-	if err != nil {
-		Logger.Printf("Cannot get raw asset tags: %v\n", err)
-	}
 
 	return incClient, nil
 }
@@ -125,10 +121,6 @@ func NewTestNet1ClientWithCache() (*IncClient, error) {
 		return nil, err
 	}
 	incClient.cache.start()
-	rawAssetTags, err = incClient.GetAllAssetTags()
-	if err != nil {
-		Logger.Printf("Cannot get raw asset tags: %v\n", err)
-	}
 
 	return incClient, nil
 }
@@ -176,10 +168,6 @@ func NewMainNetClientWithCache() (*IncClient, error) {
 		return nil, err
 	}
 	incClient.cache.start()
-	rawAssetTags, err = incClient.GetAllAssetTags()
-	if err != nil {
-		Logger.Printf("Cannot get raw asset tags: %v\n", err)
-	}
 
 	return incClient, nil
 }
@@ -228,10 +216,6 @@ func NewLocalClientWithCache() (*IncClient, error) {
 		return nil, err
 	}
 	incClient.cache.start()
-	rawAssetTags, err = incClient.GetAllAssetTags()
-	if err != nil {
-		Logger.Printf("Cannot get raw asset tags: %v\n", err)
-	}
 
 	return incClient, nil
 }
@@ -306,10 +290,6 @@ func NewIncClientWithCache(fullNode, ethNode string, version int, networks ...st
 		return nil, err
 	}
 	incClient.cache.start()
-	rawAssetTags, err = incClient.GetAllAssetTags()
-	if err != nil {
-		Logger.Printf("Cannot get raw asset tags: %v\n", err)
-	}
 
 	return incClient, nil
 }
