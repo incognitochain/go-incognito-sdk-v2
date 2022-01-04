@@ -12,14 +12,15 @@ import (
 
 // KeyInfo contains all key-related information of an account.
 type KeyInfo struct {
-	PrivateKey      string
-	PublicKey       string
-	PaymentAddress  string
-	ReadOnlyKey     string
-	OTAPrivateKey   string
-	MiningKey       string
-	MiningPublicKey string
-	ShardID         byte
+	PrivateKey         string
+	PublicKey          string
+	PaymentAddress     string
+	ReadOnlyKey        string
+	OTAPrivateKey      string
+	MiningKey          string
+	MiningPublicKey    string
+	ValidatorPublicKey string
+	ShardID            byte
 }
 
 func (k KeyInfo) String() string {
@@ -54,23 +55,25 @@ func GetAccountInfoFromPrivateKey(privateKey string) (*KeyInfo, error) {
 		return nil, err
 	}
 
-	miningPubKey, err := key.NewCommitteeKeyFromSeed(miningKeyBytes, pubKey)
+	committeeKey, err := key.NewCommitteeKeyFromSeed(miningKeyBytes, pubKey)
 	if err != nil {
 		return nil, err
 	}
-	miningPubKeyStr, err := miningPubKey.ToBase58()
+	miningPubKeyStr, err := committeeKey.ToBase58()
 	if err != nil {
 		return nil, err
 	}
+	validatorPublicKey := committeeKey.GetMiningKeyBase58(common.BlsConsensus)
 
 	return &KeyInfo{
-		PrivateKey:      privateKey,
-		PublicKey:       base58.Base58Check{}.Encode(pubKey, common.ZeroByte),
-		PaymentAddress:  addr,
-		ReadOnlyKey:     readonlyKey,
-		OTAPrivateKey:   otaKey,
-		MiningKey:       miningKey,
-		MiningPublicKey: miningPubKeyStr,
-		ShardID:         shardID,
+		PrivateKey:         privateKey,
+		PublicKey:          base58.Base58Check{}.Encode(pubKey, common.ZeroByte),
+		PaymentAddress:     addr,
+		ReadOnlyKey:        readonlyKey,
+		OTAPrivateKey:      otaKey,
+		MiningKey:          miningKey,
+		MiningPublicKey:    miningPubKeyStr,
+		ValidatorPublicKey: validatorPublicKey,
+		ShardID:            shardID,
 	}, nil
 }
