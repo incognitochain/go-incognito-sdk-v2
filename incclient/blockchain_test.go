@@ -71,7 +71,6 @@ func TestIncClient_GetListTokenIDs(t *testing.T) {
 	}
 	Logger.Printf("GetListTokenIDs: %v, %v\n", len(listTokenIDs), time.Since(start))
 
-
 	start = time.Now()
 	listTokens, err := ic.GetListToken()
 	if err != nil {
