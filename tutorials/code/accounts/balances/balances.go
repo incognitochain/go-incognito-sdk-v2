@@ -19,7 +19,6 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-
 	fmt.Printf("balancePRV: %v\n", balancePRV)
 
 	tokenID := "0000000000000000000000000000000000000000000000000000000000000100"
@@ -27,6 +26,11 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-
 	fmt.Printf("balanceToken: %v\n", balanceToken)
+
+	allBalances, err := incClient.GetAllBalancesV2(privateKey)
+	if err != nil {
+		log.Fatal(err)
+	}
+	common.PrintJson(allBalances, "All Balances")
 }

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"testing"
+	"time"
 )
 
 func TestIncClient_GetActiveShards(t *testing.T) {
@@ -54,6 +55,28 @@ func TestIncClient_GetListToken(t *testing.T) {
 	}
 
 	fmt.Println(string(jsb))
+}
+
+func TestIncClient_GetListTokenIDs(t *testing.T) {
+	var err error
+	ic, err = NewTestNet1Client()
+	if err != nil {
+		panic(err)
+	}
+
+	start := time.Now()
+	listTokenIDs, err := ic.GetListTokenIDs()
+	if err != nil {
+		panic(err)
+	}
+	Logger.Printf("GetListTokenIDs: %v, %v\n", len(listTokenIDs), time.Since(start))
+
+	start = time.Now()
+	listTokens, err := ic.GetListToken()
+	if err != nil {
+		panic(err)
+	}
+	Logger.Printf("GetListToken: %v, %v\n", len(listTokens), time.Since(start))
 }
 
 func TestIncClient_GetRawMemPool(t *testing.T) {

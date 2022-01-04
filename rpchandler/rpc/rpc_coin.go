@@ -77,6 +77,11 @@ func (server *RPCServer) ListPrivacyCustomTokenByRPC() ([]byte, error) {
 	return server.SendQuery(listPrivacyCustomToken, nil)
 }
 
+// ListPrivacyCustomTokenIDsByRPC lists all token IDs currently present on the blockchain.
+func (server *RPCServer) ListPrivacyCustomTokenIDsByRPC() ([]byte, error) {
+	return server.SendQuery(listPrivacyCustomTokenIDs, nil)
+}
+
 // ListBridgeTokenByRPC lists all bridge-tokens currently present on the blockchain.
 func (server *RPCServer) ListBridgeTokenByRPC() ([]byte, error) {
 	return server.SendQuery(getAllBridgeTokens, nil)
