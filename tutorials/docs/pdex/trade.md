@@ -107,7 +107,9 @@ pools:
 To trade from USDT to BTC, a trading path could simply be `[USDT-BTC-A]`, or it could
 be `[USDT-ETH-A, ETH-PRV-B, PRV-BTC-A]` depending on which part gives a better receiving amount. Note that ordering of
 pools matters because it requires the next pool must contain the buying token of the previous pool. For
-example, `[USDT-ETH-A, PRV-BTC-A, ETH-PRV-B]` is not a valid trading path.
+example, `[USDT-ETH-A, PRV-BTC-A, ETH-PRV-B]` is not a valid trading path. Furthermore, the more pools in a trading path,
+the more trading fee you have to pay. For the above example, the trading path with the only pool `[USDT-BTC-A]` will 
+pay less trading fee than the one consisting of `[USDT-ETH-A, ETH-PRV-B, PRV-BTC-A]`.
 
 To check status of a trade, we use the function `CheckTradeStatus`. See more detail in the following example.
 
