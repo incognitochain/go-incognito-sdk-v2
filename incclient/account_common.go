@@ -14,6 +14,7 @@ import (
 type KeyInfo struct {
 	PrivateKey         string
 	PublicKey          string
+	PaymentAddressV1   string
 	PaymentAddress     string
 	ReadOnlyKey        string
 	OTAPrivateKey      string
@@ -45,6 +46,7 @@ func GetAccountInfoFromPrivateKey(privateKey string) (*KeyInfo, error) {
 
 	pubKey := PrivateKeyToPublicKey(privateKey)
 	addr := PrivateKeyToPaymentAddress(privateKey, -1)
+	addrV1 := PrivateKeyToPaymentAddress(privateKey, 0)
 	readonlyKey := PrivateKeyToReadonlyKey(privateKey)
 	otaKey := PrivateKeyToPrivateOTAKey(privateKey)
 	miningKey := PrivateKeyToMiningKey(privateKey)
@@ -68,6 +70,7 @@ func GetAccountInfoFromPrivateKey(privateKey string) (*KeyInfo, error) {
 	return &KeyInfo{
 		PrivateKey:         privateKey,
 		PublicKey:          base58.Base58Check{}.Encode(pubKey, common.ZeroByte),
+		PaymentAddressV1:   addrV1,
 		PaymentAddress:     addr,
 		ReadOnlyKey:        readonlyKey,
 		OTAPrivateKey:      otaKey,
