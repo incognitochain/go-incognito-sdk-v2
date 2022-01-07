@@ -675,7 +675,7 @@ func (client *IncClient) GetTxs(txHashList []string, hashReCheck ...bool) (map[s
 	mapRes := make(map[string]string)
 	err = rpchandler.ParseResponse(responseInBytes, &mapRes)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	res := make(map[string]metadata.Transaction)
