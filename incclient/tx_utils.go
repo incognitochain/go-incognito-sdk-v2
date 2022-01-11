@@ -922,6 +922,7 @@ func (client *IncClient) GetReceivingInfo(
 			received = true
 		}
 		mapResult[common.PRVIDStr] = prvAmount
+		outCoins = append(outCoins, tx.GetProof().GetOutputCoins()...)
 	default:
 		err = fmt.Errorf("transaction type `%v` is invalid", tx.GetType())
 	}
