@@ -452,7 +452,7 @@ func (client *IncClient) GetAllAssetTags() (map[string]*common.Hash, error) {
 		}
 	}
 	if listTokens == nil {
-		for tokenIdStr, _ := range mapToken {
+		for tokenIdStr := range mapToken {
 			if included[tokenIdStr] {
 				continue
 			}
