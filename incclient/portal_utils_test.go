@@ -89,7 +89,7 @@ func TestIncClient_GenerateDepositPubKeyFromPrivateKey(t *testing.T) {
 
 func TestIncClient_GetNextOTDepositKey(t *testing.T) {
 	var err error
-	ic, err = NewMainNetClient()
+	ic, err = NewIncClient("http://51.222.43.133:9334", "", 2)
 	if err != nil {
 		panic(err)
 	}

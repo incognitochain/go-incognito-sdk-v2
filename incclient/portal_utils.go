@@ -49,15 +49,18 @@ func (client *IncClient) GeneratePortalShieldingAddress(chainCodeStr, tokenIDStr
 		if chainCodeStr == "" {
 			pubKeys = client.btcPortalParams.MasterPubKeys[:]
 		} else {
+			var chainCode []byte
 			_, err = AssertPaymentAddressAndTxVersion(chainCodeStr, 2)
 			if err != nil {
 				depositPubKey, _, err := base58.Base58Check{}.Decode(chainCodeStr)
 				if err != nil || len(depositPubKey) != 32 {
 					return "", fmt.Errorf("invalid chain-code")
 				}
+				chainCode = chainhash.HashB(depositPubKey)
+			} else {
+				chainhash.HashB([]byte(chainCodeStr))
 			}
 
-			chainCode := chainhash.HashB([]byte(chainCodeStr))
 			for idx, masterPubKey := range client.btcPortalParams.MasterPubKeys {
 				// generate BTC child public key for this Incognito address
 				extendedBTCPublicKey := hdkeychain.NewExtendedKey(client.btcPortalParams.ChainParams.HDPublicKeyID[:], masterPubKey, chainCode, []byte{}, 0, 0, false)
