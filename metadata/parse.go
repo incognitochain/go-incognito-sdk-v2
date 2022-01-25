@@ -157,7 +157,7 @@ func ParseMetadata(metaInBytes []byte) (Metadata, error) {
 	case metadataCommon.Pdexv3WithdrawStakingRewardResponseMeta:
 		md = &metadataPdexv3.WithdrawalStakingRewardResponse{}
 	case PortalV4ShieldingRequestMeta:
-		md = &PortalShieldingRequest{}
+		md = &PortalV4ShieldingRequest{}
 	case PortalV4ShieldingResponseMeta:
 		md = &PortalShieldingResponse{}
 	case PortalV4UnshieldingRequestMeta:
