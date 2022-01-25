@@ -3,6 +3,7 @@ package incclient
 import (
 	"github.com/incognitochain/go-incognito-sdk-v2/coin"
 	"github.com/incognitochain/go-incognito-sdk-v2/common"
+	"github.com/incognitochain/go-incognito-sdk-v2/common/base58"
 	"github.com/incognitochain/go-incognito-sdk-v2/metadata"
 	metadataCommon "github.com/incognitochain/go-incognito-sdk-v2/metadata/common"
 	"github.com/incognitochain/go-incognito-sdk-v2/wallet"
@@ -19,6 +20,8 @@ func (client *IncClient) CreatePortalShieldTransaction(
 		tokenID,
 		paymentAddr,
 		shieldingProof,
+		"",
+		nil,
 	)
 	if err != nil {
 		return nil, "", err
@@ -39,6 +42,73 @@ func (client *IncClient) CreateAndSendPortalShieldTransaction(
 	privateKey, tokenID, paymentAddr, shieldingProof string, inputCoins []coin.PlainCoin, coinIndices []uint64,
 ) (string, error) {
 	encodedTx, txHash, err := client.CreatePortalShieldTransaction(privateKey, tokenID, paymentAddr, shieldingProof, inputCoins, coinIndices)
+	if err != nil {
+		return "", err
+	}
+	err = client.SendRawTx(encodedTx)
+	if err != nil {
+		return "", err
+	}
+	return txHash, nil
+}
+
+// CreatePortalShieldTransaction creates a Portal V4 shielding transaction.
+//
+// It returns the base58-encoded transaction, the transaction's hash, and an error (if any).
+func (client *IncClient) CreatePortalShieldTransactionWithDepositKey(
+	privateKey, tokenIDStr, shieldingProof string, depositKeyIndex uint64, inputCoins []coin.PlainCoin, coinIndices []uint64,
+) ([]byte, string, error) {
+	tokenID, err := common.Hash{}.NewHashFromStr(tokenIDStr)
+	if err != nil {
+		return nil, "", err
+	}
+	w, err := wallet.Base58CheckDeserialize(privateKey)
+	if err != nil {
+		return nil, "", err
+	}
+
+	depositKey, err := w.KeySet.GenerateOTDepositKey(tokenIDStr, depositKeyIndex)
+	if err != nil {
+		return nil, "", err
+	}
+
+	otaReceivers, err := GenerateOTAReceivers([]common.Hash{*tokenID}, w.KeySet.PaymentAddress)
+	if err != nil {
+		return nil, "", err
+	}
+
+	sig, err := SignDepositData(depositKey, otaReceivers[*tokenID].Bytes())
+	if err != nil {
+		return nil, "", err
+	}
+
+	portalShieldingMetadata, err := metadata.NewPortalShieldingRequest(
+		metadataCommon.PortalV4ShieldingRequestMeta,
+		tokenIDStr,
+		otaReceivers[*tokenID].String(),
+		shieldingProof,
+		base58.Base58Check{}.NewEncode(depositKey.PublicKey, 0),
+		sig,
+	)
+	if err != nil {
+		return nil, "", err
+	}
+
+	txParam := NewTxParam(privateKey, []string{}, []uint64{}, 0, nil, portalShieldingMetadata, nil)
+	if len(inputCoins) > 0 {
+		return client.CreateRawTransactionWithInputCoins(txParam, inputCoins, coinIndices)
+	}
+	return client.CreateRawTransaction(txParam, 2)
+}
+
+// CreatePortalShieldTransaction creates a Portal V4 shielding transaction.
+//
+// It returns the base58-encoded transaction, the transaction's hash, and an error (if any).
+func (client *IncClient) CreateAndSendPortalShieldTransactionWithDepositKey(
+	privateKey, tokenIDStr, shieldingProof string, depositKeyIndex uint64, inputCoins []coin.PlainCoin, coinIndices []uint64,
+) (string, error) {
+	encodedTx, txHash, err := client.CreatePortalShieldTransactionWithDepositKey(privateKey,
+		tokenIDStr, shieldingProof, depositKeyIndex, inputCoins, coinIndices)
 	if err != nil {
 		return "", err
 	}

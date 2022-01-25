@@ -7,8 +7,16 @@ import (
 	"github.com/btcsuite/btcd/txscript"
 	"github.com/btcsuite/btcutil"
 	"github.com/btcsuite/btcutil/hdkeychain"
+	"github.com/incognitochain/go-incognito-sdk-v2/common"
+	"github.com/incognitochain/go-incognito-sdk-v2/common/base58"
+	"github.com/incognitochain/go-incognito-sdk-v2/crypto"
+	"github.com/incognitochain/go-incognito-sdk-v2/key"
 	"github.com/incognitochain/go-incognito-sdk-v2/metadata"
+	"github.com/incognitochain/go-incognito-sdk-v2/privacy"
 	"github.com/incognitochain/go-incognito-sdk-v2/rpchandler"
+	"github.com/incognitochain/go-incognito-sdk-v2/wallet"
+	"math"
+	"math/big"
 )
 
 // GetPortalShieldingRequestStatus retrieves the status of a port shielding request.
@@ -27,8 +35,8 @@ func (client *IncClient) GetPortalShieldingRequestStatus(shieldID string) (*meta
 	return res, nil
 }
 
-// GeneratePortalShieldingAddress returns the multi-sig shielding address for a given payment address and a tokenID.
-func (client *IncClient) GeneratePortalShieldingAddress(paymentAddressStr, tokenIDStr string) (string, error) {
+// GeneratePortalShieldingAddress returns the multi-sig shielding address for a given seed and a tokenID.
+func (client *IncClient) GeneratePortalShieldingAddress(chainCodeStr, tokenIDStr string) (string, error) {
 	var res string
 	var err error
 
@@ -38,15 +46,18 @@ func (client *IncClient) GeneratePortalShieldingAddress(paymentAddressStr, token
 		}
 
 		pubKeys := make([][]byte, 0)
-		if paymentAddressStr == "" {
+		if chainCodeStr == "" {
 			pubKeys = client.btcPortalParams.MasterPubKeys[:]
 		} else {
-			_, err = AssertPaymentAddressAndTxVersion(paymentAddressStr, 2)
+			_, err = AssertPaymentAddressAndTxVersion(chainCodeStr, 2)
 			if err != nil {
-				return "", fmt.Errorf("invalid payment address: %v", err)
+				depositPubKey, _, err := base58.Base58Check{}.Decode(chainCodeStr)
+				if err != nil || len(depositPubKey) != 32 {
+					return "", fmt.Errorf("invalid chain-code")
+				}
 			}
 
-			chainCode := chainhash.HashB([]byte(paymentAddressStr))
+			chainCode := chainhash.HashB([]byte(chainCodeStr))
 			for idx, masterPubKey := range client.btcPortalParams.MasterPubKeys {
 				// generate BTC child public key for this Incognito address
 				extendedBTCPublicKey := hdkeychain.NewExtendedKey(client.btcPortalParams.ChainParams.HDPublicKeyID[:], masterPubKey, chainCode, []byte{}, 0, 0, false)
@@ -89,7 +100,8 @@ func (client *IncClient) GeneratePortalShieldingAddress(paymentAddressStr, token
 			res = addr.EncodeAddress()
 		}
 
-		rpcRes, err := client.generatePortalShieldingAddressFromRPC(paymentAddressStr, tokenIDStr)
+		// call RPCs to double-check
+		rpcRes, err := client.generatePortalShieldingAddressFromRPC(chainCodeStr, tokenIDStr)
 		if err != nil {
 			return "", err
 		}
@@ -100,7 +112,7 @@ func (client *IncClient) GeneratePortalShieldingAddress(paymentAddressStr, token
 		}
 	}
 
-	res, err = client.generatePortalShieldingAddressFromRPC(paymentAddressStr, tokenIDStr)
+	res, err = client.generatePortalShieldingAddressFromRPC(chainCodeStr, tokenIDStr)
 	if err != nil {
 		return "", err
 	}
@@ -124,10 +136,98 @@ func (client *IncClient) GetPortalUnShieldingRequestStatus(unShieldID string) (*
 	return res, nil
 }
 
+// GenerateDepositPubKeyFromPrivateKey generates a new OTDepositKey from the given privateKey, tokenID and index.
+func (client *IncClient) GenerateDepositPubKeyFromPrivateKey(privateKeyStr, tokenIDStr string, index uint64) (*key.OTDepositKey, error) {
+	w, err := wallet.Base58CheckDeserialize(privateKeyStr)
+	if err != nil || len(w.KeySet.PrivateKey[:]) == 0 {
+		return nil, fmt.Errorf("invalid privateKey")
+	}
+
+	tokenID, err := new(common.Hash).NewHashFromStr(tokenIDStr)
+	if err != nil {
+		return nil, err
+	}
+
+	tmp := append([]byte(common.PortalV4DepositKeyGenSeed), tokenID[:]...)
+	masterDepositSeed := common.SHA256(append(w.KeySet.PrivateKey[:], tmp...))
+	indexBig := new(big.Int).SetUint64(index)
+
+	privateKey := crypto.HashToScalar(append(masterDepositSeed, indexBig.Bytes()...))
+	pubKey := new(crypto.Point).ScalarMultBase(privateKey)
+
+	return &key.OTDepositKey{
+		PrivateKey: privateKey.ToBytesS(),
+		PublicKey:  pubKey.ToBytesS(),
+		Index:      index,
+	}, nil
+}
+
+// GetNextOTDepositKey returns the next un-used deposit key and its corresponding depositing address.
+func (client *IncClient) GetNextOTDepositKey(privateKeyStr, tokenIDStr string) (*key.OTDepositKey, string, error) {
+	tmpKey, err := client.GenerateDepositPubKeyFromPrivateKey(privateKeyStr, tokenIDStr, 0)
+	if err != nil {
+		return nil, "", err
+	}
+	tmpPubKeyStr := base58.Base58Check{}.Encode(tmpKey.PublicKey, 0)
+
+	exists, err := client.HasDepositPubKeys([]string{tmpPubKeyStr})
+	if err != nil {
+		return nil, "", err
+	}
+
+	if exists[tmpPubKeyStr] {
+		// Perform binary-search for the un-used index
+		lower := uint64(0)
+		upper := uint64(math.MaxUint64)
+		currentIndex := lower
+		for lower < upper {
+			tmpKey, err = client.GenerateDepositPubKeyFromPrivateKey(privateKeyStr, tokenIDStr, currentIndex)
+			if err != nil {
+				return nil, "", fmt.Errorf("generating depositKey at index %v error: %v", lower, err)
+			}
+			tmpPubKeyStr = base58.Base58Check{}.Encode(tmpKey.PublicKey, 0)
+			exists, err = client.HasDepositPubKeys([]string{tmpPubKeyStr})
+			if err != nil {
+				return nil, "", err
+			}
+
+			if !exists[tmpPubKeyStr] {
+				upper = currentIndex
+			} else {
+				lower = currentIndex
+			}
+			currentIndex = (lower + upper) / 2
+		}
+	}
+
+	depositAddress, err := client.GeneratePortalShieldingAddress(tmpPubKeyStr, tokenIDStr)
+	if err != nil {
+		return nil, "", err
+	}
+
+	return tmpKey, depositAddress, nil
+}
+
+// HasDepositPubKeys checks if one-time deposit keys have been used.
+func (client *IncClient) HasDepositPubKeys(depositPubKeys []string) (map[string]bool, error) {
+	responseInBytes, err := client.rpcServer.HasOTDepositKey(depositPubKeys)
+	if err != nil {
+		return nil, err
+	}
+
+	res := make(map[string]bool)
+	err = rpchandler.ParseResponse(responseInBytes, &res)
+	if err != nil {
+		return nil, err
+	}
+
+	return res, nil
+}
+
 // generatePortalShieldingAddressFromRPC returns the multi-sig shielding address for a given payment address and a tokenID
 // via an RPC when using the Portal.
 func (client *IncClient) generatePortalShieldingAddressFromRPC(paymentAddressStr, tokenIDStr string) (string, error) {
-	responseInBytes, err := client.rpcServer.GenerateShieldingMultiSigAddress(paymentAddressStr, tokenIDStr)
+	responseInBytes, err := client.rpcServer.GenerateDepositAddress(paymentAddressStr, tokenIDStr)
 	if err != nil {
 		return "", err
 	}
@@ -139,4 +239,19 @@ func (client *IncClient) generatePortalShieldingAddressFromRPC(paymentAddressStr
 	}
 
 	return res, nil
+}
+
+// SignDepositData signs the given depositing data using the given OTDepositKey.
+// Data is the raw depositing data (not hashed).
+func SignDepositData(depositKey *key.OTDepositKey, data []byte) ([]byte, error) {
+	schnorrPrivateKey := new(privacy.SchnorrPrivateKey)
+	schnorrPrivateKey.Set(new(crypto.Scalar).FromBytesS(depositKey.PrivateKey), crypto.RandomScalar())
+
+	digestedData := common.HashB(data)
+	sig, err := schnorrPrivateKey.Sign(digestedData)
+	if err != nil {
+		return nil, err
+	}
+
+	return sig.Bytes(), nil
 }
