@@ -87,19 +87,16 @@ func (recv *OTAReceiver) FromString(data string) error {
 }
 
 // String() marshals the OTAReceiver, then encodes it with base58
-func (recv OTAReceiver) String() (string, error) {
-	rawBytes, err := recv.Bytes()
-	if err != nil {
-		return "", err
-	}
-	return base58.Base58Check{}.NewEncode(rawBytes, common.ZeroByte), nil
+func (recv OTAReceiver) String() string {
+	rawBytes := recv.Bytes()
+	return base58.Base58Check{}.NewEncode(rawBytes, common.ZeroByte)
 }
 
-func (recv OTAReceiver) Bytes() ([]byte, error) {
+func (recv OTAReceiver) Bytes() []byte {
 	rawBytes := []byte{byte(wallet.PrivateReceivingAddressType)}
 	rawBytes = append(rawBytes, recv.PublicKey.ToBytesS()...)
 	rawBytes = append(rawBytes, recv.TxRandom.Bytes()...)
-	return rawBytes, nil
+	return rawBytes
 }
 
 func (recv *OTAReceiver) SetBytes(b []byte) error {
@@ -133,10 +130,7 @@ func (recv *OTAReceiver) SetBytes(b []byte) error {
 }
 
 func (recv OTAReceiver) MarshalJSON() ([]byte, error) {
-	s, err := recv.String()
-	if err != nil {
-		return nil, err
-	}
+	s := recv.String()
 	return json.Marshal(s)
 }
 
