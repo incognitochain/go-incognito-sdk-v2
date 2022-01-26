@@ -171,7 +171,7 @@ func (client *IncClient) GetNextOTDepositKey(privateKeyStr, tokenIDStr string) (
 	if err != nil {
 		return nil, "", err
 	}
-	tmpPubKeyStr := base58.Base58Check{}.Encode(tmpKey.PublicKey, 0)
+	tmpPubKeyStr := base58.Base58Check{}.NewEncode(tmpKey.PublicKey, 0)
 
 	exists, err := client.HasDepositPubKeys([]string{tmpPubKeyStr})
 	if err != nil {
@@ -188,7 +188,7 @@ func (client *IncClient) GetNextOTDepositKey(privateKeyStr, tokenIDStr string) (
 			if err != nil {
 				return nil, "", fmt.Errorf("generating depositKey at index %v error: %v", lower, err)
 			}
-			tmpPubKeyStr = base58.Base58Check{}.Encode(tmpKey.PublicKey, 0)
+			tmpPubKeyStr = base58.Base58Check{}.NewEncode(tmpKey.PublicKey, 0)
 			exists, err = client.HasDepositPubKeys([]string{tmpPubKeyStr})
 			if err != nil {
 				return nil, "", err
@@ -208,7 +208,7 @@ func (client *IncClient) GetNextOTDepositKey(privateKeyStr, tokenIDStr string) (
 			if err != nil {
 				return nil, "", fmt.Errorf("generating depositKey at index %v error: %v", lower, err)
 			}
-			tmpPubKeyStr = base58.Base58Check{}.Encode(tmpKey.PublicKey, 0)
+			tmpPubKeyStr = base58.Base58Check{}.NewEncode(tmpKey.PublicKey, 0)
 			exists, err = client.HasDepositPubKeys([]string{tmpPubKeyStr})
 			if err != nil {
 				return nil, "", err
@@ -220,6 +220,16 @@ func (client *IncClient) GetNextOTDepositKey(privateKeyStr, tokenIDStr string) (
 				lower = currentIndex
 			}
 			currentIndex = (lower + upper) / 2
+		}
+
+		tmpKey, err = client.GenerateDepositKeyFromPrivateKey(privateKeyStr, tokenIDStr, lower+1)
+		if err != nil {
+			return nil, "", fmt.Errorf("generating depositKey at index %v error: %v", lower+1, err)
+		}
+		tmpPubKeyStr = base58.Base58Check{}.NewEncode(tmpKey.PublicKey, 0)
+		exists, err = client.HasDepositPubKeys([]string{tmpPubKeyStr})
+		if err != nil {
+			return nil, "", err
 		}
 	}
 
