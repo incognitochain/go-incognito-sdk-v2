@@ -180,8 +180,28 @@ func (client *IncClient) GetNextOTDepositKey(privateKeyStr, tokenIDStr string) (
 
 	if exists[tmpPubKeyStr] {
 		// Perform binary-search for the un-used index
-		lower := uint64(0)
+		lower := uint64(1)
 		upper := uint64(math.MaxUint64)
+		for {
+			currentIndex := uint64(math.Max(float64(lower), 1))
+			tmpKey, err = client.GenerateDepositKeyFromPrivateKey(privateKeyStr, tokenIDStr, currentIndex)
+			if err != nil {
+				return nil, "", fmt.Errorf("generating depositKey at index %v error: %v", lower, err)
+			}
+			tmpPubKeyStr = base58.Base58Check{}.Encode(tmpKey.PublicKey, 0)
+			exists, err = client.HasDepositPubKeys([]string{tmpPubKeyStr})
+			if err != nil {
+				return nil, "", err
+			}
+			if exists[tmpPubKeyStr] {
+				lower = currentIndex
+				currentIndex = 2 * lower
+			} else {
+				upper = currentIndex
+				break
+			}
+		}
+
 		currentIndex := lower
 		for lower < upper-1 {
 			tmpKey, err = client.GenerateDepositKeyFromPrivateKey(privateKeyStr, tokenIDStr, currentIndex)
