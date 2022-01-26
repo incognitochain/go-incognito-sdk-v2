@@ -78,7 +78,7 @@ func TestIncClient_GenerateDepositPubKeyFromPrivateKey(t *testing.T) {
 	privateKeyStr := "11111113mea9j9z4QogdaVFQ2VXGQNK2Y6hLHFZGD42kJ1J8FSvQLogdCHuhQbvxLpGWtcwiJLHQHm4yqSetTnUBWG8wusWHAqnTJGpHdJD"
 	tokenIdStr := "b832e5d3b1f01a4f0623f7fe91d6673461e1f5d37d91fe78c5c2e6183ff39696"
 	for index := uint64(0); index < 100; index++ {
-		depositKey, err := ic.GenerateDepositPubKeyFromPrivateKey(privateKeyStr, tokenIdStr, index)
+		depositKey, err := ic.GenerateDepositKeyFromPrivateKey(privateKeyStr, tokenIdStr, index)
 		if err != nil {
 			panic(err)
 		}

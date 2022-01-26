@@ -139,8 +139,8 @@ func (client *IncClient) GetPortalUnShieldingRequestStatus(unShieldID string) (*
 	return res, nil
 }
 
-// GenerateDepositPubKeyFromPrivateKey generates a new OTDepositKey from the given privateKey, tokenID and index.
-func (client *IncClient) GenerateDepositPubKeyFromPrivateKey(privateKeyStr, tokenIDStr string, index uint64) (*key.OTDepositKey, error) {
+// GenerateDepositKeyFromPrivateKey generates a new OTDepositKey from the given privateKey, tokenID and index.
+func (client *IncClient) GenerateDepositKeyFromPrivateKey(privateKeyStr, tokenIDStr string, index uint64) (*key.OTDepositKey, error) {
 	w, err := wallet.Base58CheckDeserialize(privateKeyStr)
 	if err != nil || len(w.KeySet.PrivateKey[:]) == 0 {
 		return nil, fmt.Errorf("invalid privateKey")
@@ -167,7 +167,7 @@ func (client *IncClient) GenerateDepositPubKeyFromPrivateKey(privateKeyStr, toke
 
 // GetNextOTDepositKey returns the next un-used deposit key and its corresponding depositing address.
 func (client *IncClient) GetNextOTDepositKey(privateKeyStr, tokenIDStr string) (*key.OTDepositKey, string, error) {
-	tmpKey, err := client.GenerateDepositPubKeyFromPrivateKey(privateKeyStr, tokenIDStr, 0)
+	tmpKey, err := client.GenerateDepositKeyFromPrivateKey(privateKeyStr, tokenIDStr, 0)
 	if err != nil {
 		return nil, "", err
 	}
@@ -184,7 +184,7 @@ func (client *IncClient) GetNextOTDepositKey(privateKeyStr, tokenIDStr string) (
 		upper := uint64(math.MaxUint64)
 		currentIndex := lower
 		for lower < upper {
-			tmpKey, err = client.GenerateDepositPubKeyFromPrivateKey(privateKeyStr, tokenIDStr, currentIndex)
+			tmpKey, err = client.GenerateDepositKeyFromPrivateKey(privateKeyStr, tokenIDStr, currentIndex)
 			if err != nil {
 				return nil, "", fmt.Errorf("generating depositKey at index %v error: %v", lower, err)
 			}
