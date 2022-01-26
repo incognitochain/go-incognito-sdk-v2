@@ -13,7 +13,7 @@ import (
 )
 
 // DepositParams consists of parameters for creating a shielding transaction.
-// At least one of the following condition holds:
+// A DepositParams is valid if at least one of the following conditions hold:
 //	- Signature is not empty
 //		- Receiver and DepositPubKey must not be empty
 //	- Signature is empty
@@ -43,6 +43,50 @@ type DepositParams struct {
 	// Signature is a valid signature signed by the owner of the shielding asset.
 	// If Signature is not empty, DepositPubKey and Receiver must not be empty.
 	Signature string
+}
+
+// IsValid checks if a DepositParams is valid.
+func (dp DepositParams) IsValid() (bool, error) {
+	var err error
+
+	_, err = common.Hash{}.NewHashFromStr(dp.TokenID)
+	if err != nil || dp.TokenID == "" {
+		return false, fmt.Errorf("invalid tokenID %v", dp.TokenID)
+	}
+
+	if dp.Signature != "" {
+		_, _, err = base58.Base58Check{}.Decode(dp.Signature)
+		if err != nil {
+			return false, fmt.Errorf("invalid signature")
+		}
+		if dp.DepositPubKey == "" || dp.Receiver == "" {
+			return false, fmt.Errorf("must have both `DepositPubKey` and `Receiver`")
+		}
+	} else {
+		if dp.DepositPrivateKey != "" {
+			_, _, err = base58.Base58Check{}.Decode(dp.DepositPrivateKey)
+			if err != nil {
+				return false, fmt.Errorf("invalid DepositPrivateKey")
+			}
+		}
+	}
+
+	if dp.DepositPubKey != "" {
+		_, _, err = base58.Base58Check{}.Decode(dp.DepositPubKey)
+		if err != nil {
+			return false, fmt.Errorf("invalid DepositPubKey")
+		}
+	}
+
+	if dp.Receiver != "" {
+		otaReceiver := new(coin.OTAReceiver)
+		err = otaReceiver.FromString(dp.Receiver)
+		if err != nil {
+			return false, fmt.Errorf("invalid receiver: %v", err)
+		}
+	}
+
+	return true, nil
 }
 
 // CreatePortalShieldTransaction creates a Portal V4 shielding transaction.
@@ -98,25 +142,21 @@ func (client *IncClient) CreateAndSendPortalShieldTransaction(
 func (client *IncClient) CreatePortalShieldTransactionWithDepositKey(
 	privateKey string, depositParams DepositParams, inputCoins []coin.PlainCoin, coinIndices []uint64,
 ) ([]byte, string, error) {
-	tokenID, err := common.Hash{}.NewHashFromStr(depositParams.TokenID)
-	if err != nil || depositParams.TokenID == "" {
-		return nil, "", err
-	}
 	w, err := wallet.Base58CheckDeserialize(privateKey)
 	if err != nil {
 		return nil, "", err
 	}
 
+	_, err = depositParams.IsValid()
+	if err != nil {
+		return nil, "", err
+	}
+
+	tokenID, _ := common.Hash{}.NewHashFromStr(depositParams.TokenID)
 	receiver, depositPubKey := depositParams.Receiver, depositParams.DepositPubKey
 	var sig []byte
 	if depositParams.Signature != "" {
-		sig, _, err = base58.Base58Check{}.Decode(depositParams.Signature)
-		if err != nil {
-			return nil, "", err
-		}
-		if depositParams.DepositPubKey == "" || depositParams.Receiver == "" {
-			return nil, "", fmt.Errorf("must have both `DepositPubKey` and `Receiver`")
-		}
+		sig, _, _ = base58.Base58Check{}.Decode(depositParams.Signature)
 	} else {
 		if receiver == "" {
 			otaReceivers, err := GenerateOTAReceivers([]common.Hash{*tokenID}, w.KeySet.PaymentAddress)
@@ -126,17 +166,11 @@ func (client *IncClient) CreatePortalShieldTransactionWithDepositKey(
 			receiver = otaReceivers[*tokenID].String()
 		}
 		otaReceiver := new(coin.OTAReceiver)
-		err = otaReceiver.FromString(receiver)
-		if err != nil {
-			return nil, "", fmt.Errorf("invalid receiver %v", receiver)
-		}
+		_ = otaReceiver.FromString(receiver)
 
 		var depositPrivateKey *crypto.Scalar
 		if depositParams.DepositPrivateKey != "" {
-			tmp, _, err := base58.Base58Check{}.Decode(depositParams.DepositPrivateKey)
-			if err != nil {
-				return nil, "", fmt.Errorf("cannot decode depositPrivateKey %v", depositParams.DepositPrivateKey)
-			}
+			tmp, _, _ := base58.Base58Check{}.Decode(depositParams.DepositPrivateKey)
 			depositPrivateKey = new(crypto.Scalar).FromBytesS(tmp)
 		} else {
 			depositKey, err := client.GenerateDepositKeyFromPrivateKey(privateKey, depositParams.TokenID, depositParams.DepositKeyIndex)
