@@ -183,7 +183,7 @@ func (client *IncClient) GetNextOTDepositKey(privateKeyStr, tokenIDStr string) (
 		lower := uint64(0)
 		upper := uint64(math.MaxUint64)
 		currentIndex := lower
-		for lower < upper {
+		for lower < upper-1 {
 			tmpKey, err = client.GenerateDepositKeyFromPrivateKey(privateKeyStr, tokenIDStr, currentIndex)
 			if err != nil {
 				return nil, "", fmt.Errorf("generating depositKey at index %v error: %v", lower, err)
