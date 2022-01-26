@@ -178,9 +178,10 @@ func (client *IncClient) CreatePortalShieldTransactionWithDepositKey(
 				return nil, "", fmt.Errorf("generate depositKey error: %v", err)
 			}
 			depositPrivateKey = new(crypto.Scalar).FromBytesS(depositKey.PrivateKey)
-			depositPubKeyBytes := new(crypto.Point).ScalarMultBase(depositPrivateKey).ToBytesS()
-			depositPubKey = base58.Base58Check{}.NewEncode(depositPubKeyBytes, 0)
 		}
+		depositPubKeyBytes := new(crypto.Point).ScalarMultBase(depositPrivateKey).ToBytesS()
+		depositPubKey = base58.Base58Check{}.NewEncode(depositPubKeyBytes, 0)
+		
 		schnorrPrivateKey := new(privacy.SchnorrPrivateKey)
 		schnorrPrivateKey.Set(depositPrivateKey, crypto.RandomScalar())
 		tmpSig, err := schnorrPrivateKey.Sign(common.HashB(otaReceiver.Bytes()))

@@ -248,13 +248,13 @@ func (client *IncClient) HasDepositPubKeys(depositPubKeys []string) (map[string]
 }
 
 // GetDepositTxsByPubKeys retrieves the Incognito depositing transactions for a given list of depositing public keys.
-func (client *IncClient) GetDepositTxsByPubKeys(depositPubKeys []string) (map[string]string, error) {
+func (client *IncClient) GetDepositTxsByPubKeys(depositPubKeys []string) (map[string][]string, error) {
 	responseInBytes, err := client.rpcServer.GetDepositTxsByPubKeys(depositPubKeys)
 	if err != nil {
 		return nil, err
 	}
 
-	res := make(map[string]string)
+	res := make(map[string][]string)
 	err = rpchandler.ParseResponse(responseInBytes, &res)
 	if err != nil {
 		return nil, err
@@ -264,7 +264,7 @@ func (client *IncClient) GetDepositTxsByPubKeys(depositPubKeys []string) (map[st
 }
 
 // GetDepositByOTKeyHistory retrieves the depositing (using OTDepositKey) history of a privateKeyStr for a tokenID.
-func (client *IncClient) GetDepositByOTKeyHistory(privateKeyStr, tokenID string) (map[string]*metadata.PortalShieldingRequestStatus, error) {
+func (client *IncClient) GetDepositByOTKeyHistory(privateKeyStr, tokenID string) (map[string][]*metadata.PortalShieldingRequestStatus, error) {
 	depositPubKeys := make([]string, 0)
 
 	nextAvailableDepositKey, _, err := client.GetNextOTDepositKey(privateKeyStr, tokenID)
@@ -288,13 +288,17 @@ func (client *IncClient) GetDepositByOTKeyHistory(privateKeyStr, tokenID string)
 	if err != nil {
 		return nil, err
 	}
-	res := make(map[string]*metadata.PortalShieldingRequestStatus)
-	for pubKeyStr, txHash := range depositTxs {
-		status, err := client.GetPortalShieldingRequestStatus(txHash)
-		if err != nil {
-			return nil, err
+	res := make(map[string][]*metadata.PortalShieldingRequestStatus)
+	for pubKeyStr, txHashList := range depositTxs {
+		depositForPubKey := make([]*metadata.PortalShieldingRequestStatus, 0)
+		for _, txHash := range txHashList {
+			status, err := client.GetPortalShieldingRequestStatus(txHash)
+			if err != nil {
+				return nil, err
+			}
+			depositForPubKey = append(depositForPubKey, status)
 		}
-		res[pubKeyStr] = status
+		res[pubKeyStr] = depositForPubKey
 	}
 
 	return res, nil
