@@ -70,7 +70,7 @@ func TestIncClient_GetPortalUnShieldingRequestStatus(t *testing.T) {
 
 func TestIncClient_GenerateDepositPubKeyFromPrivateKey(t *testing.T) {
 	var err error
-	ic, err = NewIncClient("http://51.222.43.133:9334", "", 2, "mainnet")
+	ic, err = NewMainNetClientWithCache()
 	if err != nil {
 		panic(err)
 	}
@@ -89,7 +89,7 @@ func TestIncClient_GenerateDepositPubKeyFromPrivateKey(t *testing.T) {
 
 func TestIncClient_GetNextOTDepositKey(t *testing.T) {
 	var err error
-	ic, err = NewIncClient("http://51.222.43.133:9334", "", 2)
+	ic, err = NewMainNetClientWithCache()
 	if err != nil {
 		panic(err)
 	}
@@ -108,4 +108,21 @@ func TestIncClient_GetNextOTDepositKey(t *testing.T) {
 		jsb, _ := json.Marshal(depositKey)
 		Logger.Printf("Attempt: %v, DepositAddr: %v, DepositKey: %v\n\n", attempt, depositAddr, string(jsb))
 	}
+}
+
+func TestIncClient_GetDepositByOTKeyHistory(t *testing.T) {
+	var err error
+	ic, err = NewIncClient("http://51.222.43.133:9334", "", 2)
+	if err != nil {
+		panic(err)
+	}
+
+	tokenIdStr := "b832e5d3b1f01a4f0623f7fe91d6673461e1f5d37d91fe78c5c2e6183ff39696"
+	privateKeyStr := ""
+	history, err := ic.GetDepositByOTKeyHistory(privateKeyStr, tokenIdStr)
+	if err != nil {
+		panic(err)
+	}
+
+	_ = jsonPrint(history)
 }

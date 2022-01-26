@@ -1,6 +1,7 @@
 package incclient
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/incognitochain/go-incognito-sdk-v2/common"
 	"github.com/incognitochain/go-incognito-sdk-v2/wallet"
@@ -238,4 +239,14 @@ func send(id int, privateKey, tokenIDStr string, addrList []string, amountList [
 
 	doneCh <- txHash
 	return
+}
+
+func jsonPrint(val interface{}) error {
+	jsb, err := json.MarshalIndent(val, "", "\t")
+	if err != nil {
+		return err
+	}
+
+	Logger.Println(string(jsb))
+	return nil
 }

@@ -227,6 +227,59 @@ func (client *IncClient) HasDepositPubKeys(depositPubKeys []string) (map[string]
 	return res, nil
 }
 
+// GetDepositTxsByPubKeys retrieves the Incognito depositing transactions for a given list of depositing public keys.
+func (client *IncClient) GetDepositTxsByPubKeys(depositPubKeys []string) (map[string]string, error) {
+	responseInBytes, err := client.rpcServer.GetDepositTxsByPubKeys(depositPubKeys)
+	if err != nil {
+		return nil, err
+	}
+
+	res := make(map[string]string)
+	err = rpchandler.ParseResponse(responseInBytes, &res)
+	if err != nil {
+		return nil, err
+	}
+
+	return res, nil
+}
+
+// GetDepositByOTKeyHistory retrieves the depositing (using OTDepositKey) history of a privateKeyStr for a tokenID.
+func (client *IncClient) GetDepositByOTKeyHistory(privateKeyStr, tokenID string) (map[string]*metadata.PortalShieldingRequestStatus, error) {
+	depositPubKeys := make([]string, 0)
+
+	nextAvailableDepositKey, _, err := client.GetNextOTDepositKey(privateKeyStr, tokenID)
+	if err != nil {
+		return nil, err
+	}
+	for index := uint64(0); index < nextAvailableDepositKey.Index; index++ {
+		depositKey, err := client.GenerateDepositKeyFromPrivateKey(privateKeyStr, tokenID, index)
+		if err != nil {
+			return nil, err
+		}
+		depositPubKey := base58.Base58Check{}.Encode(depositKey.PublicKey, 0)
+		depositPubKeys = append(depositPubKeys, depositPubKey)
+	}
+
+	if len(depositPubKeys) == 0 {
+		return nil, fmt.Errorf("no deposit history found")
+	}
+
+	depositTxs, err := client.GetDepositTxsByPubKeys(depositPubKeys)
+	if err != nil {
+		return nil, err
+	}
+	res := make(map[string]*metadata.PortalShieldingRequestStatus)
+	for pubKeyStr, txHash := range depositTxs {
+		status, err := client.GetPortalShieldingRequestStatus(txHash)
+		if err != nil {
+			return nil, err
+		}
+		res[pubKeyStr] = status
+	}
+
+	return res, nil
+}
+
 // generatePortalShieldingAddressFromRPC returns the multi-sig shielding address for a given payment address and a tokenID
 // via an RPC when using the Portal.
 func (client *IncClient) generatePortalShieldingAddressFromRPC(paymentAddressStr, tokenIDStr string) (string, error) {
