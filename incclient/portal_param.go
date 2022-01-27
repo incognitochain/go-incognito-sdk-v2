@@ -78,5 +78,5 @@ var localBTCPortalV4Params = BTCPortalV4Params{
 	NumRequiredSigs:   3,
 	MinUnshieldAmount: 100000,
 	ChainParams:       &chaincfg.TestNet3Params,
-	TokenID:           "4483b5efffa71eb8f302a5417c40728cf3acccab8ec278bbe094186b5bd22d3f",
+	TokenID:           "ef5947f70ead81a76a53c7c8b7317dd5245510c665d3a13921dc9a581188728b",
 }
