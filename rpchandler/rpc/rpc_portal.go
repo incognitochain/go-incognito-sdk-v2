@@ -27,7 +27,7 @@ func (server *RPCServer) GenerateDepositAddress(chainCode, tokenID string, isPay
 	method := generateDepositAddress
 	params := make([]interface{}, 0)
 	mapParams := make(map[string]interface{})
-	chainCodeKey := "OTDepositPubKey"
+	chainCodeKey := "DepositPubKey"
 	if len(isPaymentAddress) > 0 && isPaymentAddress[0] {
 		chainCodeKey = "IncAddressStr"
 	}
