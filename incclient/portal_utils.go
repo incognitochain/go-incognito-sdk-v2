@@ -243,7 +243,7 @@ func (client *IncClient) GetNextOTDepositKey(privateKeyStr, tokenIDStr string) (
 
 // HasDepositPubKeys checks if one-time deposit keys have been used.
 func (client *IncClient) HasDepositPubKeys(depositPubKeys []string) (map[string]bool, error) {
-	responseInBytes, err := client.rpcServer.HasOTDepositKey(depositPubKeys)
+	responseInBytes, err := client.rpcServer.HasOTDepositKeys(depositPubKeys)
 	if err != nil {
 		return nil, err
 	}

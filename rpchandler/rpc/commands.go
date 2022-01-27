@@ -287,7 +287,7 @@ const (
 	generateDepositAddress                     = "generatedepositaddress"
 	generateOTDepositKey                       = "generateotdepositkey"
 	getNextOTDepositKey                        = "getnextotdepositkey"
-	hasOTDepositPubKey                         = "hasotdepositpubkey"
+	hasOTDepositPubKeys                        = "hasotdepositpubkeys"
 	getDepositTxsByPubKeys                     = "getdeposittxsbypubkeys"
 
 	// relaying
