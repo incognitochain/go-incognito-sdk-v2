@@ -1,6 +1,7 @@
 package incclient
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/incognitochain/go-incognito-sdk-v2/common"
 	"math/big"
@@ -52,6 +53,36 @@ func (client *IncClient) GetPdexState(beaconHeight uint64) (*jsonresult.CurrentP
 	}
 
 	return &pdeState, nil
+}
+
+// GetPdexParams retrieves the params of pDEX at the provided beacon height.
+// If the beacon height is set to 0, it returns the latest pDEX param.
+func (client *IncClient) GetPdexParams(beaconHeight uint64) (*jsonresult.Pdexv3Params, error) {
+	filter := make(map[string]interface{})
+	filter["Key"] = "Params"
+	filter["Verbosity"] = 3
+	responseInBytes, err := client.rpcServer.GetPdexState(beaconHeight, filter)
+	if err != nil {
+		return nil, err
+	}
+
+	type Res struct {
+		Params map[string]interface{}
+	}
+	var tmpRes *Res
+	err = rpchandler.ParseResponse(responseInBytes, &tmpRes)
+	if err != nil {
+		return nil, err
+	}
+
+	jsb, _ := json.Marshal(tmpRes.Params)
+	var param jsonresult.Pdexv3Params
+	err = json.Unmarshal(jsb, &param)
+	if err != nil {
+		return nil, err
+	}
+
+	return &param, nil
 }
 
 // GetAllPdexPoolPairs retrieves all pools in pDEX at the provided beacon height.
@@ -488,7 +519,12 @@ func (client *IncClient) GetOrderByID(beaconHeight uint64, orderID string) (*jso
 // GetMinPRVRequiredToMintNFT returns the minimum PRV amount required to mint an NFT.
 // If the beacon height is set to 0, it returns the latest information.
 func (client *IncClient) GetMinPRVRequiredToMintNFT(beaconHeight uint64) uint64 {
-	return defaultNftRequiredAmount
+	params, err := client.GetPdexParams(beaconHeight)
+	if err != nil {
+		return defaultNftRequiredAmount
+	}
+
+	return params.MintNftRequireAmount
 }
 
 // BuildDEXShareKey constructs a key for retrieving contributed shares in pDEX.

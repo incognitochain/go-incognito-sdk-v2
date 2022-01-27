@@ -8,6 +8,22 @@ import (
 	"time"
 )
 
+func TestIncClient_GetPdexParams(t *testing.T) {
+	var err error
+	ic, err = NewTestNetClient()
+	if err != nil {
+		panic(err)
+	}
+
+	params, err := ic.GetPdexParams(0)
+	if err != nil {
+		panic(err)
+	}
+
+	jsb, _ := json.MarshalIndent(params, "", "\t")
+	Logger.Printf("params: %v\n", string(jsb))
+}
+
 func TestIncClient_GetAllPdexPoolPairs(t *testing.T) {
 	var err error
 	ic, err = NewTestNetClient()
