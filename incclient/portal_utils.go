@@ -58,7 +58,7 @@ func (client *IncClient) GeneratePortalShieldingAddress(chainCodeStr, tokenIDStr
 				}
 				chainCode = chainhash.HashB(depositPubKey)
 			} else {
-				chainhash.HashB([]byte(chainCodeStr))
+				chainCode = chainhash.HashB([]byte(chainCodeStr))
 			}
 
 			for idx, masterPubKey := range client.btcPortalParams.MasterPubKeys {
@@ -317,7 +317,11 @@ func (client *IncClient) GetDepositByOTKeyHistory(privateKeyStr, tokenID string)
 // generatePortalShieldingAddressFromRPC returns the multi-sig shielding address for a given payment address and a tokenID
 // via an RPC when using the Portal.
 func (client *IncClient) generatePortalShieldingAddressFromRPC(paymentAddressStr, tokenIDStr string) (string, error) {
-	responseInBytes, err := client.rpcServer.GenerateDepositAddress(paymentAddressStr, tokenIDStr)
+	isPaymentAddr := false
+	if _, err := metadata.AssertPaymentAddressAndTxVersion(paymentAddressStr, 2); err == nil {
+		isPaymentAddr = true
+	}
+	responseInBytes, err := client.rpcServer.GenerateDepositAddress(paymentAddressStr, tokenIDStr, isPaymentAddr)
 	if err != nil {
 		return "", err
 	}
