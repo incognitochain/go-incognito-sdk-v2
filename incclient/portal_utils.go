@@ -339,7 +339,8 @@ func (client *IncClient) generatePortalShieldingAddressFromRPC(paymentAddressStr
 // Data is the raw depositing data (not hashed).
 func SignDepositData(depositKey *key.OTDepositKey, data []byte) ([]byte, error) {
 	schnorrPrivateKey := new(privacy.SchnorrPrivateKey)
-	schnorrPrivateKey.Set(new(crypto.Scalar).FromBytesS(depositKey.PrivateKey), crypto.RandomScalar())
+	r := new(crypto.Scalar).FromUint64(0)
+	schnorrPrivateKey.Set(new(crypto.Scalar).FromBytesS(depositKey.PrivateKey), r)
 
 	digestedData := common.HashB(data)
 	sig, err := schnorrPrivateKey.Sign(digestedData)

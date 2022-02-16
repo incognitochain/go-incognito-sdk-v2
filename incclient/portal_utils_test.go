@@ -3,6 +3,9 @@ package incclient
 import (
 	"encoding/json"
 	"github.com/incognitochain/go-incognito-sdk-v2/common"
+	"github.com/incognitochain/go-incognito-sdk-v2/crypto"
+	"github.com/incognitochain/go-incognito-sdk-v2/privacy"
+	"github.com/incognitochain/go-incognito-sdk-v2/privacy/v1/schnorr"
 	"github.com/incognitochain/go-incognito-sdk-v2/wallet"
 	"testing"
 )
@@ -125,4 +128,39 @@ func TestIncClient_GetDepositByOTKeyHistory(t *testing.T) {
 	}
 
 	_ = jsonPrint(history)
+}
+
+func TestSignDepositData(t *testing.T) {
+	var err error
+	ic, err = NewLocalClient("8334")
+	if err != nil {
+		panic(err)
+	}
+
+	privateKey := "1111111HGJVyeAp2Knn5pfJswiucehMhZtmuPwrwSfLRwbJy1TUXpKiKh77wMy5yKUhQ6HF3D1Coh77mSVHohiueusphrBpX4SYYhy8p5WG"
+	otaDepositKey, _, err := ic.GetNextOTDepositKey(privateKey, "ef5947f70ead81a76a53c7c8b7317dd5245510c665d3a13921dc9a581188728b")
+	if err != nil {
+		panic(err)
+	}
+
+	data := common.RandBytes(32)
+	sig, err := SignDepositData(otaDepositKey, data)
+	if err != nil {
+		panic(err)
+	}
+
+	schPubKey := new(privacy.SchnorrPublicKey)
+	pubKey, _ := new(crypto.Point).FromBytesS(otaDepositKey.PublicKey)
+	schPubKey.Set(pubKey)
+
+	schSig := new(schnorr.SchnSignature)
+	err = schSig.SetBytes(sig)
+	if err != nil {
+		panic(err)
+	}
+
+	isValid := schPubKey.Verify(schSig, common.HashB(data))
+	if !isValid {
+		panic("invalid signature!!!")
+	}
 }

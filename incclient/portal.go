@@ -183,7 +183,8 @@ func (client *IncClient) CreatePortalShieldTransactionWithDepositKey(
 		depositPubKey = base58.Base58Check{}.NewEncode(depositPubKeyBytes, 0)
 
 		schnorrPrivateKey := new(privacy.SchnorrPrivateKey)
-		schnorrPrivateKey.Set(depositPrivateKey, crypto.RandomScalar())
+		r := new(crypto.Scalar).FromUint64(0) // must use r = 0
+		schnorrPrivateKey.Set(depositPrivateKey, r)
 		tmpSig, err := schnorrPrivateKey.Sign(common.HashB(otaReceiver.Bytes()))
 		if err != nil {
 			return nil, "", fmt.Errorf("sign metadata error: %v", err)

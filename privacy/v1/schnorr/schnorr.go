@@ -1,6 +1,7 @@
 package schnorr
 
 import (
+	"crypto/subtle"
 	"errors"
 	"github.com/incognitochain/go-incognito-sdk-v2/common"
 	"github.com/incognitochain/go-incognito-sdk-v2/crypto"
@@ -139,4 +140,20 @@ func (privateKey SchnorrPrivateKey) Sign(data []byte) (*SchnSignature, error) {
 	signature.z2 = nil
 
 	return signature, nil
+}
+
+// Verify is function which using for verify that the given signature was signed by the privateKey of the public key.
+func (publicKey SchnorrPublicKey) Verify(signature *SchnSignature, data []byte) bool {
+	if signature == nil {
+		return false
+	}
+	rv := new(crypto.Point).ScalarMult(publicKey.publicKey, signature.e)
+	rv.Add(rv, new(crypto.Point).ScalarMult(publicKey.g, signature.z1))
+	if signature.z2 != nil {
+		rv.Add(rv, new(crypto.Point).ScalarMult(publicKey.h, signature.z2))
+	}
+	msg := append(rv.ToBytesS(), data...)
+
+	ev := crypto.HashToScalar(msg)
+	return subtle.ConstantTimeCompare(ev.ToBytesS(), signature.e.ToBytesS()) == 1
 }
