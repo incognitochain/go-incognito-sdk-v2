@@ -179,7 +179,7 @@ func (client *IncClient) CreatePortalShieldTransactionWithDepositKey(
 			}
 			depositPrivateKey = new(crypto.Scalar).FromBytesS(depositKey.PrivateKey)
 		}
-		depositPubKeyBytes := new(crypto.Point).ScalarMultBase(depositPrivateKey).ToBytesS()
+		depositPubKeyBytes := new(crypto.Point).ScalarMult(crypto.PedCom.G[crypto.PedersenPrivateKeyIndex], depositPrivateKey).ToBytesS()
 		depositPubKey = base58.Base58Check{}.NewEncode(depositPubKeyBytes, 0)
 
 		schnorrPrivateKey := new(privacy.SchnorrPrivateKey)
