@@ -156,7 +156,7 @@ func (client *IncClient) GenerateDepositKeyFromPrivateKey(privateKeyStr, tokenID
 	indexBig := new(big.Int).SetUint64(index)
 
 	privateKey := crypto.HashToScalar(append(masterDepositSeed, indexBig.Bytes()...))
-	pubKey := new(crypto.Point).ScalarMultBase(privateKey)
+	pubKey := new(crypto.Point).ScalarMult(crypto.PedCom.G[crypto.PedersenPrivateKeyIndex], privateKey)
 
 	return &key.OTDepositKey{
 		PrivateKey: privateKey.ToBytesS(),
