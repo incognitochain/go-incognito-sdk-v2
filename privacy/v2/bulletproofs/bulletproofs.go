@@ -32,6 +32,42 @@ type RangeProof struct {
 	innerProductProof *InnerProductProof
 }
 
+func (proof RangeProof) GetCmsValues() []*crypto.Point {
+	return proof.cmsValue
+}
+
+func (proof RangeProof) A() *crypto.Point {
+	return proof.a
+}
+
+func (proof RangeProof) S() *crypto.Point {
+	return proof.s
+}
+
+func (proof RangeProof) T1() *crypto.Point {
+	return proof.t1
+}
+
+func (proof RangeProof) T2() *crypto.Point {
+	return proof.t2
+}
+
+func (proof RangeProof) TauX() *crypto.Scalar {
+	return proof.tauX
+}
+
+func (proof RangeProof) THat() *crypto.Scalar {
+	return proof.tHat
+}
+
+func (proof RangeProof) Mu() *crypto.Scalar {
+	return proof.mu
+}
+
+func (proof RangeProof) InnerProof() *InnerProductProof {
+	return proof.innerProductProof
+}
+
 var aggParam = newBulletproofParams(utils.MaxOutputCoin)
 
 // Init creates an empty RangeProof.

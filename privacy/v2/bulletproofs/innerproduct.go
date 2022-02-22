@@ -21,6 +21,26 @@ type InnerProductProof struct {
 	p *crypto.Point
 }
 
+func (proof InnerProductProof) L() []*crypto.Point {
+	return proof.l
+}
+
+func (proof InnerProductProof) R() []*crypto.Point {
+	return proof.r
+}
+
+func (proof InnerProductProof) A() *crypto.Scalar {
+	return proof.a
+}
+
+func (proof InnerProductProof) B() *crypto.Scalar {
+	return proof.b
+}
+
+func (proof InnerProductProof) P() *crypto.Point {
+	return proof.p
+}
+
 // Init creates an empty InnerProductProof.
 func (proof *InnerProductProof) Init() *InnerProductProof {
 	proof.l = []*crypto.Point{}
