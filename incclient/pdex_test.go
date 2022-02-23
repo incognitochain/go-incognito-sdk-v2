@@ -1,6 +1,8 @@
 package incclient
 
 import (
+	"encoding/json"
+	"fmt"
 	"math/big"
 	"testing"
 
@@ -78,6 +80,11 @@ func TestIncClient_CreateAndPdexv3ModifyParamsTransaction(t *testing.T) {
 		DAOContributingPercent:    50,
 		MiningRewardPendingBlocks: 50,
 	}
+	paramsBytes, err := json.Marshal(newParams)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("Marshal params: %v\n", string(paramsBytes))
 	txHash, err := ic.CreateAndSendPdexv3ModifyParamsTransaction(privateKey, newParams)
 	if err != nil {
 		panic(err)
