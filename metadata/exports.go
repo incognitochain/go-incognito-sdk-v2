@@ -192,4 +192,15 @@ const (
 	PortalV4FeeReplacementRequestMeta = metadataCommon.PortalV4FeeReplacementRequestMeta
 	PortalV4SubmitConfirmedTxMeta     = metadataCommon.PortalV4SubmitConfirmedTxMeta
 	PortalV4ConvertVaultRequestMeta   = metadataCommon.PortalV4ConvertVaultRequestMeta
+
+	BurningPBSCForDepositToSCRequestMeta = metadataCommon.BurningPBSCForDepositToSCRequestMeta
+	BurningPBSCConfirmForDepositToSCMeta = metadataCommon.BurningPBSCConfirmForDepositToSCMeta
+
+	IssuingPLGRequestMeta  = metadataCommon.IssuingPLGRequestMeta
+	IssuingPLGResponseMeta = metadataCommon.IssuingPLGResponseMeta
+	BurningPLGRequestMeta  = metadataCommon.BurningPLGRequestMeta
+	BurningPLGConfirmMeta  = metadataCommon.BurningPLGConfirmMeta
+
+	BurningPLGForDepositToSCRequestMeta = metadataCommon.BurningPLGForDepositToSCRequestMeta
+	BurningPLGConfirmForDepositToSCMeta = metadataCommon.BurningPLGConfirmForDepositToSCMeta
 )
