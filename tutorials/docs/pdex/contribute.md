@@ -23,7 +23,7 @@ type AddLiquidityRequest struct {
     poolPairID  string
     
     // pairHash is a string for matching the two contributing transactions. It can be anything as long as it is the same in
-    // both contributing transaction.
+    // both contributing transactions.
     pairHash    string
     
     // otaReceiver is a one-time address for receiving back the token in case of being refunded.
