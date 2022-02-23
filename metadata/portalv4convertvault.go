@@ -10,7 +10,7 @@ type PortalConvertVaultRequest struct {
 	MetadataBaseWithSignature
 	TokenID          string // pTokenID in incognito chain
 	ConvertProof     string
-	IncognitoAddress string
+	IncognitoAddress string `json:"IncognitoAddress,omitempty"`
 }
 
 // NewPortalConvertVaultRequest creates a new PortalConvertVaultRequest.
