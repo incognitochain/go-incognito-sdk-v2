@@ -2,24 +2,30 @@ package pdexv3
 
 import (
 	"encoding/json"
+
 	"github.com/incognitochain/go-incognito-sdk-v2/common"
 	metadataCommon "github.com/incognitochain/go-incognito-sdk-v2/metadata/common"
 )
 
 type Pdexv3Params struct {
-	DefaultFeeRateBPS               uint            // the default value if fee rate is not specific in FeeRateBPS (default 0.3% ~ 30 BPS)
-	FeeRateBPS                      map[string]uint // map: pool ID -> fee rate (0.1% ~ 10 BPS)
-	PRVDiscountPercent              uint            // percent of fee that will be discounted if using PRV as the trading token fee (default: 25%)
-	TradingProtocolFeePercent       uint            // percent of fees that is rewarded for the core team (default: 0%)
-	TradingStakingPoolRewardPercent uint            // percent of fees that is distributed for staking pools (PRV, PDEX, ..., default: 10%)
-	PDEXRewardPoolPairsShare        map[string]uint // map: pool pair ID -> PDEX reward share weight
-	StakingPoolsShare               map[string]uint // map: staking tokenID -> pool staking share weight
-	StakingRewardTokens             []common.Hash   // list of staking reward tokens
-	MintNftRequireAmount            uint64          // amount prv for depositing to pdex
-	MaxOrdersPerNft                 uint            // max orders per nft
-	AutoWithdrawOrderLimitAmount    uint            // max orders will be auto withdraw each shard for each blocks
-	MinPRVReserveTradingRate        uint64          // min prv reserve for checking price of trading fee paid by PRV
-	OrderMiningRewardRatioBPS       map[string]uint // map: pool ID -> ratio of LOP rewards compare with LP rewards (0.1% ~ 10 BPS)
+	DefaultFeeRateBPS                 uint            `json:"DefaultFeeRateBPS"`
+	FeeRateBPS                        map[string]uint `json:"FeeRateBPS"`
+	PRVDiscountPercent                uint            `json:"PRVDiscountPercent"`
+	TradingProtocolFeePercent         uint            `json:"TradingProtocolFeePercent"`
+	TradingStakingPoolRewardPercent   uint            `json:"TradingStakingPoolRewardPercent"`
+	PDEXRewardPoolPairsShare          map[string]uint `json:"PDEXRewardPoolPairsShare"`
+	StakingPoolsShare                 map[string]uint `json:"StakingPoolsShare"`
+	StakingRewardTokens               []common.Hash   `json:"StakingRewardTokens"`
+	MintNftRequireAmount              uint64          `json:"MintNftRequireAmount"`
+	MaxOrdersPerNft                   uint            `json:"MaxOrdersPerNft"`
+	AutoWithdrawOrderLimitAmount      uint            `json:"AutoWithdrawOrderLimitAmount"`
+	MinPRVReserveTradingRate          uint64          `json:"MinPRVReserveTradingRate"`
+	DefaultOrderTradingRewardRatioBPS uint            `json:"DefaultOrderTradingRewardRatioBPS,omitempty"`
+	OrderTradingRewardRatioBPS        map[string]uint `json:"OrderTradingRewardRatioBPS,omitempty"`
+	OrderLiquidityMiningBPS           map[string]uint `json:"OrderLiquidityMiningBPS,omitempty"`
+	DAOContributingPercent            uint            `json:"DAOContributingPercent,omitempty"`
+	MiningRewardPendingBlocks         uint64          `json:"MiningRewardPendingBlocks,omitempty"`
+	OrderMiningRewardRatioBPS         map[string]uint `json:"OrderMiningRewardRatioBPS,omitempty"`
 }
 
 type ParamsModifyingRequest struct {
@@ -38,6 +44,18 @@ type ParamsModifyingRequestStatus struct {
 	Status       int    `json:"Status"`
 	ErrorMsg     string `json:"ErrorMsg"`
 	Pdexv3Params `json:"Pdexv3Params"`
+}
+
+func NewPdexv3ParamsModifyingRequest(
+	metaType int,
+	params Pdexv3Params,
+) (*ParamsModifyingRequest, error) {
+	metadataBase := metadataCommon.NewMetadataBaseWithSignature(metaType)
+	paramsModifying := &ParamsModifyingRequest{}
+	paramsModifying.MetadataBaseWithSignature = *metadataBase
+	paramsModifying.Pdexv3Params = params
+
+	return paramsModifying, nil
 }
 
 func (paramsModifying ParamsModifyingRequest) Hash() *common.Hash {

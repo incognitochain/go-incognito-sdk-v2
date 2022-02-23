@@ -2,10 +2,11 @@ package incclient
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/incognitochain/go-incognito-sdk-v2/coin"
 	"github.com/incognitochain/go-incognito-sdk-v2/common"
 	"github.com/incognitochain/go-incognito-sdk-v2/key"
-	"strings"
 
 	// "github.com/incognitochain/go-incognito-sdk-v2/metadata"
 	metadataCommon "github.com/incognitochain/go-incognito-sdk-v2/metadata/common"
@@ -672,6 +673,40 @@ func (client *IncClient) CreateAndSendPdexv3WithdrawStakeRewardTransaction(
 	}
 
 	err = client.SendRawTokenTx(encodedTx)
+	if err != nil {
+		return "", err
+	}
+
+	return txHash, nil
+}
+
+// CreatePdexv3ModifyParams creates a modify params transaction.
+//
+// It returns the base58-encoded transaction, the transaction's hash, and an error (if any).
+func (client *IncClient) CreatePdexv3ModifyParams(privateKey string, pdexv3Params metadataPdexv3.Pdexv3Params,
+) ([]byte, string, error) {
+	// construct modify params metadata
+	md, _ := metadataPdexv3.NewPdexv3ParamsModifyingRequest(
+		metadataCommon.Pdexv3ModifyParamsMeta,
+		pdexv3Params,
+	)
+
+	txParam := NewTxParam(privateKey, []string{}, []uint64{}, 0, nil, md, nil)
+	return client.CreateRawTransaction(txParam, 2)
+
+}
+
+// CreateAndSendPdexv3ModifyParams creates a modify params transaction (version 2 only), and submits it to the Incognito network.
+//
+// It returns the transaction's hash, and an error (if any).
+func (client *IncClient) CreateAndSendPdexv3ModifyParamsTransaction(privateKey string, pdexv3Params metadataPdexv3.Pdexv3Params,
+) (string, error) {
+	encodedTx, txHash, err := client.CreatePdexv3ModifyParams(privateKey, pdexv3Params)
+	if err != nil {
+		return "", err
+	}
+
+	err = client.SendRawTx(encodedTx)
 	if err != nil {
 		return "", err
 	}
