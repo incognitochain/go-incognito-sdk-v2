@@ -125,6 +125,32 @@ func (p *TxHistoryProcessor) GetTxsIn(privateKey string, tokenIDStr string, vers
 					txList[start:end], tokenIDStr, p.txChan, p.errChan)
 			}
 		}
+	} else if version == 2 {
+		pubKeys := make([]string, 0)
+		for _, outCoin := range listDecryptedCoins {
+			pubKeys = append(pubKeys, base58.Base58Check{}.Encode(outCoin.GetPublicKey().ToBytesS(), 0))
+		}
+
+		if len(pubKeys) < len(p.workers) {
+			numWorkers = 1
+			go p.workers[0].getTxsInV2(&kWallet.KeySet, listDecryptedCoins,
+				pubKeys, tokenIDStr, p.txChan, p.errChan)
+		} else {
+			numWorkers = len(p.workers)
+			//calculate the number of txs each worker has to handle
+			numForEach := len(pubKeys) / len(p.workers)
+
+			//call each worker to retrieve history
+			for i := 0; i < len(p.workers); i++ {
+				start := i * numForEach
+				end := (i + 1) * numForEach
+				if i == len(p.workers)-1 {
+					end = len(pubKeys)
+				}
+				go p.workers[i].getTxsInV2(&kWallet.KeySet, listDecryptedCoins,
+					pubKeys[start:end], tokenIDStr, p.txChan, p.errChan)
+			}
+		}
 	}
 
 	numSuccess := 0
@@ -177,26 +203,24 @@ func (p *TxHistoryProcessor) GetTxsOut(privateKey string, tokenIDStr string, ver
 	Logger.Printf("len(snList) = %v\n", len(snList))
 
 	numWorkers := 0
-	if version == 1 {
-		if len(snList) < len(p.workers) {
-			numWorkers = 1
-			go p.workers[0].getTxsOutV1(&kWallet.KeySet, mapSpentCoins,
-				snList, tokenIDStr, p.txChan, p.errChan)
-		} else {
-			numWorkers = len(p.workers)
-			//calculate the number of txs each worker has to handle
-			numForEach := len(snList) / len(p.workers)
+	if len(snList) < len(p.workers) {
+		numWorkers = 1
+		go p.workers[0].getTxsOut(&kWallet.KeySet, mapSpentCoins,
+			snList, tokenIDStr, p.txChan, p.errChan)
+	} else {
+		numWorkers = len(p.workers)
+		//calculate the number of txs each worker has to handle
+		numForEach := len(snList) / len(p.workers)
 
-			//call each worker to retrieve history
-			for i := 0; i < len(p.workers); i++ {
-				start := i * numForEach
-				end := (i + 1) * numForEach
-				if i == len(p.workers)-1 {
-					end = len(snList)
-				}
-				go p.workers[i].getTxsOutV1(&kWallet.KeySet, mapSpentCoins,
-					snList[start:end], tokenIDStr, p.txChan, p.errChan)
+		//call each worker to retrieve history
+		for i := 0; i < len(p.workers); i++ {
+			start := i * numForEach
+			end := (i + 1) * numForEach
+			if i == len(p.workers)-1 {
+				end = len(snList)
 			}
+			go p.workers[i].getTxsOut(&kWallet.KeySet, mapSpentCoins,
+				snList[start:end], tokenIDStr, p.txChan, p.errChan)
 		}
 	}
 
@@ -222,19 +246,45 @@ func (p *TxHistoryProcessor) GetTxsOut(privateKey string, tokenIDStr string, ver
 
 // GetTokenHistory returns the history of a private key w.r.t a tokenID in a parallel manner.
 func (p *TxHistoryProcessor) GetTokenHistory(privateKey string, tokenIDStr string) (*TxHistory, error) {
-	Logger.Printf("GETTING in-coming txs\n")
+	Logger.Printf("GETTING in-coming v1 txs\n")
 	txsIn, err := p.GetTxsIn(privateKey, tokenIDStr, 1)
 	if err != nil {
 		return nil, err
 	}
-	Logger.Printf("FINISHED in-coming txs\n\n")
+	Logger.Printf("FINISHED in-coming v1 txs\n\n")
 
-	Logger.Printf("GETTING out-going txs\n")
+	Logger.Printf("GETTING out-going v1 txs\n")
 	txsOut, err := p.GetTxsOut(privateKey, tokenIDStr, 1)
 	if err != nil {
 		return nil, err
 	}
-	Logger.Printf("FINISHED out-going txs\n\n")
+	Logger.Printf("FINISHED out-going v1 txs\n\n")
+
+	Logger.Printf("GETTING in-coming v2 txs\n")
+	txsInV2, err := p.GetTxsIn(privateKey, tokenIDStr, 2)
+	if err != nil {
+		return nil, err
+	}
+	Logger.Printf("FINISHED in-coming v2 txs\n\n")
+	for _, txInV2 := range txsInV2 {
+		txsIn = append(txsIn, txInV2)
+	}
+	sort.Slice(txsIn, func(i, j int) bool {
+		return txsIn[i].LockTime > txsIn[j].LockTime
+	})
+
+	Logger.Printf("GETTING out-going v2 txs\n")
+	txsOutV2, err := p.GetTxsOut(privateKey, tokenIDStr, 2)
+	if err != nil {
+		return nil, err
+	}
+	Logger.Printf("FINISHED out-going v2 txs\n\n")
+	for _, txOutV2 := range txsOutV2 {
+		txsOut = append(txsOut, txOutV2)
+	}
+	sort.Slice(txsOut, func(i, j int) bool {
+		return txsOut[i].LockTime > txsOut[j].LockTime
+	})
 
 	return &TxHistory{
 		TxInList:  txsIn,
@@ -296,12 +346,14 @@ func (worker TxHistoryWorker) getTxsInV1(keySet *key.KeySet, listDecryptedCoins 
 	txMap, err := worker.getListTxs(txList)
 	if err != nil {
 		errChan <- err
+		return
 	}
 
 	res := make([]TxIn, 0)
 	for txHash, tx := range txMap {
 		if isOut, err := isTxOut(tx, tokenIDStr, listDecryptedCoins); err != nil {
 			errChan <- err
+			return
 		} else if isOut {
 			continue
 		}
@@ -309,6 +361,7 @@ func (worker TxHistoryWorker) getTxsInV1(keySet *key.KeySet, listDecryptedCoins 
 		outCoins, err := getTxOutputCoinsByKeySet(tx, tokenIDStr, keySet)
 		if err != nil {
 			errChan <- err
+			return
 		}
 
 		amount := uint64(0)
@@ -325,6 +378,7 @@ func (worker TxHistoryWorker) getTxsInV1(keySet *key.KeySet, listDecryptedCoins 
 				TxHash:   txHash,
 				TokenID:  tx.GetTokenID().String(),
 				Metadata: tx.GetMetadata(),
+				Note:     txMetadataNote[tx.GetMetadataType()],
 			}
 			newTxIn.Amount = amount
 			res = append(res, newTxIn)
@@ -361,12 +415,18 @@ func (worker TxHistoryWorker) getTxsInV2(keySet *key.KeySet, listDecryptedCoins 
 	txMap, err := worker.client.GetTransactionsByPublicKeys(publicKeys)
 	if err != nil {
 		errChan <- err
+		return
 	}
 
+	mapRes := make(map[string]TxIn)
 	for _, tmpTxMap := range txMap {
 		for txHash, tx := range tmpTxMap {
+			if _, ok := mapRes[txHash]; ok {
+				continue
+			}
 			if isOut, err := isTxOut(tx, tokenIDStr, listDecryptedCoins); err != nil {
 				errChan <- err
+				return
 			} else if isOut {
 				continue
 			}
@@ -374,12 +434,15 @@ func (worker TxHistoryWorker) getTxsInV2(keySet *key.KeySet, listDecryptedCoins 
 			outCoins, err := getTxOutputCoinsByKeySet(tx, tokenIDStr, keySet)
 			if err != nil {
 				errChan <- err
+				return
 			}
 
+			pubKeys := make(map[string]uint64)
 			amount := uint64(0)
 			for cmtStr := range outCoins {
 				if outCoin, ok := mapCmt[cmtStr]; ok {
 					amount += outCoin.GetValue()
+					pubKeys[base58.Base58Check{}.Encode(outCoin.GetPublicKey().ToBytesS(), 0)] = outCoin.GetValue()
 					continue
 				}
 			}
@@ -387,14 +450,20 @@ func (worker TxHistoryWorker) getTxsInV2(keySet *key.KeySet, listDecryptedCoins 
 				newTxIn := TxIn{
 					Version:  tx.GetVersion(),
 					LockTime: tx.GetLockTime(),
+					OutCoins: pubKeys,
 					TxHash:   txHash,
 					TokenID:  tx.GetTokenID().String(),
+					Amount:   amount,
 					Metadata: tx.GetMetadata(),
+					Note:     txMetadataNote[tx.GetMetadataType()],
 				}
-				newTxIn.Amount = amount
-				res = append(res, newTxIn)
+				mapRes[txHash] = newTxIn
 			}
 		}
+	}
+
+	for _, txIn := range mapRes {
+		res = append(res, txIn)
 	}
 
 	sort.Slice(res, func(i, j int) bool {
@@ -411,8 +480,8 @@ func (worker TxHistoryWorker) getTxsInV2(keySet *key.KeySet, listDecryptedCoins 
 // getTxsOut returns the list of out-going transactions of version 1.
 //
 // It only returns the list of transactions whose value is greater than 0.
-func (worker TxHistoryWorker) getTxsOutV1(keySet *key.KeySet, mapSpentCoins map[string]coin.PlainCoin, snList []string, tokenIDStr string, txChan chan TxHistory, errChan chan error) {
-	Logger.Printf("[WORKER %v] getTxsOutV1, #No: %v\n", worker.id, len(snList))
+func (worker TxHistoryWorker) getTxsOut(keySet *key.KeySet, mapSpentCoins map[string]coin.PlainCoin, snList []string, tokenIDStr string, txChan chan TxHistory, errChan chan error) {
+	Logger.Printf("[WORKER %v] getTxsOut, #No: %v\n", worker.id, len(snList))
 
 	shardID := common.GetShardIDFromLastByte(keySet.PaymentAddress.Pk[len(keySet.PaymentAddress.Pk)-1])
 
@@ -423,6 +492,7 @@ func (worker TxHistoryWorker) getTxsOutV1(keySet *key.KeySet, mapSpentCoins map[
 			errChan <- fmt.Errorf("method not supported by the remote node configurations")
 		}
 		errChan <- err
+		return
 	}
 
 	// Create a list of txs
@@ -434,6 +504,7 @@ func (worker TxHistoryWorker) getTxsOutV1(keySet *key.KeySet, mapSpentCoins map[
 	txs, err := worker.getListTxs(txHashList)
 	if err != nil {
 		errChan <- err
+		return
 	}
 
 	mapRes := make(map[string]TxOut)
@@ -450,6 +521,7 @@ func (worker TxHistoryWorker) getTxsOutV1(keySet *key.KeySet, mapSpentCoins map[
 		tx, ok = txs[txHash]
 		if !ok {
 			errChan <- fmt.Errorf("tx %v not found", txHash)
+			return
 		}
 
 		//get transaction fee
@@ -459,10 +531,12 @@ func (worker TxHistoryWorker) getTxsOutV1(keySet *key.KeySet, mapSpentCoins map[
 		inputAmount, spentCoins, err := getTxInputAmount(tx, tokenIDStr, mapSpentCoins)
 		if err != nil {
 			errChan <- err
+			return
 		}
 		outputAmount, err := getTxOutputAmountByKeySet(tx, tokenIDStr, keySet)
 		if err != nil {
 			errChan <- err
+			return
 		}
 		amount := inputAmount - outputAmount
 		if isPRVFee && tokenIDStr == common.PRVIDStr {
@@ -476,6 +550,7 @@ func (worker TxHistoryWorker) getTxsOutV1(keySet *key.KeySet, mapSpentCoins map[
 		receivers, err := getTxReceivers(tx, tokenIDStr)
 		if err != nil {
 			errChan <- err
+			return
 		}
 
 		if amount > 0 {
@@ -489,6 +564,7 @@ func (worker TxHistoryWorker) getTxsOutV1(keySet *key.KeySet, mapSpentCoins map[
 				Amount:     amount,
 				Metadata:   tx.GetMetadata(),
 				PRVFee:     fee,
+				Note:       txMetadataNote[tx.GetMetadataType()],
 			}
 			if !isPRVFee {
 				newTxOut.PRVFee = 0
@@ -507,5 +583,5 @@ func (worker TxHistoryWorker) getTxsOutV1(keySet *key.KeySet, mapSpentCoins map[
 		TxInList:  nil,
 		TxOutList: res,
 	}
-	Logger.Printf("[WORKER %v] FINISHED getTxsOutV1, #TXS: %v!!\n\n", worker.id, len(res))
+	Logger.Printf("[WORKER %v] FINISHED getTxsOut, #TXS: %v!!\n\n", worker.id, len(res))
 }

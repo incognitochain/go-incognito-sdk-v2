@@ -18,6 +18,7 @@ type TxHistoryInterface interface {
 	GetLockTime() int64
 	GetAmount() uint64
 	String() string
+	Summarize() string
 	GetTxHash() string
 }
 
@@ -34,6 +35,8 @@ type TxIn struct {
 	Amount   uint64
 	TokenID  string
 	Metadata metadata.Metadata
+	OutCoins map[string]uint64
+	Note     string
 }
 
 // GetLockTime returns the lock-time.
@@ -54,7 +57,17 @@ func (txIn TxIn) String() string {
 	}
 
 	lockTimeStr := time.Unix(txIn.GetLockTime(), 0).Format(common.DateOutputFormat)
-	res := fmt.Sprintf("Timestamp: %v, Detail: %v", lockTimeStr, string(resBytes))
+	res := fmt.Sprintf("[TxIn] Timestamp: %v, Detail: %v", lockTimeStr, string(resBytes))
+	return res
+}
+
+// Summarize prints out a summary of a TxIn.
+func (txIn TxIn) Summarize() string {
+	lockTimeStr := time.Unix(txIn.GetLockTime(), 0).Format(common.DateOutputFormat)
+	res := fmt.Sprintf("[TxIn] Timestamp: %v, TxHash: %v, TokenID: %v, Amount: %v", lockTimeStr, txIn.TxHash, txIn.TokenID, txIn.Amount)
+	if txIn.Note != "" {
+		res = res + fmt.Sprintf(", Note: %v", txIn.Note)
+	}
 	return res
 }
 
@@ -76,6 +89,7 @@ type TxOut struct {
 	PRVFee     uint64
 	TokenFee   uint64
 	Metadata   metadata.Metadata
+	Note       string
 }
 
 // GetLockTime returns the lock-time.
@@ -96,7 +110,17 @@ func (txOut TxOut) String() string {
 	}
 
 	lockTimeStr := time.Unix(txOut.GetLockTime(), 0).Format(common.DateOutputFormat)
-	res := fmt.Sprintf("Timestamp: %v, Detail: %v", lockTimeStr, string(resBytes))
+	res := fmt.Sprintf("[TxOut] Timestamp: %v, Detail: %v", lockTimeStr, string(resBytes))
+	return res
+}
+
+// Summarize prints out a summary of a TxOut.
+func (txOut TxOut) Summarize() string {
+	lockTimeStr := time.Unix(txOut.GetLockTime(), 0).Format(common.DateOutputFormat)
+	res := fmt.Sprintf("[TxOut] Timestamp: %v, TxHash: %v, TokenID: %v, Amount: %v", lockTimeStr, txOut.TxHash, txOut.TokenID, txOut.Amount)
+	if txOut.Note != "" {
+		res = res + fmt.Sprintf(", Note: %v", txOut.Note)
+	}
 	return res
 }
 
@@ -209,8 +233,12 @@ func (client *IncClient) GetListTxsInV2(privateKey string, tokenIDStr string) ([
 		return nil, err
 	}
 
+	mapRes := make(map[string]TxIn)
 	for _, tmpTxMap := range txMap {
 		for txHash, tx := range tmpTxMap {
+			if _, ok := mapRes[txHash]; ok {
+				continue
+			}
 			if isOut, err := isTxOut(tx, tokenIDStr, listDecryptedCoins); err != nil {
 				return nil, err
 			} else if isOut {
@@ -222,25 +250,33 @@ func (client *IncClient) GetListTxsInV2(privateKey string, tokenIDStr string) ([
 				return nil, err
 			}
 
+			pubKeys := make(map[string]uint64)
 			amount := uint64(0)
 			for cmtStr := range outCoins {
 				if outCoin, ok := mapCmt[cmtStr]; ok {
 					amount += outCoin.GetValue()
+					pubKeys[base58.Base58Check{}.Encode(outCoin.GetPublicKey().ToBytesS(), 0)] = outCoin.GetValue()
 					continue
 				}
 			}
 			if amount > 0 {
-				newTxIn := TxIn{
+				txIn := TxIn{
 					Version:  tx.GetVersion(),
+					OutCoins: pubKeys,
 					LockTime: tx.GetLockTime(),
 					TxHash:   txHash,
 					TokenID:  tx.GetTokenID().String(),
 					Metadata: tx.GetMetadata(),
+					Amount:   amount,
+					Note:     txMetadataNote[tx.GetMetadataType()],
 				}
-				newTxIn.Amount = amount
-				res = append(res, newTxIn)
+				mapRes[txHash] = txIn
 			}
 		}
+	}
+
+	for _, txIn := range mapRes {
+		res = append(res, txIn)
 	}
 
 	sort.Slice(res, func(i, j int) bool {
@@ -314,7 +350,6 @@ func (client *IncClient) GetListTxsOutV1(privateKey string, tokenIDStr string) (
 	}
 
 	mapRes := make(map[string]TxOut)
-	res := make([]TxOut, 0)
 	for _, txHash := range mapSpentTxs {
 		// check if the txHash has been processed
 		if _, ok := mapRes[txHash]; ok {
@@ -362,6 +397,7 @@ func (client *IncClient) GetListTxsOutV1(privateKey string, tokenIDStr string) (
 			Amount:     amount,
 			Metadata:   tx.GetMetadata(),
 			PRVFee:     fee,
+			Note:       txMetadataNote[tx.GetMetadataType()],
 		}
 		if !isPRVFee {
 			newTxOut.PRVFee = 0
@@ -369,9 +405,12 @@ func (client *IncClient) GetListTxsOutV1(privateKey string, tokenIDStr string) (
 		}
 
 		mapRes[txHash] = newTxOut
-		res = append(res, newTxOut)
 	}
 
+	res := make([]TxOut, 0)
+	for _, txOut := range mapRes {
+		res = append(res, txOut)
+	}
 	sort.Slice(res, func(i, j int) bool {
 		return res[i].LockTime > res[j].LockTime
 	})
@@ -381,10 +420,6 @@ func (client *IncClient) GetListTxsOutV1(privateKey string, tokenIDStr string) (
 
 // GetListTxsOutV2 returns a list of all out-going tokenIDStr transactions (V2) of a private key.
 func (client *IncClient) GetListTxsOutV2(privateKey string, tokenIDStr string) ([]TxOut, error) {
-	res := make([]TxOut, 0)
-	if client.version != 2 {
-		return res, nil
-	}
 	kWallet, err := wallet.Base58CheckDeserialize(privateKey)
 	if err != nil {
 		return nil, fmt.Errorf("cannot deserialize private key %v: %v", privateKey, err)
@@ -470,6 +505,7 @@ func (client *IncClient) GetListTxsOutV2(privateKey string, tokenIDStr string) (
 			Amount:     amount,
 			Metadata:   tx.GetMetadata(),
 			PRVFee:     fee,
+			Note:       txMetadataNote[tx.GetMetadataType()],
 		}
 		if !isPRVFee {
 			newTxOut.PRVFee = 0
@@ -477,9 +513,12 @@ func (client *IncClient) GetListTxsOutV2(privateKey string, tokenIDStr string) (
 		}
 
 		mapRes[txHash] = newTxOut
-		res = append(res, newTxOut)
 	}
 
+	res := make([]TxOut, 0)
+	for _, txOut := range mapRes {
+		res = append(res, txOut)
+	}
 	sort.Slice(res, func(i, j int) bool {
 		return res[i].LockTime > res[j].LockTime
 	})
