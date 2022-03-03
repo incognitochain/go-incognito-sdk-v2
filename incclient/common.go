@@ -245,5 +245,3 @@ func AssertPaymentAddressAndTxVersion(paymentAddress interface{}, version int8) 
 
 	return addr, nil
 }
-
-var rawAssetTags map[string]*common.Hash

@@ -2,6 +2,7 @@ package incclient
 
 import (
 	"fmt"
+	"github.com/incognitochain/go-incognito-sdk-v2/rpchandler/rpc"
 	"strings"
 
 	ethCommon "github.com/ethereum/go-ethereum/common"
@@ -55,16 +56,26 @@ func NewETHDepositProof(blockNumber uint, blockHash ethCommon.Hash, txIdx uint, 
 // CreateIssuingEVMRequestTransaction creates an EVM shielding trading transaction. By EVM, it means either ETH or BSC.
 //
 // It returns the base58-encoded transaction, the transaction's hash, and an error (if any).
-func (client *IncClient) CreateIssuingEVMRequestTransaction(privateKey, tokenIDStr string, proof EVMDepositProof, isBSC ...bool) ([]byte, string, error) {
+//
+// An additional parameter `evmNetworkID` is introduced to specify the target EVM network. evmNetworkID can be one of the following:
+//	- rpc.ETHNetworkID: the Ethereum network
+//	- rpc.BSCNetworkID: the Binance Smart Chain network
+//	- rpc.PLGNetworkID: the Polygon network
+// If set empty, evmNetworkID defaults to rpc.ETHNetworkID. NOTE that only the first value of evmNetworkID is used.
+func (client *IncClient) CreateIssuingEVMRequestTransaction(privateKey, tokenIDStr string, proof EVMDepositProof, evmNetworkID ...int) ([]byte, string, error) {
 	tokenID, err := new(common.Hash).NewHashFromStr(tokenIDStr)
 	if err != nil {
 		return nil, "", err
 	}
 
-	mdType := metadata.IssuingETHRequestMeta
-	if len(isBSC) > 0 && isBSC[0] {
-		mdType = metadata.IssuingBSCRequestMeta
+	networkID := rpc.ETHNetworkID
+	if len(evmNetworkID) > 0 {
+		networkID = evmNetworkID[0]
 	}
+	if _, ok := rpc.EVMIssuingMetadata[networkID]; !ok {
+		return nil, "", fmt.Errorf("networkID %v not found", networkID)
+	}
+	mdType := rpc.EVMIssuingMetadata[networkID]
 
 	var issuingETHRequestMeta *metadata.IssuingEVMRequest
 	issuingETHRequestMeta, err = metadata.NewIssuingEVMRequest(proof.blockHash, proof.txIdx, proof.nodeList, *tokenID, mdType)
@@ -79,8 +90,14 @@ func (client *IncClient) CreateIssuingEVMRequestTransaction(privateKey, tokenIDS
 // CreateAndSendIssuingEVMRequestTransaction creates an EVM shielding transaction, and submits it to the Incognito network.
 //
 // It returns the transaction's hash, and an error (if any).
-func (client *IncClient) CreateAndSendIssuingEVMRequestTransaction(privateKey, tokenIDStr string, proof EVMDepositProof, isBSC ...bool) (string, error) {
-	encodedTx, txHash, err := client.CreateIssuingEVMRequestTransaction(privateKey, tokenIDStr, proof, isBSC...)
+//
+// An additional parameter `evmNetworkID` is introduced to specify the target EVM network. evmNetworkID can be one of the following:
+//	- rpc.ETHNetworkID: the Ethereum network
+//	- rpc.BSCNetworkID: the Binance Smart Chain network
+//	- rpc.PLGNetworkID: the Polygon network
+// If set empty, evmNetworkID defaults to rpc.ETHNetworkID. NOTE that only the first value of evmNetworkID is used.
+func (client *IncClient) CreateAndSendIssuingEVMRequestTransaction(privateKey, tokenIDStr string, proof EVMDepositProof, evmNetworkID ...int) (string, error) {
+	encodedTx, txHash, err := client.CreateIssuingEVMRequestTransaction(privateKey, tokenIDStr, proof, evmNetworkID...)
 	if err != nil {
 		return "", err
 	}
@@ -96,7 +113,13 @@ func (client *IncClient) CreateAndSendIssuingEVMRequestTransaction(privateKey, t
 // CreateBurningRequestTransaction creates an EVM burning transaction for exiting the Incognito network.
 //
 // It returns the base58-encoded transaction, the transaction's hash, and an error (if any).
-func (client *IncClient) CreateBurningRequestTransaction(privateKey, remoteAddress, tokenIDStr string, burnedAmount uint64, isBSC ...bool) ([]byte, string, error) {
+//
+// An additional parameter `evmNetworkID` is introduced to specify the target EVM network. evmNetworkID can be one of the following:
+//	- rpc.ETHNetworkID: the Ethereum network
+//	- rpc.BSCNetworkID: the Binance Smart Chain network
+//	- rpc.PLGNetworkID: the Polygon network
+// If set empty, evmNetworkID defaults to rpc.ETHNetworkID. NOTE that only the first value of evmNetworkID is used.
+func (client *IncClient) CreateBurningRequestTransaction(privateKey, remoteAddress, tokenIDStr string, burnedAmount uint64, evmNetworkID ...int) ([]byte, string, error) {
 	if tokenIDStr == common.PRVIDStr {
 		return nil, "", fmt.Errorf("cannot burn PRV in a burning request transaction")
 	}
@@ -119,10 +142,14 @@ func (client *IncClient) CreateBurningRequestTransaction(privateKey, remoteAddre
 		remoteAddress = remoteAddress[2:]
 	}
 
-	mdType := metadata.BurningRequestMetaV2
-	if len(isBSC) > 0 && isBSC[0] {
-		mdType = metadata.BurningPBSCRequestMeta
+	networkID := rpc.ETHNetworkID
+	if len(evmNetworkID) > 0 {
+		networkID = evmNetworkID[0]
 	}
+	if _, ok := rpc.EVMBurningMetadata[networkID]; !ok {
+		return nil, "", fmt.Errorf("networkID %v not found", networkID)
+	}
+	mdType := rpc.EVMBurningMetadata[networkID]
 
 	var md *metadata.BurningRequest
 	md, err = metadata.NewBurningRequest(burnerAddress, burnedAmount, *tokenID, tokenIDStr, remoteAddress, mdType)
@@ -139,8 +166,14 @@ func (client *IncClient) CreateBurningRequestTransaction(privateKey, remoteAddre
 // CreateAndSendBurningRequestTransaction creates an EVM burning transaction for exiting the Incognito network, and submits it to the network.
 //
 // It returns the transaction's hash, and an error (if any).
-func (client *IncClient) CreateAndSendBurningRequestTransaction(privateKey, remoteAddress, tokenIDStr string, burnedAmount uint64, isBSC ...bool) (string, error) {
-	encodedTx, txHash, err := client.CreateBurningRequestTransaction(privateKey, remoteAddress, tokenIDStr, burnedAmount, isBSC...)
+//
+// An additional parameter `evmNetworkID` is introduced to specify the target EVM network. evmNetworkID can be one of the following:
+//	- rpc.ETHNetworkID: the Ethereum network
+//	- rpc.BSCNetworkID: the Binance Smart Chain network
+//	- rpc.PLGNetworkID: the Polygon network
+// If set empty, evmNetworkID defaults to rpc.ETHNetworkID. NOTE that only the first value of evmNetworkID is used.
+func (client *IncClient) CreateAndSendBurningRequestTransaction(privateKey, remoteAddress, tokenIDStr string, burnedAmount uint64, evmNetworkID ...int) (string, error) {
+	encodedTx, txHash, err := client.CreateBurningRequestTransaction(privateKey, remoteAddress, tokenIDStr, burnedAmount, evmNetworkID...)
 	if err != nil {
 		return "", err
 	}
@@ -154,8 +187,14 @@ func (client *IncClient) CreateAndSendBurningRequestTransaction(privateKey, remo
 }
 
 // GetBurnProof retrieves the burning proof for the Incognito network for submitting to the smart contract later.
-func (client *IncClient) GetBurnProof(txHash string, isBSC ...bool) (*jsonresult.InstructionProof, error) {
-	responseInBytes, err := client.rpcServer.GetBurnProof(txHash, isBSC...)
+//
+// An additional parameter `evmNetworkID` is introduced to specify the target EVM network. evmNetworkID can be one of the following:
+//	- rpc.ETHNetworkID: the Ethereum network
+//	- rpc.BSCNetworkID: the Binance Smart Chain network
+//	- rpc.PLGNetworkID: the Polygon network
+// If set empty, evmNetworkID defaults to rpc.ETHNetworkID. NOTE that only the first value of evmNetworkID is used.
+func (client *IncClient) GetBurnProof(txHash string, evmNetworkID ...int) (*jsonresult.InstructionProof, error) {
+	responseInBytes, err := client.rpcServer.GetBurnProof(txHash, evmNetworkID...)
 	if err != nil {
 		return nil, err
 	}

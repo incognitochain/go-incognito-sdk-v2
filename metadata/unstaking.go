@@ -12,6 +12,15 @@ type UnStakingMetadata struct {
 	CommitteePublicKey string
 }
 
+// NewUnStakingMetadata return a new UnStakingMetadata.
+func NewUnStakingMetadata(committeePublicKey string) (*UnStakingMetadata, error) {
+	metadataBase := NewMetadataBaseWithSignature(UnStakingMeta)
+	return &UnStakingMetadata{
+		MetadataBaseWithSignature: *metadataBase,
+		CommitteePublicKey:        committeePublicKey,
+	}, nil
+}
+
 // Hash overrides MetadataBase.Hash().
 func (req *UnStakingMetadata) Hash() *common.Hash {
 	record := strconv.Itoa(req.Type)

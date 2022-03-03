@@ -1,6 +1,9 @@
 ---
 Description: Tutorial on how to create a custom token in Incognito.
 ---
+# Before Going Further
+Please read through the tutorials on [key submission](../accounts/submit_key.md) and [UTXO cache](../accounts/utxo_cache.md) for proper
+balance and UTXO retrieval. Skip these parts if you're familiar with these notions.
 
 # Create Custom Tokens
 Assume that we have already connected to the Incognito network. 
@@ -82,7 +85,7 @@ func main() {
 }
 ```
 
-Enough with basic transactions, let's move on to a more interesting part, [pDEX](../pdex/query.md).
+Enough with basic transactions, let's move on to a more interesting part, [pDEX](../pdex/intro.md).
 
 ---
 Return to [the table of contents](../../../README.md).

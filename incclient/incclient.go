@@ -14,11 +14,8 @@ type IncClient struct {
 	// the Incognito-RPC server
 	rpcServer *rpc.RPCServer
 
-	// the Ethereum-RPC server
-	ethServer *rpc.RPCServer
-
-	// the BSC-RPC server
-	bscServer *rpc.RPCServer
+	// the EVM-RPC servers
+	evmServers map[int]*rpc.RPCServer
 
 	// the parameters used in the v4 portal for BTC
 	btcPortalParams *BTCPortalV4Params
@@ -33,13 +30,15 @@ type IncClient struct {
 // NewTestNetClient creates a new IncClient with the test-net environment.
 func NewTestNetClient() (*IncClient, error) {
 	rpcServer := rpc.NewRPCServer(TestNetFullNode)
-	ethServer := rpc.NewRPCServer(TestNetETHHost)
-	bscServer := rpc.NewRPCServer(TestNetBSCHost)
+	evmServers := map[int]*rpc.RPCServer{
+		rpc.ETHNetworkID: rpc.NewRPCServer(TestNetETHHost),
+		rpc.BSCNetworkID: rpc.NewRPCServer(TestNetBSCHost),
+		rpc.PLGNetworkID: rpc.NewRPCServer(TestNetPLGHost),
+	}
 
 	incClient := IncClient{
 		rpcServer:       rpcServer,
-		ethServer:       ethServer,
-		bscServer:       bscServer,
+		evmServers:      evmServers,
 		btcPortalParams: &testNetBTCPortalV4Params,
 		version:         TestNetPrivacyVersion,
 	}
@@ -74,10 +73,6 @@ func NewTestNetClientWithCache() (*IncClient, error) {
 		return nil, err
 	}
 	incClient.cache.start()
-	rawAssetTags, err = incClient.GetAllAssetTags()
-	if err != nil {
-		Logger.Printf("Cannot get raw asset tags: %v\n", err)
-	}
 
 	return incClient, nil
 }
@@ -85,13 +80,15 @@ func NewTestNetClientWithCache() (*IncClient, error) {
 // NewTestNet1Client creates a new IncClient with the test-net 1 environment.
 func NewTestNet1Client() (*IncClient, error) {
 	rpcServer := rpc.NewRPCServer(TestNet1FullNode)
-	ethServer := rpc.NewRPCServer(TestNet1ETHHost)
-	bscServer := rpc.NewRPCServer(TestNet1BSCHost)
+	evmServers := map[int]*rpc.RPCServer{
+		rpc.ETHNetworkID: rpc.NewRPCServer(TestNet1ETHHost),
+		rpc.BSCNetworkID: rpc.NewRPCServer(TestNet1BSCHost),
+		rpc.PLGNetworkID: rpc.NewRPCServer(TestNet1PLGHost),
+	}
 
 	incClient := IncClient{
 		rpcServer:       rpcServer,
-		ethServer:       ethServer,
-		bscServer:       bscServer,
+		evmServers:      evmServers,
 		btcPortalParams: &testNet1BTCPortalV4Params,
 		version:         TestNet1PrivacyVersion}
 
@@ -125,10 +122,6 @@ func NewTestNet1ClientWithCache() (*IncClient, error) {
 		return nil, err
 	}
 	incClient.cache.start()
-	rawAssetTags, err = incClient.GetAllAssetTags()
-	if err != nil {
-		Logger.Printf("Cannot get raw asset tags: %v\n", err)
-	}
 
 	return incClient, nil
 }
@@ -136,13 +129,15 @@ func NewTestNet1ClientWithCache() (*IncClient, error) {
 // NewMainNetClient creates a new IncClient with the main-net environment.
 func NewMainNetClient() (*IncClient, error) {
 	rpcServer := rpc.NewRPCServer(MainNetFullNode)
-	ethServer := rpc.NewRPCServer(MainNetETHHost)
-	bscServer := rpc.NewRPCServer(MainNetBSCHost)
+	evmServers := map[int]*rpc.RPCServer{
+		rpc.ETHNetworkID: rpc.NewRPCServer(MainNetETHHost),
+		rpc.BSCNetworkID: rpc.NewRPCServer(MainNetBSCHost),
+		rpc.PLGNetworkID: rpc.NewRPCServer(MainNetPLGHost),
+	}
 
 	incClient := IncClient{
 		rpcServer:       rpcServer,
-		ethServer:       ethServer,
-		bscServer:       bscServer,
+		evmServers:      evmServers,
 		btcPortalParams: &mainNetBTCPortalV4Params,
 		version:         MainNetPrivacyVersion}
 
@@ -176,10 +171,6 @@ func NewMainNetClientWithCache() (*IncClient, error) {
 		return nil, err
 	}
 	incClient.cache.start()
-	rawAssetTags, err = incClient.GetAllAssetTags()
-	if err != nil {
-		Logger.Printf("Cannot get raw asset tags: %v\n", err)
-	}
 
 	return incClient, nil
 }
@@ -187,11 +178,13 @@ func NewMainNetClientWithCache() (*IncClient, error) {
 // NewLocalClient creates a new IncClient with the local environment.
 func NewLocalClient(port string) (*IncClient, error) {
 	rpcServer := rpc.NewRPCServer(LocalFullNode)
-	ethServer := rpc.NewRPCServer(LocalETHHost)
+	evmServers := map[int]*rpc.RPCServer{
+		rpc.ETHNetworkID: rpc.NewRPCServer(LocalETHHost),
+	}
 
 	incClient := IncClient{
 		rpcServer:       rpcServer,
-		ethServer:       ethServer,
+		evmServers:      evmServers,
 		btcPortalParams: &localBTCPortalV4Params,
 		version:         LocalPrivacyVersion}
 	if port != "" {
@@ -228,10 +221,6 @@ func NewLocalClientWithCache() (*IncClient, error) {
 		return nil, err
 	}
 	incClient.cache.start()
-	rawAssetTags, err = incClient.GetAllAssetTags()
-	if err != nil {
-		Logger.Printf("Cannot get raw asset tags: %v\n", err)
-	}
 
 	return incClient, nil
 }
@@ -244,12 +233,15 @@ func NewLocalClientWithCache() (*IncClient, error) {
 // Note that only the first value passed to `networks` is processed.
 func NewIncClient(fullNode, ethNode string, version int, networks ...string) (*IncClient, error) {
 	rpcServer := rpc.NewRPCServer(fullNode)
-	ethServer := rpc.NewRPCServer(ethNode)
+	evmServers := map[int]*rpc.RPCServer{
+		rpc.ETHNetworkID: rpc.NewRPCServer(ethNode),
+		rpc.BSCNetworkID: rpc.NewRPCServer(MainNetBSCHost),
+		rpc.PLGNetworkID: rpc.NewRPCServer(MainNetPLGHost),
+	}
 
 	incClient := IncClient{
 		rpcServer:       rpcServer,
-		ethServer:       ethServer,
-		bscServer:       rpc.NewRPCServer(MainNetBSCHost),
+		evmServers:      evmServers,
 		btcPortalParams: &mainNetBTCPortalV4Params,
 		version:         version,
 	}
@@ -257,10 +249,12 @@ func NewIncClient(fullNode, ethNode string, version int, networks ...string) (*I
 		switch strings.ToLower(networks[0]) {
 		case "testnet":
 			incClient.btcPortalParams = &testNetBTCPortalV4Params
-			incClient.bscServer = rpc.NewRPCServer(TestNetBSCHost)
+			incClient.evmServers[rpc.BSCNetworkID] = rpc.NewRPCServer(TestNetBSCHost)
+			incClient.evmServers[rpc.PLGNetworkID] = rpc.NewRPCServer(TestNetPLGHost)
 		case "testnet1":
 			incClient.btcPortalParams = &testNet1BTCPortalV4Params
-			incClient.bscServer = rpc.NewRPCServer(TestNet1BSCHost)
+			incClient.evmServers[rpc.BSCNetworkID] = rpc.NewRPCServer(TestNet1BSCHost)
+			incClient.evmServers[rpc.PLGNetworkID] = rpc.NewRPCServer(TestNet1PLGHost)
 		case "local":
 			incClient.btcPortalParams = &localBTCPortalV4Params
 		case "mainnet":
@@ -306,10 +300,6 @@ func NewIncClientWithCache(fullNode, ethNode string, version int, networks ...st
 		return nil, err
 	}
 	incClient.cache.start()
-	rawAssetTags, err = incClient.GetAllAssetTags()
-	if err != nil {
-		Logger.Printf("Cannot get raw asset tags: %v\n", err)
-	}
 
 	return incClient, nil
 }

@@ -2,6 +2,12 @@
 Description: Tutorial on how to shield pegged-PRV into the Incognito network
 ---
 
+# Before Going Further
+
+Please read through the tutorials on [key submission](../accounts/submit_key.md)
+and [UTXO cache](../accounts/utxo_cache.md) for proper balance and UTXO retrieval. Skip these parts if you're familiar
+with these notions.
+
 # Shielding pegged-PRV
 
 This is the same as shielding an EVM token except for the
@@ -18,6 +24,7 @@ package main
 import (
 	"fmt"
 	"github.com/incognitochain/go-incognito-sdk-v2/incclient"
+	"github.com/incognitochain/go-incognito-sdk-v2/rpchandler/rpc"
 	"log"
 	"time"
 )
@@ -30,15 +37,18 @@ func main() {
 
 	privateKey := "YOUR_PRIVATE_KEY_HERE"
 	evmTxHash := "" //the PRV deposit transaction hash on the EVM network
-	isBSC := false
+	// specify which EVM network we are interacting with. evmNetworkID could be one of the following:
+	// 	- rpc.ETHNetworkID
+	//	- rpc.BSCNetworkID
+	evmNetworkID := rpc.ETHNetworkID
 
-	evmProof, depositAmount, err := ic.GetEVMDepositProof(evmTxHash, isBSC)
+	evmProof, depositAmount, err := ic.GetEVMDepositProof(evmTxHash, evmNetworkID)
 	if err != nil {
 		log.Fatal(err)
 	}
 	fmt.Printf("Deposited amount: %v\n", depositAmount)
 
-	txHashStr, err := ic.CreateAndSendIssuingPRVPeggingRequestTransaction(privateKey, *evmProof, isBSC)
+	txHashStr, err := ic.CreateAndSendIssuingPRVPeggingRequestTransaction(privateKey, *evmProof, evmNetworkID)
 	if err != nil {
 		panic(err)
 	}
@@ -61,5 +71,6 @@ func main() {
 	}
 }
 ```
+
 ---
 Return to [the table of contents](../../../README.md).

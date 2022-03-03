@@ -1,14 +1,26 @@
 ---
 Description: Tutorial on how to create an EVM-shielding transaction
 ---
-# Depositing ETH/BSC/ERC20/BEP20 to Incognito
-Suppose that we already have a transaction that deposited some ETH/ERC20 to the smart contract. To mint the same amount of pETH/pERC20 inside the Incognito network, we use the function [`CreateAndSendIssuingEVMRequestTransaction`](../../../incclient/bridge.go) with the following inputs:
+
+# Before Going Further
+
+Please read through the tutorials on [key submission](../accounts/submit_key.md)
+and [UTXO cache](../accounts/utxo_cache.md) for proper balance and UTXO retrieval. Skip these parts if you're familiar
+with these notions.
+
+# Depositing EVM/EVM20 to Incognito
+
+Suppose that we already have a transaction that deposited some EVM/EVM20 to the smart contract. To mint the same amount
+of pEVM/pEVM20 inside the Incognito network, we use the
+function [`CreateAndSendIssuingEVMRequestTransaction`](../../../incclient/bridge.go) with the following inputs:
+
 * `privateKey`: our private key to sign the transaction.
-* `tokenID`: the pETH/pBSC/pERC20/pBEP20 tokenID.
-* `depositProof`: the Ethereum/BSC receipt for the depositing transaction.
-* `isBSC`: whether to interact with BSC the smart contract, defaults to `false`.
+* `tokenID`: the pEVM/pEVM20 tokenID.
+* `depositProof`: the EVM receipt for the depositing transaction.
+* `evmNetworkID`: the ID of the target EVM network, defaults to `rpc.ETHNetworkID`.
 
 ## Example
+
 [shield.go](../../code/bridge/shield/shield.go)
 
 ```go
@@ -17,6 +29,7 @@ package main
 import (
 	"fmt"
 	"github.com/incognitochain/go-incognito-sdk-v2/incclient"
+	"github.com/incognitochain/go-incognito-sdk-v2/rpchandler/rpc"
 	"log"
 	"time"
 )
@@ -30,15 +43,20 @@ func main() {
 	privateKey := "112t8rneWAhErTC8YUFTnfcKHvB1x6uAVdehy1S8GP2psgqDxK3RHouUcd69fz88oAL9XuMyQ8mBY5FmmGJdcyrpwXjWBXRpoWwgJXjsxi4j"
 	tokenIDStr := "ffd8d42dc40a8d166ea4848baf8b5f6e9fe0e9c30d60062eb7d44a8df9e00854"
 	evmTxHash := "0xb31d963b3f183d60532ca60d534e0113ca56070af795fde450dd456945a7be42"
-	isBSC := false
 
-	evmProof, depositAmount, err := ic.GetEVMDepositProof(evmTxHash, isBSC)
+	// specify which EVM network we are interacting with. evmNetworkID could be one of the following:
+	// 	- rpc.ETHNetworkID
+	//	- rpc.BSCNetworkID
+	//	- rpc.PLGNetworkID
+	evmNetworkID := rpc.ETHNetworkID
+
+	evmProof, depositAmount, err := ic.GetEVMDepositProof(evmTxHash, evmNetworkID)
 	if err != nil {
 		log.Fatal(err)
 	}
 	fmt.Printf("Deposited amount: %v\n", depositAmount)
 
-	txHashStr, err := ic.CreateAndSendIssuingEVMRequestTransaction(privateKey, tokenIDStr, *evmProof, isBSC)
+	txHashStr, err := ic.CreateAndSendIssuingEVMRequestTransaction(privateKey, tokenIDStr, *evmProof, evmNetworkID)
 	if err != nil {
 		log.Fatal(err)
 	}

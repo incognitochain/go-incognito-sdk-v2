@@ -1,6 +1,9 @@
 ---
 Description: Tutorial on how to convert UTXOs from V1 to V2 in Incognito.
 ---
+# Before Going Further
+Please read through the tutorials on [key submission](../accounts/submit_key.md) and [UTXO cache](../accounts/utxo_cache.md) for proper
+balance and UTXO retrieval. Skip these parts if you're familiar with these notions.
 
 # UTXOs Conversion
 In this tutorial, we'll learn how to convert UTXOs from version 1 to version 2. This process is mandatory

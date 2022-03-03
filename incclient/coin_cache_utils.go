@@ -261,9 +261,9 @@ func (ac *accountCache) updateAllTokens(latestIndex uint64, data cachedOutCoins,
 		if !ok {
 			return fmt.Errorf("cannot parse coin %v as a CoinV2", idx)
 		}
-		tokenId, err := tmpCoinV2.GetTokenId(&keySet, rawAssetTags)
-		if err != nil {
-			return err
+		tokenId, _ := tmpCoinV2.GetTokenId(&keySet, rawAssetTags)
+		if tokenId == nil {
+			continue
 		}
 
 		tokenCached := ac.CachedTokens[tokenId.String()]

@@ -9,7 +9,7 @@ import (
 // RelayingHeader is a relay request from other public blockchains.
 type RelayingHeader struct {
 	MetadataBase
-	IncAddressStr string
+	IncAddressStr string `json:"IncogAddressStr"`
 	Header        string
 	BlockHeight   uint64
 }

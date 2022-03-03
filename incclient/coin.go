@@ -2,17 +2,18 @@ package incclient
 
 import (
 	"fmt"
-	"github.com/incognitochain/go-incognito-sdk-v2/crypto"
-	"math/big"
-
 	"github.com/incognitochain/go-incognito-sdk-v2/coin"
 	"github.com/incognitochain/go-incognito-sdk-v2/common"
 	"github.com/incognitochain/go-incognito-sdk-v2/common/base58"
+	"github.com/incognitochain/go-incognito-sdk-v2/crypto"
 	"github.com/incognitochain/go-incognito-sdk-v2/key"
 	"github.com/incognitochain/go-incognito-sdk-v2/rpchandler"
 	"github.com/incognitochain/go-incognito-sdk-v2/rpchandler/jsonresult"
 	"github.com/incognitochain/go-incognito-sdk-v2/rpchandler/rpc"
 	"github.com/incognitochain/go-incognito-sdk-v2/wallet"
+	"log"
+	"math/big"
+	"time"
 )
 
 // GetOutputCoins calls the remote server to get all the output tokens for an output coin key.
@@ -167,6 +168,62 @@ func (client *IncClient) GetUnspentOutputCoins(privateKey, tokenID string, heigh
 	}
 
 	return listUnspentOutputCoins, listUnspentIndices, nil
+}
+
+// GetAllUTXOsV2 returns all v2 UTXOs (and associated tokenIDs) of a private key.
+func (client *IncClient) GetAllUTXOsV2(privateKey string) (map[string][]coin.PlainCoin, map[string][]*big.Int, error) {
+	utxoRes := make(map[string][]coin.PlainCoin)
+	idxRes := make(map[string][]*big.Int)
+	w, err := wallet.Base58CheckDeserialize(privateKey)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	prvUTXOs, prvIndices, err := client.GetUnspentOutputCoins(privateKey, common.PRVIDStr, 0)
+	if err != nil {
+		return nil, nil, err
+	}
+	if len(prvUTXOs) > 0 {
+		utxoRes[common.PRVIDStr] = prvUTXOs
+		idxRes[common.PRVIDStr] = prvIndices
+	}
+
+	tokenUTXOs, tokenIndices, err := client.GetUnspentOutputCoins(privateKey, common.ConfidentialAssetID.String(), 0)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	var rawAssetTags map[string]*common.Hash
+	// only get rawAssetTags when we have token UTXOs to improve response time
+	if len(tokenUTXOs) > 0 {
+		rawAssetTags, err = client.GetAllAssetTags()
+		if err != nil {
+			return nil, nil, err
+		}
+	}
+
+	for i, utxo := range tokenUTXOs {
+		if utxo.GetValue() == 0 {
+			continue
+		}
+		v2Coin, ok := utxo.(*coin.CoinV2)
+		if !ok {
+			return nil, nil, fmt.Errorf("cannot cast UTXO %v to a CoinV2", base58.Base58Check{}.Encode(utxo.GetPublicKey().ToBytesS(), 0))
+		}
+		tokenID, err := v2Coin.GetTokenId(&(w.KeySet), rawAssetTags)
+		if err != nil || tokenID == nil {
+			Logger.Printf("GetTokenId error: %v\n", err)
+			continue
+		}
+		if _, ok := utxoRes[tokenID.String()]; !ok {
+			utxoRes[tokenID.String()] = make([]coin.PlainCoin, 0)
+			idxRes[tokenID.String()] = make([]*big.Int, 0)
+		}
+		utxoRes[tokenID.String()] = append(utxoRes[tokenID.String()], utxo)
+		idxRes[tokenID.String()] = append(idxRes[tokenID.String()], tokenIndices[i])
+	}
+
+	return utxoRes, idxRes, nil
 }
 
 // GetUnspentOutputCoinsFromCache retrieves all unspent coins from the local cache (if possible).
@@ -376,23 +433,65 @@ func (client *IncClient) GetOTACoinLengthByShard(shardID byte, tokenID string) (
 	}
 }
 
-// GetAllAssetTags computes a mapping from raw assetTags to tokenIds (e.g, HashToPoint(PRV) => PRV).
+// GetAllAssetTags retrieves all tokenIDs and computes a mapping from raw assetTags to tokenIds (e.g, HashToPoint(PRV) => PRV).
 func (client *IncClient) GetAllAssetTags() (map[string]*common.Hash, error) {
-	assetTags := make(map[string]*common.Hash)
-	assetTags[crypto.HashToPoint(common.PRVCoinID[:]).String()] = &common.PRVCoinID
-	listTokens, err := client.GetListToken()
-	if err != nil {
-		return nil, err
+	start := time.Now()
+	rawAssetTags := make(map[string]*common.Hash)
+	included := make(map[string]bool)
+	for _, tokenID := range rawAssetTags {
+		included[tokenID.String()] = true
 	}
-	for tokenIdStr := range listTokens {
+
+	rawAssetTags[crypto.HashToPoint(common.PRVCoinID[:]).String()] = &common.PRVCoinID
+	listTokens, err := client.GetListTokenIDs()
+	var mapToken map[string]CustomToken
+	if err != nil {
+		mapToken, err = client.GetListToken()
+		if err != nil {
+			return nil, err
+		}
+	}
+	if listTokens == nil {
+		for tokenIdStr := range mapToken {
+			if included[tokenIdStr] {
+				continue
+			}
+			tokenHash, err := new(common.Hash).NewHashFromStr(tokenIdStr)
+			if err != nil {
+				return nil, err
+			}
+			rawAssetTags[crypto.HashToPoint(tokenHash[:]).String()] = tokenHash
+		}
+	} else {
+		for _, tokenIdStr := range listTokens {
+			if included[tokenIdStr] {
+				continue
+			}
+			tokenHash, err := new(common.Hash).NewHashFromStr(tokenIdStr)
+			if err != nil {
+				return nil, err
+			}
+			rawAssetTags[crypto.HashToPoint(tokenHash[:]).String()] = tokenHash
+		}
+	}
+
+	Logger.Printf("GetAllAssetTags FINISHED: %v\n", time.Since(start).Seconds())
+
+	return rawAssetTags, nil
+}
+
+// BuildAssetTags computes raw asset tags (i.e, Hash(tokenID)) of a given list of tokenIDs.
+func BuildAssetTags(tokenIDs []string) (map[string]*common.Hash, error) {
+	res := make(map[string]*common.Hash)
+	for _, tokenIdStr := range tokenIDs {
 		tokenHash, err := new(common.Hash).NewHashFromStr(tokenIdStr)
 		if err != nil {
 			return nil, err
 		}
-		assetTags[crypto.HashToPoint(tokenHash[:]).String()] = tokenHash
+		res[crypto.HashToPoint(tokenHash[:]).String()] = tokenHash
 	}
 
-	return assetTags, nil
+	return res, nil
 }
 
 // NewOutCoinKeyFromPrivateKey creates a new rpc.OutCoinKey given the private key.
@@ -495,7 +594,8 @@ func GetListDecryptedCoins(privateKey string, listOutputCoins []jsonresult.ICoin
 			}
 			decryptedCoin, err := tmpCoinV2.Decrypt(&keyWallet.KeySet)
 			if err != nil {
-				return nil, nil, err
+				log.Printf("Decrypt %v error: %v\n", base58.Base58Check{}.Encode(outCoin.GetPublicKey().ToBytesS(), 0), err)
+				continue
 			}
 			keyImage := decryptedCoin.GetKeyImage()
 			keyImageString := base58.Base58Check{}.Encode(keyImage.ToBytesS(), common.ZeroByte)
