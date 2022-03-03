@@ -4,20 +4,20 @@ Description: Tutorial on how to create an EVM un-shielding transaction
 
 # Before Going Further
 
-Please read through the tutorials on [key submission](../accounts/submit_key.md)
-and [UTXO cache](../accounts/utxo_cache.md) for proper balance and UTXO retrieval. Skip these parts if you're familiar
+Please read through the tutorials on [key submission](../../accounts/submit_key.md)
+and [UTXO cache](../../accounts/utxo_cache.md) for proper balance and UTXO retrieval. Skip these parts if you're familiar
 with these notions.
 
 # Withdrawing an EVM token from the Incognito Network
 
 The very first step in withdrawing an EVM token from the Incognito network to the main Ethereum/BSC networks is to burn
 the corresponding pEVM token inside the Incognito network and have the beacon generate a burn proof for us. This is done
-using the function [`CreateAndSendBurningRequestTransaction`](../../../incclient/bridge.go) supplied with an Ethereum
+using the function [`CreateAndSendBurningRequestTransaction`](../../../../incclient/bridge.go) supplied with an Ethereum
 address.
 
 ## Example
 
-[unshield.go](../../code/bridge/unshield/unshield.go)
+[unshield.go](../../../code/bridge/evm/unshield/unshield.go)
 
 ```go
 package main
@@ -62,4 +62,4 @@ scope of this tutorial series. See example on the full flow of
 un-shielding [here](https://github.com/incognitochain/incognito-cli/blob/development/bridge_evm.go).
 
 ---
-Return to [the table of contents](../../../README.md).
+Return to [the table of contents](../../../../README.md).

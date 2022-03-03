@@ -4,15 +4,15 @@ Description: Tutorial on how to create an EVM-shielding transaction
 
 # Before Going Further
 
-Please read through the tutorials on [key submission](../accounts/submit_key.md)
-and [UTXO cache](../accounts/utxo_cache.md) for proper balance and UTXO retrieval. Skip these parts if you're familiar
+Please read through the tutorials on [key submission](../../accounts/submit_key.md)
+and [UTXO cache](../../accounts/utxo_cache.md) for proper balance and UTXO retrieval. Skip these parts if you're familiar
 with these notions.
 
 # Depositing EVM/EVM20 to Incognito
 
 Suppose that we already have a transaction that deposited some EVM/EVM20 to the smart contract. To mint the same amount
 of pEVM/pEVM20 inside the Incognito network, we use the
-function [`CreateAndSendIssuingEVMRequestTransaction`](../../../incclient/bridge.go) with the following inputs:
+function [`CreateAndSendIssuingEVMRequestTransaction`](../../../../incclient/bridge.go) with the following inputs:
 
 * `privateKey`: our private key to sign the transaction.
 * `tokenID`: the pEVM/pEVM20 tokenID.
@@ -21,7 +21,7 @@ function [`CreateAndSendIssuingEVMRequestTransaction`](../../../incclient/bridge
 
 ## Example
 
-[shield.go](../../code/bridge/shield/shield.go)
+[shield.go](../../../code/bridge/evm/shield/shield.go)
 
 ```go
 package main
@@ -82,4 +82,4 @@ func main() {
 ```
 
 ---
-Return to [the table of contents](../../../README.md).
+Return to [the table of contents](../../../../README.md).

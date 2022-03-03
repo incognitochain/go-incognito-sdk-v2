@@ -4,8 +4,8 @@ Description: Tutorial on how to withdraw PRV to EVM networks
 
 # Before Going Further
 
-Please read through the tutorials on [key submission](../accounts/submit_key.md)
-and [UTXO cache](../accounts/utxo_cache.md) for proper balance and UTXO retrieval. Skip these parts if you're familiar
+Please read through the tutorials on [key submission](../../accounts/submit_key.md)
+and [UTXO cache](../../accounts/utxo_cache.md) for proper balance and UTXO retrieval. Skip these parts if you're familiar
 with these notions.
 
 # Withdraw PRV to EVM networks
@@ -17,15 +17,15 @@ tokens ([ERC20](https://etherscan.io/address/0xB64fde8f199F073F41c132B9eC7aD5b61
 much the same as that of an EVM token:
 
 * The first step is to burn the PRV inside the Incognito network. This is done using the
-  function [`CreateAndSendBurningPRVPeggingRequestTransaction`](../../../incclient/prv_pegging.go). This step also needs
+  function [`CreateAndSendBurningPRVPeggingRequestTransaction`](../../../../incclient/prv_pegging.go). This step also needs
   to specify which network will the PRV be withdrawn to (using param `evmNetworkIDs`, defaults to `rpc.ETHNetworkID`).
 * The second step is to retrieve the burn proof from the beacon chain. This is done via the
-  function [`GetBurnPRVPeggingProof`](../../../incclient/prv_pegging.go).
+  function [`GetBurnPRVPeggingProof`](../../../../incclient/prv_pegging.go).
 * Finally, we submit the burn proof to the designated pegged-PRV smart contract.
 
 ## Example
 
-[unshield_prv.go](../../code/bridge/unshield_prv/unshield_prv.go)
+[unshield_prv.go](../../../code/bridge/evm/unshield_prv/unshield_prv.go)
 
 ```go
 package main
@@ -77,4 +77,4 @@ func main() {
 The final step is out of the scope of this tutorial series.
 
 ---
-Return to [the table of contents](../../../README.md).
+Return to [the table of contents](../../../../README.md).

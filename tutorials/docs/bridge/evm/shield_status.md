@@ -2,7 +2,7 @@
 description: Tutorial on how to check the status of a shield request
 ---
 # Checking Shielding Requests
-This sdk allows you to check the status of a (BSC/ETH/ERC20) shielding transaction via the function [`CheckShieldStatus`](../../../incclient/bridge.go). All you need to do is to supply it with an Incognito transaction hash. Possile returned values are as follows.
+This sdk allows you to check the status of a (BSC/ETH/ERC20) shielding transaction via the function [`CheckShieldStatus`](../../../../incclient/bridge.go). All you need to do is to supply it with an Incognito transaction hash. Possile returned values are as follows.
 * -1: an error has occurred, see the the error for more detail.
 * 0: the transaction is not found or it is not a shielding transaction.
 * 1: the transaction is pending.
@@ -12,7 +12,7 @@ This sdk allows you to check the status of a (BSC/ETH/ERC20) shielding transacti
 See the following example.
 
 ## Example
-[shield_status](../../code/bridge/status/status.go)
+[shield_status](../../../code/bridge/evm/status/status.go)
 
 ```go
 package main
@@ -39,4 +39,4 @@ func main() {
 }
 ```
 ---
-Return to [the table of contents](../../../README.md).
+Return to [the table of contents](../../../../README.md).

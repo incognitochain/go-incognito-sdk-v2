@@ -4,19 +4,19 @@ Description: Tutorial on how to shield pegged-PRV into the Incognito network
 
 # Before Going Further
 
-Please read through the tutorials on [key submission](../accounts/submit_key.md)
-and [UTXO cache](../accounts/utxo_cache.md) for proper balance and UTXO retrieval. Skip these parts if you're familiar
+Please read through the tutorials on [key submission](../../accounts/submit_key.md)
+and [UTXO cache](../../accounts/utxo_cache.md) for proper balance and UTXO retrieval. Skip these parts if you're familiar
 with these notions.
 
 # Shielding pegged-PRV
 
 This is the same as shielding an EVM token except for the
-function [`CreateAndSendIssuingPRVPeggingRequestTransaction`](../../../incclient/prv_pegging.go) is used instead of the
-function [`CreateAndSendIssuingEVMRequestTransaction`](../../../incclient/bridge.go).
+function [`CreateAndSendIssuingPRVPeggingRequestTransaction`](../../../../incclient/prv_pegging.go) is used instead of the
+function [`CreateAndSendIssuingEVMRequestTransaction`](../../../../incclient/bridge.go).
 
 ## Example
 
-[shield_prv.go](../../code/bridge/shield_prv/shield_prv.go)
+[shield_prv.go](../../../code/bridge/evm/shield_prv/shield_prv.go)
 
 ```go
 package main
@@ -73,4 +73,4 @@ func main() {
 ```
 
 ---
-Return to [the table of contents](../../../README.md).
+Return to [the table of contents](../../../../README.md).
