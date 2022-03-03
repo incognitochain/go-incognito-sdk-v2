@@ -92,9 +92,9 @@ func TestIncClient_GetEVMDepositProof(t *testing.T) {
 		panic(err)
 	}
 
-	txHash := "0x44f01c88fe21ed42408b70312a3899893497fdb6d215f87c9f038adae978a484"
+	txHash := "0x8eb88d913fbd37a55680f74fe6dfcc176511713545c16f9314a0a67ef5bc0853"
 
-	depositProof, amount, err := ic.GetEVMDepositProof(txHash)
+	depositProof, amount, err := ic.GetEVMDepositProof(txHash, rpc.PLGNetworkID)
 	if err != nil {
 		panic(err)
 	}
