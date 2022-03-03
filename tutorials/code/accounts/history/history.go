@@ -10,7 +10,7 @@ import (
 // It is suitable for accounts that have a few transactions.
 func GetHistory() {
 	// For main-net
-	client, err := incclient.NewIncClient("https://beta-fullnode.incognito.org/fullnode", incclient.MainNetETHHost, 1)
+	client, err := incclient.NewMainNetClient()
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -33,7 +33,7 @@ func GetHistory() {
 // GetHistoryFaster helps retrieve the history faster by running parallel workers.
 func GetHistoryFaster() {
 	// For main-net
-	client, err := incclient.NewIncClient("https://beta-fullnode.incognito.org/fullnode", incclient.MainNetETHHost, 1)
+	client, err := incclient.NewMainNetClient()
 	if err != nil {
 		log.Fatal(err)
 	}
