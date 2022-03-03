@@ -506,6 +506,7 @@ func (client *IncClient) GetListTxsOutV2(privateKey string, tokenIDStr string) (
 			if tokenIDStr == common.PRVIDStr && amount == 0 {
 				note += " (Tx Fee)"
 			}
+			note = strings.TrimSpace(note)
 			newTxOut := TxOut{
 				Version:    tx.GetVersion(),
 				LockTime:   tx.GetLockTime(),

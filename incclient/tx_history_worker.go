@@ -558,6 +558,8 @@ func (worker TxHistoryWorker) getTxsOut(keySet *key.KeySet, mapSpentCoins map[st
 			if tokenIDStr == common.PRVIDStr && amount == 0 {
 				note += " (Tx Fee)"
 			}
+			note = strings.TrimSpace(note)
+			
 			newTxOut := TxOut{
 				Version:    tx.GetVersion(),
 				LockTime:   tx.GetLockTime(),
