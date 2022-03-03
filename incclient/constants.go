@@ -10,7 +10,7 @@ const (
 	MainNetFullNode                   = "https://beta-fullnode.incognito.org/fullnode"
 	MainNetETHHost                    = "https://mainnet.infura.io/v3/34918000975d4374a056ed78fe21c517"
 	MainNetBSCHost                    = "https://bsc-dataseed.binance.org"
-	MainNetPLGHost                    = "https://polygon-mainnet.infura.io/v3/9bc873177cf74a03a35739e45755a9ac"
+	MainNetPLGHost                    = "https://rpc-mainnet.matic.network"
 	MainNetPrivacyVersion             = 2
 )
 
@@ -23,8 +23,8 @@ const (
 	TestNetPRVBEP20ContractAddressStr = "0xB49E8844a72CF1ce885aEf13F82BeeAEEFc01527"
 	TestNetFullNode                   = "https://testnet.incognito.org/fullnode"
 	TestNetETHHost                    = "https://kovan.infura.io/v3/93fe721349134964aa71071a713c5cef"
-	TestNetBSCHost                    = "https://data-seed-prebsc-2-s1.binance.org:8545"
-	TestNetPLGHost                    = "https://polygon-mumbai.g.alchemy.com/v2/CBQ1SQRLf3eQGbTXd_aA3LU7hvmwR33K"
+	TestNetBSCHost                    = "https://data-seed-prebsc-2-s2.binance.org:8545"
+	TestNetPLGHost                    = "https://matic-mumbai.chainstacklabs.com"
 	TestNetPrivacyVersion             = 2
 )
 

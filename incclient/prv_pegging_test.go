@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/incognitochain/go-incognito-sdk-v2/common"
+	"github.com/incognitochain/go-incognito-sdk-v2/rpchandler/rpc"
 	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"
@@ -29,7 +30,7 @@ func initPRVPeggingIncClient() error {
 
 type TestCaseShieldPRVPegging struct {
 	externalTxID string
-	isBSC        bool
+	evmNetworkID int
 	shieldAmt    uint64
 }
 
@@ -39,12 +40,12 @@ func TestIncClient_ShieldPRVPegging(t *testing.T) {
 	tcs := []TestCaseShieldPRVPegging{
 		{
 			externalTxID: "",
-			isBSC:        false,
+			evmNetworkID: rpc.ETHNetworkID,
 			shieldAmt:    uint64(0),
 		},
 		{
 			externalTxID: "",
-			isBSC:        true,
+			evmNetworkID: rpc.BSCNetworkID,
 			shieldAmt:    uint64(0),
 		},
 	}
@@ -72,7 +73,7 @@ func TestIncClient_ShieldPRVPegging(t *testing.T) {
 			panic(err)
 		}
 
-		txHashStr, err := PRVPeggingIncClient.CreateAndSendIssuingPRVPeggingRequestTransaction(privateKey, *ethProof, tc.isBSC)
+		txHashStr, err := PRVPeggingIncClient.CreateAndSendIssuingPRVPeggingRequestTransaction(privateKey, *ethProof, tc.evmNetworkID)
 		if err != nil {
 			panic(err)
 		}
@@ -108,7 +109,7 @@ func TestIncClient_ShieldPRVPegging(t *testing.T) {
 }
 
 type TestCaseUnShieldPRVPegging struct {
-	isBSC           bool
+	evmNetworkID    int
 	unshieldAmt     uint64
 	externalAddress string
 }
@@ -118,12 +119,12 @@ func TestIncClient_UnShieldPRVPegging(t *testing.T) {
 	// INPUT YOUR TESTCASE
 	tcs := []TestCaseUnShieldPRVPegging{
 		{
-			isBSC:           false,
+			evmNetworkID:    rpc.ETHNetworkID,
 			unshieldAmt:     2 * 1e9,
 			externalAddress: "0xF91cEe2DE943733e338891Ef602c962eF4D7Eb81",
 		},
 		{
-			isBSC:           true,
+			evmNetworkID:    rpc.BSCNetworkID,
 			unshieldAmt:     1 * 1e9,
 			externalAddress: "0xF91cEe2DE943733e338891Ef602c962eF4D7Eb81",
 		},
