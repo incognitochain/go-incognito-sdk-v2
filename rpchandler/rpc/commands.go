@@ -285,6 +285,11 @@ const (
 	createAndSendTxPortalConvertVaultRequest   = "createandsendtxportalconvertvault"
 	getPortalConvertVaultTxStatus              = "getportalconvertvaultstatus"
 	generatePortalShieldMultisigAddress        = "generateportalshieldmultisigaddress"
+	generateDepositAddress                     = "generatedepositaddress"
+	generateOTDepositKey                       = "generateotdepositkey"
+	getNextOTDepositKey                        = "getnextotdepositkey"
+	hasOTDepositPubKeys                        = "hasotdepositpubkeys"
+	getDepositTxsByPubKeys                     = "getdeposittxsbypubkeys"
 
 	// relaying
 	createAndSendTxWithRelayingBNBHeader = "createandsendtxwithrelayingbnbheader"

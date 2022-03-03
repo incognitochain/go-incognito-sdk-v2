@@ -49,3 +49,7 @@ const (
 const (
 	SalaryVerFixHash = 1
 )
+
+const (
+	PortalV4DepositKeyGenSeed = "PortalV4OneTimeDepositPubKey"
+)

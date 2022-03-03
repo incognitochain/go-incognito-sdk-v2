@@ -7,18 +7,32 @@ import (
 
 type PortalShieldingResponse struct {
 	MetadataBase
-	RequestStatus    string
-	ReqTxID          common.Hash
-	RequesterAddrStr string
-	MintingAmount    uint64
-	IncTokenID       string
-	SharedRandom     []byte
+
+	// RequestStatus is the status of the shielding request.
+	RequestStatus string
+
+	// ReqTxID is the hash of the shielding request transaction.
+	ReqTxID common.Hash
+
+	// Receiver is the same as in the request.
+	// If Receiver is an Incognito payment address, SharedRandom must not be empty.
+	// If Receiver is an OTAReceiver, SharedRandom is not required.
+	Receiver string `json:"RequesterAddrStr"` // the json-tag is required for backward-compatibility.
+
+	// MintingAmount is the shielding amount.
+	MintingAmount uint64
+
+	// IncTokenID is the Incognito ID of the shielding token.
+	IncTokenID string
+
+	// SharedRandom is combined with Receiver to make sure the minting amount is for the eligible party.
+	SharedRandom []byte `json:"SharedRandom,omitempty"`
 }
 
 func NewPortalShieldingResponse(
 	depositStatus string,
 	reqTxID common.Hash,
-	requesterAddressStr string,
+	receiver string,
 	amount uint64,
 	tokenID string,
 	metaType int,
@@ -27,12 +41,12 @@ func NewPortalShieldingResponse(
 		Type: metaType,
 	}
 	return &PortalShieldingResponse{
-		RequestStatus:    depositStatus,
-		ReqTxID:          reqTxID,
-		MetadataBase:     metadataBase,
-		RequesterAddrStr: requesterAddressStr,
-		MintingAmount:    amount,
-		IncTokenID:       tokenID,
+		RequestStatus: depositStatus,
+		ReqTxID:       reqTxID,
+		MetadataBase:  metadataBase,
+		Receiver:      receiver,
+		MintingAmount: amount,
+		IncTokenID:    tokenID,
 	}
 }
 
@@ -40,7 +54,7 @@ func (iRes PortalShieldingResponse) Hash() *common.Hash {
 	record := iRes.MetadataBase.Hash().String()
 	record += iRes.RequestStatus
 	record += iRes.ReqTxID.String()
-	record += iRes.RequesterAddrStr
+	record += iRes.Receiver
 	record += strconv.FormatUint(iRes.MintingAmount, 10)
 	record += iRes.IncTokenID
 	// final hash

@@ -94,3 +94,23 @@ func (server *RPCServer) CheckShieldStatus(txHash string) ([]byte, error) {
 func (server *RPCServer) GetAllBridgeTokens() ([]byte, error) {
 	return server.SendQuery(getAllBridgeTokens, nil)
 }
+
+// HasOTDepositKeys checks if one-time deposit keys have been used.
+func (server *RPCServer) HasOTDepositKeys(pubKeys []string) ([]byte, error) {
+	tmpParams := make(map[string]interface{})
+	tmpParams["DepositPubKeys"] = pubKeys
+
+	params := make([]interface{}, 0)
+	params = append(params, tmpParams)
+	return server.SendQuery(hasOTDepositPubKeys, params)
+}
+
+// GetDepositTxsByPubKeys returns the list of shielding requests for given list of depositPubKeys.
+func (server *RPCServer) GetDepositTxsByPubKeys(pubKeys []string) ([]byte, error) {
+	tmpParams := make(map[string]interface{})
+	tmpParams["DepositPubKeys"] = pubKeys
+
+	params := make([]interface{}, 0)
+	params = append(params, tmpParams)
+	return server.SendQuery(getDepositTxsByPubKeys, params)
+}

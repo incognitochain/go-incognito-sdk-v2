@@ -2,6 +2,11 @@ package incclient
 
 import (
 	"encoding/json"
+	"github.com/incognitochain/go-incognito-sdk-v2/common"
+	"github.com/incognitochain/go-incognito-sdk-v2/crypto"
+	"github.com/incognitochain/go-incognito-sdk-v2/privacy"
+	"github.com/incognitochain/go-incognito-sdk-v2/privacy/v1/schnorr"
+	"github.com/incognitochain/go-incognito-sdk-v2/wallet"
 	"testing"
 )
 
@@ -64,4 +69,98 @@ func TestIncClient_GetPortalUnShieldingRequestStatus(t *testing.T) {
 		panic(err)
 	}
 	Logger.Println(string(jsb))
+}
+
+func TestIncClient_GenerateDepositPubKeyFromPrivateKey(t *testing.T) {
+	var err error
+	ic, err = NewMainNetClientWithCache()
+	if err != nil {
+		panic(err)
+	}
+
+	privateKeyStr := "11111113mea9j9z4QogdaVFQ2VXGQNK2Y6hLHFZGD42kJ1J8FSvQLogdCHuhQbvxLpGWtcwiJLHQHm4yqSetTnUBWG8wusWHAqnTJGpHdJD"
+	tokenIdStr := "b832e5d3b1f01a4f0623f7fe91d6673461e1f5d37d91fe78c5c2e6183ff39696"
+	for index := uint64(0); index < 100; index++ {
+		depositKey, err := ic.GenerateDepositKeyFromPrivateKey(privateKeyStr, tokenIdStr, index)
+		if err != nil {
+			panic(err)
+		}
+		jsb, _ := json.Marshal(depositKey)
+		Logger.Printf("Index: %v, DepositKey: %v\n\n", index, string(jsb))
+	}
+}
+
+func TestIncClient_GetNextOTDepositKey(t *testing.T) {
+	var err error
+	ic, err = NewMainNetClientWithCache()
+	if err != nil {
+		panic(err)
+	}
+
+	tokenIdStr := "b832e5d3b1f01a4f0623f7fe91d6673461e1f5d37d91fe78c5c2e6183ff39696"
+	for attempt := uint64(0); attempt < 100; attempt++ {
+		w, err := wallet.GenRandomWalletForShardID(byte(common.RandInt() % 8))
+		if err != nil {
+			panic(err)
+		}
+		privateKeyStr := w.Base58CheckSerialize(0)
+		depositKey, depositAddr, err := ic.GetNextOTDepositKey(privateKeyStr, tokenIdStr)
+		if err != nil {
+			panic(err)
+		}
+		jsb, _ := json.Marshal(depositKey)
+		Logger.Printf("Attempt: %v, DepositAddr: %v, DepositKey: %v\n\n", attempt, depositAddr, string(jsb))
+	}
+}
+
+func TestIncClient_GetDepositByOTKeyHistory(t *testing.T) {
+	var err error
+	ic, err = NewIncClient("http://51.222.43.133:9334", "", 2)
+	if err != nil {
+		panic(err)
+	}
+
+	tokenIdStr := "b832e5d3b1f01a4f0623f7fe91d6673461e1f5d37d91fe78c5c2e6183ff39696"
+	privateKeyStr := ""
+	history, err := ic.GetDepositByOTKeyHistory(privateKeyStr, tokenIdStr)
+	if err != nil {
+		panic(err)
+	}
+
+	_ = jsonPrint(history)
+}
+
+func TestSignDepositData(t *testing.T) {
+	var err error
+	ic, err = NewLocalClient("8334")
+	if err != nil {
+		panic(err)
+	}
+
+	privateKey := "1111111HGJVyeAp2Knn5pfJswiucehMhZtmuPwrwSfLRwbJy1TUXpKiKh77wMy5yKUhQ6HF3D1Coh77mSVHohiueusphrBpX4SYYhy8p5WG"
+	otaDepositKey, _, err := ic.GetNextOTDepositKey(privateKey, "ef5947f70ead81a76a53c7c8b7317dd5245510c665d3a13921dc9a581188728b")
+	if err != nil {
+		panic(err)
+	}
+
+	data := common.RandBytes(32)
+	sig, err := SignDepositData(otaDepositKey, data)
+	if err != nil {
+		panic(err)
+	}
+
+	schPubKey := new(privacy.SchnorrPublicKey)
+	pubKey, _ := new(crypto.Point).FromBytesS(otaDepositKey.PublicKey)
+	schPubKey.Set(pubKey)
+
+	schSig := new(schnorr.SchnSignature)
+	err = schSig.SetBytes(sig)
+	if err != nil {
+		panic(err)
+	}
+
+	isValid := schPubKey.Verify(schSig, common.HashB(data))
+	if !isValid {
+		panic("invalid signature!!!")
+	}
 }
