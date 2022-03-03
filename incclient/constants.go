@@ -23,7 +23,7 @@ const (
 	TestNetPRVBEP20ContractAddressStr = "0xB49E8844a72CF1ce885aEf13F82BeeAEEFc01527"
 	TestNetFullNode                   = "https://testnet.incognito.org/fullnode"
 	TestNetETHHost                    = "https://kovan.infura.io/v3/93fe721349134964aa71071a713c5cef"
-	TestNetBSCHost                    = "https://data-seed-prebsc-2-s1.binance.org:8545"
+	TestNetBSCHost                    = "https://data-seed-prebsc-2-s2.binance.org:8545"
 	TestNetPLGHost                    = "https://matic-mumbai.chainstacklabs.com"
 	TestNetPrivacyVersion             = 2
 )
