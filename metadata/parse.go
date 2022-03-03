@@ -54,11 +54,11 @@ func ParseMetadata(metaInBytes []byte) (Metadata, error) {
 		md = &IssuingEVMResponse{}
 	case IssuingPRVBEP20ResponseMeta:
 		md = &IssuingEVMResponse{}
-	case BurningRequestMeta:
+	case BurningRequestMeta, BurningForDepositToSCRequestMeta:
 		md = &BurningRequest{}
-	case BurningRequestMetaV2:
+	case BurningRequestMetaV2, BurningForDepositToSCRequestMetaV2:
 		md = &BurningRequest{}
-	case BurningPBSCRequestMeta:
+	case BurningPBSCRequestMeta, BurningPBSCForDepositToSCRequestMeta:
 		md = &BurningRequest{}
 	case BurningPRVBEP20RequestMeta:
 		md = &BurningRequest{}
@@ -68,9 +68,7 @@ func ParseMetadata(metaInBytes []byte) (Metadata, error) {
 		md = &IssuingEVMRequest{}
 	case IssuingPLGResponseMeta:
 		md = &IssuingEVMResponse{}
-	case BurningPLGRequestMeta:
-		md = &BurningRequest{}
-	case BurningPLGForDepositToSCRequestMeta:
+	case BurningPLGRequestMeta, BurningPLGForDepositToSCRequestMeta:
 		md = &BurningRequest{}
 	case ShardStakingMeta:
 		md = &StakingMetadata{}
@@ -112,12 +110,6 @@ func ParseMetadata(metaInBytes []byte) (Metadata, error) {
 		md = &RelayingHeader{}
 	case RelayingBTCHeaderMeta:
 		md = &RelayingHeader{}
-	case BurningForDepositToSCRequestMeta:
-		md = &BurningRequest{}
-	case BurningPBSCForDepositToSCRequestMeta:
-		md = &BurningRequest{}
-	case BurningForDepositToSCRequestMetaV2:
-		md = &BurningRequest{}
 	case metadataCommon.PortalV4ShieldingRequestMeta:
 		md = &PortalShieldingRequest{}
 	case metadataCommon.PortalV4ShieldingResponseMeta:

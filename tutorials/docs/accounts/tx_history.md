@@ -1,26 +1,36 @@
 ---
 Description: Tutorial on how to retrieve the history of an account.
 ---
-Currently, thousands of transactions take place on the Incognito chain every day. A user might have done a few to thousands of transactions. Therefore, the need to retrieve the history of these transaction is inevitable. However, there is not a known method to extract an account's history for users who do not use the Incognito wallet. In this tutorial, we will show you how to perform this task with the go-sdk.
+Currently, thousands of transactions take place on the Incognito chain every day. A user might have done a few to
+thousands of transactions. Therefore, the need to retrieve the history of these transaction is inevitable. However,
+there is not a known method to extract an account's history for users who do not use the Incognito wallet. In this
+tutorial, we will show you how to perform this task with the go-sdk.
 
 The sdk provides two methods for user to get their account's history.
-* Sequential: this method retrieves the history sequentially. It best suits accounts with a few transactions. This method is a part of an [`IncClient`](../../../incclient/tx_history.go) object.
-* Parallel: this method creates several workers working simultaneously to boost up the speed. It best suits accounts with many transactions (says 100+). Also, this mode requires more CPU than the previous one, and its performance depends on the device configuration. This method is a part of a [`TxHistoryProcessor`](../../../incclient/tx_history_worker.go) object.
 
-Here are some functions that are used to retrieve the history of an account. Note that all of these functions are for a specific token only. Right now, users have to provide the tokenID for each history request.
+* Sequential: this method retrieves the history sequentially. It best suits accounts with a few transactions. This
+  method is a part of an [`IncClient`](../../../incclient/tx_history.go) object.
+* Parallel: this method creates several workers working simultaneously to boost up the speed. It best suits accounts
+  with many transactions (says 100+). Also, this mode requires more CPU than the previous one, and its performance
+  depends on the device configuration. This method is a part of
+  a [`TxHistoryProcessor`](../../../incclient/tx_history_worker.go) object.
+
+Here are some functions that are used to retrieve the history of an account. Note that all of these functions are for a
+specific token only. Right now, users have to provide the tokenID for each history request.
+
 ## Functions
-Name | Description | Object | Status
--------------|-------------|-------------|-----------
-GetListTxsInV1| Get all in-coming transactions v1 of a token | IncClient | Finished
-GetListTxsInV2 | Get all in-coming transactions v2 of a token | IncClient | In Progress
-GetListTxsOutV1 | Get all out-going transactions v1 of a token | IncClient | Finished
-GetListTxsOutV2 | Get all out-going transactions v1 of a token | IncClient | In Progress
-GetTxHistoryV1 | Get the history V1 of a token | IncClient | Finished
-GetTxHistoryV2 | Get the history V2 of a token | IncClient | In Progress
-GetTxsIn | Get in-coming transactions of a token (with the given version) | TxHistoryProcessor | Finished (v1) & In Progress (v2)
-GetTxsOut | Get out-going transactions of a token (with the given version) | TxHistoryProcessor | Finished (v1) & In Progress (v2)
-GetTokenHistory | Get the history of a token (with the given version) | TxHistoryProcessor | Finished (v1) & In Progress (v2)
 
+Name | Description                                                    | Object | Status
+-------------|----------------------------------------------------------------|-------------|-----------
+GetListTxsInV1| Get all in-coming transactions v1 of a token                   | IncClient | Finished
+GetListTxsInV2 | Get all in-coming transactions v2 of a token                   | IncClient | Finished
+GetListTxsOutV1 | Get all out-going transactions v1 of a token                   | IncClient | Finished
+GetListTxsOutV2 | Get all out-going transactions v2 of a token                   | IncClient | Finished
+GetTxHistoryV1 | Get the history V1 of a token                                  | IncClient | Finished
+GetTxHistoryV2 | Get the history V2 of a token                                  | IncClient | Finished
+GetTxsIn | Get in-coming transactions of a token (with the given version) | TxHistoryProcessor | Finished 
+GetTxsOut | Get out-going transactions of a token (with the given version) | TxHistoryProcessor | Finished
+GetTokenHistory | Get the history of a token (with the given version)            | TxHistoryProcessor | Finished
 
 The followings are the descriptions of an in-coming transaction as well as an out-going transaction, respectively.
 
@@ -32,12 +42,12 @@ The followings are the descriptions of an in-coming transaction as well as an ou
 // In case a user A sends some coins to a user B and A receives a sent-back output coin, this is not considered to
 // be a TxIn.
 type TxIn struct {
-	Version  int8
-	LockTime int64
-	TxHash   string
-	Amount   uint64
-	TokenID  string
-	Metadata metadata.Metadata
+Version  int8
+LockTime int64
+TxHash   string
+Amount   uint64
+TokenID  string
+Metadata metadata.Metadata
 }
 ```
 
@@ -45,79 +55,98 @@ type TxIn struct {
 // TxOut is an out-going transaction.
 // A transaction is considered to be a TxOut if it spends input coins.
 type TxOut struct {
-	Version    int8
-	LockTime   int64
-	TxHash     string
-	Amount     uint64
-	TokenID    string
-	SpentCoins map[string]uint64 // map from the coin's serialNumber to its amount
-	Receivers  []string
-	PRVFee     uint64
-	TokenFee   uint64
-	Metadata   metadata.Metadata
+Version    int8
+LockTime   int64
+TxHash     string
+Amount     uint64
+TokenID    string
+SpentCoins map[string]uint64 // map from the coin's serialNumber to its amount
+Receivers  []string
+PRVFee     uint64
+TokenFee   uint64
+Metadata   metadata.Metadata
 }
 ```
+
 And the history looks like
+
 ```go
 // TxHistory consists of a list of TxIn's and a list of TxOut's.
 type TxHistory struct {
-	TxInList  []TxIn
-	TxOutList []TxOut
+TxInList  []TxIn
+TxOutList []TxOut
 }
 ```
 
 Now, let's get to the detail of how we can use these functions.
 
 ## Connect to the network
-Because most of currently running full-nodes don't have some required RPCs ad data, the created client in this case must point to the designated address, which is `https://beta-fullnode.incognito.org/fullnode`.
+
+Because most of currently running full-nodes don't have some required RPCs ad data, the created client in this case must
+point to the designated address, which is `https://beta-fullnode.incognito.org/fullnode`.
+
 ```go
 // For main-net
-client, err := incclient.NewIncClient("https://beta-fullnode.incognito.org/fullnode", incclient.MainNetETHHost, 1)
+client, err := incclient.NewMainNetClient()
 if err != nil {
-	log.Fatal(err)
+log.Fatal(err)
 }
 ```
 
 ## Specify the private key and the tokenID
+
 ```go
-tokenIDStr := common.PRVIDStr // input the tokenID in which you want to retrieve the history of.
+tokenIDStr := common.PRVIDStr    // input the tokenID in which you want to retrieve the history of.
 privateKey := "YOUR_PRIVATE_KEY" // input your private key here
 ```
 
 ## Retrive the history
+
 ### Sequential method
+
 ```go
 // get the history in a normal way.
 h, err := client.GetTxHistoryV1(privateKey, tokenIDStr)
 if err != nil {
-	log.Fatal(err)
+log.Fatal(err)
 }
 ```
-If you want to get only the in-coming (out-going) history, consider using `GetListTxsInV1` (`GetListTxsOutV1`).	
+
+If you want to get only the in-coming (out-going) history, consider using `GetListTxsInV1` (`GetListTxsOutV1`).
 
 ### Parallel method
+
 To run in this mode, we have to create a `TxHistoryProcessor`.
+
 ```go
 numWorkers := 15
 p := incclient.NewTxHistoryProcessor(client, numWorkers)
 ```
-The number of workers depends on the local device performance. Keeping it at 5-15 is an advisible choice. If this number is too high, the remote full-node may drop the connection to the device due to limited number of requests at a time. Finally, call the required functions.
+
+The number of workers depends on the local device performance. Keeping it at 5-15 is an advisible choice. If this number
+is too high, the remote full-node may drop the connection to the device due to limited number of requests at a time.
+Finally, call the required functions.
+
 ```go
 h, err := p.GetTokenHistory(privateKey, tokenIDStr)
 if err != nil {
-	log.Fatal(err)
+log.Fatal(err)
 }
 ```
-If you want to get only the in-coming (out-going) history, consider using `GetTxsIn` (`GetTxsOut`).	
+
+If you want to get only the in-coming (out-going) history, consider using `GetTxsIn` (`GetTxsOut`).
 
 ### Save the result to a file
+
 ```go
 err = incclient.SaveTxHistory(h, "history.csv")
 if err != nil {
-    log.Fatal(err)
+log.Fatal(err)
 }
 ```
+
 An example result looks like this.
+
 ```
 2021/06/24 10:47:31 TxsIn
 2021/06/24 10:47:31 Timestamp: 2021-06-06T05:04:02, Detail: {"Version":1,"LockTime":1622952242,"TxHash":"bad93fd599a5cf4807f01e392a2652e71d767ba4173a6e0ed93304f03c9d7040","Amount":2894758,"TokenID":"0000000000000000000000000000000000000000000000000000000000000004","Metadata":{"Type":92,"TradeStatus":"accepted","RequestedTxID":"178565e75ac7788ed14b26796add341a1db3b6ff277423325bb49b9d31513802"}}
@@ -135,7 +164,9 @@ An example result looks like this.
 2021/06/24 10:47:31 Timestamp: 2021-05-19T04:22:07, Detail: {"Version":1,"LockTime":1621394527,"TxHash":"48c24524239c17486b249203dc7bb60d3aaf3f7e4eb8f1ebe70d90e26aa1896b","Amount":196674,"TokenID":"ef80ac984c6367c9c45f8e3b89011d00e76a6f17bd782e939f649fcf95a05b74","SpentCoins":{"1pLBCMNYtxRSZt9GCvuTNan6YvzTTr1eVq93vnauRhsKSxtW1w":9339058818},"Receivers":["1y4gnYS1Ns2K7BjQTjgfZ5nTR8JZMkMJ3CTGMj2Pk7CQkSTFgA","1uJC6JzhcdERhthksMM6zaiTT9aXTowRkE2odayUBJspHjncyW"],"PRVFee":4,"TokenFee":0,"Metadata":{"TokenIDToBuyStr":"0000000000000000000000000000000000000000000000000000000000000004","TokenIDToSellStr":"ef80ac984c6367c9c45f8e3b89011d00e76a6f17bd782e939f649fcf95a05b74","SellAmount":2234900,"MinAcceptableAmount":1292217,"TradingFee":196674,"TraderAddressStr":"12Rx2NqWi5uEmMrT3fRVjhosBoGpjAQ9yxFmHckxZjyekU9YPdN622iVrwL3NwERvepotM6TDxPUo2SV4iDpW3NUukxeNCwJb2QTN9H","SubTraderAddressStr":"12Rx2NqWi5uEmMrT3fRVjhosBoGpjAQ9yxFmHckxZjyekU9YPdN622iVrwL3NwERvepotM6TDxPUo2SV4iDpW3NUukxeNCwJb2QTN9H","Type":205}}
 2021/06/24 10:47:31 Finished TxsOut
 ```
+
 ## Example
+
 [history.go](../../code/accounts/history/history.go)
 
 ```go
@@ -179,7 +210,7 @@ func GetHistoryFaster() {
 		log.Fatal(err)
 	}
 
-	tokenIDStr := common.PRVIDStr                                                                                               // input the tokenID in which you want to retrieve the history of.
+	tokenIDStr := common.PRVIDStr    // input the tokenID in which you want to retrieve the history of.
 	privateKey := "YOUR_PRIVATE_KEY" // input your private key here
 
 	numWorkers := 15
@@ -204,19 +235,23 @@ func main() {
 	GetHistoryFaster()
 }
 ```
+
 ## Disclaimer
-* This functionality is ONLY in its BETA phase, there might be some problems with its performance. If you encounter any problem, or find any issue, please report to the team.
+
+* This functionality is ONLY in its BETA phase, there might be some problems with its performance. If you encounter any
+  problem, or find any issue, please report to the team.
 * The history-retrieval process is time-consuming. Please take your time.
 * Old full-nodes don't have some required RPCs, therefore, you MUST use this the designated full-node in this case.
-* Your private key NEVER leave your local device. 
+* Your private key NEVER leave your local device.
 
 ## TODOs
 
 - [X] Get history of each tokenIDs
 - [X] Get history of transactions V1
-- [ ] Get history of transactions V2 (testing)
-- [ ] Get the full history
-- [ ] Get history for each feature
-- [ ] Export to CSV files
+- [X] Get history of transactions V2
+- [X] Get the full history
+- [X] Get history for each feature
+- [X] Export to CSV files
+
 ---
 Return to [the table of contents](../../../README.md).
