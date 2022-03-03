@@ -553,7 +553,11 @@ func (worker TxHistoryWorker) getTxsOut(keySet *key.KeySet, mapSpentCoins map[st
 			return
 		}
 
-		if amount > 0 {
+		if amount > 0 || tokenIDStr == common.PRVIDStr {
+			note := txMetadataNote[tx.GetMetadataType()]
+			if tokenIDStr == common.PRVIDStr && amount == 0 {
+				note += " (Tx Fee)"
+			}
 			newTxOut := TxOut{
 				Version:    tx.GetVersion(),
 				LockTime:   tx.GetLockTime(),
@@ -564,8 +568,9 @@ func (worker TxHistoryWorker) getTxsOut(keySet *key.KeySet, mapSpentCoins map[st
 				Amount:     amount,
 				Metadata:   tx.GetMetadata(),
 				PRVFee:     fee,
-				Note:       txMetadataNote[tx.GetMetadataType()],
+				Note:       note,
 			}
+
 			if !isPRVFee {
 				newTxOut.PRVFee = 0
 				newTxOut.TokenFee = fee

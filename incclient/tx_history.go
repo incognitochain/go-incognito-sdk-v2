@@ -387,24 +387,30 @@ func (client *IncClient) GetListTxsOutV1(privateKey string, tokenIDStr string) (
 			return nil, err
 		}
 
-		newTxOut := TxOut{
-			Version:    tx.GetVersion(),
-			LockTime:   tx.GetLockTime(),
-			TxHash:     txHash,
-			TokenID:    tx.GetTokenID().String(),
-			SpentCoins: spentCoins,
-			Receivers:  receivers,
-			Amount:     amount,
-			Metadata:   tx.GetMetadata(),
-			PRVFee:     fee,
-			Note:       txMetadataNote[tx.GetMetadataType()],
-		}
-		if !isPRVFee {
-			newTxOut.PRVFee = 0
-			newTxOut.TokenFee = fee
-		}
+		if amount > 0 || tokenIDStr == common.PRVIDStr {
+			note := txMetadataNote[tx.GetMetadataType()]
+			if tokenIDStr == common.PRVIDStr && amount == 0 {
+				note += " (Tx Fee)"
+			}
+			newTxOut := TxOut{
+				Version:    tx.GetVersion(),
+				LockTime:   tx.GetLockTime(),
+				TxHash:     txHash,
+				TokenID:    tx.GetTokenID().String(),
+				SpentCoins: spentCoins,
+				Receivers:  receivers,
+				Amount:     amount,
+				Metadata:   tx.GetMetadata(),
+				PRVFee:     fee,
+				Note:       note,
+			}
+			if !isPRVFee {
+				newTxOut.PRVFee = 0
+				newTxOut.TokenFee = fee
+			}
 
-		mapRes[txHash] = newTxOut
+			mapRes[txHash] = newTxOut
+		}
 	}
 
 	res := make([]TxOut, 0)
@@ -495,24 +501,30 @@ func (client *IncClient) GetListTxsOutV2(privateKey string, tokenIDStr string) (
 			return nil, err
 		}
 
-		newTxOut := TxOut{
-			Version:    tx.GetVersion(),
-			LockTime:   tx.GetLockTime(),
-			TxHash:     txHash,
-			TokenID:    tx.GetTokenID().String(),
-			SpentCoins: spentCoins,
-			Receivers:  receivers,
-			Amount:     amount,
-			Metadata:   tx.GetMetadata(),
-			PRVFee:     fee,
-			Note:       txMetadataNote[tx.GetMetadataType()],
-		}
-		if !isPRVFee {
-			newTxOut.PRVFee = 0
-			newTxOut.TokenFee = fee
-		}
+		if amount > 0 || tokenIDStr == common.PRVIDStr {
+			note := txMetadataNote[tx.GetMetadataType()]
+			if tokenIDStr == common.PRVIDStr && amount == 0 {
+				note += " (Tx Fee)"
+			}
+			newTxOut := TxOut{
+				Version:    tx.GetVersion(),
+				LockTime:   tx.GetLockTime(),
+				TxHash:     txHash,
+				TokenID:    tx.GetTokenID().String(),
+				SpentCoins: spentCoins,
+				Receivers:  receivers,
+				Amount:     amount,
+				Metadata:   tx.GetMetadata(),
+				PRVFee:     fee,
+				Note:       note,
+			}
+			if !isPRVFee {
+				newTxOut.PRVFee = 0
+				newTxOut.TokenFee = fee
+			}
 
-		mapRes[txHash] = newTxOut
+			mapRes[txHash] = newTxOut
+		}
 	}
 
 	res := make([]TxOut, 0)
