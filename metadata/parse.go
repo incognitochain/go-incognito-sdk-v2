@@ -36,23 +36,23 @@ func ParseMetadata(metaInBytes []byte) (Metadata, error) {
 		md = &IssuingRequest{}
 	case IssuingResponseMeta:
 		md = &IssuingResponse{}
-	case IssuingPRVERC20RequestMeta:
-		md = &IssuingEVMRequest{}
-	case IssuingPRVBEP20RequestMeta:
-		md = &IssuingEVMRequest{}
 	case ContractingRequestMeta:
 		md = &ContractingRequest{}
 	case IssuingETHRequestMeta:
 		md = &IssuingEVMRequest{}
+	case IssuingBSCRequestMeta:
+		md = &IssuingEVMRequest{}
+	case IssuingPRVERC20RequestMeta:
+		md = &IssuingEVMRequest{}
+	case IssuingPRVBEP20RequestMeta:
+		md = &IssuingEVMRequest{}
 	case IssuingETHResponseMeta:
+		md = &IssuingEVMResponse{}
+	case IssuingBSCResponseMeta:
 		md = &IssuingEVMResponse{}
 	case IssuingPRVERC20ResponseMeta:
 		md = &IssuingEVMResponse{}
 	case IssuingPRVBEP20ResponseMeta:
-		md = &IssuingEVMResponse{}
-	case IssuingBSCRequestMeta:
-		md = &IssuingEVMRequest{}
-	case IssuingBSCResponseMeta:
 		md = &IssuingEVMResponse{}
 	case BurningRequestMeta:
 		md = &BurningRequest{}
@@ -63,6 +63,14 @@ func ParseMetadata(metaInBytes []byte) (Metadata, error) {
 	case BurningPRVBEP20RequestMeta:
 		md = &BurningRequest{}
 	case BurningPRVERC20RequestMeta:
+		md = &BurningRequest{}
+	case IssuingPLGRequestMeta:
+		md = &IssuingEVMRequest{}
+	case IssuingPLGResponseMeta:
+		md = &IssuingEVMResponse{}
+	case BurningPLGRequestMeta:
+		md = &BurningRequest{}
+	case BurningPLGForDepositToSCRequestMeta:
 		md = &BurningRequest{}
 	case ShardStakingMeta:
 		md = &StakingMetadata{}
@@ -100,12 +108,30 @@ func ParseMetadata(metaInBytes []byte) (Metadata, error) {
 		md = &PDEFeeWithdrawalResponse{}
 	case PDEContributionResponseMeta:
 		md = &PDEContributionResponse{}
+	case RelayingBNBHeaderMeta:
+		md = &RelayingHeader{}
+	case RelayingBTCHeaderMeta:
+		md = &RelayingHeader{}
 	case BurningForDepositToSCRequestMeta:
+		md = &BurningRequest{}
+	case BurningPBSCForDepositToSCRequestMeta:
 		md = &BurningRequest{}
 	case BurningForDepositToSCRequestMetaV2:
 		md = &BurningRequest{}
-	case RelayingBTCHeaderMeta:
-		md = &RelayingHeader{}
+	case metadataCommon.PortalV4ShieldingRequestMeta:
+		md = &PortalShieldingRequest{}
+	case metadataCommon.PortalV4ShieldingResponseMeta:
+		md = &PortalShieldingResponse{}
+	case metadataCommon.PortalV4UnshieldingRequestMeta:
+		md = &PortalUnshieldRequest{}
+	case metadataCommon.PortalV4UnshieldingResponseMeta:
+		md = &PortalUnshieldResponse{}
+	case metadataCommon.PortalV4FeeReplacementRequestMeta:
+		md = &PortalReplacementFeeRequest{}
+	case metadataCommon.PortalV4SubmitConfirmedTxMeta:
+		md = &PortalSubmitConfirmedTxRequest{}
+	case metadataCommon.PortalV4ConvertVaultRequestMeta:
+		md = &PortalConvertVaultRequest{}
 	case metadataCommon.Pdexv3ModifyParamsMeta:
 		md = &metadataPdexv3.ParamsModifyingRequest{}
 	case metadataCommon.Pdexv3AddLiquidityRequestMeta:

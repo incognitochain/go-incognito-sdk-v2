@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/incognitochain/go-incognito-sdk-v2/common"
+	"github.com/incognitochain/go-incognito-sdk-v2/rpchandler/rpc"
 	"math/big"
 	"strconv"
 	"sync"
@@ -28,18 +29,22 @@ type BridgeTokenInfo struct {
 }
 
 // GetEVMTxByHash retrieves an EVM transaction from its hash.
-func (client *IncClient) GetEVMTxByHash(txHash string, isOnBSC ...bool) (map[string]interface{}, error) {
-	isBSC := false
-	if len(isOnBSC) > 0 && isOnBSC[0] {
-		isBSC = true
+//
+// An additional parameter `evmNetworkID` is introduced to specify the target EVM network. evmNetworkID can be one of the following:
+//	- rpc.ETHNetworkID: the Ethereum network
+//	- rpc.BSCNetworkID: the Binance Smart Chain network
+//	- rpc.PLGNetworkID: the Polygon network
+// If set empty, evmNetworkID defaults to rpc.ETHNetworkID. NOTE that only the first value of evmNetworkID is used.
+func (client *IncClient) GetEVMTxByHash(txHash string, evmNetworkID ...int) (map[string]interface{}, error) {
+	networkID := rpc.ETHNetworkID
+	if len(evmNetworkID) > 0 {
+		networkID = evmNetworkID[0]
 	}
 
-	evmClient := client.ethServer
-	if isBSC {
-		evmClient = client.bscServer
-	}
-	if evmClient == nil {
-		return nil, fmt.Errorf("evmClient is nil")
+	var evmClient *rpc.RPCServer
+	var ok bool
+	if evmClient, ok = client.evmServers[networkID]; !ok || evmClient == nil {
+		return nil, rpc.EVMNetworkNotFoundError(networkID)
 	}
 
 	method := "eth_getTransactionByHash"
@@ -67,18 +72,16 @@ func (client *IncClient) GetEVMTxByHash(txHash string, isOnBSC ...bool) (map[str
 }
 
 // GetEVMBlockByHash retrieves an EVM block from its hash.
-func (client *IncClient) GetEVMBlockByHash(blockHash string, isOnBSC ...bool) (map[string]interface{}, error) {
-	isBSC := false
-	if len(isOnBSC) > 0 && isOnBSC[0] {
-		isBSC = true
+func (client *IncClient) GetEVMBlockByHash(blockHash string, evmNetworkID ...int) (map[string]interface{}, error) {
+	networkID := rpc.ETHNetworkID
+	if len(evmNetworkID) > 0 {
+		networkID = evmNetworkID[0]
 	}
 
-	evmClient := client.ethServer
-	if isBSC {
-		evmClient = client.bscServer
-	}
-	if evmClient == nil {
-		return nil, fmt.Errorf("evmClient is nil")
+	var evmClient *rpc.RPCServer
+	var ok bool
+	if evmClient, ok = client.evmServers[networkID]; !ok || evmClient == nil {
+		return nil, rpc.EVMNetworkNotFoundError(networkID)
 	}
 
 	method := "eth_getBlockByHash"
@@ -105,18 +108,22 @@ func (client *IncClient) GetEVMBlockByHash(blockHash string, isOnBSC ...bool) (m
 }
 
 // GetEVMTxReceipt retrieves an EVM transaction receipt from its hash.
-func (client *IncClient) GetEVMTxReceipt(txHash string, isOnBSC ...bool) (*types.Receipt, error) {
-	isBSC := false
-	if len(isOnBSC) > 0 && isOnBSC[0] {
-		isBSC = true
+//
+// An additional parameter `evmNetworkID` is introduced to specify the target EVM network. evmNetworkID can be one of the following:
+//	- rpc.ETHNetworkID: the Ethereum network
+//	- rpc.BSCNetworkID: the Binance Smart Chain network
+//	- rpc.PLGNetworkID: the Polygon network
+// If set empty, evmNetworkID defaults to rpc.ETHNetworkID. NOTE that only the first value of evmNetworkID is used.
+func (client *IncClient) GetEVMTxReceipt(txHash string, evmNetworkID ...int) (*types.Receipt, error) {
+	networkID := rpc.ETHNetworkID
+	if len(evmNetworkID) > 0 {
+		networkID = evmNetworkID[0]
 	}
 
-	evmClient := client.ethServer
-	if isBSC {
-		evmClient = client.bscServer
-	}
-	if evmClient == nil {
-		return nil, fmt.Errorf("evmClient is nil")
+	var evmClient *rpc.RPCServer
+	var ok bool
+	if evmClient, ok = client.evmServers[networkID]; !ok || evmClient == nil {
+		return nil, rpc.EVMNetworkNotFoundError(networkID)
 	}
 
 	method := "eth_getTransactionReceipt"
@@ -143,14 +150,15 @@ func (client *IncClient) GetEVMTxReceipt(txHash string, isOnBSC ...bool) (*types
 }
 
 // GetEVMDepositProof retrieves an EVM-depositing proof of a transaction hash.
-func (client *IncClient) GetEVMDepositProof(txHash string, isOnBSC ...bool) (*EVMDepositProof, uint64, error) {
-	isBSC := false
-	if len(isOnBSC) > 0 && isOnBSC[0] {
-		isBSC = true
-	}
-
+//
+// An additional parameter `evmNetworkID` is introduced to specify the target EVM network. evmNetworkID can be one of the following:
+//	- rpc.ETHNetworkID: the Ethereum network
+//	- rpc.BSCNetworkID: the Binance Smart Chain network
+//	- rpc.PLGNetworkID: the Polygon network
+// If set empty, evmNetworkID defaults to rpc.ETHNetworkID. NOTE that only the first value of evmNetworkID is used.
+func (client *IncClient) GetEVMDepositProof(txHash string, evmNetworkID ...int) (*EVMDepositProof, uint64, error) {
 	// Get tx content
-	txContent, err := client.GetEVMTxByHash(txHash, isBSC)
+	txContent, err := client.GetEVMTxByHash(txHash, evmNetworkID...)
 	if err != nil {
 		Logger.Println("cannot get eth by hash", err)
 		return nil, 0, err
@@ -211,7 +219,7 @@ func (client *IncClient) GetEVMDepositProof(txHash string, isOnBSC ...bool) (*EV
 		return nil, 0, fmt.Errorf("cannot convert blockNumber into integer")
 	}
 
-	blockHeader, err := client.GetEVMBlockByHash(blockHashStr, isBSC)
+	blockHeader, err := client.GetEVMBlockByHash(blockHashStr, evmNetworkID...)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -237,7 +245,7 @@ func (client *IncClient) GetEVMDepositProof(txHash string, isOnBSC ...bool) (*EV
 		if !ok {
 			return nil, 0, fmt.Errorf("cannot parse sibling tx: %v", tx)
 		}
-		siblingReceipt, err := client.GetEVMTxReceipt(txStr, isBSC)
+		siblingReceipt, err := client.GetEVMTxReceipt(txStr, evmNetworkID...)
 		if err != nil {
 			return nil, 0, err
 		}
@@ -297,18 +305,22 @@ func (client *IncClient) GetEVMDepositProof(txHash string, isOnBSC ...bool) (*EV
 }
 
 // GetMostRecentEVMBlockNumber retrieves the most recent EVM block number.
-func (client *IncClient) GetMostRecentEVMBlockNumber(isOnBSC ...bool) (uint64, error) {
-	isBSC := false
-	if len(isOnBSC) > 0 && isOnBSC[0] {
-		isBSC = true
+//
+// An additional parameter `evmNetworkID` is introduced to specify the target EVM network. evmNetworkID can be one of the following:
+//	- rpc.ETHNetworkID: the Ethereum network
+//	- rpc.BSCNetworkID: the Binance Smart Chain network
+//	- rpc.PLGNetworkID: the Polygon network
+// If set empty, evmNetworkID defaults to rpc.ETHNetworkID. NOTE that only the first value of evmNetworkID is used.
+func (client *IncClient) GetMostRecentEVMBlockNumber(evmNetworkID ...int) (uint64, error) {
+	networkID := rpc.ETHNetworkID
+	if len(evmNetworkID) > 0 {
+		networkID = evmNetworkID[0]
 	}
 
-	evmClient := client.ethServer
-	if isBSC {
-		evmClient = client.bscServer
-	}
-	if evmClient == nil {
-		return 0, fmt.Errorf("evmClient is nil")
+	var evmClient *rpc.RPCServer
+	var ok bool
+	if evmClient, ok = client.evmServers[networkID]; !ok || evmClient == nil {
+		return 0, rpc.EVMNetworkNotFoundError(networkID)
 	}
 
 	method := "eth_blockNumber"
@@ -341,13 +353,14 @@ func (client *IncClient) GetMostRecentEVMBlockNumber(isOnBSC ...bool) (uint64, e
 }
 
 // GetEVMTransactionStatus returns the status of an EVM transaction.
-func (client *IncClient) GetEVMTransactionStatus(txHash string, isOnBSC ...bool) (int, error) {
-	isBSC := false
-	if len(isOnBSC) > 0 && isOnBSC[0] {
-		isBSC = true
-	}
-
-	receipt, err := client.GetEVMTxReceipt(txHash, isBSC)
+//
+// An additional parameter `evmNetworkID` is introduced to specify the target EVM network. evmNetworkID can be one of the following:
+//	- rpc.ETHNetworkID: the Ethereum network
+//	- rpc.BSCNetworkID: the Binance Smart Chain network
+//	- rpc.PLGNetworkID: the Polygon network
+// If set empty, evmNetworkID defaults to rpc.ETHNetworkID. NOTE that only the first value of evmNetworkID is used.
+func (client *IncClient) GetEVMTransactionStatus(txHash string, evmNetworkID ...int) (int, error) {
+	receipt, err := client.GetEVMTxReceipt(txHash, evmNetworkID...)
 	if err != nil {
 		return -1, err
 	}
