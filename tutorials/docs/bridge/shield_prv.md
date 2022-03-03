@@ -24,6 +24,7 @@ package main
 import (
 	"fmt"
 	"github.com/incognitochain/go-incognito-sdk-v2/incclient"
+	"github.com/incognitochain/go-incognito-sdk-v2/rpchandler/rpc"
 	"log"
 	"time"
 )
@@ -36,15 +37,18 @@ func main() {
 
 	privateKey := "YOUR_PRIVATE_KEY_HERE"
 	evmTxHash := "" //the PRV deposit transaction hash on the EVM network
-	isBSC := false
+	// specify which EVM network we are interacting with. evmNetworkID could be one of the following:
+	// 	- rpc.ETHNetworkID
+	//	- rpc.BSCNetworkID
+	evmNetworkID := rpc.ETHNetworkID
 
-	evmProof, depositAmount, err := ic.GetEVMDepositProof(evmTxHash, isBSC)
+	evmProof, depositAmount, err := ic.GetEVMDepositProof(evmTxHash, evmNetworkID)
 	if err != nil {
 		log.Fatal(err)
 	}
 	fmt.Printf("Deposited amount: %v\n", depositAmount)
 
-	txHashStr, err := ic.CreateAndSendIssuingPRVPeggingRequestTransaction(privateKey, *evmProof, isBSC)
+	txHashStr, err := ic.CreateAndSendIssuingPRVPeggingRequestTransaction(privateKey, *evmProof, evmNetworkID)
 	if err != nil {
 		panic(err)
 	}

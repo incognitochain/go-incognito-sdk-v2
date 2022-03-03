@@ -25,6 +25,7 @@ package main
 import (
 	"fmt"
 	"github.com/incognitochain/go-incognito-sdk-v2/incclient"
+	"github.com/incognitochain/go-incognito-sdk-v2/rpchandler/rpc"
 	"log"
 )
 
@@ -39,13 +40,20 @@ func main() {
 	remoteAddr := "b446151522b8f1c9d27cacedce93f398a016f84337c1b79fc54c8436af5f7900"
 	burnedAmount := uint64(50000000)
 
-	txHash, err := ic.CreateAndSendBurningRequestTransaction(privateKey, remoteAddr, tokenIDStr, burnedAmount)
+	// specify which EVM network we are interacting with. evmNetworkID could be one of the following:
+	// 	- rpc.ETHNetworkID
+	//	- rpc.BSCNetworkID
+	//	- rpc.PLGNetworkID
+	evmNetworkID := rpc.ETHNetworkID
+
+	txHash, err := ic.CreateAndSendBurningRequestTransaction(privateKey, remoteAddr, tokenIDStr, burnedAmount, evmNetworkID)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	fmt.Printf("TxHash: %v\n", txHash)
 }
+
 ```
 
 After the burning process is successful, the next step is to retrieve the burn proof and submit it to the corresponding

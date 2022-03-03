@@ -65,10 +65,15 @@ func (server *RPCServer) GetBurnProofForSC(txHash string) ([]byte, error) {
 }
 
 // GetBurnPRVPeggingProof retrieves the burning prv pegging proof of a transaction.
-func (server *RPCServer) GetBurnPRVPeggingProof(txHash string, isBSC ...bool) ([]byte, error) {
+func (server *RPCServer) GetBurnPRVPeggingProof(txHash string, evmNetworkIDs ...int) ([]byte, error) {
 	method := getPRVERC20BurnProof
-	if len(isBSC) > 0 && isBSC[0] {
-		method = getPRVBEP20BurnProof
+	if len(evmNetworkIDs) > 0 {
+		switch evmNetworkIDs[0] {
+		case BSCNetworkID:
+			method = getPRVBEP20BurnProof
+		case PLGNetworkID:
+			return nil, EVMNetworkNotFoundError(evmNetworkIDs[0])
+		}
 	}
 	params := make([]interface{}, 0)
 	params = append(params, txHash)
