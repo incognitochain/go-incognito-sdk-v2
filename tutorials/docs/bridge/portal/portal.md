@@ -11,10 +11,10 @@ This hugely improves the UX and makes it available to perform bridging tasks on 
 relying solely on the Incognito apps. Furthermore, [one-time addresses](https://we.incognito.org/t/work-in-progress-one-time-shielding-addresses/15677) 
 are also employed when shielding to address the problem of shielding address re-using.
 
-For more information, check out [this post](https://we.incognito.org/t/shipped-incognito-s-trustless-non-custodial-bitcoin-bridge/9605), 
-and [this post](https://we.incognito.org/t/work-in-progress-one-time-shielding-addresses/15677).
+For more information, check out [The Trustless Non-custodial Bitcoin Bridge](https://we.incognito.org/t/shipped-incognito-s-trustless-non-custodial-bitcoin-bridge/9605), 
+and [One-time Shielding Addresses](https://we.incognito.org/t/work-in-progress-one-time-shielding-addresses/15677).
 
-In this category of tutorials, we'll explain Portal terms (when encountered) and show how to use the SDK to manipulate with the
+In this category of tutorials, we'll explain Portal terms (possibly when encountered) and show how to use the SDK to manipulate with the
 Portal with the following sections:
 
 * [Introduction](./portal.md)

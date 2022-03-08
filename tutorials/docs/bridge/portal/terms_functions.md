@@ -16,7 +16,7 @@ and master public keys from the Beacon committee. Each chain-code is 1-1 mapped 
 Un-shielding is the process of withdrawing private tokens from the Incognito network and releasing them to the public blockchains. 
 
 ### DepositParams
-DepositParams consists of parameters for creating a shielding transaction. This struct is used in the [newly improved one-time depositing addresses](https://we.incognito.org/t/work-in-progress-one-time-shielding-addresses/15677).
+[DepositParams](../../../../incclient/portal.go) consists of parameters for creating a shielding transaction. This struct is used in the [newly improved one-time depositing addresses](https://we.incognito.org/t/work-in-progress-one-time-shielding-addresses/15677).
 The description of a DepositParams is as follows:
 ```go
 // DepositParams consists of parameters for creating a shielding transaction.
@@ -52,6 +52,27 @@ type DepositParams struct {
 	Signature string
 }
 
+```
+
+### OTDepositKey
+[OTDepositKey](../../../../key/feature.go) represents a pair of one-time depositing keys for shielding.
+```go
+// OTDepositKey represents a pair of one-time depositing key for shielding.
+type OTDepositKey struct {
+    // PrivateKey is used to signed shielding requests when this OTDepositKey is employed.
+    PrivateKey []byte
+
+    // PublicKey serves as a chain-code to generate a unique multi-sig address (depositAddr) for shielding request. It is
+    // derived from the PrivateKey, and is used to verify signatures signed by the PrivateKey to authorize shielding requests.
+    // It is used to replace the Incognito address for better privacy. Different PublicKey results in a different depositAddr.
+    // Note that one re-use the OTPubKey in many shielding requests.
+    // However, this is NOT RECOMMENDED because it will lower the privacy level and allow an observer to link his shields.
+    PublicKey []byte
+
+    // Index is the index of the current OTDepositKey. Since most of the time, an OTDepositKey is generated from a master key,
+    // this index serves as a tool for the ease of key management. More detail about the index can be found here: https://we.incognito.org/t/work-in-progress-one-time-shielding-addresses/15677
+    Index uint64
+}
 ```
 
 

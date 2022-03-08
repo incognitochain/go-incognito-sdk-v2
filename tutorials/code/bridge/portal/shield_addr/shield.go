@@ -16,13 +16,22 @@ func main() {
 	privateKey := "YOUR_PRIVATE_KEY"
 	addr := "PAYMENT_ADDRESS"
 	tokenIDStr := "PORTAL_TOKEN"
-	shieldProof := "SHIELD_PROOF"
+
+	depositAddr, err := ic.GeneratePortalShieldingAddress(addr, tokenIDStr)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Printf("depositAddr: %v\n", depositAddr)
+
+	// SEND SOME PUBLIC TOKENS TO depositAddr, AND THEN RETRIEVE THE SHIELDING PROOF.
+	// SEE HOW TO GET THE SHIELD PROOF: https://github.com/incognitochain/incognito-cli/blob/main/portal.go#L77
+	depositProof := "DEPOSIT_PROOF"
 
 	txHashStr, err := ic.CreateAndSendPortalShieldTransaction(
 		privateKey,
 		tokenIDStr,
 		addr,
-		shieldProof,
+		depositProof,
 		nil, nil,
 	)
 	fmt.Printf("TxHash: %v\n", txHashStr)

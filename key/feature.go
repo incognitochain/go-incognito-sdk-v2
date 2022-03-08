@@ -10,9 +10,19 @@ import (
 
 // OTDepositKey represents a pair of one-time depositing key for shielding.
 type OTDepositKey struct {
+	// PrivateKey is used to signed shielding requests when this OTDepositKey is employed.
 	PrivateKey []byte
-	PublicKey  []byte
-	Index      uint64
+
+	// PublicKey serves as a chain-code to generate a unique multi-sig address (depositAddr) for shielding request. It is
+	// derived from the PrivateKey, and is used to verify signatures signed by the PrivateKey to authorize shielding requests.
+	// It is used to replace the Incognito address for better privacy. Different PublicKey results in a different depositAddr.
+	// Note that one re-use the OTPubKey in many shielding requests.
+	// However, this is NOT RECOMMENDED because it will lower the privacy level and allow an observer to link his shields.
+	PublicKey []byte
+
+	// Index is the index of the current OTDepositKey. Since most of the time, an OTDepositKey is generated from a master key,
+	// this Index serves as a tool for the ease of key management. More detail about the Index can be found here: https://we.incognito.org/t/work-in-progress-one-time-shielding-addresses/15677
+	Index uint64
 }
 
 func (k OTDepositKey) MarshalJSON() ([]byte, error) {
