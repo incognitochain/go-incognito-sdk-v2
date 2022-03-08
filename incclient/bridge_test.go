@@ -297,4 +297,19 @@ func TestIncClient_GetBridgeTokens(t *testing.T) {
 	}
 }
 
+func TestIncClient_CheckShieldStatus(t *testing.T) {
+	var err error
+	ic, err = NewMainNetClient()
+	if err != nil {
+		panic(err)
+	}
+
+	txHash := "5b3eb00a96aafe4b477b91d0e78051b58c44385fae07f2a862f3f68195ad7db3"
+	status, err := ic.CheckShieldStatus(txHash)
+	if err != nil {
+		panic(err)
+	}
+	Logger.Println(status)
+}
+
 //END TEST FUNCTIONS
