@@ -1,5 +1,5 @@
 ---
-Description: Tutorial on how to create an EVM-shielding transaction
+Description: Tutorial on how to create a Portal-shielding transaction
 ---
 
 # Before Going Further
