@@ -2,6 +2,7 @@ package incclient
 
 import (
 	"fmt"
+	"log"
 	"sort"
 	"strings"
 	"sync"
@@ -296,7 +297,7 @@ func (p *TxHistoryProcessor) GetTokenHistory(privateKey string, tokenIDStr strin
 // GetAllHistory returns all the history of an account in a parallel manner.
 func (p *TxHistoryProcessor) GetAllHistory(privateKeyStr string) (map[string]*TxHistory, error) {
 	prefix := "[GetAllHistory]"
-	Logger.Printf("%v STARTING...\n", prefix)
+	log.Printf("%v STARTING...\n", prefix)
 	res := make(map[string]*TxHistory)
 
 	tokenIDs, err := p.client.getAllTokens(privateKeyStr)
@@ -304,7 +305,7 @@ func (p *TxHistoryProcessor) GetAllHistory(privateKeyStr string) (map[string]*Tx
 		return nil, err
 	}
 
-	Logger.Printf("%v #TokenIDs: %v\n", prefix, len(tokenIDs))
+	log.Printf("%v #TokenIDs: %v\n", prefix, len(tokenIDs))
 	finishedCount := 0
 	for _, tokenID := range tokenIDs {
 		if tokenID == common.PRVIDStr {
@@ -315,7 +316,7 @@ func (p *TxHistoryProcessor) GetAllHistory(privateKeyStr string) (map[string]*Tx
 			return nil, err
 		}
 		finishedCount++
-		Logger.Printf("%v Finished token %v, count: %v/%v\n", prefix, tokenID, finishedCount, len(tokenIDs))
+		log.Printf("%v Finished token %v, count: %v/%v\n", prefix, tokenID, finishedCount, len(tokenIDs))
 	}
 
 	res[common.PRVIDStr], err = p.GetTokenHistory(privateKeyStr, common.PRVIDStr)
@@ -323,9 +324,9 @@ func (p *TxHistoryProcessor) GetAllHistory(privateKeyStr string) (map[string]*Tx
 		return nil, err
 	}
 	finishedCount++
-	Logger.Printf("%v Finished token %v, count: %v/%v\n", prefix, common.PRVIDStr, finishedCount, len(tokenIDs))
+	log.Printf("%v Finished token %v, count: %v/%v\n", prefix, common.PRVIDStr, finishedCount, len(tokenIDs))
 
-	Logger.Printf("%v FINISHED ALL\n\n", prefix)
+	log.Printf("%v FINISHED ALL\n\n", prefix)
 
 	return res, nil
 }
