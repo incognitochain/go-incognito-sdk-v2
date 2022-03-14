@@ -246,26 +246,26 @@ func (p *TxHistoryProcessor) GetTxsOut(privateKey string, tokenIDStr string, ver
 
 // GetTokenHistory returns the history of a private key w.r.t a tokenID in a parallel manner.
 func (p *TxHistoryProcessor) GetTokenHistory(privateKey string, tokenIDStr string) (*TxHistory, error) {
-	Logger.Printf("GETTING in-coming v1 txs\n")
+	Logger.Printf("GETTING in-coming v1 txs for token %v\n", tokenIDStr)
 	txsIn, err := p.GetTxsIn(privateKey, tokenIDStr, 1)
 	if err != nil {
 		return nil, err
 	}
-	Logger.Printf("FINISHED in-coming v1 txs\n\n")
+	Logger.Printf("FINISHED in-coming v1 txs for token %v\n\n", tokenIDStr)
 
-	Logger.Printf("GETTING out-going v1 txs\n")
+	Logger.Printf("GETTING out-going v1 txs for token %v\n", tokenIDStr)
 	txsOut, err := p.GetTxsOut(privateKey, tokenIDStr, 1)
 	if err != nil {
 		return nil, err
 	}
-	Logger.Printf("FINISHED out-going v1 txs\n\n")
+	Logger.Printf("FINISHED out-going v1 txs for token %v\n\n", tokenIDStr)
 
-	Logger.Printf("GETTING in-coming v2 txs\n")
+	Logger.Printf("GETTING in-coming v2 txs for token %v\n", tokenIDStr)
 	txsInV2, err := p.GetTxsIn(privateKey, tokenIDStr, 2)
 	if err != nil {
 		return nil, err
 	}
-	Logger.Printf("FINISHED in-coming v2 txs\n\n")
+	Logger.Printf("FINISHED in-coming v2 txs for token %v\n\n", tokenIDStr)
 	for _, txInV2 := range txsInV2 {
 		txsIn = append(txsIn, txInV2)
 	}
@@ -273,12 +273,12 @@ func (p *TxHistoryProcessor) GetTokenHistory(privateKey string, tokenIDStr strin
 		return txsIn[i].LockTime > txsIn[j].LockTime
 	})
 
-	Logger.Printf("GETTING out-going v2 txs\n")
+	Logger.Printf("GETTING out-going v2 txs for token %v\n", tokenIDStr)
 	txsOutV2, err := p.GetTxsOut(privateKey, tokenIDStr, 2)
 	if err != nil {
 		return nil, err
 	}
-	Logger.Printf("FINISHED out-going v2 txs\n\n")
+	Logger.Printf("FINISHED out-going v2 txs for token %v\n\n", tokenIDStr)
 	for _, txOutV2 := range txsOutV2 {
 		txsOut = append(txsOut, txOutV2)
 	}
@@ -291,6 +291,33 @@ func (p *TxHistoryProcessor) GetTokenHistory(privateKey string, tokenIDStr strin
 		TxOutList: txsOut,
 	}, nil
 
+}
+
+// GetAllHistory returns all the history of an account in a parallel manner.
+func (p *TxHistoryProcessor) GetAllHistory(privateKeyStr string) (map[string]*TxHistory, error) {
+	prefix := "[GetAllHistory]"
+	Logger.Printf("%v STARTING...\n", prefix)
+	res := make(map[string]*TxHistory)
+
+	tokenIDs, err := p.client.getAllTokens(privateKeyStr)
+	if err != nil {
+		return nil, err
+	}
+
+	Logger.Printf("%v #TokenIDs: %v\n", prefix, len(tokenIDs))
+	finishedCount := 0
+	for _, tokenID := range tokenIDs {
+		res[tokenID], err = p.GetTokenHistory(privateKeyStr, tokenID)
+		if err != nil {
+			return nil, err
+		}
+		finishedCount++
+		Logger.Printf("%v Finished token %v, count: %v/%v\n", prefix, tokenID, finishedCount, len(tokenIDs))
+	}
+
+	Logger.Printf("%v FINISHED ALL\n\n", prefix)
+
+	return res, nil
 }
 
 // TxHistoryWorker implements a worker for retrieving transaction history.
@@ -559,7 +586,7 @@ func (worker TxHistoryWorker) getTxsOut(keySet *key.KeySet, mapSpentCoins map[st
 				note += " (Tx Fee)"
 			}
 			note = strings.TrimSpace(note)
-			
+
 			newTxOut := TxOut{
 				Version:    tx.GetVersion(),
 				LockTime:   tx.GetLockTime(),
