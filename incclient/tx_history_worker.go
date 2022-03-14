@@ -307,6 +307,9 @@ func (p *TxHistoryProcessor) GetAllHistory(privateKeyStr string) (map[string]*Tx
 	Logger.Printf("%v #TokenIDs: %v\n", prefix, len(tokenIDs))
 	finishedCount := 0
 	for _, tokenID := range tokenIDs {
+		if tokenID == common.PRVIDStr {
+			continue
+		}
 		res[tokenID], err = p.GetTokenHistory(privateKeyStr, tokenID)
 		if err != nil {
 			return nil, err
@@ -314,6 +317,13 @@ func (p *TxHistoryProcessor) GetAllHistory(privateKeyStr string) (map[string]*Tx
 		finishedCount++
 		Logger.Printf("%v Finished token %v, count: %v/%v\n", prefix, tokenID, finishedCount, len(tokenIDs))
 	}
+
+	res[common.PRVIDStr], err = p.GetTokenHistory(privateKeyStr, common.PRVIDStr)
+	if err != nil {
+		return nil, err
+	}
+	finishedCount++
+	Logger.Printf("%v Finished token %v, count: %v/%v\n", prefix, common.PRVIDStr, finishedCount, len(tokenIDs))
 
 	Logger.Printf("%v FINISHED ALL\n\n", prefix)
 
