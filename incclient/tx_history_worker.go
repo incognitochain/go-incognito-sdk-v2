@@ -167,7 +167,7 @@ func (p *TxHistoryProcessor) GetTxsIn(privateKey string, tokenIDStr string, vers
 				})
 				return p.history.TxInList, nil
 			}
-			Logger.Printf("Receive new data, numSuccess = %v\n", numSuccess)
+			Logger.Printf("Receive new data, numSuccess = %v/%v\n", numSuccess, numWorkers)
 		}
 	}
 
@@ -489,7 +489,7 @@ func (worker TxHistoryWorker) getTxsInV2(keySet *key.KeySet, listDecryptedCoins 
 					LockTime: tx.GetLockTime(),
 					OutCoins: pubKeys,
 					TxHash:   txHash,
-					TokenID:  tx.GetTokenID().String(),
+					TokenID:  tokenIDStr,
 					Amount:   amount,
 					Metadata: tx.GetMetadata(),
 					Note:     txMetadataNote[tx.GetMetadataType()],
@@ -601,7 +601,7 @@ func (worker TxHistoryWorker) getTxsOut(keySet *key.KeySet, mapSpentCoins map[st
 				Version:    tx.GetVersion(),
 				LockTime:   tx.GetLockTime(),
 				TxHash:     txHash,
-				TokenID:    tx.GetTokenID().String(),
+				TokenID:    tokenIDStr,
 				SpentCoins: spentCoins,
 				Receivers:  receivers,
 				Amount:     amount,
