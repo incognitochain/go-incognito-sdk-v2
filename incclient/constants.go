@@ -10,7 +10,7 @@ const (
 	MainNetFullNode                   = "https://beta-fullnode.incognito.org/fullnode"
 	MainNetETHHost                    = "https://mainnet.infura.io/v3/34918000975d4374a056ed78fe21c517"
 	MainNetBSCHost                    = "https://bsc-dataseed.binance.org"
-	MainNetPLGHost                    = "https://rpc-mainnet.matic.network"
+	MainNetPLGHost                    = "https://matic-mainnet.chainstacklabs.com"
 	MainNetPrivacyVersion             = 2
 )
 

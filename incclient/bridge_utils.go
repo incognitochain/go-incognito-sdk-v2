@@ -19,6 +19,8 @@ import (
 	"github.com/incognitochain/go-incognito-sdk-v2/rpchandler"
 )
 
+const EVMZeroAddress = "0x0000000000000000000000000000000000000000"
+
 // BridgeTokenInfo describes the information of a bridge token.
 type BridgeTokenInfo struct {
 	TokenID         *common.Hash `json:"tokenId"`
@@ -240,15 +242,27 @@ func (client *IncClient) GetEVMDepositProof(txHash string, evmNetworkID ...int) 
 	keyBuf := new(bytes.Buffer)
 	receiptTrie := new(trie.Trie)
 	receipts := make([]*types.Receipt, 0)
-	for _, tx := range siblingTxs {
+	for i, tx := range siblingTxs {
 		txStr, ok := tx.(string)
 		if !ok {
 			return nil, 0, fmt.Errorf("cannot parse sibling tx: %v", tx)
 		}
+
+		if i == len(siblingTxs)-1 {
+			txOut, err := client.GetEVMTxByHash(txStr, evmNetworkID...)
+			if err != nil {
+				return nil, 0, err
+			}
+			if txOut["to"] == EVMZeroAddress && txOut["from"] == EVMZeroAddress {
+				break
+			}
+		}
+
 		siblingReceipt, err := client.GetEVMTxReceipt(txStr, evmNetworkID...)
 		if err != nil {
 			return nil, 0, err
 		}
+
 		receipts = append(receipts, siblingReceipt)
 	}
 
