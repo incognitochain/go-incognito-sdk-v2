@@ -681,6 +681,7 @@ func (client *IncClient) getAllTokens(privateKeyStr string) ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
+	delete(tokenOutCoins, common.ConfidentialAssetID.String())
 
 	for _, outCoin := range tokenOutCoins {
 		if outCoin.GetVersion() != 2 || outCoin.GetValue() == 0 {
