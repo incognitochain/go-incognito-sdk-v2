@@ -248,14 +248,14 @@ func (p *TxHistoryProcessor) GetTxsOut(privateKey string, tokenIDStr string, ver
 // GetTokenHistory returns the history of a private key w.r.t a tokenID in a parallel manner.
 func (p *TxHistoryProcessor) GetTokenHistory(privateKey string, tokenIDStr string) (*TxHistory, error) {
 	Logger.Printf("GETTING in-coming v1 txs for token %v\n", tokenIDStr)
-	txsIn, err := p.GetTxsIn(privateKey, tokenIDStr, 1)
+	txsInV1, err := p.GetTxsIn(privateKey, tokenIDStr, 1)
 	if err != nil {
 		return nil, err
 	}
 	Logger.Printf("FINISHED in-coming v1 txs for token %v\n\n", tokenIDStr)
 
 	Logger.Printf("GETTING out-going v1 txs for token %v\n", tokenIDStr)
-	txsOut, err := p.GetTxsOut(privateKey, tokenIDStr, 1)
+	txsOutV1, err := p.GetTxsOut(privateKey, tokenIDStr, 1)
 	if err != nil {
 		return nil, err
 	}
@@ -267,12 +267,6 @@ func (p *TxHistoryProcessor) GetTokenHistory(privateKey string, tokenIDStr strin
 		return nil, err
 	}
 	Logger.Printf("FINISHED in-coming v2 txs for token %v\n\n", tokenIDStr)
-	for _, txInV2 := range txsInV2 {
-		txsIn = append(txsIn, txInV2)
-	}
-	sort.Slice(txsIn, func(i, j int) bool {
-		return txsIn[i].LockTime > txsIn[j].LockTime
-	})
 
 	Logger.Printf("GETTING out-going v2 txs for token %v\n", tokenIDStr)
 	txsOutV2, err := p.GetTxsOut(privateKey, tokenIDStr, 2)
@@ -280,16 +274,50 @@ func (p *TxHistoryProcessor) GetTokenHistory(privateKey string, tokenIDStr strin
 		return nil, err
 	}
 	Logger.Printf("FINISHED out-going v2 txs for token %v\n\n", tokenIDStr)
-	for _, txOutV2 := range txsOutV2 {
-		txsOut = append(txsOut, txOutV2)
+
+	addedTxsIn := make(map[string]interface{})
+	txsInRes := make([]TxIn, 0)
+	for _, txIn := range txsInV1 {
+		if _, ok := addedTxsIn[txIn.TxHash]; ok {
+			continue
+		}
+		txsInRes = append(txsInRes, txIn)
+		addedTxsIn[txIn.TxHash] = true
 	}
-	sort.Slice(txsOut, func(i, j int) bool {
-		return txsOut[i].LockTime > txsOut[j].LockTime
+	for _, txIn := range txsInV2 {
+		if _, ok := addedTxsIn[txIn.TxHash]; ok {
+			continue
+		}
+		txsInRes = append(txsInRes, txIn)
+		addedTxsIn[txIn.TxHash] = true
+	}
+	sort.Slice(txsInRes, func(i, j int) bool {
+		return txsInRes[i].LockTime > txsInRes[j].LockTime
+	})
+
+	addedTxsOut := make(map[string]interface{})
+	txsOutRes := make([]TxOut, 0)
+	for _, txOut := range txsOutV1 {
+		if _, ok := addedTxsOut[txOut.TxHash]; ok {
+			continue
+		}
+		txsOutRes = append(txsOutRes, txOut)
+		addedTxsOut[txOut.TxHash] = true
+	}
+	for _, txOut := range txsOutV2 {
+		if _, ok := addedTxsOut[txOut.TxHash]; ok {
+			continue
+		}
+		txsOutRes = append(txsOutRes, txOut)
+		addedTxsOut[txOut.TxHash] = true
+	}
+	sort.Slice(txsOutRes, func(i, j int) bool {
+		return txsOutRes[i].LockTime > txsOutRes[j].LockTime
 	})
 
 	return &TxHistory{
-		TxInList:  txsIn,
-		TxOutList: txsOut,
+		TxInList:  txsInRes,
+		TxOutList: txsOutRes,
 	}, nil
 
 }
