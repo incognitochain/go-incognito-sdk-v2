@@ -22,7 +22,7 @@ import (
 type TxHistoryProcessor struct {
 	client    *IncClient
 	mtx       *sync.RWMutex
-	history   *TxHistory
+	history   map[string]*TxHistory
 	errChan   chan error
 	txChan    chan TxHistory
 	workers   []*TxHistoryWorker
@@ -35,9 +35,7 @@ func NewTxHistoryProcessor(client *IncClient, numWorkers int) *TxHistoryProcesso
 	errChan := make(chan error, numWorkers)
 	txChan := make(chan TxHistory, numWorkers)
 	workers := make([]*TxHistoryWorker, 0)
-	history := new(TxHistory)
-	history.TxInList = make([]TxIn, 0)
-	history.TxOutList = make([]TxOut, 0)
+	history := make(map[string]*TxHistory)
 
 	for i := 0; i < numWorkers; i++ {
 		worker := NewTxHistoryWorker(i, client)
@@ -54,16 +52,23 @@ func NewTxHistoryProcessor(client *IncClient, numWorkers int) *TxHistoryProcesso
 	}
 }
 
-func (p *TxHistoryProcessor) addHistory(history TxHistory) {
+func (p *TxHistoryProcessor) addHistory(history TxHistory, tokenIDStr string) {
 	p.mtx.Lock()
 
+	h, ok := p.history[tokenIDStr]
+	if !ok {
+		h = new(TxHistory)
+		h.TxInList = make([]TxIn, 0)
+		h.TxOutList = make([]TxOut, 0)
+	}
+
 	mapTxIns := make(map[string]bool)
-	for _, txIn := range p.history.TxInList {
+	for _, txIn := range h.TxInList {
 		mapTxIns[txIn.TxHash] = true
 	}
 
 	mapTxOuts := make(map[string]bool)
-	for _, txOut := range p.history.TxOutList {
+	for _, txOut := range h.TxOutList {
 		mapTxOuts[txOut.TxHash] = true
 	}
 
@@ -71,17 +76,19 @@ func (p *TxHistoryProcessor) addHistory(history TxHistory) {
 		if mapTxIns[txIn.TxHash] {
 			continue
 		}
-		p.history.TxInList = append(p.history.TxInList, txIn)
+		h.TxInList = append(h.TxInList, txIn)
 	}
 
 	for _, txOut := range history.TxOutList {
 		if mapTxOuts[txOut.TxHash] {
 			continue
 		}
-		p.history.TxOutList = append(p.history.TxOutList, txOut)
+		h.TxOutList = append(h.TxOutList, txOut)
 	}
 	Logger.Printf("Added %v TxsIn, %v TxsOut\n", len(history.TxInList), len(history.TxOutList))
-	Logger.Printf("Current history: #TxsIn = %v, #TxsOut = %v\n", len(p.history.TxInList), len(p.history.TxOutList))
+	Logger.Printf("Current history: #TxsIn = %v, #TxsOut = %v\n", len(h.TxInList), len(h.TxOutList))
+
+	p.history[tokenIDStr] = h
 
 	p.mtx.Unlock()
 }
@@ -158,15 +165,20 @@ func (p *TxHistoryProcessor) GetTxsIn(privateKey string, tokenIDStr string, vers
 	for {
 		select {
 		case err := <-p.errChan:
-			return p.history.TxInList, err
+			h := p.history[tokenIDStr]
+			if h == nil {
+				return nil, err
+			}
+			return p.history[tokenIDStr].TxInList, err
 		case txHistory := <-p.txChan:
 			numSuccess++
-			p.addHistory(txHistory)
+			p.addHistory(txHistory, tokenIDStr)
 			if numSuccess == numWorkers {
-				sort.Slice(p.history.TxInList, func(i, j int) bool {
-					return p.history.TxInList[i].LockTime > p.history.TxInList[j].LockTime
+				h := p.history[tokenIDStr]
+				sort.Slice(h.TxInList, func(i, j int) bool {
+					return h.TxInList[i].LockTime > h.TxInList[j].LockTime
 				})
-				return p.history.TxInList, nil
+				return h.TxInList, nil
 			}
 			Logger.Printf("Receive new data, numSuccess = %v/%v\n", numSuccess, numWorkers)
 		}
@@ -229,15 +241,20 @@ func (p *TxHistoryProcessor) GetTxsOut(privateKey string, tokenIDStr string, ver
 	for {
 		select {
 		case err := <-p.errChan:
-			return p.history.TxOutList, err
+			h := p.history[tokenIDStr]
+			if h == nil {
+				return nil, err
+			}
+			return p.history[tokenIDStr].TxOutList, err
 		case txHistory := <-p.txChan:
 			numSuccess++
-			p.addHistory(txHistory)
+			p.addHistory(txHistory, tokenIDStr)
 			if numSuccess == numWorkers {
-				sort.Slice(p.history.TxOutList, func(i, j int) bool {
-					return p.history.TxOutList[i].LockTime > p.history.TxOutList[j].LockTime
+				h := p.history[tokenIDStr]
+				sort.Slice(h.TxOutList, func(i, j int) bool {
+					return h.TxOutList[i].LockTime > h.TxOutList[j].LockTime
 				})
-				return p.history.TxOutList, nil
+				return h.TxOutList, nil
 			}
 			Logger.Printf("Receive new data, numSuccess = %v\n", numSuccess)
 		}
@@ -438,13 +455,17 @@ func (worker TxHistoryWorker) getTxsInV1(keySet *key.KeySet, listDecryptedCoins 
 			}
 		}
 		if amount > 0 {
+			note := txMetadataNote[tx.GetMetadataType()]
+			if tx.GetType() == "cv" || tx.GetType() == "tcv" {
+				note = "Conversion"
+			}
 			newTxIn := TxIn{
 				Version:  tx.GetVersion(),
 				LockTime: tx.GetLockTime(),
 				TxHash:   txHash,
 				TokenID:  tx.GetTokenID().String(),
 				Metadata: tx.GetMetadata(),
-				Note:     txMetadataNote[tx.GetMetadataType()],
+				Note:     note,
 			}
 			newTxIn.Amount = amount
 			res = append(res, newTxIn)
@@ -513,6 +534,10 @@ func (worker TxHistoryWorker) getTxsInV2(keySet *key.KeySet, listDecryptedCoins 
 				}
 			}
 			if amount > 0 {
+				note := txMetadataNote[tx.GetMetadataType()]
+				if tx.GetType() == "cv" || tx.GetType() == "tcv" {
+					note = "Conversion"
+				}
 				newTxIn := TxIn{
 					Version:  tx.GetVersion(),
 					LockTime: tx.GetLockTime(),
@@ -521,7 +546,7 @@ func (worker TxHistoryWorker) getTxsInV2(keySet *key.KeySet, listDecryptedCoins 
 					TokenID:  tokenIDStr,
 					Amount:   amount,
 					Metadata: tx.GetMetadata(),
-					Note:     txMetadataNote[tx.GetMetadataType()],
+					Note:     note,
 				}
 				mapRes[txHash] = newTxIn
 			}
