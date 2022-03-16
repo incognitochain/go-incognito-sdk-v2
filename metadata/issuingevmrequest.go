@@ -5,35 +5,56 @@ import (
 	"github.com/incognitochain/go-incognito-sdk-v2/common"
 )
 
-// IssuingEVMRequest is a request to mint an amount of an ETH/BSC token in the Incognito network
-// after the same amount has been locked in the smart contracts.
+// IssuingEVMRequest represents an EVM shielding request. Users create transactions with this metadata after
+// sending public tokens to the corresponding smart contract. There are two ways to use this metadata,
+// depending on which data has been enclosed with the depositing transaction:
+// 	- payment address: Receiver and Signature must be empty;
+//	- using one-time depositing public key: Receiver must be an OTAReceiver, a signature is required.
 type IssuingEVMRequest struct {
-	BlockHash  rCommon.Hash
-	TxIndex    uint
-	ProofStrs  []string
+	// BlockHash is the hash of the block where the public depositing transaction resides in.
+	BlockHash rCommon.Hash
+
+	// TxIndex is the index of the public transaction in the BlockHash.
+	TxIndex uint
+
+	// ProofStrs is the generated proof for this shielding request.
+	ProofStrs []string
+
+	// IncTokenID is the Incognito tokenID of the shielding token.
 	IncTokenID common.Hash
+
+	// Signature is the signature for validating the authenticity of the request. This signature is different from a
+	// MetadataBaseWithSignature type since it is signed with the tx privateKey.
+	Signature []byte `json:"Signature,omitempty"`
+
+	// Receiver is the recipient of this shielding request. It is an OTAReceiver if OTDepositPubKey is not empty.
+	Receiver string `json:"Receiver,omitempty"`
+
 	MetadataBase
 }
 
-// NewIssuingEVMRequest creates a new IssuingEVMRequest.
 func NewIssuingEVMRequest(
 	blockHash rCommon.Hash,
 	txIndex uint,
-	proofs []string,
+	proofStrs []string,
 	incTokenID common.Hash,
+	receiver string,
+	signature []byte,
 	metaType int,
 ) (*IssuingEVMRequest, error) {
 	metadataBase := MetadataBase{
 		Type: metaType,
 	}
-	issuingETHReq := &IssuingEVMRequest{
+	issuingEVMReq := &IssuingEVMRequest{
 		BlockHash:  blockHash,
 		TxIndex:    txIndex,
-		ProofStrs:  proofs,
+		ProofStrs:  proofStrs,
 		IncTokenID: incTokenID,
+		Receiver:   receiver,
+		Signature:  signature,
 	}
-	issuingETHReq.MetadataBase = metadataBase
-	return issuingETHReq, nil
+	issuingEVMReq.MetadataBase = metadataBase
+	return issuingEVMReq, nil
 }
 
 // Hash overrides MetadataBase.Hash().

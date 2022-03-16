@@ -35,7 +35,7 @@ func (client *IncClient) CreateIssuingPRVPeggingRequestTransaction(
 	}
 
 	var issuingPRVPeggingRequestMeta *metadata.IssuingEVMRequest
-	issuingPRVPeggingRequestMeta, err = metadata.NewIssuingEVMRequest(proof.blockHash, proof.txIdx, proof.nodeList, *tokenID, mdType)
+	issuingPRVPeggingRequestMeta, err = metadata.NewIssuingEVMRequest(proof.blockHash, proof.txIdx, proof.nodeList, *tokenID, "", nil, mdType)
 	if err != nil {
 		return nil, "", fmt.Errorf("cannot init issue eth request for %v, tokenID %v: %v", proof, tokenIDStr, err)
 	}

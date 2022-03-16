@@ -2,6 +2,10 @@ package incclient
 
 import (
 	"fmt"
+	"github.com/incognitochain/go-incognito-sdk-v2/coin"
+	"github.com/incognitochain/go-incognito-sdk-v2/common/base58"
+	"github.com/incognitochain/go-incognito-sdk-v2/crypto"
+	"github.com/incognitochain/go-incognito-sdk-v2/privacy"
 	"github.com/incognitochain/go-incognito-sdk-v2/rpchandler/rpc"
 	"strings"
 
@@ -41,6 +45,80 @@ func (E EVMDepositProof) NodeList() []string {
 	return E.nodeList
 }
 
+// EVMDepositParams consists of parameters for creating an EVM shielding transaction.
+// An EVMDepositParams is valid if at least one of the following conditions hold:
+//	- Signature is not empty
+//		- Receiver must not be empty
+//	- Signature is empty
+//		- Either DepositPrivateKey or DepositKeyIndex must not be empty; if DepositPrivateKey is empty, it will be
+// 	derived from the DepositKeyIndex
+//		- Receiver will be generated from the sender's private key
+//		- Signature will be signed using the DepositPrivateKey
+type EVMDepositParams struct {
+	// MetadataType is the type of the shielding request.
+	MetadataType int
+
+	// DepositProof is the proof for the shielding request.
+	DepositProof *EVMDepositProof
+
+	// TokenID is the shielding asset ID.
+	TokenID string
+
+	// DepositPrivateKey is a base58-encoded deposit privateKey used to sign the request.
+	// If set empty, it will be derived from the DepositKeyIndex.
+	DepositPrivateKey string
+
+	// DepositKeyIndex is the index of the OTDepositKey. It is used to generate DepositPrivateKey and DepositPubKey when the DepositPrivateKey is not supply.
+	DepositKeyIndex uint64
+
+	// Receiver is a base58-encoded OTAReceiver. If set empty, it will be generated from the sender's privateKey.
+	Receiver string
+
+	// Signature is a valid signature signed by the owner of the shielding asset.
+	// If Signature is not empty, Receiver must not be empty.
+	Signature string
+}
+
+// IsValid checks if a EVMDepositParams is valid.
+func (dp EVMDepositParams) IsValid() (bool, error) {
+	var err error
+	_, err = common.Hash{}.NewHashFromStr(dp.TokenID)
+	if err != nil || dp.TokenID == "" {
+		return false, fmt.Errorf("invalid tokenID %v", dp.TokenID)
+	}
+
+	if len(dp.DepositProof.NodeList()) == 0 {
+		return false, fmt.Errorf("invalid proofs")
+	}
+
+	if dp.Signature != "" {
+		_, _, err = base58.Base58Check{}.Decode(dp.Signature)
+		if err != nil {
+			return false, fmt.Errorf("invalid signature")
+		}
+		if dp.Receiver == "" {
+			return false, fmt.Errorf("must have `Receiver`")
+		}
+	} else {
+		if dp.DepositPrivateKey != "" {
+			_, _, err = base58.Base58Check{}.Decode(dp.DepositPrivateKey)
+			if err != nil {
+				return false, fmt.Errorf("invalid DepositPrivateKey")
+			}
+		}
+	}
+
+	if dp.Receiver != "" {
+		otaReceiver := new(coin.OTAReceiver)
+		err = otaReceiver.FromString(dp.Receiver)
+		if err != nil {
+			return false, fmt.Errorf("invalid receiver: %v", err)
+		}
+	}
+
+	return true, nil
+}
+
 // NewETHDepositProof creates a new EVMDepositProof with the given parameters.
 func NewETHDepositProof(blockNumber uint, blockHash ethCommon.Hash, txIdx uint, nodeList []string) *EVMDepositProof {
 	proof := EVMDepositProof{
@@ -78,7 +156,7 @@ func (client *IncClient) CreateIssuingEVMRequestTransaction(privateKey, tokenIDS
 	mdType := rpc.EVMIssuingMetadata[networkID]
 
 	var issuingETHRequestMeta *metadata.IssuingEVMRequest
-	issuingETHRequestMeta, err = metadata.NewIssuingEVMRequest(proof.blockHash, proof.txIdx, proof.nodeList, *tokenID, mdType)
+	issuingETHRequestMeta, err = metadata.NewIssuingEVMRequest(proof.blockHash, proof.txIdx, proof.nodeList, *tokenID, "", nil, mdType)
 	if err != nil {
 		return nil, "", fmt.Errorf("cannot init issue eth request for %v, tokenID %v: %v", proof, tokenIDStr, err)
 	}
@@ -183,6 +261,97 @@ func (client *IncClient) CreateAndSendBurningRequestTransaction(privateKey, remo
 		return "", err
 	}
 
+	return txHash, nil
+}
+
+// CreateEVMDepositTxWithDepositKey creates an EVM depositing transaction using one-time deposit key.
+// It assumes the corresponding public transaction has been accepted.
+//
+// It returns the base58-encoded transaction, the transaction's hash, and an error (if any).
+func (client *IncClient) CreateEVMDepositTxWithDepositKey(privateKey string, dp EVMDepositParams) ([]byte, string, error) {
+	w, err := wallet.Base58CheckDeserialize(privateKey)
+	if err != nil {
+		return nil, "", err
+	}
+
+	if _, err := dp.IsValid(); err != nil {
+		return nil, "", err
+	}
+
+	receiver := dp.Receiver
+	var sig []byte
+	if dp.Signature != "" {
+		sig, _, _ = base58.Base58Check{}.Decode(dp.Signature)
+	} else {
+		if receiver == "" {
+			otaReceiver := new(coin.OTAReceiver)
+			err = otaReceiver.FromAddress(w.KeySet.PaymentAddress)
+			if err != nil {
+				return nil, "", err
+			}
+			receiver = otaReceiver.String()
+		}
+		otaReceiver := new(coin.OTAReceiver)
+		_ = otaReceiver.FromString(receiver)
+
+		var depositPrivateKey *crypto.Scalar
+		if dp.DepositPrivateKey != "" {
+			tmp, _, _ := base58.Base58Check{}.Decode(dp.DepositPrivateKey)
+			depositPrivateKey = new(crypto.Scalar).FromBytesS(tmp)
+		} else {
+			depositKey, err := client.GenerateDepositKeyFromPrivateKey(privateKey, dp.TokenID, dp.DepositKeyIndex)
+			if err != nil {
+				return nil, "", err
+			}
+			depositPrivateKey = new(crypto.Scalar).FromBytesS(depositKey.PrivateKey)
+		}
+
+		schnorrPrivateKey := new(privacy.SchnorrPrivateKey)
+		r := new(crypto.Scalar).FromUint64(0) // must use r = 0
+		schnorrPrivateKey.Set(depositPrivateKey, r)
+		metaDataBytes := otaReceiver.Bytes()
+		tmpSig, err := schnorrPrivateKey.Sign(common.HashB(metaDataBytes))
+		if err != nil {
+			return nil, "", err
+		}
+		sig = tmpSig.Bytes()
+	}
+
+	tokenID, _ := new(common.Hash).NewHashFromStr(dp.TokenID)
+
+	md, err := metadata.NewIssuingEVMRequest(
+		dp.DepositProof.BlockHash(),
+		dp.DepositProof.TxIdx(),
+		dp.DepositProof.NodeList(),
+		*tokenID,
+		receiver,
+		sig,
+		dp.MetadataType,
+	)
+	if err != nil {
+		return nil, "", err
+	}
+
+	txParam := NewTxParam(privateKey, []string{}, []uint64{}, 0, nil, md, nil)
+	return client.CreateRawTransaction(txParam, 2)
+
+}
+
+// CreateAndSendEVMDepositTxWithDepositKey creates an EVM shielding transaction using deposit keys,
+// and submits it to the Incognito network.
+//
+// It returns the transaction's hash, and an error (if any).
+func (client *IncClient) CreateAndSendEVMDepositTxWithDepositKey(
+	privateKey string, dp EVMDepositParams) (string, error) {
+	encodedTx, txHash, err := client.CreateEVMDepositTxWithDepositKey(privateKey,
+		dp)
+	if err != nil {
+		return "", err
+	}
+	err = client.SendRawTx(encodedTx)
+	if err != nil {
+		return "", err
+	}
 	return txHash, nil
 }
 
