@@ -110,20 +110,6 @@ func ParseMetadata(metaInBytes []byte) (Metadata, error) {
 		md = &RelayingHeader{}
 	case RelayingBTCHeaderMeta:
 		md = &RelayingHeader{}
-	case metadataCommon.PortalV4ShieldingRequestMeta:
-		md = &PortalShieldingRequest{}
-	case metadataCommon.PortalV4ShieldingResponseMeta:
-		md = &PortalShieldingResponse{}
-	case metadataCommon.PortalV4UnshieldingRequestMeta:
-		md = &PortalUnshieldRequest{}
-	case metadataCommon.PortalV4UnshieldingResponseMeta:
-		md = &PortalUnshieldResponse{}
-	case metadataCommon.PortalV4FeeReplacementRequestMeta:
-		md = &PortalReplacementFeeRequest{}
-	case metadataCommon.PortalV4SubmitConfirmedTxMeta:
-		md = &PortalSubmitConfirmedTxRequest{}
-	case metadataCommon.PortalV4ConvertVaultRequestMeta:
-		md = &PortalConvertVaultRequest{}
 	case metadataCommon.Pdexv3ModifyParamsMeta:
 		md = &metadataPdexv3.ParamsModifyingRequest{}
 	case metadataCommon.Pdexv3AddLiquidityRequestMeta:
