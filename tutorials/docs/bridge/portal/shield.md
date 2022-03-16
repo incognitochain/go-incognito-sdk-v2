@@ -224,7 +224,7 @@ type PortalDepositParams struct {
     Signature string
 }
 ```
-A `PortalDepositParams` is valid if at least one of the following conditions hold:
+A `Portal DepositParams` is valid if at least one of the following conditions hold:
 - Signature is not empty
   - Receiver and DepositPubKey must not be empty
 - Signature is empty
