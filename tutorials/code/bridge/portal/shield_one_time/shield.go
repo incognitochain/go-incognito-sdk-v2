@@ -58,7 +58,7 @@ func main() {
 	// SEE HOW TO GET THE SHIELD PROOF: https://github.com/incognitochain/incognito-cli/blob/main/portal.go#L77
 	depositProof := "DEPOSIT_PROOF"
 
-	depositParam := incclient.DepositParams{
+	depositParam := incclient.PortalDepositParams{
 		TokenID:       tokenIDStr,
 		ShieldProof:   depositProof,
 		DepositPubKey: depositPubKeyStr,

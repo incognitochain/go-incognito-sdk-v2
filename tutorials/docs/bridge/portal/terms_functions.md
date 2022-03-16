@@ -16,42 +16,41 @@ and master public keys from the Beacon committee. Each chain-code is 1-1 mapped 
 Un-shielding is the process of withdrawing private tokens from the Incognito network and releasing them to the public blockchains. 
 
 ### DepositParams
-[DepositParams](../../../../incclient/portal.go) consists of parameters for creating a shielding transaction. This struct is used in the [newly improved one-time depositing addresses](https://we.incognito.org/t/work-in-progress-one-time-shielding-addresses/15677).
-The description of a DepositParams is as follows:
+[PortalDepositParams](../../../../incclient/portal.go) consists of parameters for creating a shielding transaction. This struct is used in the [newly improved one-time depositing addresses](https://we.incognito.org/t/work-in-progress-one-time-shielding-addresses/15677).
+The description of a PortalDepositParams is as follows:
 ```go
-// DepositParams consists of parameters for creating a shielding transaction.
-// A DepositParams is valid if at least one of the following conditions hold:
+// PortalDepositParams consists of parameters for creating a Portal shielding transaction.
+// A PortalDepositParams is valid if at least one of the following conditions hold:
 //	- Signature is not empty
 //		- Receiver and DepositPubKey must not be empty
 //	- Signature is empty
 //		- If Receiver is empty, it will be generated from the sender's privateKey
 //		- If DepositPrivateKey is empty, it will be derived from the DepositKeyIndex
-//		- DepositPubKey is derived from DepositPrivateKey.
-type DepositParams struct {
-	// TokenID is the shielding asset ID.
-	TokenID string
-
-	// ShieldProof is a merkel proof for the shielding request.
-	ShieldProof string
-
-	// DepositPrivateKey is a base58-encoded deposit privateKey used to sign the request.
-	// If set empty, it will be derived from the DepositKeyIndex.
-	DepositPrivateKey string
-
-	// DepositPubKey is a base58-encoded deposit publicKey. If Signature is not provided, DepositPubKey will be derived from the DepositPrivateKey.
-	DepositPubKey string
-
-	// DepositKeyIndex is the index of the OTDepositKey.
-	DepositKeyIndex uint64
-
-	// Receiver is a base58-encoded OTAReceiver. If set empty, it will be generated from the sender's privateKey.
-	Receiver string
-
-	// Signature is a valid signature signed by the owner of the shielding asset.
-	// If Signature is not empty, DepositPubKey and Receiver must not be empty.
-	Signature string
+//		- DepositPubKey is derived from DepositPrivateKey.s
+type PortalDepositParams struct {
+    // TokenID is the shielding asset ID.
+    TokenID string
+    
+    // ShieldProof is a merkel proof for the shielding request.
+    ShieldProof string
+    
+    // DepositPrivateKey is a base58-encoded deposit privateKey used to sign the request.
+    // If set empty, it will be derived from the DepositKeyIndex.
+    DepositPrivateKey string
+    
+    // DepositPubKey is a base58-encoded deposit publicKey. If Signature is not provided, DepositPubKey will be derived from the DepositPrivateKey.
+    DepositPubKey string
+    
+    // DepositKeyIndex is the index of the OTDepositKey.
+    DepositKeyIndex uint64
+    
+    // Receiver is a base58-encoded OTAReceiver. If set empty, it will be generated from the sender's privateKey.
+    Receiver string
+    
+    // Signature is a valid signature signed by the owner of the shielding asset.
+    // If Signature is not empty, DepositPubKey and Receiver must not be empty.
+    Signature string
 }
-
 ```
 
 ### OTDepositKey

@@ -12,15 +12,15 @@ import (
 	"github.com/incognitochain/go-incognito-sdk-v2/wallet"
 )
 
-// DepositParams consists of parameters for creating a shielding transaction.
-// A DepositParams is valid if at least one of the following conditions hold:
+// PortalDepositParams consists of parameters for creating a Portal shielding transaction.
+// A PortalDepositParams is valid if at least one of the following conditions hold:
 //	- Signature is not empty
 //		- Receiver and DepositPubKey must not be empty
 //	- Signature is empty
 //		- If Receiver is empty, it will be generated from the sender's privateKey
 //		- If DepositPrivateKey is empty, it will be derived from the DepositKeyIndex
-//		- DepositPubKey is derived from DepositPrivateKey.
-type DepositParams struct {
+//		- DepositPubKey is derived from DepositPrivateKey.s
+type PortalDepositParams struct {
 	// TokenID is the shielding asset ID.
 	TokenID string
 
@@ -45,8 +45,8 @@ type DepositParams struct {
 	Signature string
 }
 
-// IsValid checks if a DepositParams is valid.
-func (dp DepositParams) IsValid() (bool, error) {
+// IsValid checks if a PortalDepositParams is valid.
+func (dp PortalDepositParams) IsValid() (bool, error) {
 	var err error
 
 	_, err = common.Hash{}.NewHashFromStr(dp.TokenID)
@@ -140,7 +140,7 @@ func (client *IncClient) CreateAndSendPortalShieldTransaction(
 //
 // It returns the base58-encoded transaction, the transaction's hash, and an error (if any).
 func (client *IncClient) CreatePortalShieldTransactionWithDepositKey(
-	privateKey string, depositParams DepositParams, inputCoins []coin.PlainCoin, coinIndices []uint64,
+	privateKey string, depositParams PortalDepositParams, inputCoins []coin.PlainCoin, coinIndices []uint64,
 ) ([]byte, string, error) {
 	w, err := wallet.Base58CheckDeserialize(privateKey)
 	if err != nil {
@@ -216,7 +216,7 @@ func (client *IncClient) CreatePortalShieldTransactionWithDepositKey(
 //
 // It returns the transaction's hash, and an error (if any).
 func (client *IncClient) CreateAndSendPortalShieldTransactionWithDepositKey(
-	privateKey string, depositParam DepositParams, inputCoins []coin.PlainCoin, coinIndices []uint64,
+	privateKey string, depositParam PortalDepositParams, inputCoins []coin.PlainCoin, coinIndices []uint64,
 ) (string, error) {
 	encodedTx, txHash, err := client.CreatePortalShieldTransactionWithDepositKey(privateKey,
 		depositParam, inputCoins, coinIndices)

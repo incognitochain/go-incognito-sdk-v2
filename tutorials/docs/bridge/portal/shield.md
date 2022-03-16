@@ -189,42 +189,42 @@ From this, we can observe the following. If different shielding requests (of the
 
 ### Create shielding transactions (Steps 2, 3, 7)
 Creating a shielding transaction now can be done via the function `CreateAndSendPortalShieldTransactionWithDepositKey` supplied
-with a `DepositParams`. A `DepositParams` consists of the following fields.
+with a `PortalDepositParams`. A `PortalDepositParams` consists of the following fields.
 ```go
-// DepositParams consists of parameters for creating a shielding transaction.
-// A DepositParams is valid if at least one of the following conditions hold:
+// PortalDepositParams consists of parameters for creating a Portal shielding transaction.
+// A PortalDepositParams is valid if at least one of the following conditions hold:
 //	- Signature is not empty
 //		- Receiver and DepositPubKey must not be empty
 //	- Signature is empty
 //		- If Receiver is empty, it will be generated from the sender's privateKey
 //		- If DepositPrivateKey is empty, it will be derived from the DepositKeyIndex
-//		- DepositPubKey is derived from DepositPrivateKey.
-type DepositParams struct {
-	// TokenID is the shielding asset ID.
-	TokenID string
-
-	// ShieldProof is a merkel proof for the shielding request.
-	ShieldProof string
-
-	// DepositPrivateKey is a base58-encoded deposit privateKey used to sign the request.
-	// If set empty, it will be derived from the DepositKeyIndex.
-	DepositPrivateKey string
-
-	// DepositPubKey is a base58-encoded deposit publicKey. If Signature is not provided, DepositPubKey will be derived from the DepositPrivateKey.
-	DepositPubKey string
-
-	// DepositKeyIndex is the index of the OTDepositKey.
-	DepositKeyIndex uint64
-
-	// Receiver is a base58-encoded OTAReceiver. If set empty, it will be generated from the sender's privateKey.
-	Receiver string
-
-	// Signature is a valid signature signed by the owner of the shielding asset.
-	// If Signature is not empty, DepositPubKey and Receiver must not be empty.
-	Signature string
+//		- DepositPubKey is derived from DepositPrivateKey.s
+type PortalDepositParams struct {
+    // TokenID is the shielding asset ID.
+    TokenID string
+    
+    // ShieldProof is a merkel proof for the shielding request.
+    ShieldProof string
+    
+    // DepositPrivateKey is a base58-encoded deposit privateKey used to sign the request.
+    // If set empty, it will be derived from the DepositKeyIndex.
+    DepositPrivateKey string
+    
+    // DepositPubKey is a base58-encoded deposit publicKey. If Signature is not provided, DepositPubKey will be derived from the DepositPrivateKey.
+    DepositPubKey string
+    
+    // DepositKeyIndex is the index of the OTDepositKey.
+    DepositKeyIndex uint64
+    
+    // Receiver is a base58-encoded OTAReceiver. If set empty, it will be generated from the sender's privateKey.
+    Receiver string
+    
+    // Signature is a valid signature signed by the owner of the shielding asset.
+    // If Signature is not empty, DepositPubKey and Receiver must not be empty.
+    Signature string
 }
 ```
-A `DepositParams` is valid if at least one of the following conditions hold:
+A `PortalDepositParams` is valid if at least one of the following conditions hold:
 - Signature is not empty
   - Receiver and DepositPubKey must not be empty
 - Signature is empty
