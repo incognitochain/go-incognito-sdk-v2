@@ -920,9 +920,11 @@ func (client *IncClient) GetReceivingInfo(
 		}
 		if prvAmount > 0 {
 			received = true
+			mapResult[common.PRVIDStr] = prvAmount
+		} else {
+			outCoins = append(outCoins, tx.GetProof().GetOutputCoins()...)
 		}
-		mapResult[common.PRVIDStr] = prvAmount
-		outCoins = append(outCoins, tx.GetProof().GetOutputCoins()...)
+
 	default:
 		err = fmt.Errorf("transaction type `%v` is invalid", tx.GetType())
 	}
@@ -946,10 +948,12 @@ func (client *IncClient) GetReceivingInfo(
 			received = true
 
 			// try to decrypt first
-			amount := uint64(0)
-			plainCoin, _ = outCoin.Decrypt(&keySet)
-			if plainCoin != nil {
-				amount = plainCoin.GetValue()
+			amount := outCoin.GetValue()
+			if outCoin.IsEncrypted() {
+				plainCoin, _ = outCoin.Decrypt(&keySet)
+				if plainCoin != nil {
+					amount = plainCoin.GetValue()
+				}
 			}
 
 			switch tokenIdStr {
