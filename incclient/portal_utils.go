@@ -103,16 +103,16 @@ func (client *IncClient) GeneratePortalShieldingAddress(chainCodeStr, tokenIDStr
 			res = addr.EncodeAddress()
 		}
 
-		// call RPCs to double-check
-		rpcRes, err := client.generatePortalShieldingAddressFromRPC(chainCodeStr, tokenIDStr)
-		if err != nil {
-			return "", err
-		}
-		Logger.Println("Generated shielding addresses match!!")
-
-		if rpcRes != res {
-			return "", fmt.Errorf("rpc result (%v) and client result (%v) mismatch, please double check the v4 Portal configuration", rpcRes, res)
-		}
+		//// call RPCs to double-check
+		//rpcRes, err := client.generatePortalShieldingAddressFromRPC(chainCodeStr, tokenIDStr)
+		//if err != nil {
+		//	return "", err
+		//}
+		//
+		//if rpcRes != res {
+		//	return "", fmt.Errorf("rpc result (%v) and client result (%v) mismatch, please double check the v4 Portal configuration", rpcRes, res)
+		//}
+		//Logger.Println("Generated shielding addresses match!!")
 	} else {
 		res, err = client.generatePortalShieldingAddressFromRPC(chainCodeStr, tokenIDStr)
 		if err != nil {
