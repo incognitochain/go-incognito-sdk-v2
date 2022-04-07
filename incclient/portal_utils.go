@@ -314,14 +314,16 @@ func (client *IncClient) GetDepositByOTKeyHistory(privateKeyStr, tokenID string)
 	return res, nil
 }
 
-// generatePortalShieldingAddressFromRPC returns the multi-sig shielding address for a given payment address and a tokenID
+// generatePortalShieldingAddressFromRPC returns the multi-sig shielding address for a given chainCode and a tokenID
 // via an RPC when using the Portal.
-func (client *IncClient) generatePortalShieldingAddressFromRPC(paymentAddressStr, tokenIDStr string) (string, error) {
-	isPaymentAddr := false
-	if _, err := metadata.AssertPaymentAddressAndTxVersion(paymentAddressStr, 2); err == nil {
-		isPaymentAddr = true
+func (client *IncClient) generatePortalShieldingAddressFromRPC(chainCodeStr, tokenIDStr string) (string, error) {
+	var responseInBytes []byte
+	var err error
+	if _, err = metadata.AssertPaymentAddressAndTxVersion(chainCodeStr, 2); err == nil {
+		responseInBytes, err = client.rpcServer.GenerateShieldingMultiSigAddress(chainCodeStr, tokenIDStr)
+	} else {
+		responseInBytes, err = client.rpcServer.GenerateDepositAddress(chainCodeStr, tokenIDStr)
 	}
-	responseInBytes, err := client.rpcServer.GenerateDepositAddress(paymentAddressStr, tokenIDStr, isPaymentAddr)
 	if err != nil {
 		return "", err
 	}
