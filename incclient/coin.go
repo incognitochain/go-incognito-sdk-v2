@@ -378,6 +378,16 @@ func (client *IncClient) GetOTACoinsByIndices(shardID byte, tokenID string, idxL
 	return res, nil
 }
 
+// HasOTAPubKey checks if the given pubKeyStr existed as a public key of a CoinV2.
+func (client *IncClient) HasOTAPubKey(pubKeyStr string) bool {
+	res, _ := client.GetTxHashByPublicKeys([]string{pubKeyStr})
+	if res == nil || len(res[pubKeyStr]) == 0 {
+		return false
+	}
+
+	return true
+}
+
 // GetOTACoinLength returns the current sizes (number of output coins) of PRV and tokens for each shard.
 //
 // Sample output:

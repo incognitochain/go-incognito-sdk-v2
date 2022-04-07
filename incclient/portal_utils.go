@@ -113,11 +113,11 @@ func (client *IncClient) GeneratePortalShieldingAddress(chainCodeStr, tokenIDStr
 		if rpcRes != res {
 			return "", fmt.Errorf("rpc result (%v) and client result (%v) mismatch, please double check the v4 Portal configuration", rpcRes, res)
 		}
-	}
-
-	res, err = client.generatePortalShieldingAddressFromRPC(chainCodeStr, tokenIDStr)
-	if err != nil {
-		return "", err
+	} else {
+		res, err = client.generatePortalShieldingAddressFromRPC(chainCodeStr, tokenIDStr)
+		if err != nil {
+			return "", err
+		}
 	}
 
 	return res, nil
