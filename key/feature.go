@@ -16,8 +16,8 @@ type OTDepositKey struct {
 	// PublicKey serves as a chain-code to generate a unique multi-sig address (depositAddr) for shielding request. It is
 	// derived from the PrivateKey, and is used to verify signatures signed by the PrivateKey to authorize shielding requests.
 	// It is used to replace the Incognito address for better privacy. Different PublicKey results in a different depositAddr.
-	// Note that one re-use the OTPubKey in many shielding requests.
-	// However, this is NOT RECOMMENDED because it will lower the privacy level and allow an observer to link his shields.
+	// Note that one can re-use the OTPubKey in many shielding requests. However, this is NOT RECOMMENDED because it
+	// will lower the privacy level and allow an observer to link his shields.
 	PublicKey []byte
 
 	// Index is the index of the current OTDepositKey. Since most of the time, an OTDepositKey is generated from a master key,
