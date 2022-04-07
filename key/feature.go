@@ -10,7 +10,7 @@ import (
 
 // OTDepositKey represents a pair of one-time depositing key for shielding.
 type OTDepositKey struct {
-	// PrivateKey is used to signed shielding requests when this OTDepositKey is employed.
+	// PrivateKey is used to sign shielding requests when this OTDepositKey is employed.
 	PrivateKey []byte
 
 	// PublicKey serves as a chain-code to generate a unique multi-sig address (depositAddr) for shielding request. It is
