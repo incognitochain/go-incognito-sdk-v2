@@ -36,6 +36,7 @@ type BridgeTokenInfo struct {
 //	- rpc.ETHNetworkID: the Ethereum network
 //	- rpc.BSCNetworkID: the Binance Smart Chain network
 //	- rpc.PLGNetworkID: the Polygon network
+//	- rpc.FTMNetworkID: the Fantom network
 // If set empty, evmNetworkID defaults to rpc.ETHNetworkID. NOTE that only the first value of evmNetworkID is used.
 func (client *IncClient) GetEVMTxByHash(txHash string, evmNetworkID ...int) (map[string]interface{}, error) {
 	networkID := rpc.ETHNetworkID
@@ -115,6 +116,7 @@ func (client *IncClient) GetEVMBlockByHash(blockHash string, evmNetworkID ...int
 //	- rpc.ETHNetworkID: the Ethereum network
 //	- rpc.BSCNetworkID: the Binance Smart Chain network
 //	- rpc.PLGNetworkID: the Polygon network
+//	- rpc.FTMNetworkID: the Fantom network
 // If set empty, evmNetworkID defaults to rpc.ETHNetworkID. NOTE that only the first value of evmNetworkID is used.
 func (client *IncClient) GetEVMTxReceipt(txHash string, evmNetworkID ...int) (*types.Receipt, error) {
 	networkID := rpc.ETHNetworkID
@@ -157,6 +159,7 @@ func (client *IncClient) GetEVMTxReceipt(txHash string, evmNetworkID ...int) (*t
 //	- rpc.ETHNetworkID: the Ethereum network
 //	- rpc.BSCNetworkID: the Binance Smart Chain network
 //	- rpc.PLGNetworkID: the Polygon network
+//	- rpc.FTMNetworkID: the Fantom network
 // If set empty, evmNetworkID defaults to rpc.ETHNetworkID. NOTE that only the first value of evmNetworkID is used.
 func (client *IncClient) GetEVMDepositProof(txHash string, evmNetworkID ...int) (*EVMDepositProof, uint64, error) {
 	// Get tx content
@@ -324,6 +327,7 @@ func (client *IncClient) GetEVMDepositProof(txHash string, evmNetworkID ...int) 
 //	- rpc.ETHNetworkID: the Ethereum network
 //	- rpc.BSCNetworkID: the Binance Smart Chain network
 //	- rpc.PLGNetworkID: the Polygon network
+//	- rpc.FTMNetworkID: the Fantom network
 // If set empty, evmNetworkID defaults to rpc.ETHNetworkID. NOTE that only the first value of evmNetworkID is used.
 func (client *IncClient) GetMostRecentEVMBlockNumber(evmNetworkID ...int) (uint64, error) {
 	networkID := rpc.ETHNetworkID
@@ -372,6 +376,7 @@ func (client *IncClient) GetMostRecentEVMBlockNumber(evmNetworkID ...int) (uint6
 //	- rpc.ETHNetworkID: the Ethereum network
 //	- rpc.BSCNetworkID: the Binance Smart Chain network
 //	- rpc.PLGNetworkID: the Polygon network
+//	- rpc.FTMNetworkID: the Fantom network
 // If set empty, evmNetworkID defaults to rpc.ETHNetworkID. NOTE that only the first value of evmNetworkID is used.
 func (client *IncClient) GetEVMTransactionStatus(txHash string, evmNetworkID ...int) (int, error) {
 	receipt, err := client.GetEVMTxReceipt(txHash, evmNetworkID...)

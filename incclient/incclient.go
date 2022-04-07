@@ -34,6 +34,7 @@ func NewTestNetClient() (*IncClient, error) {
 		rpc.ETHNetworkID: rpc.NewRPCServer(TestNetETHHost),
 		rpc.BSCNetworkID: rpc.NewRPCServer(TestNetBSCHost),
 		rpc.PLGNetworkID: rpc.NewRPCServer(TestNetPLGHost),
+		rpc.FTMNetworkID: rpc.NewRPCServer(TestNetFTMHost),
 	}
 
 	incClient := IncClient{
@@ -84,6 +85,7 @@ func NewTestNet1Client() (*IncClient, error) {
 		rpc.ETHNetworkID: rpc.NewRPCServer(TestNet1ETHHost),
 		rpc.BSCNetworkID: rpc.NewRPCServer(TestNet1BSCHost),
 		rpc.PLGNetworkID: rpc.NewRPCServer(TestNet1PLGHost),
+		rpc.FTMNetworkID: rpc.NewRPCServer(TestNet1FTMHost),
 	}
 
 	incClient := IncClient{
@@ -133,6 +135,7 @@ func NewMainNetClient() (*IncClient, error) {
 		rpc.ETHNetworkID: rpc.NewRPCServer(MainNetETHHost),
 		rpc.BSCNetworkID: rpc.NewRPCServer(MainNetBSCHost),
 		rpc.PLGNetworkID: rpc.NewRPCServer(MainNetPLGHost),
+		rpc.FTMNetworkID: rpc.NewRPCServer(MainNetFTMHost),
 	}
 
 	incClient := IncClient{

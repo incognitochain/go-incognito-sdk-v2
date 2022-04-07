@@ -9,6 +9,7 @@ const (
 	ETHNetworkID = iota
 	BSCNetworkID
 	PLGNetworkID
+	FTMNetworkID
 )
 
 // EVMIssuingMetadata keeps track of EVM issuing metadata types based on the EVM networkIDs.
@@ -16,6 +17,7 @@ var EVMIssuingMetadata = map[int]int{
 	ETHNetworkID: metadata.IssuingETHRequestMeta,
 	BSCNetworkID: metadata.IssuingBSCRequestMeta,
 	PLGNetworkID: metadata.IssuingPLGRequestMeta,
+	FTMNetworkID: metadata.IssuingFantomRequestMeta,
 }
 
 // EVMBurningMetadata keeps track of EVM burning metadata types based on the EVM networkIDs.
@@ -23,12 +25,14 @@ var EVMBurningMetadata = map[int]int{
 	ETHNetworkID: metadata.BurningConfirmMetaV2,
 	BSCNetworkID: metadata.BurningPBSCRequestMeta,
 	PLGNetworkID: metadata.BurningPLGRequestMeta,
+	FTMNetworkID: metadata.BurningFantomRequestMeta,
 }
 
 var burnProofRPCMethod = map[int]string{
 	ETHNetworkID: getBurnProof,
 	BSCNetworkID: getBSCBurnProof,
 	PLGNetworkID: getPLGBurnProof,
+	FTMNetworkID: getFTMBurnProof,
 }
 
 // EVMNetworkNotFoundError returns an error indicating that the given EVM networkID is not supported.
@@ -41,6 +45,7 @@ func EVMNetworkNotFoundError(evmNetworkID int) error {
 //	- ETHNetworkID: the Ethereum network
 //	- BSCNetworkID: the Binance Smart Chain network
 //	- PLGNetworkID: the Polygon network
+//	- FTMNetworkID: the Fantom network
 // If set empty, evmNetworkID defaults to ETHNetworkID. NOTE that only the first value of evmNetworkID is used.
 func (server *RPCServer) GetBurnProof(txHash string, evmNetworkID ...int) ([]byte, error) {
 	networkID := ETHNetworkID
@@ -71,7 +76,7 @@ func (server *RPCServer) GetBurnPRVPeggingProof(txHash string, evmNetworkIDs ...
 		switch evmNetworkIDs[0] {
 		case BSCNetworkID:
 			method = getPRVBEP20BurnProof
-		case PLGNetworkID:
+		case PLGNetworkID, FTMNetworkID:
 			return nil, EVMNetworkNotFoundError(evmNetworkIDs[0])
 		}
 	}

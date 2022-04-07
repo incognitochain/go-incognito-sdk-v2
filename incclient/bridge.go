@@ -139,6 +139,7 @@ func NewETHDepositProof(blockNumber uint, blockHash ethCommon.Hash, txIdx uint, 
 //	- rpc.ETHNetworkID: the Ethereum network
 //	- rpc.BSCNetworkID: the Binance Smart Chain network
 //	- rpc.PLGNetworkID: the Polygon network
+//	- rpc.FTMNetworkID: the Fantom network
 // If set empty, evmNetworkID defaults to rpc.ETHNetworkID. NOTE that only the first value of evmNetworkID is used.
 func (client *IncClient) CreateIssuingEVMRequestTransaction(privateKey, tokenIDStr string, proof EVMDepositProof, evmNetworkID ...int) ([]byte, string, error) {
 	tokenID, err := new(common.Hash).NewHashFromStr(tokenIDStr)
@@ -173,6 +174,7 @@ func (client *IncClient) CreateIssuingEVMRequestTransaction(privateKey, tokenIDS
 //	- rpc.ETHNetworkID: the Ethereum network
 //	- rpc.BSCNetworkID: the Binance Smart Chain network
 //	- rpc.PLGNetworkID: the Polygon network
+//	- rpc.FTMNetworkID: the Fantom network
 // If set empty, evmNetworkID defaults to rpc.ETHNetworkID. NOTE that only the first value of evmNetworkID is used.
 func (client *IncClient) CreateAndSendIssuingEVMRequestTransaction(privateKey, tokenIDStr string, proof EVMDepositProof, evmNetworkID ...int) (string, error) {
 	encodedTx, txHash, err := client.CreateIssuingEVMRequestTransaction(privateKey, tokenIDStr, proof, evmNetworkID...)
@@ -196,6 +198,7 @@ func (client *IncClient) CreateAndSendIssuingEVMRequestTransaction(privateKey, t
 //	- rpc.ETHNetworkID: the Ethereum network
 //	- rpc.BSCNetworkID: the Binance Smart Chain network
 //	- rpc.PLGNetworkID: the Polygon network
+//	- rpc.FTMNetworkID: the Fantom network
 // If set empty, evmNetworkID defaults to rpc.ETHNetworkID. NOTE that only the first value of evmNetworkID is used.
 func (client *IncClient) CreateBurningRequestTransaction(privateKey, remoteAddress, tokenIDStr string, burnedAmount uint64, evmNetworkID ...int) ([]byte, string, error) {
 	if tokenIDStr == common.PRVIDStr {
@@ -249,6 +252,7 @@ func (client *IncClient) CreateBurningRequestTransaction(privateKey, remoteAddre
 //	- rpc.ETHNetworkID: the Ethereum network
 //	- rpc.BSCNetworkID: the Binance Smart Chain network
 //	- rpc.PLGNetworkID: the Polygon network
+//	- rpc.FTMNetworkID: the Fantom network
 // If set empty, evmNetworkID defaults to rpc.ETHNetworkID. NOTE that only the first value of evmNetworkID is used.
 func (client *IncClient) CreateAndSendBurningRequestTransaction(privateKey, remoteAddress, tokenIDStr string, burnedAmount uint64, evmNetworkID ...int) (string, error) {
 	encodedTx, txHash, err := client.CreateBurningRequestTransaction(privateKey, remoteAddress, tokenIDStr, burnedAmount, evmNetworkID...)
@@ -361,6 +365,7 @@ func (client *IncClient) CreateAndSendEVMDepositTxWithDepositKey(
 //	- rpc.ETHNetworkID: the Ethereum network
 //	- rpc.BSCNetworkID: the Binance Smart Chain network
 //	- rpc.PLGNetworkID: the Polygon network
+//	- rpc.FTMNetworkID: the Fantom network
 // If set empty, evmNetworkID defaults to rpc.ETHNetworkID. NOTE that only the first value of evmNetworkID is used.
 func (client *IncClient) GetBurnProof(txHash string, evmNetworkID ...int) (*jsonresult.InstructionProof, error) {
 	responseInBytes, err := client.rpcServer.GetBurnProof(txHash, evmNetworkID...)

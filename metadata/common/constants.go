@@ -186,6 +186,13 @@ const (
 	BurningPLGConfirmMeta               = 153 // incognito mode for bsc
 	BurningPLGForDepositToSCRequestMeta = 330
 	BurningPLGConfirmForDepositToSCMeta = 154
+
+	IssuingFantomRequestMeta               = 331
+	IssuingFantomResponseMeta              = 332
+	BurningFantomRequestMeta               = 333
+	BurningFantomConfirmMeta               = 155
+	BurningFantomForDepositToSCRequestMeta = 334
+	BurningFantomConfirmForDepositToSCMeta = 156
 )
 
 var minerCreatedMetaTypes = []int{
