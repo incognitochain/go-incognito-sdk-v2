@@ -388,6 +388,17 @@ func (client *IncClient) HasOTAPubKey(pubKeyStr string) bool {
 	return true
 }
 
+// HasOTAReceiver checks if the public key of an OTAReceiver has been used as a public key of a CoinV2.
+func (client *IncClient) HasOTAReceiver(otaReceiverStr string) (bool, error) {
+	otaReceiver := new(coin.OTAReceiver)
+	err := otaReceiver.FromString(otaReceiverStr)
+	if err != nil {
+		return false, err
+	}
+
+	return client.HasOTAPubKey(base58.Base58Check{}.Encode(otaReceiver.PublicKey.ToBytesS(), 0)), nil
+}
+
 // GetOTACoinLength returns the current sizes (number of output coins) of PRV and tokens for each shard.
 //
 // Sample output:
