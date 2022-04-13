@@ -26,7 +26,7 @@ func (client *IncClient) CreatePdexv3MintNFT(privateKey string) ([]byte, string,
 	if err != nil {
 		return nil, "", err
 	}
-	otaReceiveStr := otaReceiver.String()
+	otaReceiveStr := otaReceiver.String(true)
 	prvRequiredToMintNFT := client.GetMinPRVRequiredToMintNFT(0)
 	md := metadataPdexv3.NewUserMintNftRequestWithValue(otaReceiveStr, prvRequiredToMintNFT)
 
@@ -300,7 +300,7 @@ func (client *IncClient) CreatePdexv3Contribute(privateKey, pairID, pairHash, to
 	if err != nil {
 		return nil, "", err
 	}
-	otaReceiverStr := temp.String()
+	otaReceiverStr := temp.String(true)
 	md := metadataPdexv3.NewAddLiquidityRequestWithValue(
 		pairID, pairHash, otaReceiverStr,
 		tokenIDStr, nftIDStr, amount, uint(amplifier),
@@ -515,7 +515,7 @@ func (client *IncClient) CreatePdexv3Staking(privateKey, tokenIDStr, nftIDStr st
 	if err != nil {
 		return nil, "", err
 	}
-	otaReceiverStr := temp.String()
+	otaReceiverStr := temp.String(true)
 	md := metadataPdexv3.NewStakingRequestWithValue(tokenIDStr, nftIDStr, otaReceiverStr, amount)
 
 	if isPRV {
@@ -698,7 +698,7 @@ func GenerateOTAReceivers(
 func toStringKeys(inputMap map[common.Hash]coin.OTAReceiver) map[string]string {
 	result := make(map[string]string)
 	for k, v := range inputMap {
-		result[k.String()] = v.String()
+		result[k.String()] = v.String(true)
 	}
 	return result
 }

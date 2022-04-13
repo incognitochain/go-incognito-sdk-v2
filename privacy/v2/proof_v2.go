@@ -401,7 +401,7 @@ func Prove(inputCoins []coin.PlainCoin, outputCoins []*coin.CoinV2, sharedSecret
 	// After Prove, we should hide all information in coin details.
 	for i, outputCoin := range proof.outputCoins {
 		if !wallet.IsPublicKeyBurningAddress(outputCoin.GetPublicKey().ToBytesS()) {
-			if err = outputCoin.ConcealOutputCoin(paymentInfo[i].PaymentAddress.GetPublicView()); err != nil {
+			if err = outputCoin.ConcealOutputCoin(paymentInfo[i]); err != nil {
 				return nil, err
 			}
 
