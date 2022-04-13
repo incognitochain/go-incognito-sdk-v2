@@ -32,6 +32,16 @@ func (receiver OTAReceiver) IsValid() bool {
 	return receiver.PublicKey.PointValid()
 }
 
+// GetPublicKey returns the base58-encoded PublicKey of an OTAReceiver.
+func (receiver OTAReceiver) GetPublicKey() string {
+	return base58.Base58Check{}.Encode(receiver.PublicKey.ToBytesS(), 0)
+}
+
+// GetTxRandom returns the base58-encoded GetTxRandom of an OTAReceiver.
+func (receiver OTAReceiver) GetTxRandom() string {
+	return base58.Base58Check{}.Encode(receiver.TxRandom.Bytes(), 0)
+}
+
 func (receiver *OTAReceiver) FromAddress(addr key.PaymentAddress) error {
 	if receiver == nil {
 		return fmt.Errorf("OTAReceiver not initialized")
