@@ -16,6 +16,11 @@ import (
 type OTAReceiver struct {
 	PublicKey crypto.Point
 	TxRandom  TxRandom
+
+	// SharedSecrets are for the sender to mask the amount as well as the asset type of the sending coins.
+	// SharedSecrets = []crypto.Point{sharedOTAPoint, sharedConcealPoint}.
+	// For non-privacy transactions, this field can be omitted.
+	SharedSecrets []crypto.Point `json:"SharedSecrets,omitempty"`
 }
 
 // IsValid checks the validity of this OTAReceiver (all referenced Points must be valid).
@@ -29,7 +34,20 @@ func (receiver OTAReceiver) IsValid() bool {
 	if err != nil {
 		return false
 	}
+	if len(receiver.SharedSecrets) > 0 {
+		if len(receiver.SharedSecrets) != 2 {
+			return false
+		}
+		if !receiver.SharedSecrets[0].PointValid() || !receiver.SharedSecrets[1].PointValid() {
+			return false
+		}
+	}
 	return receiver.PublicKey.PointValid()
+}
+
+// IsFull checks if the OTAReceiver supports full privacy.
+func (receiver OTAReceiver) IsFull() bool {
+	return len(receiver.SharedSecrets) > 0
 }
 
 // GetPublicKey returns the base58-encoded PublicKey of an OTAReceiver.
@@ -70,6 +88,10 @@ func (receiver *OTAReceiver) FromAddress(addr key.PaymentAddress) error {
 		if currentShardID == targetShardID {
 			otaRandomPoint := (&crypto.Point{}).ScalarMultBase(otaRand)
 			concealRandomPoint := (&crypto.Point{}).ScalarMultBase(concealRand)
+			sharedOTAPoint := (&crypto.Point{}).ScalarMult(addr.GetOTAPublicKey(), otaRand)
+			sharedConcealPoint := (&crypto.Point{}).ScalarMult(addr.GetPublicView(), concealRand)
+			receiver.SharedSecrets = []crypto.Point{*sharedOTAPoint, *sharedConcealPoint}
+
 			receiver.PublicKey = *publicKey
 			receiver.TxRandom = *NewTxRandom()
 			receiver.TxRandom.SetTxOTARandomPoint(otaRandomPoint)
@@ -95,15 +117,21 @@ func (receiver *OTAReceiver) FromString(data string) error {
 	return nil
 }
 
-// String() marshals the OTAReceiver, then encodes it with base58
-func (receiver OTAReceiver) String() string {
-	return base58.Base58Check{}.NewEncode(receiver.Bytes(), common.ZeroByte)
+// String marshals the OTAReceiver, then encodes it with base58
+func (receiver OTAReceiver) String(isNonPrivate ...bool) string {
+	return base58.Base58Check{}.NewEncode(receiver.Bytes(isNonPrivate...), common.ZeroByte)
 }
 
-func (receiver OTAReceiver) Bytes() []byte {
+func (receiver OTAReceiver) Bytes(isNonPrivate ...bool) []byte {
+	nonPrivate := len(isNonPrivate) > 0 && isNonPrivate[0]
 	rawBytes := []byte{wallet.PrivateReceivingAddressType}
 	rawBytes = append(rawBytes, receiver.PublicKey.ToBytesS()...)
 	rawBytes = append(rawBytes, receiver.TxRandom.Bytes()...)
+	if !nonPrivate && len(receiver.SharedSecrets) > 0 {
+		for _, s := range receiver.SharedSecrets {
+			rawBytes = append(rawBytes, s.ToBytesS()...)
+		}
+	}
 	return rawBytes
 }
 
@@ -124,13 +152,31 @@ func (receiver *OTAReceiver) SetBytes(b []byte) error {
 			return err
 		}
 		receiver.PublicKey = *pk
+
 		txr := NewTxRandom()
-		// SetBytes() will perform length check
-		err = txr.SetBytes(b[33:])
+		err = txr.SetBytes(b[33:101])
 		if err != nil {
 			return err
 		}
 		receiver.TxRandom = *txr
+
+		if len(b) == 165 {
+			buf = make([]byte, 32)
+			copy(buf, b[101:133])
+			s1, err := (&crypto.Point{}).FromBytesS(buf)
+			if err != nil {
+				return err
+			}
+
+			buf = make([]byte, 32)
+			copy(buf, b[133:165])
+			s2, err := (&crypto.Point{}).FromBytesS(buf)
+			if err != nil {
+				return err
+			}
+
+			receiver.SharedSecrets = []crypto.Point{*s1, *s2}
+		}
 		return nil
 	default:
 		return fmt.Errorf("unrecognized prefix for ReceivingAddress")
@@ -138,7 +184,7 @@ func (receiver *OTAReceiver) SetBytes(b []byte) error {
 }
 
 func (receiver OTAReceiver) MarshalJSON() ([]byte, error) {
-	return json.Marshal(receiver.String())
+	return json.Marshal(receiver.String(false))
 }
 
 func (receiver *OTAReceiver) UnmarshalJSON(raw []byte) error {
