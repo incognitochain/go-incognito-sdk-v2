@@ -138,7 +138,7 @@ func createPaymentInfos(addrList []string, amountList []uint64) ([]*key.PaymentI
 			if !otaReceiver.IsValid() {
 				return nil, fmt.Errorf("invalid receiver %v", receiver)
 			}
-			if !otaReceiver.IsFull() {
+			if !otaReceiver.IsConcealable() {
 				return nil, fmt.Errorf("OTAReceiver %v does not support private transaction", receiver)
 			}
 			paymentInfo.OTAReceiver = receiver

@@ -102,7 +102,7 @@ type CoinV2 struct {
 	// sharedRandom is only visible when creating coins, when it is broadcast to network, it will be set to null
 	sharedConcealRandom *crypto.Scalar //rConceal: shared random when concealing output coin and blinding assetTag
 	sharedRandom        *crypto.Scalar // rOTA: shared random when creating one-time-address
-	txRandom            *TxRandom      // rConceal*G + rOTA*G + index
+	txRandom            *TxRandom      // rConceal*G || rOTA*G || index
 
 	// mask = randomness
 	// amount = value

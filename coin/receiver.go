@@ -45,9 +45,9 @@ func (receiver OTAReceiver) IsValid() bool {
 	return receiver.PublicKey.PointValid()
 }
 
-// IsFull checks if the OTAReceiver supports full privacy.
-func (receiver OTAReceiver) IsFull() bool {
-	return len(receiver.SharedSecrets) > 0
+// IsConcealable checks if the OTAReceiver supports full privacy.
+func (receiver OTAReceiver) IsConcealable() bool {
+	return len(receiver.SharedSecrets) == 2
 }
 
 // GetPublicKey returns the base58-encoded PublicKey of an OTAReceiver.
@@ -117,17 +117,22 @@ func (receiver *OTAReceiver) FromString(data string) error {
 	return nil
 }
 
-// String marshals the OTAReceiver, then encodes it with base58
-func (receiver OTAReceiver) String(isNonPrivate ...bool) string {
-	return base58.Base58Check{}.NewEncode(receiver.Bytes(isNonPrivate...), common.ZeroByte)
+// String marshals the OTAReceiver, then encodes it with base58.
+// By default, an OTAReceiver will only support receiving assets in a non-private transaction. Set `isConcealable = true`
+// to enable receiving assets in a private transaction.
+func (receiver OTAReceiver) String(isConcealable ...bool) string {
+	return base58.Base58Check{}.NewEncode(receiver.Bytes(isConcealable...), common.ZeroByte)
 }
 
-func (receiver OTAReceiver) Bytes(isNonPrivate ...bool) []byte {
-	nonPrivate := len(isNonPrivate) > 0 && isNonPrivate[0]
+// Bytes returns a byte-encoded form of an OTAReceiver.
+// By default, an OTAReceiver will only support receiving assets in a non-private transaction. Set `isConcealable = true`
+// to enable receiving assets in a private transaction.
+func (receiver OTAReceiver) Bytes(isConcealable ...bool) []byte {
+	concealable := len(isConcealable) > 0 && isConcealable[0]
 	rawBytes := []byte{wallet.PrivateReceivingAddressType}
 	rawBytes = append(rawBytes, receiver.PublicKey.ToBytesS()...)
 	rawBytes = append(rawBytes, receiver.TxRandom.Bytes()...)
-	if !nonPrivate && len(receiver.SharedSecrets) > 0 {
+	if concealable && len(receiver.SharedSecrets) > 0 {
 		for _, s := range receiver.SharedSecrets {
 			rawBytes = append(rawBytes, s.ToBytesS()...)
 		}
@@ -183,8 +188,9 @@ func (receiver *OTAReceiver) SetBytes(b []byte) error {
 	}
 }
 
+// MarshalJSON returns a non-private byte-sequence representation of an OTAReceiver.
 func (receiver OTAReceiver) MarshalJSON() ([]byte, error) {
-	return json.Marshal(receiver.String(false))
+	return json.Marshal(receiver.String())
 }
 
 func (receiver *OTAReceiver) UnmarshalJSON(raw []byte) error {
