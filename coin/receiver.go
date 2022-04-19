@@ -11,11 +11,14 @@ import (
 	"github.com/incognitochain/go-incognito-sdk-v2/wallet"
 )
 
-// OTAReceiver holds the data necessary to send a coin to your receiver with privacy.
-// It is somewhat equivalent in usage with PaymentAddress
+// OTAReceiver holds the data necessary to receive a coin with privacy.
+// It is somewhat equivalent in usage with PaymentAddress.
 type OTAReceiver struct {
+	// PublicKey is the one-time public key of the receiving coin.
 	PublicKey crypto.Point
-	TxRandom  TxRandom
+
+	// TxRandom is for the receiver to recover the receiving information.
+	TxRandom TxRandom
 
 	// SharedSecrets are for the sender to mask the amount as well as the asset type of the sending coins.
 	// SharedSecrets = []crypto.Point{sharedOTAPoint, sharedConcealPoint}:
@@ -62,12 +65,17 @@ func (receiver OTAReceiver) GetTxRandom() string {
 	return base58.Base58Check{}.Encode(receiver.TxRandom.Bytes(), 0)
 }
 
-func (receiver *OTAReceiver) FromAddress(addr key.PaymentAddress) error {
+func (receiver *OTAReceiver) FromAddress(addr key.PaymentAddress, sendingShard ...byte) error {
 	if receiver == nil {
 		return fmt.Errorf("OTAReceiver not initialized")
 	}
 
 	targetShardID := common.GetShardIDFromLastByte(addr.Pk[len(addr.Pk)-1])
+	fromShard := targetShardID
+	if len(sendingShard) > 0 {
+		fromShard = sendingShard[0] % byte(common.MaxShardNumber)
+	}
+
 	otaRand := crypto.RandomScalar()
 	concealRand := crypto.RandomScalar()
 
@@ -86,8 +94,8 @@ func (receiver *OTAReceiver) FromAddress(addr key.PaymentAddress) error {
 		publicKey := (&crypto.Point{}).Add(HrKG, publicSpend)
 
 		pkb := publicKey.ToBytesS()
-		currentShardID := common.GetShardIDFromLastByte(pkb[len(pkb)-1])
-		if currentShardID == targetShardID {
+		tmpSendingShard, tmpReceivingShard := common.GetShardIDsFromPublicKey(pkb)
+		if tmpReceivingShard == targetShardID && tmpSendingShard == fromShard {
 			otaRandomPoint := (&crypto.Point{}).ScalarMultBase(otaRand)
 			concealRandomPoint := (&crypto.Point{}).ScalarMultBase(concealRand)
 			sharedOTAPoint := (&crypto.Point{}).ScalarMult(addr.GetOTAPublicKey(), otaRand)
