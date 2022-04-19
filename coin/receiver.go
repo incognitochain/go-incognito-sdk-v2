@@ -18,7 +18,9 @@ type OTAReceiver struct {
 	TxRandom  TxRandom
 
 	// SharedSecrets are for the sender to mask the amount as well as the asset type of the sending coins.
-	// SharedSecrets = []crypto.Point{sharedOTAPoint, sharedConcealPoint}.
+	// SharedSecrets = []crypto.Point{sharedOTAPoint, sharedConcealPoint}:
+	//	- sharedOTAPoint: used for generating the one-time address and concealing the assetID.
+	//	- sharedConcealPoint: used for concealing the amount.
 	// For non-privacy transactions, this field can be omitted.
 	SharedSecrets []crypto.Point `json:"SharedSecrets,omitempty"`
 }

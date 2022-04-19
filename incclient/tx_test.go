@@ -421,9 +421,9 @@ func TestIncClient_SendToOTA(t *testing.T) {
 		if err != nil {
 			panic("cannot generate a new OTAReceiver")
 		}
-		log.Printf("OTAReceiver: %v\n", otaReceiver.String())
+		log.Printf("OTAReceiver: %v\n", otaReceiver.String(true))
 
-		txParam := NewTxParam(senderPrivateKey, []string{otaReceiver.String()}, []uint64{sendingAmount}, txFee, nil, nil, nil)
+		txParam := NewTxParam(senderPrivateKey, []string{otaReceiver.String(true)}, []uint64{sendingAmount}, txFee, nil, nil, nil)
 		encodedTx, txHash, err := ic.CreateRawTransactionVer2(txParam)
 		if err != nil {
 			panic(err)
