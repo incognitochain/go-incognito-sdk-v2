@@ -342,7 +342,7 @@ func (c CoinV2) GetTxRandomDetail() (*crypto.Point, *crypto.Point, uint32, error
 // GetShardID returns the shardID in which a CoinV2 belongs to.
 func (c CoinV2) GetShardID() (uint8, error) {
 	if c.publicKey == nil {
-		return 255, fmt.Errorf("cannot get GetShardID because GetPublicKey of PlainCoin is concealed")
+		return 255, fmt.Errorf("cannot GetShardID because GetPublicKey of PlainCoin is concealed")
 	}
 	pubKeyBytes := c.publicKey.ToBytes()
 	lastByte := pubKeyBytes[crypto.Ed25519KeySize-1]

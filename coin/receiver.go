@@ -218,9 +218,8 @@ func (receiver *OTAReceiver) UnmarshalJSON(raw []byte) error {
 	return nil
 }
 
-func (receiver OTAReceiver) GetShardID() byte {
-	pkb := receiver.PublicKey.ToBytes()
-	lastByte := pkb[crypto.Ed25519KeySize-1]
-	shardID := common.GetShardIDFromLastByte(lastByte)
-	return shardID
+// GetShardIDs returns a pair of (sendingShard, receivingShard) of an OTAReceiver.
+func (receiver OTAReceiver) GetShardIDs() (byte, byte) {
+	pkb := receiver.PublicKey.ToBytesS()
+	return common.GetShardIDsFromPublicKey(pkb)
 }
