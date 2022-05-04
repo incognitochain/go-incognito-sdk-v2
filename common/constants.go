@@ -51,5 +51,5 @@ const (
 )
 
 const (
-	PortalV4DepositKeyGenSeed = "PortalV4OneTimeDepositPubKey"
+	OneTimeDepositKeyGenSeed = "OneTimeDepositPubKey"
 )

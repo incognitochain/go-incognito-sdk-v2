@@ -151,7 +151,7 @@ func (client *IncClient) GenerateDepositKeyFromPrivateKey(privateKeyStr, tokenID
 		return nil, err
 	}
 
-	tmp := append([]byte(common.PortalV4DepositKeyGenSeed), tokenID[:]...)
+	tmp := append([]byte(common.OneTimeDepositKeyGenSeed), tokenID[:]...)
 	masterDepositSeed := common.SHA256(append(w.KeySet.PrivateKey[:], tmp...))
 	indexBig := new(big.Int).SetUint64(index)
 

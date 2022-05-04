@@ -78,7 +78,7 @@ func (keySet *KeySet) GenerateOTDepositKey(tokenIDStr string, index uint64) (*OT
 		return nil, err
 	}
 
-	tmp := append([]byte(common.PortalV4DepositKeyGenSeed), tokenID[:]...)
+	tmp := append([]byte(common.OneTimeDepositKeyGenSeed), tokenID[:]...)
 	masterDepositSeed := common.SHA256(append(keySet.PrivateKey[:], tmp...))
 	indexBig := new(big.Int).SetUint64(index)
 
@@ -99,7 +99,7 @@ func GenerateOTDepositKeyFromPrivateKey(incPrivateKey []byte, tokenIDStr string,
 		return nil, err
 	}
 
-	tmp := append([]byte(common.PortalV4DepositKeyGenSeed), tokenID[:]...)
+	tmp := append([]byte(common.OneTimeDepositKeyGenSeed), tokenID[:]...)
 	masterDepositSeed := common.SHA256(append(incPrivateKey[:], tmp...))
 	indexBig := new(big.Int).SetUint64(index)
 
