@@ -1,6 +1,7 @@
 package incclient
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/incognitochain/go-incognito-sdk-v2/common"
 	"github.com/incognitochain/go-incognito-sdk-v2/common/base58"
@@ -228,4 +229,22 @@ func TestIncClient_GetAllUTXOsV2(t *testing.T) {
 		}
 
 	}
+}
+
+func TestIncClient_getAllTokens(t *testing.T) {
+	var err error
+	ic, err = NewMainNetClientWithCache()
+	if err != nil {
+		panic(err)
+	}
+
+	privateKey := "PRIVATE_KEY" // input the private key
+
+	tokenIDs, err := ic.getAllTokens(privateKey)
+	if err != nil {
+		panic(err)
+	}
+
+	jsb, _ := json.Marshal(tokenIDs)
+	Logger.Println(string(jsb))
 }

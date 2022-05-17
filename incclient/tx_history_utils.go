@@ -8,6 +8,7 @@ import (
 	"github.com/incognitochain/go-incognito-sdk-v2/common/base58"
 	"github.com/incognitochain/go-incognito-sdk-v2/key"
 	"github.com/incognitochain/go-incognito-sdk-v2/metadata"
+	metadataCommon "github.com/incognitochain/go-incognito-sdk-v2/metadata/common"
 	"github.com/incognitochain/go-incognito-sdk-v2/privacy"
 	"github.com/incognitochain/go-incognito-sdk-v2/transaction/tx_generic"
 	"os"
@@ -18,6 +19,104 @@ const (
 	DefaultTxOut     = "txOut_history.csv"
 	DefaultTxHistory = "txHistory.csv"
 )
+
+var (
+	committeePrefix = "[Committee]"
+	bridgePrefix    = "[Bridge]"
+	portalPrefix    = "[Portal]"
+	pDEXV2Prefix    = "[pDEX v2]"
+	pDEXV3Prefix    = "[pDEX v3]"
+)
+
+var txMetadataNote = map[int]string{
+	metadata.InvalidMeta: "",
+
+	metadata.InitTokenRequestMeta:  fmt.Sprintf("Init Token Request"),
+	metadata.InitTokenResponseMeta: fmt.Sprintf("Init Token Response"),
+
+	// Committee
+	metadata.ShardStakingMeta:           fmt.Sprintf("%v Staking", committeePrefix),
+	metadata.BeaconStakingMeta:          fmt.Sprintf("%v Staking", committeePrefix),
+	metadata.UnStakingMeta:              fmt.Sprintf("%v Un-staking", committeePrefix),
+	metadata.StopAutoStakingMeta:        fmt.Sprintf("%v Stop-staking", committeePrefix),
+	metadata.WithDrawRewardRequestMeta:  fmt.Sprintf("%v Withdraw Reward Request", committeePrefix),
+	metadata.WithDrawRewardResponseMeta: fmt.Sprintf("%v Withdraw Reward Response", committeePrefix),
+
+	// Bridge
+	metadata.IssuingRequestMeta:                   fmt.Sprintf("%v Shield Request", bridgePrefix),
+	metadata.IssuingResponseMeta:                  fmt.Sprintf("%v Shield Response", bridgePrefix),
+	metadata.IssuingETHRequestMeta:                fmt.Sprintf("%v Shield Request", bridgePrefix),
+	metadata.IssuingETHResponseMeta:               fmt.Sprintf("%v Shield Response", bridgePrefix),
+	metadata.IssuingBSCRequestMeta:                fmt.Sprintf("%v Shield Request", bridgePrefix),
+	metadata.IssuingBSCResponseMeta:               fmt.Sprintf("%v Shield Response", bridgePrefix),
+	metadata.IssuingPLGRequestMeta:                fmt.Sprintf("%v Shield Request", bridgePrefix),
+	metadata.IssuingPLGResponseMeta:               fmt.Sprintf("%v Shield Response", bridgePrefix),
+	metadata.IssuingPRVERC20RequestMeta:           fmt.Sprintf("%v Shield Request", bridgePrefix),
+	metadata.IssuingPRVERC20ResponseMeta:          fmt.Sprintf("%v Shield Response", bridgePrefix),
+	metadata.IssuingPRVBEP20RequestMeta:           fmt.Sprintf("%v Shield Request", bridgePrefix),
+	metadata.IssuingPRVBEP20ResponseMeta:          fmt.Sprintf("%v Shield Response", bridgePrefix),
+	metadata.BurningRequestMeta:                   fmt.Sprintf("%v Unshield Request", bridgePrefix),
+	metadata.BurningRequestMetaV2:                 fmt.Sprintf("%v Unshield Request", bridgePrefix),
+	metadata.ContractingRequestMeta:               fmt.Sprintf("%v Unshield Request", bridgePrefix),
+	metadata.BurningPBSCRequestMeta:               fmt.Sprintf("%v Unshield Request", bridgePrefix),
+	metadata.BurningPLGRequestMeta:                fmt.Sprintf("%v Unshield Request", bridgePrefix),
+	metadata.BurningForDepositToSCRequestMeta:     fmt.Sprintf("%v Unshield Request", bridgePrefix),
+	metadata.BurningForDepositToSCRequestMetaV2:   fmt.Sprintf("%v Unshield Request", bridgePrefix),
+	metadata.BurningPBSCForDepositToSCRequestMeta: fmt.Sprintf("%v Unshield Request", bridgePrefix),
+	metadata.BurningPLGForDepositToSCRequestMeta:  fmt.Sprintf("%v Unshield Request", bridgePrefix),
+
+	// Portal
+	metadata.PortalV4ShieldingRequestMeta:      fmt.Sprintf("%v Shield Request", portalPrefix),
+	metadata.PortalV4ShieldingResponseMeta:     fmt.Sprintf("%v Shield Response", portalPrefix),
+	metadata.PortalV4UnshieldingRequestMeta:    fmt.Sprintf("%v Unshield Request", portalPrefix),
+	metadata.PortalV4UnshieldingResponseMeta:   fmt.Sprintf("%v Unshield Response", portalPrefix),
+	metadata.PortalV4ConvertVaultRequestMeta:   fmt.Sprintf("%v Convert Vault", portalPrefix),
+	metadata.PortalV4SubmitConfirmedTxMeta:     fmt.Sprintf("%v Submit Confirmed Tx", portalPrefix),
+	metadata.PortalV4UnshieldBatchingMeta:      fmt.Sprintf("%v Batch Unshield", portalPrefix),
+	metadata.PortalV4FeeReplacementRequestMeta: fmt.Sprintf("%v Fee Replacement Request", portalPrefix),
+
+	// pDEX v2
+	metadata.PDETradeRequestMeta:                   fmt.Sprintf("%v Trade Request", pDEXV2Prefix),
+	metadata.PDETradeResponseMeta:                  fmt.Sprintf("%v Trade Response", pDEXV2Prefix),
+	metadata.PDECrossPoolTradeRequestMeta:          fmt.Sprintf("%v Trade Request", pDEXV2Prefix),
+	metadata.PDECrossPoolTradeResponseMeta:         fmt.Sprintf("%v Trade Response", pDEXV2Prefix),
+	metadata.PDEContributionMeta:                   fmt.Sprintf("%v Contribution Request", pDEXV2Prefix),
+	metadata.PDEPRVRequiredContributionRequestMeta: fmt.Sprintf("%v Contribution Request", pDEXV2Prefix),
+	metadata.PDEContributionResponseMeta:           fmt.Sprintf("%v Contribution Response", pDEXV2Prefix),
+	metadata.PDEWithdrawalRequestMeta:              fmt.Sprintf("%v Withdrawal Request", pDEXV2Prefix),
+	metadata.PDEWithdrawalResponseMeta:             fmt.Sprintf("%v Withdrawal Response", pDEXV2Prefix),
+	metadata.PDEFeeWithdrawalRequestMeta:           fmt.Sprintf("%v Fee Withdrawal Request", pDEXV2Prefix),
+	metadata.PDEFeeWithdrawalResponseMeta:          fmt.Sprintf("%v Fee Withdrawal Response", pDEXV2Prefix),
+
+	// pDEX v3
+	metadataCommon.Pdexv3ModifyParamsMeta:                  fmt.Sprintf("%v Modify Params", pDEXV3Prefix),
+	metadataCommon.Pdexv3AddLiquidityRequestMeta:           fmt.Sprintf("%v Contribution Request", pDEXV3Prefix),
+	metadataCommon.Pdexv3AddLiquidityResponseMeta:          fmt.Sprintf("%v Contribution Response", pDEXV3Prefix),
+	metadataCommon.Pdexv3WithdrawLiquidityRequestMeta:      fmt.Sprintf("%v Withdrawal Request", pDEXV3Prefix),
+	metadataCommon.Pdexv3WithdrawLiquidityResponseMeta:     fmt.Sprintf("%v Withdrawal Response", pDEXV3Prefix),
+	metadataCommon.Pdexv3TradeRequestMeta:                  fmt.Sprintf("%v Trade Request", pDEXV3Prefix),
+	metadataCommon.Pdexv3TradeResponseMeta:                 fmt.Sprintf("%v Trade Response", pDEXV3Prefix),
+	metadataCommon.Pdexv3AddOrderRequestMeta:               fmt.Sprintf("%v Add Order Request", pDEXV3Prefix),
+	metadataCommon.Pdexv3AddOrderResponseMeta:              fmt.Sprintf("%v Add Order Response", pDEXV3Prefix),
+	metadataCommon.Pdexv3WithdrawOrderRequestMeta:          fmt.Sprintf("%v Remove Order Request", pDEXV3Prefix),
+	metadataCommon.Pdexv3WithdrawOrderResponseMeta:         fmt.Sprintf("%v Remove Order Response", pDEXV3Prefix),
+	metadataCommon.Pdexv3UserMintNftRequestMeta:            fmt.Sprintf("%v Mint NFT Request", pDEXV3Prefix),
+	metadataCommon.Pdexv3UserMintNftResponseMeta:           fmt.Sprintf("%v Mint NFT Response", pDEXV3Prefix),
+	metadataCommon.Pdexv3MintNftRequestMeta:                fmt.Sprintf("%v Mint NFT Request", pDEXV3Prefix),
+	metadataCommon.Pdexv3MintNftResponseMeta:               fmt.Sprintf("%v Mint NFT Response", pDEXV3Prefix),
+	metadataCommon.Pdexv3StakingRequestMeta:                fmt.Sprintf("%v Staking Request", pDEXV3Prefix),
+	metadataCommon.Pdexv3StakingResponseMeta:               fmt.Sprintf("%v Staking Response", pDEXV3Prefix),
+	metadataCommon.Pdexv3UnstakingRequestMeta:              fmt.Sprintf("%v Staking Request", pDEXV3Prefix),
+	metadataCommon.Pdexv3UnstakingResponseMeta:             fmt.Sprintf("%v Staking Response", pDEXV3Prefix),
+	metadataCommon.Pdexv3WithdrawLPFeeRequestMeta:          fmt.Sprintf("%v Withdraw LP Fee Request", pDEXV3Prefix),
+	metadataCommon.Pdexv3WithdrawLPFeeResponseMeta:         fmt.Sprintf("%v Withdraw LP Fee Response", pDEXV3Prefix),
+	metadataCommon.Pdexv3WithdrawProtocolFeeRequestMeta:    fmt.Sprintf("%v Withdraw Protocol Fee Request", pDEXV3Prefix),
+	metadataCommon.Pdexv3WithdrawProtocolFeeResponseMeta:   fmt.Sprintf("%v Withdraw Protocol Fee Response", pDEXV3Prefix),
+	metadataCommon.Pdexv3MintBlockRewardMeta:               fmt.Sprintf("%v Block Reward", pDEXV3Prefix),
+	metadataCommon.Pdexv3DistributeStakingRewardMeta:       fmt.Sprintf("%v Distribute Staking Reward", pDEXV3Prefix),
+	metadataCommon.Pdexv3WithdrawStakingRewardRequestMeta:  fmt.Sprintf("%v Withdraw Staking Reward Request", pDEXV3Prefix),
+	metadataCommon.Pdexv3WithdrawStakingRewardResponseMeta: fmt.Sprintf("%v Withdraw Staking Reward Response", pDEXV3Prefix),
+}
 
 // getListKeyImagesFromTx returns the list of key images of a transaction based on the provided tokenID.
 func getListKeyImagesFromTx(tx metadata.Transaction, tokenIDStr string) (map[string]string, error) {
@@ -239,6 +338,8 @@ func SaveTxHistory(txHistory *TxHistory, filePath string) error {
 
 	w := csv.NewWriter(f)
 	defer w.Flush()
+
+	_ = f.Truncate(0)
 
 	totalIn := uint64(0)
 	for _, txIn := range txHistory.TxInList {

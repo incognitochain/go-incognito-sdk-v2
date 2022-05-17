@@ -594,6 +594,12 @@ type DEXLPValue struct {
 	// PoolValue represents the contributed liquidity in the pool of the LP.
 	PoolValue map[string]uint64 `json:"PoolValue"`
 
-	// TradingFee is the trading fee distributed to the LP.
-	TradingFee map[string]uint64 `json:"TradingFee"`
+	// LPReward is the trading fee and liquidity mining reward distributed to the LP.
+	LPReward map[string]uint64 `json:"LPReward"`
+
+	// OrderReward is the reward for placing orders.
+	OrderReward map[string]uint64 `json:"OrderReward"`
+
+	// PoolReward is the total rewards for the pool.
+	PoolReward map[string]uint64 `json:"PoolReward"`
 }
