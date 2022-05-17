@@ -3,6 +3,7 @@ package incclient
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"testing"
 	"time"
 )
@@ -310,6 +311,54 @@ func TestIncClient_CheckShieldStatus(t *testing.T) {
 		panic(err)
 	}
 	Logger.Println(status)
+}
+
+func TestIncClient_CreateAndSendIssuingRequestTransaction(t *testing.T) {
+	var err error
+	ic, err = NewTestNetClientWithCache()
+	if err != nil {
+		panic(err)
+	}
+	Logger.IsEnable = false
+
+	adminPrivateKey := ""
+	receiverPrivateKey := ""
+	receiver := PrivateKeyToPaymentAddress(receiverPrivateKey, -1)
+	tokenIDStr := "0000000000000000000000000000000000000000000000000000000000000333"
+	tokenName := "TestToken"
+	depositAmount := uint64(1000000)
+
+	oldBalance, err := ic.GetBalance(receiverPrivateKey, tokenIDStr)
+	if err != nil {
+		panic(err)
+	}
+	log.Printf("OldBalance: %v\n", oldBalance)
+
+	txHash, err := ic.CreateAndSendIssuingRequestTransaction(adminPrivateKey, receiver, tokenIDStr, tokenName, depositAmount)
+	if err != nil {
+		panic(err)
+	}
+	log.Printf("TxHash: %v\n", txHash)
+
+	time.Sleep(100 * time.Second)
+	newBalance, err := ic.GetBalance(receiverPrivateKey, tokenIDStr)
+	if err != nil {
+		panic(err)
+	}
+	log.Printf("NewBalance: %v\n", newBalance)
+
+	if newBalance != oldBalance+depositAmount {
+		panic(fmt.Sprintf("expected newBalance to be %v, got %v", oldBalance+depositAmount, newBalance))
+	}
+}
+
+func TestGenerateTokenID(t *testing.T) {
+	tokenID, err := GenerateTokenID("ETH", "USDT")
+	if err != nil {
+		panic(err)
+	}
+
+	Logger.Printf("tokenID: %v\n", tokenID.String())
 }
 
 //END TEST FUNCTIONS
