@@ -2,6 +2,7 @@ package incclient
 
 import (
 	"fmt"
+	"github.com/incognitochain/go-incognito-sdk-v2/crypto"
 	"github.com/incognitochain/go-incognito-sdk-v2/rpchandler/rpc"
 	"strings"
 
@@ -248,4 +249,15 @@ func (client *IncClient) CheckShieldStatus(txHash string) (int, error) {
 	}
 
 	return status, err
+}
+
+// GenerateTokenID generates an Incognito tokenID for a bridge token.
+func GenerateTokenID(network, tokenName string) (common.Hash, error) {
+	point := crypto.HashToPoint([]byte(network + "-" + tokenName))
+	hash := new(common.Hash)
+	err := hash.SetBytes(point.ToBytesS())
+	if err != nil {
+		return common.Hash{}, err
+	}
+	return *hash, nil
 }

@@ -312,4 +312,13 @@ func TestIncClient_CheckShieldStatus(t *testing.T) {
 	Logger.Println(status)
 }
 
+func TestGenerateTokenID(t *testing.T) {
+	tokenID, err := GenerateTokenID("ETH", "USDT")
+	if err != nil {
+		panic(err)
+	}
+
+	Logger.Printf("tokenID: %v\n", tokenID.String())
+}
+
 //END TEST FUNCTIONS
