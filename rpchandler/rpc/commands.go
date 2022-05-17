@@ -85,6 +85,7 @@ const (
 	gettransactionbypublickey                  = "gettransactionbypublickey"
 	listCustomToken                            = "listcustomtoken"
 	listPrivacyCustomToken                     = "listprivacycustomtoken"
+	listPrivacyCustomTokenIDs                  = "listprivacycustomtokenids"
 	getPrivacyCustomToken                      = "getprivacycustomtoken"
 	listPrivacyCustomTokenByShard              = "listprivacycustomtokenbyshard"
 	getBalancePrivacyCustomToken               = "getbalanceprivacycustomtoken"
@@ -188,6 +189,8 @@ const (
 	getBSCBurnProof          = "getbscburnproof"
 	getPRVERC20BurnProof     = "getprverc20burnproof"
 	getPRVBEP20BurnProof     = "getprvbep20burnproof"
+	getPLGBurnProof          = "getplgburnproof"
+	getFTMBurnProof          = "getftmburnproof"
 
 	// reward
 	CreateRawWithDrawTransaction = "withdrawreward"

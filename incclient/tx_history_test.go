@@ -29,7 +29,7 @@ func TestIncClient_GetListTxsInV1(t *testing.T) {
 
 func TestIncClient_GetListTxsInV2(t *testing.T) {
 	var err error
-	ic, err = NewLocalClient("")
+	ic, err = NewMainNetClientWithCache()
 	if err != nil {
 		panic(err)
 	}
@@ -44,7 +44,7 @@ func TestIncClient_GetListTxsInV2(t *testing.T) {
 	log.Printf("#TxIns: %v\n", len(txList))
 
 	for _, txIn := range txList {
-		log.Printf("%v\n", txIn.String())
+		log.Printf("%v\n", txIn.Summarize())
 	}
 }
 
@@ -137,7 +137,7 @@ func TestIncClient_GetTxHistoryV1(t *testing.T) {
 
 func TestIncClient_GetTxHistoryV2(t *testing.T) {
 	var err error
-	ic, err = NewTestNetClient()
+	ic, err = NewMainNetClientWithCache()
 	if err != nil {
 		panic(err)
 	}
@@ -151,10 +151,10 @@ func TestIncClient_GetTxHistoryV2(t *testing.T) {
 
 	log.Printf("#TxIns: %v\n", len(h.TxInList))
 	for _, txIn := range h.TxInList {
-		log.Printf("%v\n", txIn.String())
+		log.Printf("%v\n", txIn.Summarize())
 	}
 	log.Printf("\n#TxOuts: %v\n", len(h.TxOutList))
 	for _, txOut := range h.TxOutList {
-		log.Printf("%v\n", txOut.String())
+		log.Printf("%v\n", txOut.Summarize())
 	}
 }

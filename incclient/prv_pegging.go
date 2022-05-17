@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/incognitochain/go-incognito-sdk-v2/rpchandler"
 	"github.com/incognitochain/go-incognito-sdk-v2/rpchandler/jsonresult"
+	"github.com/incognitochain/go-incognito-sdk-v2/rpchandler/rpc"
 	"strings"
 
 	"github.com/incognitochain/go-incognito-sdk-v2/common"
@@ -15,7 +16,7 @@ import (
 //
 // It returns the base58-encoded transaction, the transaction's hash, and an error (if any).
 func (client *IncClient) CreateIssuingPRVPeggingRequestTransaction(
-	privateKey string, proof EVMDepositProof, isBSC ...bool,
+	privateKey string, proof EVMDepositProof, evmNetworkID ...int,
 ) ([]byte, string, error) {
 	tokenIDStr := common.PRVIDStr
 	tokenID, err := new(common.Hash).NewHashFromStr(tokenIDStr)
@@ -24,8 +25,13 @@ func (client *IncClient) CreateIssuingPRVPeggingRequestTransaction(
 	}
 
 	mdType := metadata.IssuingPRVERC20RequestMeta
-	if len(isBSC) > 0 && isBSC[0] {
-		mdType = metadata.IssuingPRVBEP20RequestMeta
+	if len(evmNetworkID) > 0 {
+		switch evmNetworkID[0] {
+		case rpc.BSCNetworkID:
+			mdType = metadata.IssuingPRVBEP20RequestMeta
+		case rpc.PLGNetworkID:
+			return nil, "", rpc.EVMNetworkNotFoundError(evmNetworkID[0])
+		}
 	}
 
 	var issuingPRVPeggingRequestMeta *metadata.IssuingEVMRequest
@@ -43,8 +49,8 @@ func (client *IncClient) CreateIssuingPRVPeggingRequestTransaction(
 //
 // It returns the transaction's hash, and an error (if any).
 func (client *IncClient) CreateAndSendIssuingPRVPeggingRequestTransaction(
-	privateKey string, proof EVMDepositProof, isBSC ...bool) (string, error) {
-	encodedTx, txHash, err := client.CreateIssuingPRVPeggingRequestTransaction(privateKey, proof, isBSC...)
+	privateKey string, proof EVMDepositProof, evmNetworkIDs ...int) (string, error) {
+	encodedTx, txHash, err := client.CreateIssuingPRVPeggingRequestTransaction(privateKey, proof, evmNetworkIDs...)
 	if err != nil {
 		return "", err
 	}
@@ -61,7 +67,7 @@ func (client *IncClient) CreateAndSendIssuingPRVPeggingRequestTransaction(
 //
 // It returns the base58-encoded transaction, the transaction's hash, and an error (if any).
 func (client *IncClient) CreateBurningPRVPeggingRequestTransaction(
-	privateKey, remoteAddress string, burnedAmount uint64, isBSC ...bool,
+	privateKey, remoteAddress string, burnedAmount uint64, evmNetworkIDs ...int,
 ) ([]byte, string, error) {
 	tokenIDStr := common.PRVIDStr
 	tokenID, err := new(common.Hash).NewHashFromStr(tokenIDStr)
@@ -83,8 +89,13 @@ func (client *IncClient) CreateBurningPRVPeggingRequestTransaction(
 	}
 
 	mdType := metadata.BurningPRVERC20RequestMeta
-	if len(isBSC) > 0 && isBSC[0] {
-		mdType = metadata.BurningPRVBEP20RequestMeta
+	if len(evmNetworkIDs) > 0 {
+		switch evmNetworkIDs[0] {
+		case rpc.BSCNetworkID:
+			mdType = metadata.BurningPRVBEP20RequestMeta
+		case rpc.PLGNetworkID:
+			return nil, "", rpc.EVMNetworkNotFoundError(evmNetworkIDs[0])
+		}
 	}
 
 	var md *metadata.BurningRequest
@@ -104,9 +115,9 @@ func (client *IncClient) CreateBurningPRVPeggingRequestTransaction(
 //
 // It returns the transaction's hash, and an error (if any).
 func (client *IncClient) CreateAndSendBurningPRVPeggingRequestTransaction(
-	privateKey, remoteAddress string, burnedAmount uint64, isBSC ...bool,
+	privateKey, remoteAddress string, burnedAmount uint64, evmNetworkIDs ...int,
 ) (string, error) {
-	encodedTx, txHash, err := client.CreateBurningPRVPeggingRequestTransaction(privateKey, remoteAddress, burnedAmount, isBSC...)
+	encodedTx, txHash, err := client.CreateBurningPRVPeggingRequestTransaction(privateKey, remoteAddress, burnedAmount, evmNetworkIDs...)
 	if err != nil {
 		return "", err
 	}
@@ -120,8 +131,8 @@ func (client *IncClient) CreateAndSendBurningPRVPeggingRequestTransaction(
 }
 
 // GetBurnPRVPeggingProof retrieves the burning proof for the Incognito network for submitting to the smart contract later.
-func (client *IncClient) GetBurnPRVPeggingProof(txHash string, isBSC ...bool) (*jsonresult.InstructionProof, error) {
-	responseInBytes, err := client.rpcServer.GetBurnPRVPeggingProof(txHash, isBSC...)
+func (client *IncClient) GetBurnPRVPeggingProof(txHash string, evmNetworkIDs ...int) (*jsonresult.InstructionProof, error) {
+	responseInBytes, err := client.rpcServer.GetBurnPRVPeggingProof(txHash, evmNetworkIDs...)
 	if err != nil {
 		return nil, err
 	}

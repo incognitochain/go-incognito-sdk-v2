@@ -41,9 +41,12 @@ func (server *RPCServer) CheckAddOrderStatus(txHash string) ([]byte, error) {
 }
 
 // CheckOrderWithdrawalStatus retrieves the status of an order-canceling transaction.
-func (server *RPCServer) CheckOrderWithdrawalStatus(txHash string) ([]byte, error) {
+func (server *RPCServer) CheckOrderWithdrawalStatus(txHash string, tokenIDs ...string) ([]byte, error) {
 	params := make([]interface{}, 0)
 	params = append(params, txHash)
+	if len(tokenIDs) > 0 {
+		params = append(params, tokenIDs[0])
+	}
 
 	return server.SendQuery(pdexv3GetWithdrawOrderStatus, params)
 }

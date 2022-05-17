@@ -78,6 +78,21 @@ func (client *IncClient) GetListToken() (map[string]CustomToken, error) {
 	return listTokens, nil
 }
 
+// GetListTokenIDs returns all token IDs currently on the Incognito network.
+func (client *IncClient) GetListTokenIDs() ([]string, error) {
+	responseInBytes, err := client.rpcServer.ListPrivacyCustomTokenIDsByRPC()
+	if err != nil {
+		return nil, err
+	}
+	var res []string
+	err = rpchandler.ParseResponse(responseInBytes, &res)
+	if err != nil {
+		return nil, err
+	}
+
+	return res, nil
+}
+
 // GetRawMemPool returns a list of transaction hashes currently in the pool.
 func (client *IncClient) GetRawMemPool() ([]string, error) {
 	responseInBytes, err := client.rpcServer.GetRawMemPool()

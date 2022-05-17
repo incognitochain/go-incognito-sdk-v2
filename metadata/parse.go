@@ -36,33 +36,45 @@ func ParseMetadata(metaInBytes []byte) (Metadata, error) {
 		md = &IssuingRequest{}
 	case IssuingResponseMeta:
 		md = &IssuingResponse{}
-	case IssuingPRVERC20RequestMeta:
-		md = &IssuingEVMRequest{}
-	case IssuingPRVBEP20RequestMeta:
-		md = &IssuingEVMRequest{}
 	case ContractingRequestMeta:
 		md = &ContractingRequest{}
 	case IssuingETHRequestMeta:
 		md = &IssuingEVMRequest{}
+	case IssuingBSCRequestMeta:
+		md = &IssuingEVMRequest{}
+	case IssuingPRVERC20RequestMeta:
+		md = &IssuingEVMRequest{}
+	case IssuingPRVBEP20RequestMeta:
+		md = &IssuingEVMRequest{}
 	case IssuingETHResponseMeta:
+		md = &IssuingEVMResponse{}
+	case IssuingBSCResponseMeta:
 		md = &IssuingEVMResponse{}
 	case IssuingPRVERC20ResponseMeta:
 		md = &IssuingEVMResponse{}
 	case IssuingPRVBEP20ResponseMeta:
 		md = &IssuingEVMResponse{}
-	case IssuingBSCRequestMeta:
-		md = &IssuingEVMRequest{}
-	case IssuingBSCResponseMeta:
-		md = &IssuingEVMResponse{}
-	case BurningRequestMeta:
+	case BurningRequestMeta, BurningForDepositToSCRequestMeta:
 		md = &BurningRequest{}
-	case BurningRequestMetaV2:
+	case BurningRequestMetaV2, BurningForDepositToSCRequestMetaV2:
 		md = &BurningRequest{}
-	case BurningPBSCRequestMeta:
+	case BurningPBSCRequestMeta, BurningPBSCForDepositToSCRequestMeta:
 		md = &BurningRequest{}
 	case BurningPRVBEP20RequestMeta:
 		md = &BurningRequest{}
 	case BurningPRVERC20RequestMeta:
+		md = &BurningRequest{}
+	case IssuingPLGRequestMeta:
+		md = &IssuingEVMRequest{}
+	case IssuingPLGResponseMeta:
+		md = &IssuingEVMResponse{}
+	case BurningPLGRequestMeta, BurningPLGForDepositToSCRequestMeta:
+		md = &BurningRequest{}
+	case IssuingFantomRequestMeta:
+		md = &IssuingEVMRequest{}
+	case IssuingFantomResponseMeta:
+		md = &IssuingEVMResponse{}
+	case BurningFantomRequestMeta, BurningFantomForDepositToSCRequestMeta:
 		md = &BurningRequest{}
 	case ShardStakingMeta:
 		md = &StakingMetadata{}
@@ -100,12 +112,24 @@ func ParseMetadata(metaInBytes []byte) (Metadata, error) {
 		md = &PDEFeeWithdrawalResponse{}
 	case PDEContributionResponseMeta:
 		md = &PDEContributionResponse{}
-	case BurningForDepositToSCRequestMeta:
-		md = &BurningRequest{}
-	case BurningForDepositToSCRequestMetaV2:
-		md = &BurningRequest{}
+	case RelayingBNBHeaderMeta:
+		md = &RelayingHeader{}
 	case RelayingBTCHeaderMeta:
 		md = &RelayingHeader{}
+	case metadataCommon.PortalV4ShieldingRequestMeta:
+		md = &PortalShieldingRequest{}
+	case metadataCommon.PortalV4ShieldingResponseMeta:
+		md = &PortalShieldingResponse{}
+	case metadataCommon.PortalV4UnshieldingRequestMeta:
+		md = &PortalUnshieldRequest{}
+	case metadataCommon.PortalV4UnshieldingResponseMeta:
+		md = &PortalUnshieldResponse{}
+	case metadataCommon.PortalV4FeeReplacementRequestMeta:
+		md = &PortalReplacementFeeRequest{}
+	case metadataCommon.PortalV4SubmitConfirmedTxMeta:
+		md = &PortalSubmitConfirmedTxRequest{}
+	case metadataCommon.PortalV4ConvertVaultRequestMeta:
+		md = &PortalConvertVaultRequest{}
 	case metadataCommon.Pdexv3ModifyParamsMeta:
 		md = &metadataPdexv3.ParamsModifyingRequest{}
 	case metadataCommon.Pdexv3AddLiquidityRequestMeta:
@@ -156,20 +180,6 @@ func ParseMetadata(metaInBytes []byte) (Metadata, error) {
 		md = &metadataPdexv3.WithdrawalStakingRewardRequest{}
 	case metadataCommon.Pdexv3WithdrawStakingRewardResponseMeta:
 		md = &metadataPdexv3.WithdrawalStakingRewardResponse{}
-	case PortalV4ShieldingRequestMeta:
-		md = &PortalShieldingRequest{}
-	case PortalV4ShieldingResponseMeta:
-		md = &PortalShieldingResponse{}
-	case PortalV4UnshieldingRequestMeta:
-		md = &PortalUnshieldRequest{}
-	case PortalV4UnshieldingResponseMeta:
-		md = &PortalUnshieldResponse{}
-	case PortalV4FeeReplacementRequestMeta:
-		md = &PortalReplacementFeeRequest{}
-	case PortalV4SubmitConfirmedTxMeta:
-		md = &PortalSubmitConfirmedTxRequest{}
-	case PortalV4ConvertVaultRequestMeta:
-		md = &PortalConvertVaultRequest{}
 	default:
 		return nil, errors.Errorf("Could not parse metadata with type: %d", theType)
 	}

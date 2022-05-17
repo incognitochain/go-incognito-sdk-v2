@@ -13,6 +13,7 @@ import (
 	"github.com/ethereum/go-ethereum/trie"
 	"github.com/incognitochain/go-incognito-sdk-v2/common/base58"
 	"github.com/incognitochain/go-incognito-sdk-v2/metadata"
+	"github.com/incognitochain/go-incognito-sdk-v2/rpchandler/rpc"
 	"github.com/incognitochain/go-incognito-sdk-v2/transaction/tx_ver2"
 	"log"
 	"testing"
@@ -91,9 +92,9 @@ func TestIncClient_GetEVMDepositProof(t *testing.T) {
 		panic(err)
 	}
 
-	txHash := "0x44f01c88fe21ed42408b70312a3899893497fdb6d215f87c9f038adae978a484"
+	txHash := "0x8eb88d913fbd37a55680f74fe6dfcc176511713545c16f9314a0a67ef5bc0853"
 
-	depositProof, amount, err := ic.GetEVMDepositProof(txHash)
+	depositProof, amount, err := ic.GetEVMDepositProof(txHash, rpc.PLGNetworkID)
 	if err != nil {
 		panic(err)
 	}
@@ -137,18 +138,38 @@ func TestIncClient_GetEVMTransactionStatus(t *testing.T) {
 
 func TestIncClient_GetBurnProof(t *testing.T) {
 	var err error
-	ic, err = NewTestNetClient()
+	ic, err = NewMainNetClient()
 	if err != nil {
 		panic(err)
 	}
 
-	txHash := "c87985f9b09012dc182dffffc8630d7396aa34d0c541c265e5c9d777755e0754"
+	txHash := "485a8f3e50f2f9a71a155ebfee311948286c898cf65244e695be791886692ecc"
 	burnProof, err := ic.GetBurnProof(txHash)
 	if err != nil {
 		panic(err)
 	}
+	log.Println(txHash, burnProof)
 
-	log.Println(burnProof)
+	txHash = "485a8f3e50f2f9a71a155ebfee311948286c898cf65244e695be791886692ecc"
+	burnProof, err = ic.GetBurnProof(txHash, rpc.ETHNetworkID)
+	if err != nil {
+		panic(err)
+	}
+	log.Println(txHash, burnProof)
+
+	txHash = "13f31368a42dae6c1974227ddc2a870a66dc065d551e3b24014497e90683aad8"
+	burnProof, err = ic.GetBurnProof(txHash, rpc.BSCNetworkID)
+	if err != nil {
+		panic(err)
+	}
+	log.Println(txHash, burnProof)
+
+	txHash = "13489cdd4ba6bc742806f3aca52fd700c6066143ae46009c65c223fa706af643"
+	burnProof, err = ic.GetBurnProof(txHash, rpc.PLGNetworkID)
+	if err != nil {
+		panic(err)
+	}
+	log.Println(txHash, burnProof)
 }
 
 func TestIncClient_CreateAndSendIssuingEVMRequestTransaction(t *testing.T) {

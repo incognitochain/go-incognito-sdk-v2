@@ -67,7 +67,7 @@ func (client *IncClient) GetMyNFTs(privateKey string) ([]string, error) {
 	}
 	Logger.Printf("#Nfts: %v\n", len(allNFTs))
 
-	rawAssetTags, err = BuildAssetTags(nftList)
+	rawAssetTags, err := BuildAssetTags(nftList)
 	if err != nil {
 		return nil, err
 	}

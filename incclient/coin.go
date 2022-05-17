@@ -7,11 +7,14 @@ import (
 	"github.com/incognitochain/go-incognito-sdk-v2/common/base58"
 	"github.com/incognitochain/go-incognito-sdk-v2/crypto"
 	"github.com/incognitochain/go-incognito-sdk-v2/key"
+	"github.com/incognitochain/go-incognito-sdk-v2/metadata"
 	"github.com/incognitochain/go-incognito-sdk-v2/rpchandler"
 	"github.com/incognitochain/go-incognito-sdk-v2/rpchandler/jsonresult"
 	"github.com/incognitochain/go-incognito-sdk-v2/rpchandler/rpc"
 	"github.com/incognitochain/go-incognito-sdk-v2/wallet"
+	"log"
 	"math/big"
+	"time"
 )
 
 // GetOutputCoins calls the remote server to get all the output tokens for an output coin key.
@@ -186,15 +189,20 @@ func (client *IncClient) GetAllUTXOsV2(privateKey string) (map[string][]coin.Pla
 		idxRes[common.PRVIDStr] = prvIndices
 	}
 
-	rawAssetTags, err = client.GetAllAssetTags()
-	if err != nil {
-		return nil, nil, err
-	}
-
 	tokenUTXOs, tokenIndices, err := client.GetUnspentOutputCoins(privateKey, common.ConfidentialAssetID.String(), 0)
 	if err != nil {
 		return nil, nil, err
 	}
+
+	var rawAssetTags map[string]*common.Hash
+	// only get rawAssetTags when we have token UTXOs to improve response time
+	if len(tokenUTXOs) > 0 {
+		rawAssetTags, err = client.GetAllAssetTags()
+		if err != nil {
+			return nil, nil, err
+		}
+	}
+
 	for i, utxo := range tokenUTXOs {
 		if utxo.GetValue() == 0 {
 			continue
@@ -428,29 +436,47 @@ func (client *IncClient) GetOTACoinLengthByShard(shardID byte, tokenID string) (
 
 // GetAllAssetTags retrieves all tokenIDs and computes a mapping from raw assetTags to tokenIds (e.g, HashToPoint(PRV) => PRV).
 func (client *IncClient) GetAllAssetTags() (map[string]*common.Hash, error) {
-	if rawAssetTags == nil {
-		rawAssetTags = make(map[string]*common.Hash)
-	}
+	start := time.Now()
+	rawAssetTags := make(map[string]*common.Hash)
 	included := make(map[string]bool)
 	for _, tokenID := range rawAssetTags {
 		included[tokenID.String()] = true
 	}
 
 	rawAssetTags[crypto.HashToPoint(common.PRVCoinID[:]).String()] = &common.PRVCoinID
-	listTokens, err := client.GetListToken()
+	listTokens, err := client.GetListTokenIDs()
+	var mapToken map[string]CustomToken
 	if err != nil {
-		return nil, err
-	}
-	for tokenIdStr := range listTokens {
-		if included[tokenIdStr] {
-			continue
-		}
-		tokenHash, err := new(common.Hash).NewHashFromStr(tokenIdStr)
+		mapToken, err = client.GetListToken()
 		if err != nil {
 			return nil, err
 		}
-		rawAssetTags[crypto.HashToPoint(tokenHash[:]).String()] = tokenHash
 	}
+	if listTokens == nil {
+		for tokenIdStr := range mapToken {
+			if included[tokenIdStr] {
+				continue
+			}
+			tokenHash, err := new(common.Hash).NewHashFromStr(tokenIdStr)
+			if err != nil {
+				return nil, err
+			}
+			rawAssetTags[crypto.HashToPoint(tokenHash[:]).String()] = tokenHash
+		}
+	} else {
+		for _, tokenIdStr := range listTokens {
+			if included[tokenIdStr] {
+				continue
+			}
+			tokenHash, err := new(common.Hash).NewHashFromStr(tokenIdStr)
+			if err != nil {
+				return nil, err
+			}
+			rawAssetTags[crypto.HashToPoint(tokenHash[:]).String()] = tokenHash
+		}
+	}
+
+	Logger.Printf("GetAllAssetTags FINISHED: %v\n", time.Since(start).Seconds())
 
 	return rawAssetTags, nil
 }
@@ -569,7 +595,8 @@ func GetListDecryptedCoins(privateKey string, listOutputCoins []jsonresult.ICoin
 			}
 			decryptedCoin, err := tmpCoinV2.Decrypt(&keyWallet.KeySet)
 			if err != nil {
-				return nil, nil, err
+				log.Printf("Decrypt %v error: %v\n", base58.Base58Check{}.Encode(outCoin.GetPublicKey().ToBytesS(), 0), err)
+				continue
 			}
 			keyImage := decryptedCoin.GetKeyImage()
 			keyImageString := base58.Base58Check{}.Encode(keyImage.ToBytesS(), common.ZeroByte)
@@ -599,4 +626,87 @@ func GenerateOTAFromPaymentAddress(paymentAddressStr string) (string, string, er
 	txRandom := otaCoin.GetTxRandom()
 
 	return base58.Base58Check{}.Encode(pubKey.ToBytesS(), common.ZeroByte), base58.Base58Check{}.Encode(txRandom.Bytes(), common.ZeroByte), nil
+}
+
+// getAllTokens returns all the tokenIDs that are associated with at least 1 output coin of a privateKey.
+func (client *IncClient) getAllTokens(privateKeyStr string) ([]string, error) {
+	pubKey := PrivateKeyToPublicKey(privateKeyStr)
+	pubKeyStr := base58.Base58Check{}.Encode(pubKey, 0)
+
+	res := make([]string, 0)
+	addedTokenID := make(map[string]interface{})
+
+	// Get tokenIDs v1
+	txHashes, err := client.GetTxHashByPublicKeys([]string{pubKeyStr})
+	if err != nil {
+		return nil, err
+	}
+	txs := make(map[string]metadata.Transaction)
+	txList := txHashes[pubKeyStr]
+	for i := 0; i < len(txList); i += 100 {
+		next := i + 100
+		if next > len(txList) {
+			next = len(txList)
+		}
+
+		txs, err = client.GetTxs(txList[i:next])
+		if err != nil {
+			return nil, err
+		}
+
+		for _, tx := range txs {
+			if tx.GetVersion() != 1 {
+				continue
+			}
+
+			tokenIDStr := tx.GetTokenID().String()
+			if _, ok := addedTokenID[tokenIDStr]; ok {
+				continue
+			}
+			addedTokenID[tokenIDStr] = true
+			res = append(res, tokenIDStr)
+		}
+	}
+
+	// Get tokenIDs v2
+	w, err := wallet.Base58CheckDeserialize(privateKeyStr)
+	if err != nil {
+		return nil, err
+	}
+	tokenOutCoins, err := client.GetListDecryptedOutCoin(privateKeyStr, common.ConfidentialAssetID.String(), 0)
+	if err != nil {
+		return nil, err
+	}
+	rawAssetTags, err := client.GetAllAssetTags()
+	if err != nil {
+		return nil, err
+	}
+	delete(tokenOutCoins, common.ConfidentialAssetID.String())
+
+	for _, outCoin := range tokenOutCoins {
+		if outCoin.GetVersion() != 2 || outCoin.GetValue() == 0 {
+			continue
+		}
+		v2Coin, ok := outCoin.(*coin.CoinV2)
+		if !ok {
+			return nil, fmt.Errorf("cannot cast UTXO %v to a CoinV2", base58.Base58Check{}.Encode(outCoin.GetPublicKey().ToBytesS(), 0))
+		}
+		tokenID, err := v2Coin.GetTokenId(&(w.KeySet), rawAssetTags)
+		if err != nil || tokenID == nil {
+			Logger.Printf("GetTokenId error: %v\n", err)
+			continue
+		}
+		if _, ok := addedTokenID[tokenID.String()]; ok {
+			continue
+		}
+		addedTokenID[tokenID.String()] = true
+		res = append(res, tokenID.String())
+	}
+
+	if _, ok := addedTokenID[common.PRVIDStr]; !ok {
+		addedTokenID[common.PRVIDStr] = true
+		res = append(res, common.PRVIDStr)
+	}
+
+	return res, nil
 }
