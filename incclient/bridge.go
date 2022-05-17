@@ -54,6 +54,53 @@ func NewETHDepositProof(blockNumber uint, blockHash ethCommon.Hash, txIdx uint, 
 	return &proof
 }
 
+// CreateIssuingRequestTransaction creates a centralized shielding transaction.
+// This function should only be called along with the privateKey of the centralized account.
+func (client *IncClient) CreateIssuingRequestTransaction(privateKey, receiver, tokenIDStr, tokenName string, depositAmount uint64) ([]byte, string, error) {
+	tokenID, err := new(common.Hash).NewHashFromStr(tokenIDStr)
+	if err != nil {
+		return nil, "", err
+	}
+
+	w, err := wallet.Base58CheckDeserialize(receiver)
+	if err != nil {
+		return nil, "", err
+	}
+	addr := w.KeySet.PaymentAddress
+	if _, err := AssertPaymentAddressAndTxVersion(addr, 2); err != nil {
+		return nil, "", fmt.Errorf("invalid receiver address")
+	}
+
+	var issuingRequestMeta *metadata.IssuingRequest
+	issuingRequestMeta, err = metadata.NewIssuingRequest(addr, depositAmount, *tokenID, tokenName, metadata.IssuingRequestMeta)
+	if err != nil {
+		return nil, "", fmt.Errorf("cannot init issue request for %v, tokenID %v: %v", receiver, tokenIDStr, err)
+	}
+
+	txParam := NewTxParam(privateKey, []string{}, []uint64{}, DefaultPRVFee, nil, issuingRequestMeta, nil)
+	return client.CreateRawTransaction(txParam, 2)
+}
+
+// CreateAndSendIssuingRequestTransaction creates a centralized shielding transaction, and submits it to the Incognito network.
+func (client *IncClient) CreateAndSendIssuingRequestTransaction(privateKey,
+	receiver,
+	tokenIDStr,
+	tokenName string,
+	depositAmount uint64,
+) (string, error) {
+	encodedTx, txHash, err := client.CreateIssuingRequestTransaction(privateKey, receiver, tokenIDStr, tokenName, depositAmount)
+	if err != nil {
+		return "", err
+	}
+
+	err = client.SendRawTx(encodedTx)
+	if err != nil {
+		return "", err
+	}
+
+	return txHash, nil
+}
+
 // CreateIssuingEVMRequestTransaction creates an EVM shielding trading transaction. By EVM, it means either ETH or BSC.
 //
 // It returns the base58-encoded transaction, the transaction's hash, and an error (if any).
