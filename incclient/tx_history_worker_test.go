@@ -9,7 +9,7 @@ import (
 
 func TestTxHistoryProcessor_GetTxsIn(t *testing.T) {
 	var err error
-	ic, err = NewTestNetClient()
+	ic, err = NewMainNetClientWithCache()
 	if err != nil {
 		panic(err)
 	}
@@ -19,26 +19,22 @@ func TestTxHistoryProcessor_GetTxsIn(t *testing.T) {
 
 	p := NewTxHistoryProcessor(ic, 30)
 
-	txIns, err := p.GetTxsIn(privateKey, tokenIDStr, 1)
+	txIns, err := p.GetTxsIn(privateKey, tokenIDStr, 2)
 	if err != nil {
 		panic(err)
 	}
 
 	log.Printf("#TxIns: %v\n", len(txIns))
 
-	err = SaveTxHistory(&TxHistory{
-		TxInList:  txIns,
-		TxOutList: nil,
-	}, "")
-	if err != nil {
-		panic(err)
+	for _, txIn := range txIns {
+		log.Println(txIn.String())
 	}
 
 }
 
 func TestTxHistoryProcessor_GetTxsOut(t *testing.T) {
 	var err error
-	ic, err = NewTestNetClient()
+	ic, err = NewMainNetClientWithCache()
 	if err != nil {
 		panic(err)
 	}
@@ -49,7 +45,7 @@ func TestTxHistoryProcessor_GetTxsOut(t *testing.T) {
 	p := NewTxHistoryProcessor(ic, 15)
 
 	start := time.Now()
-	txOuts, err := p.GetTxsOut(privateKey, tokenIDStr, 1)
+	txOuts, err := p.GetTxsOut(privateKey, tokenIDStr, 2)
 	if err != nil {
 		panic(err)
 	}
@@ -69,7 +65,7 @@ func TestTxHistoryProcessor_GetTxsOut(t *testing.T) {
 
 func TestTxHistoryProcessor_GetTokenHistory(t *testing.T) {
 	var err error
-	ic, err = NewIncClient("https://beta-fullnode.incognito.org/fullnode", "", 1)
+	ic, err = NewMainNetClientWithCache()
 	if err != nil {
 		panic(err)
 	}
@@ -77,7 +73,7 @@ func TestTxHistoryProcessor_GetTokenHistory(t *testing.T) {
 	tokenIDStr := common.PRVIDStr
 	privateKey := ""
 
-	p := NewTxHistoryProcessor(ic, 50)
+	p := NewTxHistoryProcessor(ic, 30)
 
 	h, err := p.GetTokenHistory(privateKey, tokenIDStr)
 	if err != nil {

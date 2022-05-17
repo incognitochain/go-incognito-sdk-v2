@@ -2,9 +2,26 @@ package incclient
 
 import (
 	"encoding/json"
+	"github.com/stretchr/testify/assert"
+	"reflect"
 	"testing"
 	"time"
 )
+
+func TestIncClient_GetAllPdexPoolPairs(t *testing.T) {
+	var err error
+	ic, err = NewTestNetClient()
+	if err != nil {
+		panic(err)
+	}
+
+	allPoolPairs, err := ic.GetAllPdexPoolPairs(0)
+	if err != nil {
+		panic(err)
+	}
+	jsb, _ := json.MarshalIndent(allPoolPairs, "", "\t")
+	Logger.Printf("state: %v\n", string(jsb))
+}
 
 func TestIncClient_GetPoolPairStateByID(t *testing.T) {
 	var err error
@@ -235,21 +252,21 @@ func TestIncClient_GetEstimatedDEXStakingReward(t *testing.T) {
 
 func TestIncClient_GetEstimatedLPValue(t *testing.T) {
 	var err error
-	ic, err = NewTestNetClient()
+	ic, err = NewMainNetClient()
 	if err != nil {
 		panic(err)
 	}
 
-	poolPairID := "0000000000000000000000000000000000000000000000000000000000000004-00000000000000000000000000000000000000000000000000000000000115d7-768d95970886ef2eea617d2a0ef4aea80ca394db4f8f1ff1fd724c82955cd228"
-	nftID := "eb1ec0987a37829831c8d947ef2c48f8ab6ada4b02d99e82039ca5977570bd0c"
+	poolPairID := "0000000000000000000000000000000000000000000000000000000000000004-716fd1009e2a1669caacc36891e707bfdf02590f96ebd897548e8963c95ebac0-f0ab67d18102d2bf7700943975c357282745d5fa5272c136ac7e55a88f1a2409"
+	nftID := "1d6de062b0cd821bb01de90bca59404367d47f4b3d709060e155d45b176d11d8"
 	beaconHeight := uint64(0)
 
 	res, err := ic.GetEstimatedLPValue(beaconHeight, poolPairID, nftID)
 	if err != nil {
 		panic(err)
 	}
-
-	Logger.Printf("status: %v\n", res)
+	jsb, _ := json.Marshal(res)
+	Logger.Println(string(jsb))
 }
 
 func TestIncClient_GetListNftIDs(t *testing.T) {
@@ -264,6 +281,22 @@ func TestIncClient_GetListNftIDs(t *testing.T) {
 		panic(err)
 	}
 	Logger.Println(nftList)
+}
+
+func TestIncClient_GetDexParams(t *testing.T) {
+	var err error
+	ic, err = NewTestNetClient()
+	if err != nil {
+		panic(err)
+	}
+
+	res, err := ic.GetDexParams(0)
+	if err != nil {
+		panic(err)
+	}
+
+	jsb, _ := json.MarshalIndent(res, "", "\t")
+	Logger.Printf("state: %v\n", string(jsb))
 }
 
 func TestIncClient_GetListStakingPoolShares(t *testing.T) {
@@ -319,4 +352,20 @@ func TestIncClient_GetOrderByID(t *testing.T) {
 		panic(err)
 	}
 	Logger.Println(string(jsb))
+}
+
+func TestIncClient_CloneDEXState(t *testing.T) {
+	var err error
+	ic, err = NewTestNetClient()
+	if err != nil {
+		panic(err)
+	}
+
+	currentState, err := ic.GetPdexState(0)
+	if err != nil {
+		panic(err)
+	}
+	clonedState := currentState.Clone()
+
+	assert.Equal(t, true, reflect.DeepEqual(clonedState, currentState), "cloned and original states mismatch")
 }

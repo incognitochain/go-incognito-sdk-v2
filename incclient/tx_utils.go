@@ -675,7 +675,7 @@ func (client *IncClient) GetTxs(txHashList []string, hashReCheck ...bool) (map[s
 	mapRes := make(map[string]string)
 	err = rpchandler.ParseResponse(responseInBytes, &mapRes)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	res := make(map[string]metadata.Transaction)
@@ -920,8 +920,11 @@ func (client *IncClient) GetReceivingInfo(
 		}
 		if prvAmount > 0 {
 			received = true
+			mapResult[common.PRVIDStr] = prvAmount
+		} else {
+			outCoins = append(outCoins, tx.GetProof().GetOutputCoins()...)
 		}
-		mapResult[common.PRVIDStr] = prvAmount
+
 	default:
 		err = fmt.Errorf("transaction type `%v` is invalid", tx.GetType())
 	}
@@ -945,10 +948,12 @@ func (client *IncClient) GetReceivingInfo(
 			received = true
 
 			// try to decrypt first
-			amount := uint64(0)
-			plainCoin, _ = outCoin.Decrypt(&keySet)
-			if plainCoin != nil {
-				amount = plainCoin.GetValue()
+			amount := outCoin.GetValue()
+			if outCoin.IsEncrypted() {
+				plainCoin, _ = outCoin.Decrypt(&keySet)
+				if plainCoin != nil {
+					amount = plainCoin.GetValue()
+				}
 			}
 
 			switch tokenIdStr {
