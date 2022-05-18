@@ -22,7 +22,7 @@ var EVMIssuingMetadata = map[int]int{
 
 // EVMBurningMetadata keeps track of EVM burning metadata types based on the EVM networkIDs.
 var EVMBurningMetadata = map[int]int{
-	ETHNetworkID: metadata.BurningConfirmMetaV2,
+	ETHNetworkID: metadata.BurningRequestMetaV2,
 	BSCNetworkID: metadata.BurningPBSCRequestMeta,
 	PLGNetworkID: metadata.BurningPLGRequestMeta,
 	FTMNetworkID: metadata.BurningFantomRequestMeta,
