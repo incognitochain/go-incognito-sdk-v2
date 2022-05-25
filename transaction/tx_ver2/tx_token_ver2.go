@@ -588,7 +588,8 @@ func (tx *Tx) provePRV(params *tx_generic.TxPrivacyInitParams) ([]coin.PlainCoin
 	var err error
 	outputCoins := make([]*coin.CoinV2, 0)
 	for _, paymentInfo := range params.PaymentInfo {
-		outputCoin, err := coin.NewCoinFromPaymentInfo(paymentInfo) //We do not mind duplicated OTAs, server will handle them.
+		// We do not mind duplicated OTAs, server will handle them.
+		outputCoin, err := coin.NewCoinFromPaymentInfo(coin.NewTransferCoinParams(paymentInfo, params.GetSenderShard()))
 		if err != nil {
 			log.Printf("Cannot parse outputCoinV2 to outputCoins, error %v\n", err)
 			return nil, nil, err

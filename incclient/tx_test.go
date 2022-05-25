@@ -40,10 +40,11 @@ func getBalanceByVersion(privateKey, tokenIDStr string, version uint8) (uint64, 
 
 func TestIncClient_CreateRawTransaction(t *testing.T) {
 	var err error
-	ic, err = NewLocalClient("")
+	ic, err = NewIncClientWithCache("http://139.162.55.124:8334", "", 2, "testnet")
 	if err != nil {
 		panic(err)
 	}
+	Logger.IsEnable = false
 
 	privateKey := "11111117yu4WAe9fiqmRR4GTxocW6VUKD4dB58wHFjbcQXeDSWQMNyND6Ms3x136EfGcfL7rk3L83BZBzUJLSczmmNi1ngra1WW5Wsjsu5P"
 
@@ -51,7 +52,7 @@ func TestIncClient_CreateRawTransaction(t *testing.T) {
 	paymentAddress := PrivateKeyToPaymentAddress(receiverPrivateKey, -1)
 
 	for i := 0; i < numTests; i++ {
-		version := 1 + common.RandInt()%2
+		version := 2
 		log.Printf("TEST %v, VERSION %v\n", i, version)
 		oldSenderBalance, err := getBalanceByVersion(privateKey, common.PRVIDStr, uint8(version))
 		if err != nil {
@@ -65,7 +66,7 @@ func TestIncClient_CreateRawTransaction(t *testing.T) {
 		}
 		log.Printf("oldReceiverBalance: %v\n", oldReceiverBalance)
 
-		sendingAmount := common.RandUint64() % (oldSenderBalance / 100)
+		sendingAmount := common.RandUint64() % (oldSenderBalance / 10000)
 		receiverList := []string{paymentAddress}
 		amountList := []uint64{sendingAmount}
 		log.Printf("sendingAmount: %v\n", sendingAmount)

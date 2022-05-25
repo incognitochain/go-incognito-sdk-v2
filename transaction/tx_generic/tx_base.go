@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"github.com/incognitochain/go-incognito-sdk-v2/coin"
 	"github.com/incognitochain/go-incognito-sdk-v2/common"
+	"github.com/incognitochain/go-incognito-sdk-v2/crypto"
 	"github.com/incognitochain/go-incognito-sdk-v2/key"
 	"github.com/incognitochain/go-incognito-sdk-v2/metadata"
 	"github.com/incognitochain/go-incognito-sdk-v2/privacy"
@@ -76,6 +77,14 @@ func NewTxPrivacyInitParams(
 		KvArgs:      kvaArgs,
 	}
 	return params
+}
+
+// GetSenderShard returns the shardID of the sender of a TxPrivacyInitParams.
+func (param *TxPrivacyInitParams) GetSenderShard() byte {
+	pubKey := new(crypto.Point).ScalarMultBase(new(crypto.Scalar).FromBytesS(*param.SenderSK))
+	pubKeyBytes := pubKey.ToBytesS()
+
+	return common.GetShardIDFromLastByte(pubKeyBytes[len(pubKeyBytes)-1])
 }
 
 // GetTxInfo checks and returns valid info.

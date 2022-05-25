@@ -13,19 +13,65 @@ import (
 
 func TestIncClient_CreateRawTokenTransaction(t *testing.T) {
 	var err error
-	ic, err = NewLocalClient("")
+	ic, err = NewIncClientWithCache("http://139.162.55.124:8334", "", 2, "testnet")
 	if err != nil {
 		panic(err)
 	}
+	Logger.IsEnable = false
 
 	privateKey := "11111113iP7vLqNpK2RPPmwkQgaXf4c6dzto5RfyNYTsk8L1hNLajtcPRMihKpD9Tg8N8UkGrGso3iAUHaDbDDT2rrf7QXwAGADHkuV5A1U"
 
 	receiverPrivateKey := "11111117yu4WAe9fiqmRR4GTxocW6VUKD4dB58wHFjbcQXeDSWQMNyND6Ms3x136EfGcfL7rk3L83BZBzUJLSczmmNi1ngra1WW5Wsjsu5P"
 	paymentAddress := PrivateKeyToPaymentAddress(receiverPrivateKey, -1)
-	tokenIDStr := "f3e586e281d275ea2059e35ae434d0431947d2b49466b6d2479808378268f822"
+
+	var tokenIDStr string
+	found := false
+	allBalances, _ := ic.GetAllBalancesV2(privateKey)
+	for tokenID, balance := range allBalances {
+		if tokenID == common.PRVIDStr {
+			continue
+		}
+		if balance > 0 {
+			tokenIDStr = tokenID
+			found = true
+			break
+		}
+	}
+
+	if !found {
+		log.Printf("Token balance is zero. Mint a new token.\n")
+		mintingAmount := common.RandUint64() % uint64(10000000000000000000)
+		encodedTx, _, err := ic.CreateTokenInitTransaction(privateKey, "TEST-TOKEN", "TTT", mintingAmount, 2)
+		if err != nil {
+			panic(err)
+		}
+		err = ic.SendRawTx(encodedTx)
+		if err != nil {
+			panic(err)
+		}
+		time.Sleep(20 * time.Second)
+
+		for {
+			allBalances, _ := ic.GetAllBalancesV2(privateKey)
+			found := false
+			for tokenID, balance := range allBalances {
+				if balance == mintingAmount {
+					tokenIDStr = tokenID
+					found = true
+					break
+				}
+			}
+			if found {
+				break
+			}
+			time.Sleep(10 * time.Second)
+		}
+	}
+
+	log.Printf("TESTING WITH TOKENID %v\n\n", tokenIDStr)
 
 	for i := 0; i < numTests; i++ {
-		version := 1 + common.RandInt()%2
+		version := 2
 		log.Printf("TEST %v, VERSION %v\n", i, version)
 
 		oldSenderBalance, err := getBalanceByVersion(privateKey, tokenIDStr, uint8(version))
@@ -40,7 +86,7 @@ func TestIncClient_CreateRawTokenTransaction(t *testing.T) {
 		}
 		log.Printf("oldReceiverBalance: %v\n", oldReceiverBalance)
 
-		sendingAmount := common.RandUint64() % (oldSenderBalance / 100)
+		sendingAmount := common.RandUint64() % (oldSenderBalance / 10000)
 		receiverList := []string{paymentAddress}
 		amountList := []uint64{sendingAmount}
 		log.Printf("sendingAmount: %v\n", sendingAmount)
