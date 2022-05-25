@@ -40,7 +40,7 @@ func getBalanceByVersion(privateKey, tokenIDStr string, version uint8) (uint64, 
 
 func TestIncClient_CreateRawTransaction(t *testing.T) {
 	var err error
-	ic, err = NewIncClientWithCache("http://139.162.55.124:8334", "", 2, "testnet")
+	ic, err = NewLocalClient("")
 	if err != nil {
 		panic(err)
 	}

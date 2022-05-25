@@ -13,7 +13,7 @@ import (
 
 func TestIncClient_CreateRawTokenTransaction(t *testing.T) {
 	var err error
-	ic, err = NewIncClientWithCache("http://139.162.55.124:8334", "", 2, "testnet")
+	ic, err = NewLocalClient("")
 	if err != nil {
 		panic(err)
 	}
