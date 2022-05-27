@@ -1,0 +1,38 @@
+{
+  "Network": "mainnet",
+  "RPCHost": "https://beta-fullnode.incognito.org/fullnode",
+  "Version": 2,
+  "DefaultPRVFee": 100,
+  "EVMNetworks": {
+    "ETH": {
+      "ContractAddress": "0x43D037A562099A4C2c95b1E2120cc43054450629",
+      "PRVContractAddress": "0xB64fde8f199F073F41c132B9eC7aD5b61De0B1B7",
+      "FullNodeHost": "https://mainnet.infura.io/v3/34918000975d4374a056ed78fe21c517"
+    },
+    "BSC": {
+      "ContractAddress": "0x43D037A562099A4C2c95b1E2120cc43054450629",
+      "PRVContractAddress": "0xB64fde8f199F073F41c132B9eC7aD5b61De0B1B7",
+      "FullNodeHost": "https://bsc-dataseed.binance.org"
+    },
+    "PLG": {
+      "ContractAddress": "0x43D037A562099A4C2c95b1E2120cc43054450629",
+      "FullNodeHost": "https://matic-mainnet.chainstacklabs.com"
+    },
+    "FTM": {
+      "ContractAddress": "0x43D037A562099A4C2c95b1E2120cc43054450629",
+      "FullNodeHost": "https://rpc.ftm.tools/"
+    }
+  },
+  "UTXOCache": {
+    "Enable": true,
+    "MaxGetCoinThreads": 20,
+    "CacheLocation": ".cache"
+  },
+  "PortalParams": {
+    "NetworkName": "mainnet",
+    "TokenID": "b832e5d3b1f01a4f0623f7fe91d6673461e1f5d37d91fe78c5c2e6183ff39696"
+  },
+  "LogConfig": {
+    "Enable": true
+  }
+}
