@@ -283,5 +283,9 @@ func LoadConfig(configFile string) (*ClientConfig, error) {
 		return nil, fmt.Errorf("network %v not supported", result.Network)
 	}
 
+	if result.UTXOCache.Enable && result.UTXOCache.MaxGetCoinThreads == 0 {
+		result.UTXOCache.MaxGetCoinThreads = int(math.Max(float64(runtime.NumCPU()), 4))
+	}
+
 	return &result, nil
 }

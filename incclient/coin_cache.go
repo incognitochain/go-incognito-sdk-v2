@@ -23,6 +23,8 @@ var (
 
 	// MaxGetCoinThreads is the maximum number of threads running simultaneously to retrieve output coins in the cache layer.
 	// By default, it is set to the maximum of 4 and the number of CPUs of the running machine.
+	//
+	// Deprecated: use client.cfg.UTXOCache.MaxGetCoinThreads instead.
 	MaxGetCoinThreads = int(math.Max(float64(runtime.NumCPU()), 4))
 )
 
@@ -254,8 +256,8 @@ func (client *IncClient) syncOutCoinV2(outCoinKey *rpc.OutCoinKey, tokenIDStr st
 	Logger.Printf("Current LatestIndex for token %v: %v\n", tokenIDStr, cachedToken.LatestIndex)
 	var rawAssetTags map[string]*common.Hash
 	if currentIndex < coinLength {
-		Logger.Printf("MaxGetCoinThreads: %v\n", MaxGetCoinThreads)
-		statusChan := make(chan getCoinStatus, MaxGetCoinThreads)
+		Logger.Printf("MaxGetCoinThreads: %v\n", client.cfg.UTXOCache.MaxGetCoinThreads)
+		statusChan := make(chan getCoinStatus, client.cfg.UTXOCache.MaxGetCoinThreads)
 		doneCount := 0
 		mtx := new(sync.Mutex)
 		numWorking := 0
@@ -281,7 +283,7 @@ func (client *IncClient) syncOutCoinV2(outCoinKey *rpc.OutCoinKey, tokenIDStr st
 				if doneCount == int(numThreads) {
 					break
 				}
-				if numWorking < MaxGetCoinThreads && currentIndex < coinLength {
+				if numWorking < client.cfg.UTXOCache.MaxGetCoinThreads && currentIndex < coinLength {
 					nextIndex := currentIndex + uint64(batchSize)
 					if nextIndex > coinLength {
 						nextIndex = coinLength
