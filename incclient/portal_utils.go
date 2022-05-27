@@ -32,14 +32,14 @@ func (client *IncClient) GeneratePortalShieldingAddress(paymentAddressStr, token
 	var res string
 	var err error
 
-	if client.btcPortalParams != nil {
-		if tokenIDStr != client.btcPortalParams.TokenID {
+	if client.cfg.PortalParams != nil {
+		if tokenIDStr != client.cfg.PortalParams.TokenID {
 			return "", fmt.Errorf("tokenID %v not supported by the v4 Portal", tokenIDStr)
 		}
 
 		pubKeys := make([][]byte, 0)
 		if paymentAddressStr == "" {
-			pubKeys = client.btcPortalParams.MasterPubKeys[:]
+			pubKeys = client.cfg.PortalParams.MasterPubKeys[:]
 		} else {
 			_, err = AssertPaymentAddressAndTxVersion(paymentAddressStr, 2)
 			if err != nil {
@@ -47,9 +47,9 @@ func (client *IncClient) GeneratePortalShieldingAddress(paymentAddressStr, token
 			}
 
 			chainCode := chainhash.HashB([]byte(paymentAddressStr))
-			for idx, masterPubKey := range client.btcPortalParams.MasterPubKeys {
+			for idx, masterPubKey := range client.cfg.PortalParams.MasterPubKeys {
 				// generate BTC child public key for this Incognito address
-				extendedBTCPublicKey := hdkeychain.NewExtendedKey(client.btcPortalParams.ChainParams.HDPublicKeyID[:], masterPubKey, chainCode, []byte{}, 0, 0, false)
+				extendedBTCPublicKey := hdkeychain.NewExtendedKey(client.cfg.PortalParams.ChainParams.HDPublicKeyID[:], masterPubKey, chainCode, []byte{}, 0, 0, false)
 				extendedBTCChildPubKey, err := extendedBTCPublicKey.Child(0)
 				if err != nil {
 					return "", err
@@ -65,7 +65,7 @@ func (client *IncClient) GeneratePortalShieldingAddress(paymentAddressStr, token
 			// create redeem script for m of n multi-sig
 			builder := txscript.NewScriptBuilder()
 			// add the minimum number of needed signatures
-			builder.AddOp(byte(txscript.OP_1 - 1 + client.btcPortalParams.NumRequiredSigs))
+			builder.AddOp(byte(txscript.OP_1 - 1 + client.cfg.PortalParams.NumRequiredSigs))
 			// add the public key to redeem script
 			for _, pubKey := range pubKeys {
 				builder.AddData(pubKey)
@@ -82,7 +82,7 @@ func (client *IncClient) GeneratePortalShieldingAddress(paymentAddressStr, token
 
 			// generate P2WSH address
 			scriptHash := sha256.Sum256(redeemScript)
-			addr, err := btcutil.NewAddressWitnessScriptHash(scriptHash[:], client.btcPortalParams.ChainParams)
+			addr, err := btcutil.NewAddressWitnessScriptHash(scriptHash[:], client.cfg.PortalParams.ChainParams)
 			if err != nil {
 				return "", fmt.Errorf("could not generate address from script - Error %v", err)
 			}

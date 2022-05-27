@@ -57,7 +57,11 @@ const (
 )
 
 const (
-	DefaultPRVFee            = uint64(100)
+	// DefaultPRVFee is the default value of PRV for paying transaction fees.
+	//
+	// Deprecated: use client.GetConfig().DefaultPRVFee instead.
+	DefaultPRVFee = uint64(100)
+
 	defaultNftRequiredAmount = 100
 	MaxInputSize             = 30
 	MaxOutputSize            = 30
