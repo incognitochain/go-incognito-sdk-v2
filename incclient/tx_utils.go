@@ -621,7 +621,7 @@ func (client *IncClient) initParamsV2(txParam *TxParam, tokenIDStr string, total
 // GetTokenFee returns the token fee per kb.
 func (client *IncClient) GetTokenFee(shardID byte, tokenIDStr string) (uint64, error) {
 	if tokenIDStr == common.PRVIDStr {
-		return DefaultPRVFee, nil
+		return client.cfg.DefaultPRVFee, nil
 	}
 	responseInBytes, err := client.rpcServer.EstimateFeeWithEstimator(-1, shardID, 10, tokenIDStr)
 	if err != nil {

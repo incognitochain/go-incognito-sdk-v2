@@ -267,7 +267,7 @@ func (client *IncClient) ConsolidateTokenV2s(privateKey, tokenIDStr string, numT
 			var tmpPRV []coin.PlainCoin
 			var tmpPRVIdx []uint64
 			for i := currentPRVIdx; i < len(prvUTXOList); i++ {
-				if prvUTXOList[i].GetValue() >= DefaultPRVFee {
+				if prvUTXOList[i].GetValue() >= client.cfg.DefaultPRVFee {
 					tmpPRV = []coin.PlainCoin{prvUTXOList[i]}
 					tmpPRVIdx = []uint64{prvIndices[i]}
 					currentPRVIdx = i + 1
@@ -353,13 +353,13 @@ func (client *IncClient) consolidatePRVs(id int, privateKey string,
 	for _, c := range inputCoins {
 		totalAmount += c.GetValue()
 	}
-	if totalAmount <= DefaultPRVFee {
-		errCh <- fmt.Errorf("[ID %v] not enough PRV, got %v, want at least %v", id, totalAmount, DefaultPRVFee+1)
+	if totalAmount <= client.cfg.DefaultPRVFee {
+		errCh <- fmt.Errorf("[ID %v] not enough PRV, got %v, want at least %v", id, totalAmount, client.cfg.DefaultPRVFee+1)
 		return
 	}
 
 	addr := PrivateKeyToPaymentAddress(privateKey, -1)
-	txParam := NewTxParam(privateKey, []string{addr}, []uint64{totalAmount - DefaultPRVFee}, DefaultPRVFee, nil, nil, nil)
+	txParam := NewTxParam(privateKey, []string{addr}, []uint64{totalAmount - client.cfg.DefaultPRVFee}, client.cfg.DefaultPRVFee, nil, nil, nil)
 
 	encodedTx, txHash, err := client.CreateRawTransactionWithInputCoins(txParam, inputCoins, indices)
 	if err != nil {
@@ -455,14 +455,14 @@ func (client *IncClient) consolidateTokenV2s(id int, privateKey, tokenIDStr stri
 	for _, c := range prvInputCoins {
 		totalPRVAmount += c.GetValue()
 	}
-	if totalPRVAmount < DefaultPRVFee {
-		errCh <- fmt.Errorf("[ID %v] not enough PRV, got %v, want at least %v", id, totalAmount, DefaultPRVFee)
+	if totalPRVAmount < client.cfg.DefaultPRVFee {
+		errCh <- fmt.Errorf("[ID %v] not enough PRV, got %v, want at least %v", id, totalAmount, client.cfg.DefaultPRVFee)
 		return
 	}
 
 	addr := PrivateKeyToPaymentAddress(privateKey, -1)
 	txTokenParam := NewTxTokenParam(tokenIDStr, 1, []string{addr}, []uint64{totalAmount}, false, 0, nil)
-	txParam := NewTxParam(privateKey, []string{}, []uint64{}, DefaultPRVFee, txTokenParam, nil, nil)
+	txParam := NewTxParam(privateKey, []string{}, []uint64{}, client.cfg.DefaultPRVFee, txTokenParam, nil, nil)
 
 	encodedTx, txHash, err := client.CreateRawTokenTransactionWithInputCoins(txParam, inputCoins, indices, prvInputCoins, prvIndices)
 	if err != nil {

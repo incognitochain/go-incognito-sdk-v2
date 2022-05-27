@@ -77,7 +77,7 @@ func (client *IncClient) CreateIssuingRequestTransaction(privateKey, receiver, t
 		return nil, "", fmt.Errorf("cannot init issue request for %v, tokenID %v: %v", receiver, tokenIDStr, err)
 	}
 
-	txParam := NewTxParam(privateKey, []string{}, []uint64{}, DefaultPRVFee, nil, issuingRequestMeta, nil)
+	txParam := NewTxParam(privateKey, []string{}, []uint64{}, client.cfg.DefaultPRVFee, nil, issuingRequestMeta, nil)
 	return client.CreateRawTransaction(txParam, 2)
 }
 
@@ -132,7 +132,7 @@ func (client *IncClient) CreateIssuingEVMRequestTransaction(privateKey, tokenIDS
 		return nil, "", fmt.Errorf("cannot init issue eth request for %v, tokenID %v: %v", proof, tokenIDStr, err)
 	}
 
-	txParam := NewTxParam(privateKey, []string{}, []uint64{}, DefaultPRVFee, nil, issuingETHRequestMeta, nil)
+	txParam := NewTxParam(privateKey, []string{}, []uint64{}, client.cfg.DefaultPRVFee, nil, issuingETHRequestMeta, nil)
 	return client.CreateRawTransaction(txParam, -1)
 }
 
@@ -209,7 +209,7 @@ func (client *IncClient) CreateBurningRequestTransaction(privateKey, remoteAddre
 	}
 
 	tokenParam := NewTxTokenParam(tokenIDStr, 1, []string{common.BurningAddress2}, []uint64{burnedAmount}, false, 0, nil)
-	txParam := NewTxParam(privateKey, []string{}, []uint64{}, DefaultPRVFee, tokenParam, md, nil)
+	txParam := NewTxParam(privateKey, []string{}, []uint64{}, client.cfg.DefaultPRVFee, tokenParam, md, nil)
 
 	return client.CreateRawTokenTransaction(txParam, -1)
 }

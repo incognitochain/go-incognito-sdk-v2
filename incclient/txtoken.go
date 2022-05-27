@@ -102,7 +102,7 @@ func (client *IncClient) CreateRawTokenTransactionVer1(txParam *TxParam) ([]byte
 	var kvArgsPRV map[string]interface{}
 	prvFee := txParam.fee
 	if prvFee == 0 {
-		prvFee = DefaultPRVFee
+		prvFee = client.cfg.DefaultPRVFee
 	}
 
 	totalPRVAmount := prvFee
@@ -212,7 +212,7 @@ func (client *IncClient) CreateRawTokenTransactionVer2(txParam *TxParam) ([]byte
 
 	prvFee := txParam.fee
 	if prvFee == 0 {
-		prvFee = DefaultPRVFee
+		prvFee = client.cfg.DefaultPRVFee
 	}
 
 	totalPRVAmount := prvFee
@@ -272,7 +272,7 @@ func (client *IncClient) CreateRawTokenTransactionVer2(txParam *TxParam) ([]byte
 // It returns the transaction's hash, and an error (if any).
 func (client *IncClient) CreateAndSendRawTokenTransaction(privateKey string, addrList []string, amountList []uint64, tokenID string, version int8, md metadata.Metadata) (string, error) {
 	tokenParams := NewTxTokenParam(tokenID, 1, addrList, amountList, false, 0, nil)
-	txParam := NewTxParam(privateKey, []string{}, []uint64{}, DefaultPRVFee, tokenParams, md, nil)
+	txParam := NewTxParam(privateKey, []string{}, []uint64{}, client.cfg.DefaultPRVFee, tokenParams, md, nil)
 	encodedTx, txHash, err := client.CreateRawTokenTransaction(txParam, version)
 	if err != nil {
 		return "", err

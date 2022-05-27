@@ -42,15 +42,15 @@ func (client *IncClient) splitPRVForFees(privateKey string, version uint8, numTh
 		return "", err
 	}
 	totalAmount := uint64(0)
-	numRequiredUTXOs := 0 // a required UTXO is an UTXO whose value is greater than the DefaultPRVFee.
+	numRequiredUTXOs := 0 // a required UTXO is an UTXO whose value is greater than the client.cfg.DefaultPRVFee.
 	for _, c := range utxoList {
-		if c.GetValue() >= DefaultPRVFee {
+		if c.GetValue() >= client.cfg.DefaultPRVFee {
 			numRequiredUTXOs++
 		}
 		totalAmount += c.GetValue()
 	}
-	if totalAmount < uint64(numThreads+1)*DefaultPRVFee {
-		return "", fmt.Errorf("require at least %v nano PRV of version %v, got %v", uint64(numThreads+1)*DefaultPRVFee, version, totalAmount)
+	if totalAmount < uint64(numThreads+1)*client.cfg.DefaultPRVFee {
+		return "", fmt.Errorf("require at least %v nano PRV of version %v, got %v", uint64(numThreads+1)*client.cfg.DefaultPRVFee, version, totalAmount)
 	}
 	if numRequiredUTXOs >= numThreads {
 		Logger.Log.Printf("Already have enough UTXOs\n")
@@ -62,7 +62,7 @@ func (client *IncClient) splitPRVForFees(privateKey string, version uint8, numTh
 	amountList := make([]uint64, 0)
 	for i := 0; i < numThreads; i++ {
 		addrList = append(addrList, addr)
-		amountList = append(amountList, DefaultPRVFee)
+		amountList = append(amountList, client.cfg.DefaultPRVFee)
 	}
 
 	txHash, err := client.CreateAndSendRawTransaction(privateKey, addrList, amountList, int8(version), nil)
@@ -85,7 +85,7 @@ func (client *IncClient) splitPRVForFees(privateKey string, version uint8, numTh
 		}
 
 		for _, c := range utxoList {
-			if c.GetValue() >= DefaultPRVFee {
+			if c.GetValue() >= client.cfg.DefaultPRVFee {
 				numRequiredUTXOs++
 			}
 		}

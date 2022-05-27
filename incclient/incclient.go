@@ -191,6 +191,7 @@ func NewIncClientWithConfig(cfg *config.ClientConfig) (*IncClient, error) {
 	}
 
 	// Init the logger
+	Logger.IsEnable = cfg.LogConfig.Enable
 	if cfg.LogConfig.Enable {
 		Logger.IsEnable = true
 	}

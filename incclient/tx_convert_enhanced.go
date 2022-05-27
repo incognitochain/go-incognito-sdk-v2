@@ -41,8 +41,8 @@ func (client *IncClient) convertAllPRVs(privateKey string, numThreads int) ([]st
 		for _, c := range utxoV1List {
 			totalAmount += c.GetValue()
 		}
-		if totalAmount < DefaultPRVFee {
-			Logger.Printf("not enough PRV, got %v, want at least %v\n", totalAmount, DefaultPRVFee)
+		if totalAmount < client.cfg.DefaultPRVFee {
+			Logger.Printf("not enough PRV, got %v, want at least %v\n", totalAmount, client.cfg.DefaultPRVFee)
 			return nil, fmt.Errorf("no UTXOs to convert")
 		}
 		Logger.Printf("TotalUTXOAmount: %v\n", totalAmount)
@@ -200,7 +200,7 @@ func (client *IncClient) convertAllTokens(privateKey, tokenIDStr string, numThre
 			var tmpPRV []coin.PlainCoin
 			var tmpPRVIdx []uint64
 			for i := currentPRVIdx; i < len(prvUTXOList); i++ {
-				if prvUTXOList[i].GetValue() >= DefaultPRVFee {
+				if prvUTXOList[i].GetValue() >= client.cfg.DefaultPRVFee {
 					tmpPRV = []coin.PlainCoin{prvUTXOList[i]}
 					tmpPRVIdx = []uint64{prvIndices[i]}
 					currentPRVIdx = i + 1
@@ -285,8 +285,8 @@ func (client *IncClient) convertPRVs(id int, privateKey string,
 	for _, c := range inputCoins {
 		totalAmount += c.GetValue()
 	}
-	if totalAmount <= DefaultPRVFee {
-		errCh <- fmt.Errorf("[ID %v] not enough PRV, got %v, want at least %v", id, totalAmount, DefaultPRVFee+1)
+	if totalAmount <= client.cfg.DefaultPRVFee {
+		errCh <- fmt.Errorf("[ID %v] not enough PRV, got %v, want at least %v", id, totalAmount, client.cfg.DefaultPRVFee+1)
 		return
 	}
 
@@ -332,8 +332,8 @@ func (client *IncClient) convertTokens(id int, privateKey, tokenIDStr string,
 	for _, c := range prvInputCoins {
 		totalPRVAmount += c.GetValue()
 	}
-	if totalPRVAmount < DefaultPRVFee {
-		errCh <- fmt.Errorf("[ID %v] not enough PRV, got %v, want at least %v", id, totalAmount, DefaultPRVFee)
+	if totalPRVAmount < client.cfg.DefaultPRVFee {
+		errCh <- fmt.Errorf("[ID %v] not enough PRV, got %v, want at least %v", id, totalAmount, client.cfg.DefaultPRVFee)
 		return
 	}
 

@@ -62,7 +62,7 @@ func (client *IncClient) CreateRawTransactionVer1(param *TxParam) ([]byte, strin
 
 	//Calculate the total transacted amount
 	if param.fee == 0 {
-		param.fee = DefaultPRVFee
+		param.fee = client.cfg.DefaultPRVFee
 	}
 	totalAmount := param.fee
 	for _, amount := range param.amountList {
@@ -116,7 +116,7 @@ func (client *IncClient) CreateRawTransactionVer2(param *TxParam) ([]byte, strin
 
 	txFee := param.fee
 	if param.fee == 0 {
-		txFee = DefaultPRVFee
+		txFee = client.cfg.DefaultPRVFee
 	}
 
 	//Calculate the total transacted amount

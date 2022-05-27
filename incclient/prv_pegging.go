@@ -40,7 +40,7 @@ func (client *IncClient) CreateIssuingPRVPeggingRequestTransaction(
 		return nil, "", fmt.Errorf("cannot init issue eth request for %v, tokenID %v: %v", proof, tokenIDStr, err)
 	}
 
-	txParam := NewTxParam(privateKey, []string{}, []uint64{}, DefaultPRVFee, nil, issuingPRVPeggingRequestMeta, nil)
+	txParam := NewTxParam(privateKey, []string{}, []uint64{}, client.cfg.DefaultPRVFee, nil, issuingPRVPeggingRequestMeta, nil)
 	return client.CreateRawTransaction(txParam, -1)
 }
 
@@ -105,7 +105,7 @@ func (client *IncClient) CreateBurningPRVPeggingRequestTransaction(
 			tokenIDStr, burnedAmount, remoteAddress, err)
 	}
 
-	txParam := NewTxParam(privateKey, []string{common.BurningAddress2}, []uint64{burnedAmount}, DefaultPRVFee, nil, md, nil)
+	txParam := NewTxParam(privateKey, []string{common.BurningAddress2}, []uint64{burnedAmount}, client.cfg.DefaultPRVFee, nil, md, nil)
 
 	return client.CreateRawTransaction(txParam, -1)
 }

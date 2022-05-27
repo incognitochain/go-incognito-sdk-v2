@@ -111,7 +111,7 @@ func prepareUTXOs(senderPrivateKey, receiverPrivateKey, tokenIDStr string, numUT
 		for i := 0; i < MaxOutputSize; i++ {
 			tmpAmountList = append(tmpAmountList, amountForEach*30)
 			amountList = append(amountList, amountForEach)
-			feeAmountList = append(feeAmountList, DefaultPRVFee)
+			feeAmountList = append(feeAmountList, ic.cfg.DefaultPRVFee)
 		}
 		var txHash string
 		if tokenIDStr == common.PRVIDStr {

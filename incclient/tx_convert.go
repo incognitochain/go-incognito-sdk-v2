@@ -45,17 +45,17 @@ func (client *IncClient) CreateRawConversionTransaction(privateKey string) ([]by
 	for _, utxo := range coinV1List {
 		totalAmount += utxo.GetValue()
 	}
-	if totalAmount < DefaultPRVFee {
-		fmt.Printf("Total amount (%v) is less than txFee (%v).\n", totalAmount, DefaultPRVFee)
-		return nil, "", fmt.Errorf("Total amount (%v) is less than txFee (%v).\n", totalAmount, DefaultPRVFee)
+	if totalAmount < client.cfg.DefaultPRVFee {
+		fmt.Printf("Total amount (%v) is less than txFee (%v).\n", totalAmount, client.cfg.DefaultPRVFee)
+		return nil, "", fmt.Errorf("Total amount (%v) is less than txFee (%v).\n", totalAmount, client.cfg.DefaultPRVFee)
 	}
-	totalAmount -= DefaultPRVFee
+	totalAmount -= client.cfg.DefaultPRVFee
 
 	uniquePayment := key.PaymentInfo{PaymentAddress: senderWallet.KeySet.PaymentAddress, Amount: totalAmount, Message: []byte{}}
 
 	//Create tx conversion params
 	txParam := tx_ver2.NewTxConvertVer1ToVer2InitParams(&(senderWallet.KeySet.PrivateKey), []*key.PaymentInfo{&uniquePayment}, coinV1List,
-		DefaultPRVFee, nil, nil, nil, nil)
+		client.cfg.DefaultPRVFee, nil, nil, nil, nil)
 
 	tx := new(tx_ver2.Tx)
 	err = tx_ver2.InitConversion(tx, txParam)
@@ -94,7 +94,7 @@ func (client *IncClient) CreateRawTokenConversionTransaction(privateKey, tokenID
 	}
 
 	//We need to use PRV coinV2 to pay fee (it's a must)
-	prvFee := DefaultPRVFee
+	prvFee := client.cfg.DefaultPRVFee
 	coinsToSpendPRV, kvArgsPRV, err := client.initParams(privateKey, common.PRVIDStr, prvFee, true, 2)
 	if err != nil {
 		return nil, "", err
@@ -180,7 +180,7 @@ func (client *IncClient) CreateAndSendRawConversionTransaction(privateKey string
 //	- privateKey: the private key of the user.
 //	- inputCoins: a list of decrypted, unspent PRV output coins (with the same version).
 //
-// This function uses the DefaultPRVFee to pay the transaction fee.
+// This function uses the client.cfg.DefaultPRVFee to pay the transaction fee.
 //
 // NOTE: this servers PRV transactions only.
 func (client *IncClient) CreateConversionTransactionWithInputCoins(privateKey string, coinV1List []coin.PlainCoin) ([]byte, string, error) {
@@ -214,17 +214,17 @@ func (client *IncClient) CreateConversionTransactionWithInputCoins(privateKey st
 	for _, utxo := range coinV1List {
 		totalAmount += utxo.GetValue()
 	}
-	if totalAmount < DefaultPRVFee {
-		fmt.Printf("Total amount (%v) is less than txFee (%v).\n", totalAmount, DefaultPRVFee)
-		return nil, txHash, fmt.Errorf("Total amount (%v) is less than txFee (%v).\n", totalAmount, DefaultPRVFee)
+	if totalAmount < client.cfg.DefaultPRVFee {
+		fmt.Printf("Total amount (%v) is less than txFee (%v).\n", totalAmount, client.cfg.DefaultPRVFee)
+		return nil, txHash, fmt.Errorf("Total amount (%v) is less than txFee (%v).\n", totalAmount, client.cfg.DefaultPRVFee)
 	}
-	totalAmount -= DefaultPRVFee
+	totalAmount -= client.cfg.DefaultPRVFee
 
 	uniquePayment := key.PaymentInfo{PaymentAddress: senderWallet.KeySet.PaymentAddress, Amount: totalAmount, Message: []byte{}}
 
 	//Create tx conversion params
 	txParam := tx_ver2.NewTxConvertVer1ToVer2InitParams(&(senderWallet.KeySet.PrivateKey), []*key.PaymentInfo{&uniquePayment}, coinV1List,
-		DefaultPRVFee, nil, nil, nil, nil)
+		client.cfg.DefaultPRVFee, nil, nil, nil, nil)
 
 	tx := new(tx_ver2.Tx)
 	err = tx_ver2.InitConversion(tx, txParam)
@@ -251,7 +251,7 @@ func (client *IncClient) CreateConversionTransactionWithInputCoins(privateKey st
 //	- prvInCoins: a list of decrypted, unspent PRV output coins v2 for paying the transaction fee.
 //	- prvIndices: a list of corresponding indices for the prv input coins.
 //
-// This function uses the DefaultPRVFee to pay the transaction fee. Callers must make sure the PRV input coins have
+// This function uses the client.cfg.DefaultPRVFee to pay the transaction fee. Callers must make sure the PRV input coins have
 // enough value to cover the transaction fee.
 //
 func (client *IncClient) CreateTokenConversionTransactionWithInputCoins(privateKey,
@@ -316,13 +316,13 @@ func (client *IncClient) CreateTokenConversionTransactionWithInputCoins(privateK
 	}
 
 	//We need to use PRV coinV2 to pay fee (it's a must)
-	prvFee := DefaultPRVFee
+	prvFee := client.cfg.DefaultPRVFee
 	totalPRVAmount := uint64(0)
 	for _, utxo := range prvInCoins {
 		totalPRVAmount += utxo.GetValue()
 	}
 	if totalPRVAmount < prvFee {
-		return nil, txHash, fmt.Errorf("not enough PRV to pay fee, need %v, got %v", DefaultPRVFee, totalPRVAmount)
+		return nil, txHash, fmt.Errorf("not enough PRV to pay fee, need %v, got %v", client.cfg.DefaultPRVFee, totalPRVAmount)
 	}
 
 	//Calculate the total token amount to be converted

@@ -87,10 +87,10 @@ func TestIncClient_CreateRawTransaction(t *testing.T) {
 		// checking updated balance
 		log.Printf("Checking balance of tx %v...\n", receiverPrivateKey)
 		expectedReceiverBalance := oldReceiverBalance + sendingAmount
-		expectedSenderBalance := oldSenderBalance - sendingAmount - DefaultPRVFee
+		expectedSenderBalance := oldSenderBalance - sendingAmount - ic.cfg.DefaultPRVFee
 		if privateKey == receiverPrivateKey {
-			expectedReceiverBalance = oldReceiverBalance - DefaultPRVFee
-			expectedSenderBalance = oldSenderBalance - DefaultPRVFee
+			expectedReceiverBalance = oldReceiverBalance - ic.cfg.DefaultPRVFee
+			expectedSenderBalance = oldSenderBalance - ic.cfg.DefaultPRVFee
 		}
 		err = waitingCheckBalanceUpdated(receiverPrivateKey, common.PRVIDStr, oldReceiverBalance, expectedReceiverBalance, uint8(version))
 		if err != nil {

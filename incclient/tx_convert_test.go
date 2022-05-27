@@ -56,7 +56,7 @@ func TestIncClient_CreateConversionTransactionWithInputCoins(t *testing.T) {
 
 		log.Printf("#coinsToSpend: %v\n", len(coinsToSpend))
 
-		txFee := DefaultPRVFee
+		txFee := ic.cfg.DefaultPRVFee
 		totalAmount := uint64(0)
 		for _, c := range coinsToSpend {
 			totalAmount += c.GetValue()
@@ -98,7 +98,7 @@ func TestIncClient_CreateConversionTransactionWithInputCoins(t *testing.T) {
 
 		// checking updated balance
 		expectedBalanceV1 := oldBalanceV1 - totalAmount
-		expectedBalanceV2 := oldBalanceV2 + totalAmount - DefaultPRVFee
+		expectedBalanceV2 := oldBalanceV2 + totalAmount - ic.cfg.DefaultPRVFee
 		err = waitingCheckBalanceUpdated(privateKey, common.PRVIDStr, oldBalanceV1, expectedBalanceV1, 1)
 		if err != nil {
 			panic(err)
@@ -185,7 +185,7 @@ func TestIncClient_CreateTokenConversionTransactionWithInputCoins(t *testing.T) 
 		}
 		log.Printf("#prvCoinsToSpend: %v\n", len(prvCoinsToSpend))
 
-		txFee := DefaultPRVFee
+		txFee := ic.cfg.DefaultPRVFee
 		totalPRVAmount := uint64(0)
 		for _, c := range prvCoinsToSpend {
 			totalPRVAmount += c.GetValue()
