@@ -3,6 +3,7 @@ package rpc
 import (
 	"fmt"
 	"github.com/incognitochain/go-incognito-sdk-v2/metadata"
+	"strings"
 )
 
 const (
@@ -26,6 +27,22 @@ var EVMBurningMetadata = map[int]int{
 	BSCNetworkID: metadata.BurningPBSCRequestMeta,
 	PLGNetworkID: metadata.BurningPLGRequestMeta,
 	FTMNetworkID: metadata.BurningFantomRequestMeta,
+}
+
+// GetEVMNetworkIDByName returns the ID of an EVM network based on its name.
+func GetEVMNetworkIDByName(networkName string) (int, error) {
+	switch strings.ToUpper(networkName) {
+	case "ETH", "ETHEREUM":
+		return ETHNetworkID, nil
+	case "BSC", "BINANCE", "BNB":
+		return BSCNetworkID, nil
+	case "PLG", "POLYGON", "MATIC":
+		return PLGNetworkID, nil
+	case "FTM", "FANTOM":
+		return FTMNetworkID, nil
+	default:
+		return -1, fmt.Errorf("EVMNetwork `%v` not supported", networkName)
+	}
 }
 
 var burnProofRPCMethod = map[int]string{
