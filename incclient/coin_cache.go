@@ -69,7 +69,7 @@ func newUTXOCache(cacheDirectory string) (*utxoCache, error) {
 	if err != nil {
 		return nil, err
 	}
-	fmt.Printf("cacheDirectory: %v/%v\n", currentDir, cacheDirectory)
+	Logger.Printf("cacheDirectory: %v/%v\n", currentDir, cacheDirectory)
 
 	return &utxoCache{
 		cacheDirectory: cacheDirectory,
