@@ -1,28 +1,10 @@
 package pdexv3
 
 import (
-	"errors"
-
 	"github.com/incognitochain/go-incognito-sdk-v2/coin"
-	"github.com/incognitochain/go-incognito-sdk-v2/common"
 )
 
 type ReceiverInfo struct {
 	Address coin.OTAReceiver `json:"Address"`
 	Amount  uint64           `json:"Amount"`
-}
-
-// Check if the given OTA address is a valid address and has the expected shard ID
-func isValidOTAReceiver(receiverAddress coin.OTAReceiver, expectedShardID byte) (coin.OTAReceiver, error) {
-	if !receiverAddress.IsValid() {
-		return receiverAddress, errors.New("ReceiverAddress is invalid")
-	}
-
-	pkb := receiverAddress.PublicKey.ToBytesS()
-	currentShardID := common.GetShardIDFromLastByte(pkb[len(pkb)-1])
-	if currentShardID != expectedShardID {
-		return receiverAddress, errors.New("ReceiverAddress shard ID is wrong")
-	}
-
-	return receiverAddress, nil
 }

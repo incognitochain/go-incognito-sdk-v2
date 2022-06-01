@@ -126,12 +126,26 @@ func createPaymentInfos(addrList []string, amountList []uint64) ([]*key.PaymentI
 	}
 
 	paymentInfos := make([]*key.PaymentInfo, 0)
-	for i, addr := range addrList {
-		receiverWallet, err := wallet.Base58CheckDeserialize(addr)
+	for i, receiver := range addrList {
+		paymentInfo := key.PaymentInfo{Amount: amountList[i], Message: []byte{}}
+		receiverWallet, err := wallet.Base58CheckDeserialize(receiver)
 		if err != nil {
-			return nil, fmt.Errorf("cannot deserialize key %v: %v", addr, err)
+			otaReceiver := new(coin.OTAReceiver)
+			err = otaReceiver.FromString(receiver)
+			if err != nil {
+				return nil, fmt.Errorf("invalid receiver %v", receiver)
+			}
+			if !otaReceiver.IsValid() {
+				return nil, fmt.Errorf("invalid receiver %v", receiver)
+			}
+			if !otaReceiver.IsConcealable() {
+				return nil, fmt.Errorf("OTAReceiver %v does not support private transaction", receiver)
+			}
+			paymentInfo.OTAReceiver = receiver
+		} else {
+			paymentInfo.PaymentAddress = receiverWallet.KeySet.PaymentAddress
 		}
-		paymentInfo := key.PaymentInfo{PaymentAddress: receiverWallet.KeySet.PaymentAddress, Amount: amountList[i], Message: []byte{}}
+
 		paymentInfos = append(paymentInfos, &paymentInfo)
 	}
 

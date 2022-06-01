@@ -47,6 +47,7 @@ capabilities of the SDK, we will try to cover them as much as possible.
     * [Transaction Parameters](tutorials/docs/transactions/params.md)
     * [Transferring PRV](tutorials/docs/transactions/raw_tx.md)
     * [Transferring Token](tutorials/docs/transactions/raw_tx_token.md)
+    * [Transferring To One-time Address](tutorials/docs/transactions/send_to_ota.md)
     * [Initializing Custom Tokens](tutorials/docs/transactions/init_token.md)
     * [Converting UTXOs](tutorials/docs/transactions/convert.md)
 * [pDEX](tutorials/docs/pdex/intro.md)

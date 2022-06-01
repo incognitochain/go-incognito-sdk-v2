@@ -34,6 +34,19 @@ func GetShardIDFromLastByte(b byte) byte {
 	return byte(int(b) % MaxShardNumber)
 }
 
+// GetShardIDsFromPublicKey returns the sending and receiving shardIDs from a public key.
+// `pk` must be of length greater than 0, otherwise it will panic.
+func GetShardIDsFromPublicKey(pk []byte) (byte, byte) {
+	if len(pk) == 0 {
+		panic("expect `pk` to be a non-empty byte slice")
+	}
+	lastByte := int(pk[len(pk)-1])
+	receivingShard := byte(lastByte % MaxShardNumber)
+	sendingShard := byte(lastByte / MaxShardNumber % MaxShardNumber)
+
+	return sendingShard, receivingShard
+}
+
 // IntToBytes converts an integer number to 2-byte array in big endian.
 func IntToBytes(n int) []byte {
 	if n == 0 {
