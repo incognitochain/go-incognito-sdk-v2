@@ -8,6 +8,7 @@ import (
 	"math"
 	"os"
 	"runtime"
+	"strings"
 )
 
 // ClientConfig consists of all necessary configurations for a client.
@@ -204,7 +205,7 @@ func LoadConfig(configFile string) (*ClientConfig, error) {
 		return nil, err
 	}
 
-	switch result.Network {
+	switch strings.ToLower(result.Network) {
 	case "mainnet":
 		if result.EVMNetworks == nil {
 			result.EVMNetworks = MainNetConfig.EVMNetworks
@@ -263,11 +264,8 @@ func LoadConfig(configFile string) (*ClientConfig, error) {
 		}
 	case "custom":
 		if result.PortalParams.ChainParams == nil {
-			if result.PortalParams.MasterPubKeys == nil {
-				return nil, fmt.Errorf("portal MasterPubKeys not found from the config file")
-			}
 			result.PortalParams.ChainParams = &chaincfg.MainNetParams
-			switch result.PortalParams.NetworkName {
+			switch strings.ToLower(result.PortalParams.NetworkName) {
 			case "testnet3":
 				result.PortalParams.ChainParams = &chaincfg.TestNet3Params
 			case "regtest":
@@ -279,6 +277,9 @@ func LoadConfig(configFile string) (*ClientConfig, error) {
 				return nil, fmt.Errorf("BTC network `%v` not found", result.PortalParams.NetworkName)
 			}
 		}
+		if result.PortalParams.MasterPubKeys == nil {
+			return nil, fmt.Errorf("portal MasterPubKeys not found from the config file")
+		}
 	default:
 		return nil, fmt.Errorf("network %v not supported", result.Network)
 	}
@@ -288,4 +289,15 @@ func LoadConfig(configFile string) (*ClientConfig, error) {
 	}
 
 	return &result, nil
+}
+
+// SaveConfig writes the given ClientConfig to the give filePath.
+func SaveConfig(clientConfig ClientConfig, filePath string) error {
+	clientConfig.PortalParams.ChainParams = nil
+	jsb, err := json.MarshalIndent(clientConfig, "", "\t")
+	if err != nil {
+		return err
+	}
+
+	return ioutil.WriteFile(filePath, jsb, 0644)
 }
