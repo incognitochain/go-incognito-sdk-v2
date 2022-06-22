@@ -149,13 +149,13 @@ func createOutputCoins(paymentInfos []*key.PaymentInfo, tokenID *common.Hash) ([
 
 	for i := 0; i < len(paymentInfos); i += 1 {
 		if isPRV {
-			c[i], err = coin.NewCoinFromPaymentInfo(paymentInfos[i])
+			c[i], err = coin.NewCoinFromPaymentInfo(coin.NewTransferCoinParams(paymentInfos[i]))
 			if err != nil {
 				log.Printf("TxConversion cannot create new coin unique OTA, got error %v\n", err)
 				return nil, err
 			}
 		} else {
-			createdCACoin, _, err := createUniqueOTACoinCA(paymentInfos[i], tokenID)
+			createdCACoin, _, err := createUniqueOTACoinCA(coin.NewTransferCoinParams(paymentInfos[i]), tokenID)
 			if err != nil {
 				log.Printf("TxConversion cannot create new CA coin - %v\n", err)
 				return nil, err

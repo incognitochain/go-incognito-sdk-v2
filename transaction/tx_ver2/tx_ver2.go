@@ -331,7 +331,7 @@ func (tx *Tx) prove(params *tx_generic.TxPrivacyInitParams) error {
 	var err error
 	outputCoins := make([]*coin.CoinV2, 0)
 	for _, paymentInfo := range params.PaymentInfo {
-		outputCoin, err := coin.NewCoinFromPaymentInfo(paymentInfo) //We do not mind duplicated OTAs, server will handle them.
+		outputCoin, err := coin.NewCoinFromPaymentInfo(coin.NewTransferCoinParams(paymentInfo, params.GetSenderShard())) //We do not mind duplicated OTAs, server will handle them.
 		if err != nil {
 			return err
 		}
