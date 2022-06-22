@@ -610,20 +610,31 @@ func GetListDecryptedCoins(privateKey string, listOutputCoins []jsonresult.ICoin
 }
 
 // GenerateOTAFromPaymentAddress generates a random one-time address, and TxRandom from a payment address.
-func GenerateOTAFromPaymentAddress(paymentAddressStr string) (string, string, error) {
+// If `senderShardParams` is not given, `senderShard` will default to the shardID of the given payment info.
+// Otherwise, the first value of `senderShardParams` will be set as the `senderShard`.
+func GenerateOTAFromPaymentAddress(paymentAddressStr string, coinType int, senderShardParams ...byte) (string, string, error) {
 	keyWallet, err := wallet.Base58CheckDeserialize(paymentAddressStr)
 	if err != nil {
 		return "", "", err
 	}
 
 	paymentInfo := key.InitPaymentInfo(keyWallet.KeySet.PaymentAddress, 0, []byte{})
-	otaCoin, err := coin.NewCoinFromPaymentInfo(paymentInfo)
+
+	var coinInitParams *coin.CoinParams
+	if coinType == coin.PrivacyTypeMint {
+		coinInitParams = coin.NewMintCoinParams(paymentInfo)
+	} else {
+		coinInitParams = coin.NewTransferCoinParams(paymentInfo, senderShardParams...)
+	}
+
+	otaReceiver := new(coin.OTAReceiver)
+	err = otaReceiver.FromCoinParams(coinInitParams)
 	if err != nil {
 		return "", "", err
 	}
 
-	pubKey := otaCoin.GetPublicKey()
-	txRandom := otaCoin.GetTxRandom()
+	pubKey := otaReceiver.PublicKey
+	txRandom := otaReceiver.TxRandom
 
 	return base58.Base58Check{}.Encode(pubKey.ToBytesS(), common.ZeroByte), base58.Base58Check{}.Encode(txRandom.Bytes(), common.ZeroByte), nil
 }

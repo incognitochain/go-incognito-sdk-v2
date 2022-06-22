@@ -186,7 +186,7 @@ func (client *IncClient) CreatePortalUnShieldTransaction(
 	}
 
 	addr := senderWallet.Base58CheckSerialize(wallet.PaymentAddressType)
-	pubKeyStr, txRandomStr, err := GenerateOTAFromPaymentAddress(addr)
+	pubKeyStr, txRandomStr, err := GenerateOTAFromPaymentAddress(addr, coin.PrivacyTypeMint)
 	if err != nil {
 		return nil, "", err
 	}
