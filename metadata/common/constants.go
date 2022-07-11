@@ -193,6 +193,13 @@ const (
 	BurningFantomConfirmMeta               = 155
 	BurningFantomForDepositToSCRequestMeta = 334
 	BurningFantomConfirmForDepositToSCMeta = 156
+
+	BridgeAggConvertTokenToUnifiedTokenRequestMeta  = 341
+	BridgeAggConvertTokenToUnifiedTokenResponseMeta = 342
+	IssuingUnifiedTokenRequestMeta                  = 343
+	IssuingUnifiedTokenResponseMeta                 = 344
+	BurningUnifiedTokenRequestMeta                  = 345
+	BurningUnifiedTokenResponseMeta                 = 346
 )
 
 var minerCreatedMetaTypes = []int{

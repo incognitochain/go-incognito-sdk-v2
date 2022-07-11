@@ -1,10 +1,13 @@
 package incclient
 
 import (
+	"encoding/json"
 	"fmt"
+	"strings"
+
+	rCommon "github.com/ethereum/go-ethereum/common"
 	"github.com/incognitochain/go-incognito-sdk-v2/crypto"
 	"github.com/incognitochain/go-incognito-sdk-v2/rpchandler/rpc"
-	"strings"
 
 	ethCommon "github.com/ethereum/go-ethereum/common"
 	"github.com/incognitochain/go-incognito-sdk-v2/common"
@@ -231,6 +234,88 @@ func (client *IncClient) CreateAndSendBurningRequestTransaction(privateKey, remo
 	}
 
 	err = client.SendRawTokenTx(encodedTx)
+	if err != nil {
+		return "", err
+	}
+
+	return txHash, nil
+}
+
+// CreateIssuingpUnifiedRequestTransaction creates an EVM shielding trading transaction. By EVM, it means either ETH or BSC.
+//
+// It returns the base58-encoded transaction, the transaction's hash, and an error (if any).
+//
+// An additional parameter `evmNetworkID` is introduced to specify the target EVM network. evmNetworkID can be one of the following:
+//	- rpc.ETHNetworkID: the Ethereum network
+//	- rpc.BSCNetworkID: the Binance Smart Chain network
+//	- rpc.PLGNetworkID: the Polygon network
+//	- rpc.FTMNetworkID: the Fantom network
+// If set empty, evmNetworkID defaults to rpc.ETHNetworkID. NOTE that only the first value of evmNetworkID is used.
+func (client *IncClient) CreateIssuingpUnifiedRequestTransaction(privateKey, tokenIDStr string, proof EVMDepositProof, evmNetworkID ...int) ([]byte, string, error) {
+	tokenID, err := new(common.Hash).NewHashFromStr(tokenIDStr)
+	if err != nil {
+		return nil, "", err
+	}
+
+	networkID := rpc.ETHNetworkID
+	if len(evmNetworkID) > 0 {
+		networkID = evmNetworkID[0]
+	}
+	if _, ok := rpc.EVMIssuingMetadata[networkID]; !ok {
+		return nil, "", fmt.Errorf("networkID %v not found", networkID)
+	}
+	// mdType := rpc.EVMIssuingMetadata[networkID]
+	// mdType := metadata.IssuingUnifiedTokenRequestMeta
+
+	type EVMProof struct {
+		BlockHash rCommon.Hash `json:"BlockHash"`
+		TxIndex   uint         `json:"TxIndex"`
+		Proof     []string     `json:"Proof"`
+	}
+
+	proofData := EVMProof{
+		BlockHash: proof.blockHash,
+		TxIndex:   proof.txIdx,
+		Proof:     proof.nodeList,
+	}
+	proofBytes, err := json.Marshal(proofData)
+	if err != nil {
+		return nil, "", fmt.Errorf("failed to marshal proof")
+	}
+
+	var issuingETHRequestMeta *metadata.ShieldRequest
+	shieldRequestData := metadata.ShieldRequestData{
+		IncTokenID: *tokenID,
+		NetworkID:  uint8(networkID),
+		Proof:      proofBytes,
+	}
+	issuingETHRequestMeta = metadata.NewShieldRequestWithValue([]metadata.ShieldRequestData{shieldRequestData}, *tokenID)
+	// issuingETHRequestMeta, err = metadata.NewShieldRequest(proof.blockHash, proof.txIdx, proof.nodeList, *tokenID, mdType)
+	// if err != nil {
+	// 	return nil, "", fmt.Errorf("cannot init issue eth request for %v, tokenID %v: %v", proof, tokenIDStr, err)
+	// }
+
+	txParam := NewTxParam(privateKey, []string{}, []uint64{}, DefaultPRVFee, nil, issuingETHRequestMeta, nil)
+	return client.CreateRawTransaction(txParam, -1)
+}
+
+// CreateAndSendIssuingpUnifiedRequestTransaction creates an EVM shielding transaction, and submits it to the Incognito network.
+//
+// It returns the transaction's hash, and an error (if any).
+//
+// An additional parameter `evmNetworkID` is introduced to specify the target EVM network. evmNetworkID can be one of the following:
+//	- rpc.ETHNetworkID: the Ethereum network
+//	- rpc.BSCNetworkID: the Binance Smart Chain network
+//	- rpc.PLGNetworkID: the Polygon network
+//	- rpc.FTMNetworkID: the Fantom network
+// If set empty, evmNetworkID defaults to rpc.ETHNetworkID. NOTE that only the first value of evmNetworkID is used.
+func (client *IncClient) CreateAndSendIssuingpUnifiedRequestTransaction(privateKey, tokenIDStr string, proof EVMDepositProof, evmNetworkID ...int) (string, error) {
+	encodedTx, txHash, err := client.CreateIssuingpUnifiedRequestTransaction(privateKey, tokenIDStr, proof, evmNetworkID...)
+	if err != nil {
+		return "", err
+	}
+
+	err = client.SendRawTx(encodedTx)
 	if err != nil {
 		return "", err
 	}
