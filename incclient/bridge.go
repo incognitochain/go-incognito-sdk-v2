@@ -251,8 +251,13 @@ func (client *IncClient) CreateAndSendBurningRequestTransaction(privateKey, remo
 //	- rpc.PLGNetworkID: the Polygon network
 //	- rpc.FTMNetworkID: the Fantom network
 // If set empty, evmNetworkID defaults to rpc.ETHNetworkID. NOTE that only the first value of evmNetworkID is used.
-func (client *IncClient) CreateIssuingpUnifiedRequestTransaction(privateKey, tokenIDStr string, proof EVMDepositProof, evmNetworkID ...int) ([]byte, string, error) {
+func (client *IncClient) CreateIssuingpUnifiedRequestTransaction(privateKey, tokenIDStr string, pUnifiedTokenIDStr string, proof EVMDepositProof, evmNetworkID ...int) ([]byte, string, error) {
 	tokenID, err := new(common.Hash).NewHashFromStr(tokenIDStr)
+	if err != nil {
+		return nil, "", err
+	}
+
+	pUnifiedTokenID, err := new(common.Hash).NewHashFromStr(pUnifiedTokenIDStr)
 	if err != nil {
 		return nil, "", err
 	}
@@ -289,7 +294,7 @@ func (client *IncClient) CreateIssuingpUnifiedRequestTransaction(privateKey, tok
 		NetworkID:  uint8(networkID),
 		Proof:      proofBytes,
 	}
-	issuingETHRequestMeta = metadata.NewShieldRequestWithValue([]metadata.ShieldRequestData{shieldRequestData}, *tokenID)
+	issuingETHRequestMeta = metadata.NewShieldRequestWithValue([]metadata.ShieldRequestData{shieldRequestData}, *pUnifiedTokenID)
 	// issuingETHRequestMeta, err = metadata.NewShieldRequest(proof.blockHash, proof.txIdx, proof.nodeList, *tokenID, mdType)
 	// if err != nil {
 	// 	return nil, "", fmt.Errorf("cannot init issue eth request for %v, tokenID %v: %v", proof, tokenIDStr, err)
@@ -309,8 +314,8 @@ func (client *IncClient) CreateIssuingpUnifiedRequestTransaction(privateKey, tok
 //	- rpc.PLGNetworkID: the Polygon network
 //	- rpc.FTMNetworkID: the Fantom network
 // If set empty, evmNetworkID defaults to rpc.ETHNetworkID. NOTE that only the first value of evmNetworkID is used.
-func (client *IncClient) CreateAndSendIssuingpUnifiedRequestTransaction(privateKey, tokenIDStr string, proof EVMDepositProof, evmNetworkID ...int) (string, error) {
-	encodedTx, txHash, err := client.CreateIssuingpUnifiedRequestTransaction(privateKey, tokenIDStr, proof, evmNetworkID...)
+func (client *IncClient) CreateAndSendIssuingpUnifiedRequestTransaction(privateKey, tokenIDStr string, pUnifiedTokenIDStr string, proof EVMDepositProof, evmNetworkID ...int) (string, error) {
+	encodedTx, txHash, err := client.CreateIssuingpUnifiedRequestTransaction(privateKey, tokenIDStr, pUnifiedTokenIDStr, proof, evmNetworkID...)
 	if err != nil {
 		return "", err
 	}
