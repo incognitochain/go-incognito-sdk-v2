@@ -1,4 +1,4 @@
-package metadata
+package bridge
 
 import (
 	"encoding/json"
@@ -12,7 +12,8 @@ import (
 type ShieldRequest struct {
 	Data           []ShieldRequestData `json:"Data"`
 	UnifiedTokenID common.Hash         `json:"UnifiedTokenID"`
-	MetadataBase
+
+	metadataCommon.MetadataBase
 }
 
 type ShieldRequestData struct {
@@ -39,7 +40,7 @@ type AcceptedShieldRequestData struct {
 
 func NewShieldRequest() *ShieldRequest {
 	return &ShieldRequest{
-		MetadataBase: MetadataBase{
+		MetadataBase: metadataCommon.MetadataBase{
 			Type: metadataCommon.IssuingUnifiedTokenRequestMeta,
 		},
 	}
@@ -51,7 +52,7 @@ func NewShieldRequestWithValue(
 	return &ShieldRequest{
 		Data:           data,
 		UnifiedTokenID: unifiedTokenID,
-		MetadataBase: MetadataBase{
+		MetadataBase: metadataCommon.MetadataBase{
 			Type: metadataCommon.IssuingUnifiedTokenRequestMeta,
 		},
 	}

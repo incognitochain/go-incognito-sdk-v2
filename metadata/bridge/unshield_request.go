@@ -1,4 +1,4 @@
-package metadata
+package bridge
 
 import (
 	"encoding/json"
@@ -31,7 +31,7 @@ type RejectedUnshieldRequest struct {
 
 func NewUnshieldRequest() *UnshieldRequest {
 	return &UnshieldRequest{
-		MetadataBase: MetadataBase{
+		MetadataBase: metadataCommon.MetadataBase{
 			Type: metadataCommon.BurningUnifiedTokenRequestMeta,
 		},
 	}
@@ -45,7 +45,7 @@ func NewUnshieldRequestWithValue(
 		Data:           data,
 		Receiver:       receiver,
 		IsDepositToSC:  isDepositToSC,
-		MetadataBase: MetadataBase{
+		MetadataBase: metadataCommon.MetadataBase{
 			Type: metadataCommon.BurningUnifiedTokenRequestMeta,
 		},
 	}

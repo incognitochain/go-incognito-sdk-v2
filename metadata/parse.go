@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	metadataBridge "github.com/incognitochain/go-incognito-sdk-v2/metadata/bridge"
 	metadataCommon "github.com/incognitochain/go-incognito-sdk-v2/metadata/common"
 	metadataPdexv3 "github.com/incognitochain/go-incognito-sdk-v2/metadata/pdexv3"
 	"github.com/pkg/errors"
@@ -180,20 +181,20 @@ func ParseMetadata(metaInBytes []byte) (Metadata, error) {
 		md = &metadataPdexv3.WithdrawalStakingRewardRequest{}
 	case metadataCommon.Pdexv3WithdrawStakingRewardResponseMeta:
 		md = &metadataPdexv3.WithdrawalStakingRewardResponse{}
-	// case metadataCommon.BridgeAggModifyParamMeta:
-	// 	md = &ModifyBridgeAggParamReq{}
-	// case metadataCommon.BridgeAggConvertTokenToUnifiedTokenRequestMeta:
-	// 	md = &ConvertTokenToUnifiedTokenRequest{}
-	// case metadataCommon.BridgeAggConvertTokenToUnifiedTokenResponseMeta:
-	// 	md = &ConvertTokenToUnifiedTokenResponse{}
+	case metadataCommon.BridgeAggModifyParamMeta:
+		md = &metadataBridge.ModifyBridgeAggParamReq{}
+	case metadataCommon.BridgeAggConvertTokenToUnifiedTokenRequestMeta:
+		md = &metadataBridge.ConvertTokenToUnifiedTokenRequest{}
+	case metadataCommon.BridgeAggConvertTokenToUnifiedTokenResponseMeta:
+		md = &metadataBridge.ConvertTokenToUnifiedTokenResponse{}
 	case metadataCommon.IssuingUnifiedTokenRequestMeta:
-		md = &ShieldRequest{}
-	// case metadataCommon.IssuingUnifiedTokenResponseMeta:
-	// 	md = &ShieldResponse{}
+		md = &metadataBridge.ShieldRequest{}
+	case metadataCommon.IssuingUnifiedTokenResponseMeta:
+		md = &metadataBridge.ShieldResponse{}
 	case metadataCommon.BurningUnifiedTokenRequestMeta:
-		md = &UnshieldRequest{}
-	// case metadataCommon.BurningUnifiedTokenResponseMeta:
-	// 	md = &UnshieldResponse{}
+		md = &metadataBridge.UnshieldRequest{}
+	case metadataCommon.BurningUnifiedTokenResponseMeta:
+		md = &metadataBridge.UnshieldResponse{}
 	default:
 		return nil, errors.Errorf("Could not parse metadata with type: %d", theType)
 	}

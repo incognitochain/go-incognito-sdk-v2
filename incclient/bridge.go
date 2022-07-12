@@ -12,6 +12,7 @@ import (
 	ethCommon "github.com/ethereum/go-ethereum/common"
 	"github.com/incognitochain/go-incognito-sdk-v2/common"
 	"github.com/incognitochain/go-incognito-sdk-v2/metadata"
+	metadataBridge "github.com/incognitochain/go-incognito-sdk-v2/metadata/bridge"
 	"github.com/incognitochain/go-incognito-sdk-v2/rpchandler"
 	"github.com/incognitochain/go-incognito-sdk-v2/rpchandler/jsonresult"
 	"github.com/incognitochain/go-incognito-sdk-v2/wallet"
@@ -269,8 +270,6 @@ func (client *IncClient) CreateIssuingpUnifiedRequestTransaction(privateKey, tok
 	if _, ok := rpc.EVMIssuingMetadata[networkID]; !ok {
 		return nil, "", fmt.Errorf("networkID %v not found", networkID)
 	}
-	// mdType := rpc.EVMIssuingMetadata[networkID]
-	// mdType := metadata.IssuingUnifiedTokenRequestMeta
 
 	type EVMProof struct {
 		BlockHash rCommon.Hash `json:"BlockHash"`
@@ -288,17 +287,13 @@ func (client *IncClient) CreateIssuingpUnifiedRequestTransaction(privateKey, tok
 		return nil, "", fmt.Errorf("failed to marshal proof")
 	}
 
-	var issuingETHRequestMeta *metadata.ShieldRequest
-	shieldRequestData := metadata.ShieldRequestData{
+	var issuingETHRequestMeta *metadataBridge.ShieldRequest
+	shieldRequestData := metadataBridge.ShieldRequestData{
 		IncTokenID: *tokenID,
 		NetworkID:  uint8(networkID),
 		Proof:      proofBytes,
 	}
-	issuingETHRequestMeta = metadata.NewShieldRequestWithValue([]metadata.ShieldRequestData{shieldRequestData}, *pUnifiedTokenID)
-	// issuingETHRequestMeta, err = metadata.NewShieldRequest(proof.blockHash, proof.txIdx, proof.nodeList, *tokenID, mdType)
-	// if err != nil {
-	// 	return nil, "", fmt.Errorf("cannot init issue eth request for %v, tokenID %v: %v", proof, tokenIDStr, err)
-	// }
+	issuingETHRequestMeta = metadataBridge.NewShieldRequestWithValue([]metadataBridge.ShieldRequestData{shieldRequestData}, *pUnifiedTokenID)
 
 	txParam := NewTxParam(privateKey, []string{}, []uint64{}, DefaultPRVFee, nil, issuingETHRequestMeta, nil)
 	return client.CreateRawTransaction(txParam, -1)
