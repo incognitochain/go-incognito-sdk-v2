@@ -401,6 +401,60 @@ func (client *IncClient) CreateAndSendIssuingpUnifiedRequestTransaction(privateK
 	return txHash, nil
 }
 
+func (client *IncClient) CreateBridgeAggConvertTokenToUnifiedTokenRequestTransaction(privateKey, remoteAddress, tokenIDStr, pUnifiedTokenIDStr string, burnedAmount uint64, evmNetworkID ...int) ([]byte, string, error) {
+	tokenID, err := new(common.Hash).NewHashFromStr(tokenIDStr)
+	if err != nil {
+		return nil, "", err
+	}
+
+	pUnifiedTokenID, err := new(common.Hash).NewHashFromStr(pUnifiedTokenIDStr)
+	if err != nil {
+		return nil, "", err
+	}
+
+	mdType := metadata.BridgeAggConvertTokenToUnifiedTokenRequestMeta
+
+	var md *metadataBridge.ConvertTokenToUnifiedTokenRequest
+
+	senderWallet, err := wallet.Base58CheckDeserialize(privateKey)
+	if err != nil {
+		return nil, "", fmt.Errorf("cannot deserialize the sender private key")
+	}
+	burnerAddress := senderWallet.KeySet.PaymentAddress
+	if common.AddressVersion == 0 {
+		burnerAddress.OTAPublic = nil
+	}
+
+	if strings.Contains(remoteAddress, "0x") {
+		remoteAddress = remoteAddress[2:]
+	}
+	metadataBridge.NewConvertTokenToUnifiedTokenRequestWithValue(*tokenID, *pUnifiedTokenID, burnedAmount)
+	metadata.NewPortalUnshieldRequest()
+	md, err = metadataBridge.NewBurningRequest(burnerAddress, burnedAmount, *tokenID, tokenIDStr, remoteAddress, mdType)
+	if err != nil {
+		return nil, "", fmt.Errorf("cannot init burning request with tokenID %v, burnedAmount %v, remoteAddress %v: %v", tokenIDStr, burnedAmount, remoteAddress, err)
+	}
+
+	tokenParam := NewTxTokenParam(tokenIDStr, 1, []string{common.BurningAddress2}, []uint64{burnedAmount}, false, 0, nil)
+	txParam := NewTxParam(privateKey, []string{}, []uint64{}, DefaultPRVFee, tokenParam, md, nil)
+
+	return client.CreateRawTokenTransaction(txParam, -1)
+}
+
+func (client *IncClient) CreateAndSendBridgeAggConvertTokenToUnifiedTokenRequestTransaction(privateKey, remoteAddress, tokenIDStr string, burnedAmount uint64, evmNetworkID ...int) (string, error) {
+	encodedTx, txHash, err := client.CreateBridgeAggConvertTokenToUnifiedTokenRequestTransaction(privateKey, remoteAddress, tokenIDStr, burnedAmount, evmNetworkID...)
+	if err != nil {
+		return "", err
+	}
+
+	err = client.SendRawTx(encodedTx)
+	if err != nil {
+		return "", err
+	}
+
+	return txHash, nil
+}
+
 // GetBurnProof retrieves the burning proof for the Incognito network for submitting to the smart contract later.
 //
 // An additional parameter `evmNetworkID` is introduced to specify the target EVM network. evmNetworkID can be one of the following:
