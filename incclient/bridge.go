@@ -242,6 +242,84 @@ func (client *IncClient) CreateAndSendBurningRequestTransaction(privateKey, remo
 	return txHash, nil
 }
 
+// CreateAndSendBurningpUnifiedRequestTransaction creates an EVM pUnified burning transaction for exiting the Incognito network, and submits it to the network.
+//
+// It returns the transaction's hash, and an error (if any).
+//
+// An additional parameter `evmNetworkID` is introduced to specify the target EVM network. evmNetworkID can be one of the following:
+//	- rpc.ETHNetworkID: the Ethereum network
+//	- rpc.BSCNetworkID: the Binance Smart Chain network
+//	- rpc.PLGNetworkID: the Polygon network
+//	- rpc.FTMNetworkID: the Fantom network
+// If set empty, evmNetworkID defaults to rpc.ETHNetworkID. NOTE that only the first value of evmNetworkID is used.
+func (client *IncClient) CreateAndSendBurningpUnifiedRequestTransaction(privateKey, remoteAddress, tokenIDStr string, burnedAmount uint64, evmNetworkID ...int) (string, error) {
+	encodedTx, txHash, err := client.CreateBurningpUnifiedRequestTransaction(privateKey, remoteAddress, tokenIDStr, burnedAmount, evmNetworkID...)
+	if err != nil {
+		return "", err
+	}
+
+	err = client.SendRawTokenTx(encodedTx)
+	if err != nil {
+		return "", err
+	}
+
+	return txHash, nil
+}
+
+// CreateBurningpUnifiedRequestTransaction creates an EVM pUnified burning transaction for exiting the Incognito network.
+//
+// It returns the base58-encoded transaction, the transaction's hash, and an error (if any).
+//
+// An additional parameter `evmNetworkID` is introduced to specify the target EVM network. evmNetworkID can be one of the following:
+//	- rpc.ETHNetworkID: the Ethereum network
+//	- rpc.BSCNetworkID: the Binance Smart Chain network
+//	- rpc.PLGNetworkID: the Polygon network
+//	- rpc.FTMNetworkID: the Fantom network
+// If set empty, evmNetworkID defaults to rpc.ETHNetworkID. NOTE that only the first value of evmNetworkID is used.
+func (client *IncClient) CreateBurningpUnifiedRequestTransaction(privateKey, remoteAddress, tokenIDStr string, burnedAmount uint64, evmNetworkID ...int) ([]byte, string, error) {
+	if tokenIDStr == common.PRVIDStr {
+		return nil, "", fmt.Errorf("cannot burn PRV in a burning request transaction")
+	}
+
+	tokenID, err := new(common.Hash).NewHashFromStr(tokenIDStr)
+	if err != nil {
+		return nil, "", err
+	}
+
+	senderWallet, err := wallet.Base58CheckDeserialize(privateKey)
+	if err != nil {
+		return nil, "", fmt.Errorf("cannot deserialize the sender private key")
+	}
+	burnerAddress := senderWallet.KeySet.PaymentAddress
+	if common.AddressVersion == 0 {
+		burnerAddress.OTAPublic = nil
+	}
+
+	if strings.Contains(remoteAddress, "0x") {
+		remoteAddress = remoteAddress[2:]
+	}
+
+	// networkID := rpc.ETHNetworkID
+	// if len(evmNetworkID) > 0 {
+	// 	networkID = evmNetworkID[0]
+	// }
+	// if _, ok := rpc.EVMBurningMetadata[networkID]; !ok {
+	// 	return nil, "", fmt.Errorf("networkID %v not found", networkID)
+	// }
+	// mdType := rpc.EVMBurningMetadata[networkID]
+	mdType := metadata.BurningUnifiedTokenRequestMeta
+	var md *metadataBridge.BurningRequest
+	md, err = metadataBridge.NewBurningRequest(burnerAddress, burnedAmount, *tokenID, tokenIDStr, remoteAddress, mdType)
+	if err != nil {
+		return nil, "", fmt.Errorf("cannot init burning request with tokenID %v, burnedAmount %v, remoteAddress %v: %v", tokenIDStr, burnedAmount, remoteAddress, err)
+	}
+
+	tokenParam := NewTxTokenParam(tokenIDStr, 1, []string{common.BurningAddress2}, []uint64{burnedAmount}, false, 0, nil)
+	txParam := NewTxParam(privateKey, []string{}, []uint64{}, DefaultPRVFee, tokenParam, md, nil)
+
+	return client.CreateRawTokenTransaction(txParam, -1)
+}
+
 // CreateIssuingpUnifiedRequestTransaction creates an EVM pUnified shielding trading transaction. By EVM, it means either ETH or BSC.
 //
 // It returns the base58-encoded transaction, the transaction's hash, and an error (if any).
@@ -267,9 +345,9 @@ func (client *IncClient) CreateIssuingpUnifiedRequestTransaction(privateKey, tok
 	if len(evmNetworkID) > 0 {
 		networkID = evmNetworkID[0]
 	}
-	if _, ok := rpc.EVMIssuingMetadata[networkID]; !ok {
-		return nil, "", fmt.Errorf("networkID %v not found", networkID)
-	}
+	// if _, ok := rpc.EVMIssuingMetadata[networkID]; !ok {
+	// 	return nil, "", fmt.Errorf("networkID %v not found", networkID)
+	// }
 
 	type EVMProof struct {
 		BlockHash rCommon.Hash `json:"BlockHash"`
