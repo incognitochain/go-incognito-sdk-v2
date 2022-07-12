@@ -241,7 +241,7 @@ func (client *IncClient) CreateAndSendBurningRequestTransaction(privateKey, remo
 	return txHash, nil
 }
 
-// CreateIssuingpUnifiedRequestTransaction creates an EVM shielding trading transaction. By EVM, it means either ETH or BSC.
+// CreateIssuingpUnifiedRequestTransaction creates an EVM pUnified shielding trading transaction. By EVM, it means either ETH or BSC.
 //
 // It returns the base58-encoded transaction, the transaction's hash, and an error (if any).
 //
@@ -299,7 +299,7 @@ func (client *IncClient) CreateIssuingpUnifiedRequestTransaction(privateKey, tok
 	return client.CreateRawTransaction(txParam, -1)
 }
 
-// CreateAndSendIssuingpUnifiedRequestTransaction creates an EVM shielding transaction, and submits it to the Incognito network.
+// CreateAndSendIssuingpUnifiedRequestTransaction creates an EVM pUnified shielding transaction, and submits it to the Incognito network.
 //
 // It returns the transaction's hash, and an error (if any).
 //

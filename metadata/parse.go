@@ -180,6 +180,20 @@ func ParseMetadata(metaInBytes []byte) (Metadata, error) {
 		md = &metadataPdexv3.WithdrawalStakingRewardRequest{}
 	case metadataCommon.Pdexv3WithdrawStakingRewardResponseMeta:
 		md = &metadataPdexv3.WithdrawalStakingRewardResponse{}
+	// case metadataCommon.BridgeAggModifyParamMeta:
+	// 	md = &ModifyBridgeAggParamReq{}
+	// case metadataCommon.BridgeAggConvertTokenToUnifiedTokenRequestMeta:
+	// 	md = &ConvertTokenToUnifiedTokenRequest{}
+	// case metadataCommon.BridgeAggConvertTokenToUnifiedTokenResponseMeta:
+	// 	md = &ConvertTokenToUnifiedTokenResponse{}
+	case metadataCommon.IssuingUnifiedTokenRequestMeta:
+		md = &ShieldRequest{}
+	// case metadataCommon.IssuingUnifiedTokenResponseMeta:
+	// 	md = &ShieldResponse{}
+	case metadataCommon.BurningUnifiedTokenRequestMeta:
+		md = &UnshieldRequest{}
+	// case metadataCommon.BurningUnifiedTokenResponseMeta:
+	// 	md = &UnshieldResponse{}
 	default:
 		return nil, errors.Errorf("Could not parse metadata with type: %d", theType)
 	}
