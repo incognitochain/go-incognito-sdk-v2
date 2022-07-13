@@ -6,7 +6,9 @@ import (
 	"strings"
 
 	rCommon "github.com/ethereum/go-ethereum/common"
+	"github.com/incognitochain/go-incognito-sdk-v2/coin"
 	"github.com/incognitochain/go-incognito-sdk-v2/crypto"
+	"github.com/incognitochain/go-incognito-sdk-v2/key"
 	"github.com/incognitochain/go-incognito-sdk-v2/rpchandler/rpc"
 
 	ethCommon "github.com/ethereum/go-ethereum/common"
@@ -401,7 +403,7 @@ func (client *IncClient) CreateAndSendIssuingpUnifiedRequestTransaction(privateK
 	return txHash, nil
 }
 
-func (client *IncClient) CreateBridgeAggConvertTokenToUnifiedTokenRequestTransaction(privateKey, remoteAddress, tokenIDStr, pUnifiedTokenIDStr string, burnedAmount uint64, evmNetworkID ...int) ([]byte, string, error) {
+func (client *IncClient) CreateBridgeAggConvertTokenToUnifiedTokenRequestTransaction(privateKey, tokenIDStr, pUnifiedTokenIDStr string, burnedAmount uint64) ([]byte, string, error) {
 	tokenID, err := new(common.Hash).NewHashFromStr(tokenIDStr)
 	if err != nil {
 		return nil, "", err
@@ -412,7 +414,7 @@ func (client *IncClient) CreateBridgeAggConvertTokenToUnifiedTokenRequestTransac
 		return nil, "", err
 	}
 
-	mdType := metadata.BridgeAggConvertTokenToUnifiedTokenRequestMeta
+	// mdType := metadata.BridgeAggConvertTokenToUnifiedTokenRequestMeta
 
 	var md *metadataBridge.ConvertTokenToUnifiedTokenRequest
 
@@ -425,15 +427,14 @@ func (client *IncClient) CreateBridgeAggConvertTokenToUnifiedTokenRequestTransac
 		burnerAddress.OTAPublic = nil
 	}
 
-	if strings.Contains(remoteAddress, "0x") {
-		remoteAddress = remoteAddress[2:]
-	}
-	metadataBridge.NewConvertTokenToUnifiedTokenRequestWithValue(*tokenID, *pUnifiedTokenID, burnedAmount)
-	metadata.NewPortalUnshieldRequest()
-	md, err = metadataBridge.NewBurningRequest(burnerAddress, burnedAmount, *tokenID, tokenIDStr, remoteAddress, mdType)
+	otaReceiver := coin.OTAReceiver{}
+	paymentInfo := &key.PaymentInfo{PaymentAddress: senderWallet.KeySet.PaymentAddress, Message: []byte{}}
+	err = otaReceiver.FromCoinParams(coin.NewMintCoinParams(paymentInfo))
 	if err != nil {
-		return nil, "", fmt.Errorf("cannot init burning request with tokenID %v, burnedAmount %v, remoteAddress %v: %v", tokenIDStr, burnedAmount, remoteAddress, err)
+		return nil, "", err
 	}
+
+	md = metadataBridge.NewConvertTokenToUnifiedTokenRequestWithValue(*tokenID, *pUnifiedTokenID, burnedAmount, otaReceiver)
 
 	tokenParam := NewTxTokenParam(tokenIDStr, 1, []string{common.BurningAddress2}, []uint64{burnedAmount}, false, 0, nil)
 	txParam := NewTxParam(privateKey, []string{}, []uint64{}, DefaultPRVFee, tokenParam, md, nil)
@@ -441,8 +442,31 @@ func (client *IncClient) CreateBridgeAggConvertTokenToUnifiedTokenRequestTransac
 	return client.CreateRawTokenTransaction(txParam, -1)
 }
 
-func (client *IncClient) CreateAndSendBridgeAggConvertTokenToUnifiedTokenRequestTransaction(privateKey, remoteAddress, tokenIDStr string, burnedAmount uint64, evmNetworkID ...int) (string, error) {
-	encodedTx, txHash, err := client.CreateBridgeAggConvertTokenToUnifiedTokenRequestTransaction(privateKey, remoteAddress, tokenIDStr, burnedAmount, evmNetworkID...)
+func (client *IncClient) CreateAndSendBridgeAggConvertTokenToUnifiedTokenRequestTransaction(privateKey, tokenIDStr, pUnifiedTokenIDStr string, burnedAmount uint64, evmNetworkID ...int) (string, error) {
+	encodedTx, txHash, err := client.CreateBridgeAggConvertTokenToUnifiedTokenRequestTransaction(privateKey, tokenIDStr, pUnifiedTokenIDStr, burnedAmount)
+	if err != nil {
+		return "", err
+	}
+
+	err = client.SendRawTx(encodedTx)
+	if err != nil {
+		return "", err
+	}
+
+	return txHash, nil
+}
+
+func (client *IncClient) CreateBridgeAggModifyParamTransaction(privateKey string, percentFeeWithDec uint64) ([]byte, string, error) {
+
+	md := metadataBridge.NewModifyBridgeAggParamReqWithValue(percentFeeWithDec)
+
+	txParam := NewTxParam(privateKey, []string{}, []uint64{}, DefaultPRVFee, nil, md, nil)
+
+	return client.CreateRawTokenTransaction(txParam, -1)
+}
+
+func (client *IncClient) CreateAndSendBridgeAggModifyParamTransaction(privateKey string, percentFeeWithDec uint64) (string, error) {
+	encodedTx, txHash, err := client.CreateBridgeAggModifyParamTransaction(privateKey, percentFeeWithDec)
 	if err != nil {
 		return "", err
 	}
