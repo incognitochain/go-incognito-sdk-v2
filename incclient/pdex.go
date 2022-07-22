@@ -23,7 +23,8 @@ func (client *IncClient) CreatePdexv3MintNFT(privateKey string) ([]byte, string,
 		return nil, "", err
 	}
 	otaReceiver := coin.OTAReceiver{}
-	err = otaReceiver.FromAddress(senderWallet.KeySet.PaymentAddress)
+	paymentInfo := &key.PaymentInfo{PaymentAddress: senderWallet.KeySet.PaymentAddress, Message: []byte{}}
+	err = otaReceiver.FromCoinParams(coin.NewMintCoinParams(paymentInfo))
 	if err != nil {
 		return nil, "", err
 	}
@@ -297,7 +298,8 @@ func (client *IncClient) CreatePdexv3Contribute(privateKey, pairID, pairHash, to
 
 	// construct metadata for contribution
 	temp := coin.OTAReceiver{}
-	err = temp.FromAddress(senderWallet.KeySet.PaymentAddress)
+	paymentInfo := &key.PaymentInfo{PaymentAddress: senderWallet.KeySet.PaymentAddress, Message: []byte{}}
+	err = temp.FromCoinParams(coin.NewMintCoinParams(paymentInfo))
 	if err != nil {
 		return nil, "", err
 	}
@@ -512,7 +514,8 @@ func (client *IncClient) CreatePdexv3Staking(privateKey, tokenIDStr, nftIDStr st
 
 	// construct metadata for contribution
 	temp := coin.OTAReceiver{}
-	err = temp.FromAddress(senderWallet.KeySet.PaymentAddress)
+	paymentInfo := &key.PaymentInfo{PaymentAddress: senderWallet.KeySet.PaymentAddress, Message: []byte{}}
+	err = temp.FromCoinParams(coin.NewMintCoinParams(paymentInfo))
 	if err != nil {
 		return nil, "", err
 	}
@@ -721,7 +724,8 @@ func GenerateOTAReceivers(
 	var err error
 	for _, tokenID := range tokens {
 		temp := coin.OTAReceiver{}
-		err = temp.FromAddress(addr)
+		paymentInfo := &key.PaymentInfo{PaymentAddress: addr, Message: []byte{}}
+		err = temp.FromCoinParams(coin.NewMintCoinParams(paymentInfo))
 		if err != nil {
 			return nil, err
 		}

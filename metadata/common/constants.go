@@ -172,11 +172,27 @@ const (
 	InitTokenRequestMeta  = 244
 	InitTokenResponseMeta = 245
 
-	// incognito mode for bsc
 	IssuingBSCRequestMeta  = 250
 	IssuingBSCResponseMeta = 251
 	BurningPBSCRequestMeta = 252
 	BurningBSCConfirmMeta  = 253
+
+	BurningPBSCForDepositToSCRequestMeta = 326
+	BurningPBSCConfirmForDepositToSCMeta = 152
+
+	IssuingPLGRequestMeta               = 327
+	IssuingPLGResponseMeta              = 328
+	BurningPLGRequestMeta               = 329
+	BurningPLGConfirmMeta               = 153 // incognito mode for bsc
+	BurningPLGForDepositToSCRequestMeta = 330
+	BurningPLGConfirmForDepositToSCMeta = 154
+
+	IssuingFantomRequestMeta               = 331
+	IssuingFantomResponseMeta              = 332
+	BurningFantomRequestMeta               = 333
+	BurningFantomConfirmMeta               = 155
+	BurningFantomForDepositToSCRequestMeta = 334
+	BurningFantomConfirmForDepositToSCMeta = 156
 )
 
 var minerCreatedMetaTypes = []int{

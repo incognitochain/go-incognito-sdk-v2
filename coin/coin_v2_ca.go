@@ -105,8 +105,8 @@ func (c *CoinV2) SetPlainTokenID(tokenID *common.Hash) error {
 
 // NewCoinCA creates a new CoinV2 for the paymentInfo with asset tag for the given tokenID.
 // It is used in the case of confidential assets only
-func NewCoinCA(paymentInfo *key.PaymentInfo, tokenID *common.Hash) (*CoinV2, *crypto.Point, error) {
-	receiverPublicKey, err := new(crypto.Point).FromBytesS(paymentInfo.PaymentAddress.Pk)
+func NewCoinCA(p *CoinParams, tokenID *common.Hash) (*CoinV2, *crypto.Point, error) {
+	receiverPublicKey, err := new(crypto.Point).FromBytesS(p.PaymentAddress.Pk)
 	if err != nil {
 		errStr := fmt.Sprintf("Cannot parse outputCoinV2 from PaymentInfo when parseByte PublicKey, error %v ", err)
 		return nil, nil, fmt.Errorf(errStr)
@@ -116,17 +116,17 @@ func NewCoinCA(paymentInfo *key.PaymentInfo, tokenID *common.Hash) (*CoinV2, *cr
 
 	c := new(CoinV2).Init()
 	// Amount, Randomness, SharedRandom is transparency until we call concealData
-	c.SetAmount(new(crypto.Scalar).FromUint64(paymentInfo.Amount))
+	c.SetAmount(new(crypto.Scalar).FromUint64(p.Amount))
 	c.SetRandomness(crypto.RandomScalar())
 	c.SetSharedRandom(crypto.RandomScalar()) // r
 	c.SetSharedConcealRandom(crypto.RandomScalar())
-	c.SetInfo(paymentInfo.Message)
+	c.SetInfo(p.Message)
 
 	// If this is going to burning address then dont need to create ota
-	if wallet.IsPublicKeyBurningAddress(paymentInfo.PaymentAddress.Pk) {
-		publicKey, err := new(crypto.Point).FromBytesS(paymentInfo.PaymentAddress.Pk)
+	if wallet.IsPublicKeyBurningAddress(p.PaymentAddress.Pk) {
+		publicKey, err := new(crypto.Point).FromBytesS(p.PaymentAddress.Pk)
 		if err != nil {
-			panic("Something is wrong with paymentInfo.paymentAddress.pk, burning address should be a valid point")
+			panic("Something is wrong with info.paymentAddress.pk, burning address should be a valid point")
 		}
 		c.SetPublicKey(publicKey)
 		err = c.SetPlainTokenID(tokenID)
@@ -138,28 +138,22 @@ func NewCoinCA(paymentInfo *key.PaymentInfo, tokenID *common.Hash) (*CoinV2, *cr
 
 	// Increase index until have the right shardID
 	index := uint32(0)
-	publicOTA := paymentInfo.PaymentAddress.GetOTAPublicKey() //For generating one-time-address
+	publicOTA := p.PaymentAddress.GetOTAPublicKey() // For generating one-time-address
 	if publicOTA == nil {
 		return nil, nil, fmt.Errorf("public OTA from payment address is nil")
 	}
-	publicSpend := paymentInfo.PaymentAddress.GetPublicSpend() //General public key
-	//publicView := paymentInfo.PaymentAddress.GetPublicView() //For generating asset tag and concealing output coin
-
+	publicSpend := p.PaymentAddress.GetPublicSpend() // General public key
 	rK := new(crypto.Point).ScalarMult(publicOTA, c.GetSharedRandom())
 	for i := MaxTriesOTA; i > 0; i-- {
-		index += 1
+		index++
 
-		// Get the publicKey
 		hash := crypto.HashToScalar(append(rK.ToBytesS(), common.Uint32ToBytes(index)...))
 		HrKG := new(crypto.Point).ScalarMultBase(hash)
 		publicKey := new(crypto.Point).Add(HrKG, publicSpend)
 		c.SetPublicKey(publicKey)
 
-		currentShardID, err := c.GetShardID()
-		if err != nil {
-			return nil, nil, err
-		}
-		if currentShardID == targetShardID {
+		senderShardID, receivingShardID, coinPrivacyType, _ := DeriveShardInfoFromCoin(publicKey.ToBytesS())
+		if receivingShardID == int(targetShardID) && senderShardID == p.SenderShardID && coinPrivacyType == p.CoinPrivacyType {
 			otaSharedRandomPoint := new(crypto.Point).ScalarMultBase(c.GetSharedRandom())
 			concealSharedRandomPoint := new(crypto.Point).ScalarMultBase(c.GetSharedConcealRandom())
 			c.SetTxRandomDetail(concealSharedRandomPoint, otaSharedRandomPoint, index)
@@ -172,7 +166,6 @@ func NewCoinCA(paymentInfo *key.PaymentInfo, tokenID *common.Hash) (*CoinV2, *cr
 			assetTag := crypto.HashToPoint(tokenID[:])
 			assetTag.Add(assetTag, new(crypto.Point).ScalarMult(crypto.PedCom.G[PedersenRandomnessIndex], blinder))
 			c.SetAssetTag(assetTag)
-
 			com, err := c.ComputeCommitmentCA()
 			if err != nil {
 				return nil, nil, fmt.Errorf("cannot compute commitment for confidential asset")
@@ -182,5 +175,7 @@ func NewCoinCA(paymentInfo *key.PaymentInfo, tokenID *common.Hash) (*CoinV2, *cr
 			return c, rAsset, nil
 		}
 	}
+
+	// MaxAttempts could be exceeded if the OS's RNG or the stateDB is corrupted
 	return nil, nil, fmt.Errorf("cannot create OTA after %d attempts", MaxTriesOTA)
 }

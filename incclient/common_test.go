@@ -16,6 +16,7 @@ const (
 
 func init() {
 	Logger.IsEnable = true
+	MaxGetCoinThreads = 8
 	Logger.Println("This runs before test!!")
 }
 

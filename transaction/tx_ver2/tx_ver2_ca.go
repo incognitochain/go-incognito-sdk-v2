@@ -5,7 +5,6 @@ import (
 	"github.com/incognitochain/go-incognito-sdk-v2/coin"
 	"github.com/incognitochain/go-incognito-sdk-v2/common"
 	"github.com/incognitochain/go-incognito-sdk-v2/crypto"
-	"github.com/incognitochain/go-incognito-sdk-v2/key"
 	"github.com/incognitochain/go-incognito-sdk-v2/privacy"
 	"github.com/incognitochain/go-incognito-sdk-v2/privacy/v2/mlsag"
 	"github.com/incognitochain/go-incognito-sdk-v2/transaction/tx_generic"
@@ -14,12 +13,12 @@ import (
 	"math/big"
 )
 
-// Create unique OTA coin without the help of the db
-func createUniqueOTACoinCA(paymentInfo *key.PaymentInfo, tokenID *common.Hash) (*coin.CoinV2, *crypto.Point, error) {
+// Create unique OTA coins without the help of the db
+func createUniqueOTACoinCA(p *coin.CoinParams, tokenID *common.Hash) (*coin.CoinV2, *crypto.Point, error) {
 	if tokenID == nil {
 		tokenID = &common.PRVCoinID
 	}
-	c, sharedSecret, err := coin.NewCoinCA(paymentInfo, tokenID)
+	c, sharedSecret, err := coin.NewCoinCA(p, tokenID)
 	if err != nil {
 		log.Printf("Cannot parse coin based on payment info err: %v", err)
 		return nil, nil, err
@@ -222,8 +221,8 @@ func (tx *Tx) proveCA(params *tx_generic.TxPrivacyInitParams) (bool, error) {
 	// log.Printf("tokenID is %v\n",params.TokenID)
 	var numOfCoinsBurned uint = 0
 	var isBurning = false
-	for _, inf := range params.PaymentInfo {
-		c, ss, err := createUniqueOTACoinCA(inf, params.TokenID)
+	for _, info := range params.PaymentInfo {
+		c, ss, err := createUniqueOTACoinCA(coin.NewTransferCoinParams(info, params.GetSenderShard()), params.TokenID)
 		if err != nil {
 			log.Printf("Cannot parse outputCoinV2 to outputCoins, error %v\n", err)
 			return false, err
