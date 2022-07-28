@@ -549,3 +549,55 @@ func GenerateTokenID(network, tokenName string) (common.Hash, error) {
 	}
 	return *hash, nil
 }
+
+func (client *IncClient) CheckUnifiedShieldStatus(txHash string) (*ShieldStatus, error) {
+	responseInBytes, err := client.rpcServer.CheckShieldUnifiedStatus(txHash)
+	if err != nil {
+		return nil, err
+	}
+
+	var status ShieldStatus
+	err = rpchandler.ParseResponse(responseInBytes, &status)
+	if err != nil {
+		return nil, err
+	}
+
+	return &status, err
+}
+
+func (client *IncClient) CheckUnifiedUnshieldStatus(txHash string) (*UnshieldStatus, error) {
+	responseInBytes, err := client.rpcServer.CheckUnshieldUnifiedStatus(txHash)
+	if err != nil {
+		return nil, err
+	}
+
+	var status UnshieldStatus
+	err = rpchandler.ParseResponse(responseInBytes, &status)
+	if err != nil {
+		return nil, err
+	}
+
+	return &status, err
+}
+
+type ShieldStatusData struct {
+	Amount uint64 `json:"Amount"`
+	Reward uint64 `json:"Reward"`
+}
+
+type ShieldStatus struct {
+	Status    byte               `json:"Status"`
+	Data      []ShieldStatusData `json:"Data,omitempty"`
+	ErrorCode int                `json:"ErrorCode,omitempty"`
+}
+
+type UnshieldStatusData struct {
+	ReceivedAmount uint64 `json:"ReceivedAmount"`
+	Fee            uint64 `json:"Fee"`
+}
+
+type UnshieldStatus struct {
+	Status    byte                 `json:"Status"`
+	Data      []UnshieldStatusData `json:"Data,omitempty"`
+	ErrorCode int                  `json:"ErrorCode,omitempty"`
+}
