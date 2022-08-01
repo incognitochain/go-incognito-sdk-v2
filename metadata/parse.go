@@ -195,6 +195,12 @@ func ParseMetadata(metaInBytes []byte) (Metadata, error) {
 		md = &metadataBridge.UnshieldRequest{}
 	case metadataCommon.BurningUnifiedTokenResponseMeta:
 		md = &metadataBridge.UnshieldResponse{}
+	case metadataCommon.BurnForCallRequestMeta:
+		md = &metadataBridge.BurnForCallRequest{}
+	case metadataCommon.BurnForCallResponseMeta:
+		md = &metadataBridge.BurnForCallResponse{}
+	case metadataCommon.IssuingReshieldResponseMeta:
+		md = &metadataBridge.IssuingReshieldResponse{}
 	default:
 		return nil, errors.Errorf("Could not parse metadata with type: %d", theType)
 	}
