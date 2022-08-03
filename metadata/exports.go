@@ -218,4 +218,9 @@ const (
 	IssuingUnifiedTokenResponseMeta                 = metadataCommon.IssuingUnifiedTokenResponseMeta
 	BurningUnifiedTokenRequestMeta                  = metadataCommon.BurningUnifiedTokenRequestMeta
 	BurningUnifiedTokenResponseMeta                 = metadataCommon.BurningUnifiedTokenResponseMeta
+
+	BurnForCallConfirmMeta      = metadataCommon.BurnForCallConfirmMeta
+	BurnForCallRequestMeta      = metadataCommon.BurnForCallRequestMeta
+	BurnForCallResponseMeta     = metadataCommon.BurnForCallResponseMeta
+	IssuingReshieldResponseMeta = metadataCommon.IssuingReshieldResponseMeta
 )
