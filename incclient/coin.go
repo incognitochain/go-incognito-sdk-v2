@@ -26,8 +26,8 @@ import (
 // switches to the non-cache method.
 //
 // The returned result consists of
-//	- A list of output coins
-//	- A list of corresponding indices. For an output coin v1, its index is -1.
+//   - A list of output coins
+//   - A list of corresponding indices. For an output coin v1, its index is -1.
 func (client *IncClient) GetOutputCoins(outCoinKey *rpc.OutCoinKey, tokenID string, height uint64, isFromCache ...bool) ([]jsonresult.ICoinInfo, []*big.Int, error) {
 	fromCache := true
 	if len(isFromCache) != 0 {
@@ -69,8 +69,8 @@ func (client *IncClient) GetOutputCoinsV2(outCoinKey *rpc.OutCoinKey, tokenID st
 
 // GetListDecryptedOutCoin retrieves and decrypts all the output tokens for a private key.
 // It returns
-//	- a map from the serial number to the output coin;
-//	- error (if any).
+//   - a map from the serial number to the output coin;
+//   - error (if any).
 func (client *IncClient) GetListDecryptedOutCoin(privateKey string, tokenID string, height uint64) (map[string]coin.PlainCoin, error) {
 	outCoinKey, err := NewOutCoinKeyFromPrivateKey(privateKey)
 	if err != nil {
@@ -382,8 +382,10 @@ func (client *IncClient) GetOTACoinsByIndices(shardID byte, tokenID string, idxL
 //
 // Sample output:
 // map[
+//
 //	0000000000000000000000000000000000000000000000000000000000000004:map[0:43635 1:14775 2:11407 3:20724 4:12613 5:10165 6:18216 7:15629]
 //	0000000000000000000000000000000000000000000000000000000000000005:map[0:37831 1:7379 2:2349 3:11310 4:2218 5:2247 6:8416 7:8601]
+//
 // ]
 func (client *IncClient) GetOTACoinLength() (map[string]map[byte]uint64, error) {
 	responseInBytes, err := client.rpcServer.GetOTACoinLength()
