@@ -155,10 +155,10 @@ func (addr PaymentAddress) GetOTAPublicKey() *crypto.Point {
 
 // PaymentInfo represents the information of a receiver when creating a transaction.
 type PaymentInfo struct {
+	OTAReceiver    string `json:"OTAReceiver,omitempty"`
 	PaymentAddress PaymentAddress
 	Amount         uint64
 	Message        []byte // at most 512 bytes
-	OTA            string
 }
 
 // InitPaymentInfo creates a new PaymentInfo given a PaymentAddress, an amount and a message.

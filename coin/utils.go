@@ -96,8 +96,33 @@ func parseInfoForSetBytes(coinBytes *[]byte, offset *int) ([]byte, error) {
 	return info, nil
 }
 
-func NewCoinFromPaymentInfo(p *CoinParams) (*CoinV2, error) {
-	receiverPublicKey, err := new(crypto.Point).FromBytesS(p.PaymentAddress.Pk)
+// NewCoinFromOTAReceiver creates a new CoinV2 from a given OTA receiver, amount and info.
+func NewCoinFromOTAReceiver(otaReceiver OTAReceiver, amount uint64, info []byte) *CoinV2 {
+	c := new(CoinV2).Init()
+	c.SetPublicKey(&otaReceiver.PublicKey)
+	c.SetAmount(new(crypto.Scalar).FromUint64(amount))
+	c.SetRandomness(crypto.RandomScalar())
+	c.SetTxRandom(&otaReceiver.TxRandom)
+	c.SetCommitment(crypto.PedCom.CommitAtIndex(c.GetAmount(), c.GetRandomness(), crypto.PedersenValueIndex))
+	c.SetSharedRandom(nil)
+	c.SetSharedConcealRandom(nil)
+	c.SetInfo(info)
+	return c
+}
+
+// NewCoinFromPaymentInfo creates a new CoinV2 from the given payment info.
+func NewCoinFromPaymentInfo(info *key.PaymentInfo) (*CoinV2, error) {
+	if info.OTAReceiver != "" {
+		otaReceiver := new(OTAReceiver)
+		err := otaReceiver.FromString(info.OTAReceiver)
+		if err != nil {
+			return nil, fmt.Errorf("invalid otaReceiver %v: %v", info.OTAReceiver, err)
+		}
+
+		return NewCoinFromOTAReceiver(*otaReceiver, info.Amount, info.Message), nil
+	}
+
+	receiverPublicKey, err := new(crypto.Point).FromBytesS(info.PaymentAddress.Pk)
 	if err != nil {
 		errStr := fmt.Sprintf("Cannot parse outputCoinV2 from PaymentInfo when parseByte PublicKey, error %v ", err)
 		return nil, fmt.Errorf(errStr)

@@ -12,7 +12,6 @@ import (
 	"github.com/incognitochain/go-incognito-sdk-v2/rpchandler/jsonresult"
 	"github.com/incognitochain/go-incognito-sdk-v2/rpchandler/rpc"
 	"github.com/incognitochain/go-incognito-sdk-v2/wallet"
-	"log"
 	"math/big"
 	"time"
 )
@@ -151,6 +150,9 @@ func (client *IncClient) GetUnspentOutputCoins(privateKey, tokenID string, heigh
 	listDecryptedOutCoins, listKeyImages, err := GetListDecryptedCoins(privateKey, listOutputCoins)
 	if err != nil {
 		return nil, nil, err
+	}
+	if len(listKeyImages) == 0 {
+		return nil, nil, nil
 	}
 
 	shardID := common.GetShardIDFromLastByte(keyWallet.KeySet.PaymentAddress.Pk[len(keyWallet.KeySet.PaymentAddress.Pk)-1])
@@ -597,7 +599,7 @@ func GetListDecryptedCoins(privateKey string, listOutputCoins []jsonresult.ICoin
 			}
 			decryptedCoin, err := tmpCoinV2.Decrypt(&keyWallet.KeySet)
 			if err != nil {
-				log.Printf("Decrypt %v error: %v\n", base58.Base58Check{}.Encode(outCoin.GetPublicKey().ToBytesS(), 0), err)
+				Logger.Printf("Decrypt %v error: %v\n", base58.Base58Check{}.Encode(outCoin.GetPublicKey().ToBytesS(), 0), err)
 				continue
 			}
 			keyImage := decryptedCoin.GetKeyImage()

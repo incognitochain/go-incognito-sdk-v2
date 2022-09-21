@@ -12,9 +12,9 @@ import (
 
 // TxRandom is a struct implementing for transactions of version 2.
 //
-// A TxRandom consists of 3 elements, represented a an array of TxRandomGroupSize bytes:
+// A TxRandom consists of 3 elements, represented an array of TxRandomGroupSize bytes:
 //	- An OTA random point
-//	- A conceal random point
+//	- A concealing random point
 //	- An index
 type TxRandom [TxRandomGroupSize]byte
 
@@ -102,7 +102,7 @@ type CoinV2 struct {
 	// sharedRandom is only visible when creating coins, when it is broadcast to network, it will be set to null
 	sharedConcealRandom *crypto.Scalar //rConceal: shared random when concealing output coin and blinding assetTag
 	sharedRandom        *crypto.Scalar // rOTA: shared random when creating one-time-address
-	txRandom            *TxRandom      // rConceal*G + rOTA*G + index
+	txRandom            *TxRandom      // rConceal*G || rOTA*G || index
 
 	// mask = randomness
 	// amount = value
@@ -146,16 +146,31 @@ func (c CoinV2) ParseKeyImageWithPrivateKey(privateKey key.PrivateKey) (*crypto.
 //
 //	- AdditionalData: must be the publicView of the receiver.
 func (c *CoinV2) ConcealOutputCoin(additionalData interface{}) error {
-	// If this coin is already encrypted or it is created by other person then cannot conceal
-	if c.IsEncrypted() || c.GetSharedConcealRandom() == nil {
+	// already encrypted
+	if c.IsEncrypted() {
 		return nil
 	}
-	publicView, ok := additionalData.(*crypto.Point)
+
+	paymentInfo, ok := additionalData.(*key.PaymentInfo)
 	if !ok {
-		return fmt.Errorf("cannot conceal CoinV2 without receiver view key")
+		return fmt.Errorf("expect additionalData to be a PaymentInfo")
 	}
 
-	rK := new(crypto.Point).ScalarMult(publicView, c.GetSharedConcealRandom()) //rK = sharedConcealRandom * publicView
+	var rK *crypto.Point
+	if paymentInfo.OTAReceiver != "" {
+		otaReceiver := new(OTAReceiver)
+		_ = otaReceiver.FromString(paymentInfo.OTAReceiver) // error has been handled by callers
+
+		rK = &otaReceiver.SharedSecrets[1]
+	} else {
+		// created by other person
+		if c.GetSharedConcealRandom() == nil {
+			return nil
+		}
+
+		// re-calculate the sharedConcealSecret
+		rK = new(crypto.Point).ScalarMult(paymentInfo.PaymentAddress.GetPublicView(), c.GetSharedConcealRandom())
+	}
 
 	hash := crypto.HashToScalar(rK.ToBytesS()) //hash(rK)
 	hash = crypto.HashToScalar(hash.ToBytesS())
@@ -327,7 +342,7 @@ func (c CoinV2) GetTxRandomDetail() (*crypto.Point, *crypto.Point, uint32, error
 // GetShardID returns the shardID in which a CoinV2 belongs to.
 func (c CoinV2) GetShardID() (uint8, error) {
 	if c.publicKey == nil {
-		return 255, fmt.Errorf("cannot get GetShardID because GetPublicKey of PlainCoin is concealed")
+		return 255, fmt.Errorf("cannot GetShardID because GetPublicKey of PlainCoin is concealed")
 	}
 	pubKeyBytes := c.publicKey.ToBytes()
 	lastByte := pubKeyBytes[crypto.Ed25519KeySize-1]
