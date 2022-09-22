@@ -2,11 +2,12 @@ package incclient
 
 import (
 	"fmt"
-	"github.com/incognitochain/go-incognito-sdk-v2/transaction"
-	"github.com/incognitochain/go-incognito-sdk-v2/transaction/tx_generic"
 	"math/big"
 	"sort"
 	"time"
+
+	"github.com/incognitochain/go-incognito-sdk-v2/transaction"
+	"github.com/incognitochain/go-incognito-sdk-v2/transaction/tx_generic"
 
 	"github.com/incognitochain/go-incognito-sdk-v2/coin"
 	"github.com/incognitochain/go-incognito-sdk-v2/common"
@@ -120,7 +121,7 @@ func (cp *coinParams) SetBytes(data []byte) error {
 }
 
 // createPaymentInfos creates a list of key.PaymentInfo based on the provided address list and corresponding amount list.
-func createPaymentInfos(addrList []string, amountList []uint64) ([]*key.PaymentInfo, error) {
+func createPaymentInfos(addrList []string, amountList []uint64, isNonPrivate ...bool) ([]*key.PaymentInfo, error) {
 	if len(addrList) != len(amountList) {
 		return nil, fmt.Errorf("length of payment address (%v) and length amount (%v) mismatch", len(addrList), len(amountList))
 	}
@@ -138,12 +139,15 @@ func createPaymentInfos(addrList []string, amountList []uint64) ([]*key.PaymentI
 			if !otaReceiver.IsValid() {
 				return nil, fmt.Errorf("invalid receiver %v", receiver)
 			}
-			if !otaReceiver.IsConcealable() {
-				return nil, fmt.Errorf("OTAReceiver %v does not support private transaction", receiver)
-			}
+			// if !otaReceiver.IsConcealable() {
+			// 	return nil, fmt.Errorf("OTAReceiver %v does not support private transaction", receiver)
+			// }
 			paymentInfo.OTAReceiver = receiver
 		} else {
 			paymentInfo.PaymentAddress = receiverWallet.KeySet.PaymentAddress
+		}
+		if len(isNonPrivate) > 0 {
+			paymentInfo.IsNonPrivate = isNonPrivate[0]
 		}
 
 		paymentInfos = append(paymentInfos, &paymentInfo)

@@ -132,7 +132,8 @@ func NewCoinCAFromOTAReceiver(otaReceiver OTAReceiver, amount uint64, info []byt
 
 // NewCoinCA creates a new CoinV2 for the paymentInfo with asset tag for the given tokenID.
 // It is used in the case of confidential assets only
-func NewCoinCA(info *key.PaymentInfo, tokenID *common.Hash) (*CoinV2, *crypto.Point, error) {
+func NewCoinCA(p *CoinParams, tokenID *common.Hash) (*CoinV2, *crypto.Point, error) {
+	info := p.PaymentInfo
 	if info.OTAReceiver != "" {
 		otaReceiver := new(OTAReceiver)
 		err := otaReceiver.FromString(info.OTAReceiver)

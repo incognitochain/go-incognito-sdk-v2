@@ -4,14 +4,15 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"log"
+	"math"
+	"testing"
+
 	"github.com/incognitochain/go-incognito-sdk-v2/coin"
 	"github.com/incognitochain/go-incognito-sdk-v2/common"
 	"github.com/incognitochain/go-incognito-sdk-v2/common/base58"
 	"github.com/incognitochain/go-incognito-sdk-v2/metadata"
 	"github.com/incognitochain/go-incognito-sdk-v2/wallet"
-	"log"
-	"math"
-	"testing"
 )
 
 // getBalanceByVersion is for testing purposes ONLY.
@@ -387,14 +388,33 @@ func TestIncClient_SendToOTA(t *testing.T) {
 	}
 	Logger.IsEnable = false
 
-	senderPrivateKey := "11111117yu4WAe9fiqmRR4GTxocW6VUKD4dB58wHFjbcQXeDSWQMNyND6Ms3x136EfGcfL7rk3L83BZBzUJLSczmmNi1ngra1WW5Wsjsu5P"
-	receiverPrivateKey := "11111113iP7vLqNpK2RPPmwkQgaXf4c6dzto5RfyNYTsk8L1hNLajtcPRMihKpD9Tg8N8UkGrGso3iAUHaDbDDT2rrf7QXwAGADHkuV5A1U"
+	senderPrivateKey := "1111111cnisw5tuG28JNkiw3Etei3vVn5YTHEbbsxrruRuK5Jt9ynh4Pg5YJCtKbJiYdE3S2cKNysAYXtjTfuddWyRgzBj18FA8jV8VUZf"
+	receiverPrivateKey := "112t8rnXUbFHzsnX7zdQouzxXEWArruE4rYzeswrEtvL3iBkcgXAXsQk4kQk23XfLNU6wMknyKk8UAu8fLBfkcUVMgxTNsfrYZURAnPqhffA"
 	receiverWallet, err := wallet.Base58CheckDeserialize(receiverPrivateKey)
 	if err != nil {
 		panic(err)
 	}
 	receiverAddr := receiverWallet.KeySet.PaymentAddress
 
+	senderWallet, err := wallet.Base58CheckDeserialize(senderPrivateKey)
+	if err != nil {
+		panic(err)
+	}
+	// senderAddr := senderWallet.KeySet.PaymentAddress
+
+	// coins, indicies, err := ic.getUTXOsListByVersion("1111111cnisw5tuG28JNkiw3Etei3vVn5YTHEbbsxrruRuK5Jt9ynh4Pg5YJCtKbJiYdE3S2cKNysAYXtjTfuddWyRgzBj18FA8jV8VUZf", common.PRVCoinID.String(), 2)
+	// if err != nil {
+	// 	panic(err)
+	// }
+
+	// for idx, v := range coins {
+	// 	log.Println("coin", indicies[idx], v.GetValue())
+	// }
+
+	log.Println("shardID1", GetShardIDFromPrivateKey(senderPrivateKey))
+	log.Println("shardID2", GetShardIDFromPrivateKey(receiverPrivateKey))
+
+	// t.Skip()
 	for i := 0; i < numTests; i++ {
 		log.Printf("TEST %v\n", i)
 
@@ -413,7 +433,7 @@ func TestIncClient_SendToOTA(t *testing.T) {
 		txFee := 40 + (common.RandUint64()%10)*10
 
 		// choose the sending amount
-		sendingAmount := common.RandUint64() % 100000
+		sendingAmount := uint64(1234)
 		log.Printf("SendingAmount: %v, txFee: %v\n", sendingAmount, txFee)
 
 		// generate a new OTAReceiver
@@ -471,6 +491,27 @@ func TestIncClient_SendToOTA(t *testing.T) {
 			panic(err)
 		}
 		err = waitingCheckBalanceUpdated(senderPrivateKey, common.PRVIDStr, oldSenderBalance, expectedSenderBalance, 2)
+		if err != nil {
+			panic(err)
+		}
+
+		coins, indicies, err := ic.getUTXOsListByVersion(receiverPrivateKey, common.PRVCoinID.String(), 2)
+		if err != nil {
+			panic(err)
+		}
+
+		for idx, v := range coins {
+			log.Println("coin", indicies[idx], v.GetValue())
+		}
+
+		txParam = NewTxParam(receiverPrivateKey, []string{senderWallet.Base58CheckSerialize(wallet.PaymentAddressType)}, []uint64{sendingAmount - txFee - 100}, txFee, nil, nil, nil)
+		txRaw, txHash, err := ic.CreateRawTransactionWithInputCoins(txParam, coins, indicies)
+		if err != nil {
+			panic(err)
+		}
+
+		log.Println("txHash", txHash)
+		err = ic.SendRawTx(txRaw)
 		if err != nil {
 			panic(err)
 		}

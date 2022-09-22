@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+
 	"github.com/incognitochain/go-incognito-sdk-v2/coin"
 	"github.com/incognitochain/go-incognito-sdk-v2/common"
 	"github.com/incognitochain/go-incognito-sdk-v2/crypto"
@@ -401,10 +402,11 @@ func Prove(inputCoins []coin.PlainCoin, outputCoins []*coin.CoinV2, sharedSecret
 	// After Prove, we should hide all information in coin details.
 	for i, outputCoin := range proof.outputCoins {
 		if !wallet.IsPublicKeyBurningAddress(outputCoin.GetPublicKey().ToBytesS()) {
-			if err = outputCoin.ConcealOutputCoin(paymentInfo[i]); err != nil {
-				return nil, err
+			if !paymentInfo[i].IsNonPrivate {
+				if err = outputCoin.ConcealOutputCoin(paymentInfo[i]); err != nil {
+					return nil, err
+				}
 			}
-
 			// OutputCoin.GetKeyImage should be nil even though we do not have it
 			// Because otherwise the RPC server will return the Bytes of [1 0 0 0 0 ...] (the default byte)
 			proof.outputCoins[i].SetKeyImage(nil)

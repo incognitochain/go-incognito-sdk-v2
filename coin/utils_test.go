@@ -2,11 +2,12 @@ package coin
 
 import (
 	"fmt"
+	"testing"
+	"time"
+
 	"github.com/incognitochain/go-incognito-sdk-v2/common"
 	"github.com/incognitochain/go-incognito-sdk-v2/key"
 	"github.com/incognitochain/go-incognito-sdk-v2/wallet"
-	"testing"
-	"time"
 )
 
 var (

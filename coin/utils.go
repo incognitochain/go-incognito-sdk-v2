@@ -2,6 +2,7 @@ package coin
 
 import (
 	"fmt"
+
 	"github.com/incognitochain/go-incognito-sdk-v2/common"
 	"github.com/incognitochain/go-incognito-sdk-v2/crypto"
 	"github.com/incognitochain/go-incognito-sdk-v2/key"
@@ -111,7 +112,8 @@ func NewCoinFromOTAReceiver(otaReceiver OTAReceiver, amount uint64, info []byte)
 }
 
 // NewCoinFromPaymentInfo creates a new CoinV2 from the given payment info.
-func NewCoinFromPaymentInfo(info *key.PaymentInfo) (*CoinV2, error) {
+func NewCoinFromPaymentInfo(p *CoinParams) (*CoinV2, error) {
+	info := p.PaymentInfo
 	if info.OTAReceiver != "" {
 		otaReceiver := new(OTAReceiver)
 		err := otaReceiver.FromString(info.OTAReceiver)

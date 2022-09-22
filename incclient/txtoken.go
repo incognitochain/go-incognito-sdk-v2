@@ -3,6 +3,7 @@ package incclient
 import (
 	"encoding/json"
 	"fmt"
+
 	"github.com/incognitochain/go-incognito-sdk-v2/coin"
 	"github.com/incognitochain/go-incognito-sdk-v2/common"
 	"github.com/incognitochain/go-incognito-sdk-v2/common/base58"
@@ -361,13 +362,13 @@ func (client *IncClient) CreateTokenInitTransactionV2(privateKey, tokenName, tok
 
 // CreateRawTokenTransactionWithInputCoins creates a raw token transaction from the provided input coins.
 // Parameters:
-//	- txParam: a regular TxParam.
-//	- tokenInCoins: a list of decrypted, unspent token output coins (with the same version).
-//	- tokenIndices: a list of corresponding indices for the token input coins. This value must not be `nil` if the caller is
-//	creating a transaction v2.
-//	- prvInCoins: a list of decrypted, unspent PRV output coins for paying the transaction fee (if have).
-//	- prvIndices: a list of corresponding indices for the prv input coins. This value must not be `nil` if the caller is
-//	creating a transaction v2.
+//   - txParam: a regular TxParam.
+//   - tokenInCoins: a list of decrypted, unspent token output coins (with the same version).
+//   - tokenIndices: a list of corresponding indices for the token input coins. This value must not be `nil` if the caller is
+//     creating a transaction v2.
+//   - prvInCoins: a list of decrypted, unspent PRV output coins for paying the transaction fee (if have).
+//   - prvIndices: a list of corresponding indices for the prv input coins. This value must not be `nil` if the caller is
+//     creating a transaction v2.
 //
 // For transaction with metadata, callers must make sure other values of `param` are valid.
 //

@@ -223,3 +223,47 @@ func (receiver OTAReceiver) GetShardIDs() (byte, byte) {
 	pkb := receiver.PublicKey.ToBytesS()
 	return common.GetShardIDsFromPublicKey(pkb)
 }
+
+// FromCoinParams generates an OTAReceiver from the given CoinParams.
+func (receiver *OTAReceiver) FromCoinParams(p *CoinParams) error {
+	if receiver == nil {
+		return fmt.Errorf("OTAReceiver not initialized")
+	}
+
+	addr := p.PaymentInfo.PaymentAddress
+
+	receiverShardID := common.GetShardIDFromLastByte(addr.Pk[len(addr.Pk)-1])
+	otaRand := crypto.RandomScalar()
+	concealRand := crypto.RandomScalar()
+
+	// Increase index until have the right shardID
+	index := uint32(0)
+	publicOTA := addr.GetOTAPublicKey()
+	if publicOTA == nil {
+		return fmt.Errorf("missing public OTA in payment address")
+	}
+	publicSpend := addr.GetPublicSpend()
+	rK := (&crypto.Point{}).ScalarMult(publicOTA, otaRand)
+	for i := MaxTriesOTA; i > 0; i-- {
+		index++
+		hash := crypto.HashToScalar(append(rK.ToBytesS(), common.Uint32ToBytes(index)...))
+		HrKG := (&crypto.Point{}).ScalarMultBase(hash)
+		publicKey := (&crypto.Point{}).Add(HrKG, publicSpend)
+
+		tmpSenderShardID, tmpReceiverShardID, tmpCoinType, _ := DeriveShardInfoFromCoin(publicKey.ToBytesS())
+		if tmpReceiverShardID == int(receiverShardID) && tmpSenderShardID == p.SenderShardID && tmpCoinType == p.CoinPrivacyType {
+			otaRandomPoint := (&crypto.Point{}).ScalarMultBase(otaRand)
+			concealRandomPoint := (&crypto.Point{}).ScalarMultBase(concealRand)
+			receiver.PublicKey = *publicKey
+			receiver.TxRandom = *NewTxRandom()
+			receiver.TxRandom.SetTxOTARandomPoint(otaRandomPoint)
+			receiver.TxRandom.SetTxConcealRandomPoint(concealRandomPoint)
+			receiver.TxRandom.SetIndex(index)
+			return nil
+		}
+	}
+	return fmt.Errorf("cannot generate OTAReceiver after %d attempts", MaxTriesOTA)
+}
+func (receiver OTAReceiver) DeriveShardID() (int, int, int, error) {
+	return DeriveShardInfoFromCoin(receiver.PublicKey.ToBytesS())
+}

@@ -1,8 +1,9 @@
-//Package incclient provides a client for the Incognito RPC API.
+// Package incclient provides a client for the Incognito RPC API.
 package incclient
 
 import (
 	"fmt"
+
 	"github.com/incognitochain/go-incognito-sdk-v2/common"
 	"github.com/incognitochain/go-incognito-sdk-v2/common/base58"
 	"github.com/incognitochain/go-incognito-sdk-v2/key"
@@ -82,9 +83,9 @@ func NewTxTokenParam(tokenID string, tokenType int, receiverList []string, amoun
 
 // PrivateKeyToPaymentAddress returns the payment address for its private key corresponding to the key type.
 // KeyType should be -1, 0, 1 where
-//	- -1: payment address of version 2
-//	- 0: payment address of version 1 with old encoding
-//	- 1: payment address of version 1 with new encoding
+//   - -1: payment address of version 2
+//   - 0: payment address of version 1 with old encoding
+//   - 1: payment address of version 1 with new encoding
 func PrivateKeyToPaymentAddress(privateKey string, keyType int) string {
 	keyWallet, _ := wallet.Base58CheckDeserialize(privateKey)
 	err := keyWallet.KeySet.InitFromPrivateKey(&keyWallet.KeySet.PrivateKey)

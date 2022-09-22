@@ -3,6 +3,7 @@ package incclient
 import (
 	"encoding/json"
 	"fmt"
+
 	"github.com/incognitochain/go-incognito-sdk-v2/coin"
 	"github.com/incognitochain/go-incognito-sdk-v2/common"
 	"github.com/incognitochain/go-incognito-sdk-v2/common/base58"
@@ -174,10 +175,10 @@ func (client *IncClient) CreateAndSendRawTransaction(privateKey string, addrList
 
 // CreateRawTransactionWithInputCoins creates a raw PRV transaction from the provided input coins.
 // Parameters:
-//	- param: a regular TxParam.
-//	- inputCoins: a list of decrypted, unspent PRV output coins (with the same version).
-//	- coinIndices: a list of corresponding indices for the input coins. This value must not be `nil` if the caller is
-//	creating a transaction v2.
+//   - param: a regular TxParam.
+//   - inputCoins: a list of decrypted, unspent PRV output coins (with the same version).
+//   - coinIndices: a list of corresponding indices for the input coins. This value must not be `nil` if the caller is
+//     creating a transaction v2.
 //
 // For transaction with metadata, callers must make sure other values of `param` are valid.
 //
