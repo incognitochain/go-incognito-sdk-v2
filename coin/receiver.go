@@ -94,8 +94,13 @@ func (receiver *OTAReceiver) FromAddress(addr key.PaymentAddress, sendingShard .
 		publicKey := (&crypto.Point{}).Add(HrKG, publicSpend)
 
 		pkb := publicKey.ToBytesS()
-		tmpSendingShard, tmpReceivingShard := common.GetShardIDsFromPublicKey(pkb)
-		if tmpReceivingShard == targetShardID && tmpSendingShard == fromShard {
+		// coinSenderShardID, _, coinPrivacyType, err := privacy.DeriveShardInfoFromCoin(pkb)
+		// if err != nil {
+		// 	return err
+		// }
+
+		tmpSenderShardID, tmpReceiverShardID, tmpCoinType, _ := DeriveShardInfoFromCoin(pkb)
+		if tmpReceiverShardID == int(targetShardID) && tmpSenderShardID == int(fromShard) && tmpCoinType == PrivacyTypeTransfer {
 			otaRandomPoint := (&crypto.Point{}).ScalarMultBase(otaRand)
 			concealRandomPoint := (&crypto.Point{}).ScalarMultBase(concealRand)
 			sharedOTAPoint := (&crypto.Point{}).ScalarMult(addr.GetOTAPublicKey(), otaRand)
@@ -109,6 +114,11 @@ func (receiver *OTAReceiver) FromAddress(addr key.PaymentAddress, sendingShard .
 			receiver.TxRandom.SetIndex(index)
 			return nil
 		}
+
+		// tmpSendingShard, tmpReceivingShard := common.GetShardIDsFromPublicKey(pkb)
+		// if tmpReceivingShard == targetShardID && tmpSendingShard == fromShard {
+
+		// }
 	}
 	return fmt.Errorf("cannot generate OTAReceiver after %d attempts", MaxTriesOTA)
 }

@@ -159,7 +159,6 @@ type PaymentInfo struct {
 	PaymentAddress PaymentAddress
 	Amount         uint64
 	Message        []byte // at most 512 bytes
-	IsNonPrivate   bool
 }
 
 // InitPaymentInfo creates a new PaymentInfo given a PaymentAddress, an amount and a message.

@@ -121,7 +121,7 @@ func (cp *coinParams) SetBytes(data []byte) error {
 }
 
 // createPaymentInfos creates a list of key.PaymentInfo based on the provided address list and corresponding amount list.
-func createPaymentInfos(addrList []string, amountList []uint64, isNonPrivate ...bool) ([]*key.PaymentInfo, error) {
+func createPaymentInfos(addrList []string, amountList []uint64) ([]*key.PaymentInfo, error) {
 	if len(addrList) != len(amountList) {
 		return nil, fmt.Errorf("length of payment address (%v) and length amount (%v) mismatch", len(addrList), len(amountList))
 	}
@@ -145,9 +145,6 @@ func createPaymentInfos(addrList []string, amountList []uint64, isNonPrivate ...
 			paymentInfo.OTAReceiver = receiver
 		} else {
 			paymentInfo.PaymentAddress = receiverWallet.KeySet.PaymentAddress
-		}
-		if len(isNonPrivate) > 0 {
-			paymentInfo.IsNonPrivate = isNonPrivate[0]
 		}
 
 		paymentInfos = append(paymentInfos, &paymentInfo)
