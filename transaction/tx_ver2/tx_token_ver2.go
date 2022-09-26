@@ -3,6 +3,11 @@ package tx_ver2
 import (
 	"encoding/json"
 	"fmt"
+	"log"
+	"math"
+	"sort"
+	"strconv"
+
 	"github.com/incognitochain/go-incognito-sdk-v2/coin"
 	"github.com/incognitochain/go-incognito-sdk-v2/common"
 	"github.com/incognitochain/go-incognito-sdk-v2/metadata"
@@ -10,10 +15,6 @@ import (
 	"github.com/incognitochain/go-incognito-sdk-v2/transaction/tx_generic"
 	"github.com/incognitochain/go-incognito-sdk-v2/transaction/utils"
 	"github.com/incognitochain/go-incognito-sdk-v2/wallet"
-	"log"
-	"math"
-	"sort"
-	"strconv"
 )
 
 // TxTokenDataVersion2 represents all data of a token transaction v2.
@@ -57,8 +58,8 @@ func (td TxTokenDataVersion2) ToCompatTokenData(ttx metadata.Transaction) tx_gen
 }
 
 // TxToken represents a token transaction of version 2. A token transaction v2 consists of 2 sub-transactions
-//	- TxBase: PRV sub-transaction for paying the transaction fee. All transactions v2 pay fees in PRV.
-//	- TxNormal: the token sub-transaction to transfer token.
+//   - TxBase: PRV sub-transaction for paying the transaction fee. All transactions v2 pay fees in PRV.
+//   - TxNormal: the token sub-transaction to transfer token.
 type TxToken struct {
 	Tx             Tx                  `json:"Tx"`
 	TokenData      TxTokenDataVersion2 `json:"TxTokenPrivacyData"`
@@ -589,12 +590,12 @@ func (tx *Tx) provePRV(params *tx_generic.TxPrivacyInitParams) ([]coin.PlainCoin
 	outputCoins := make([]*coin.CoinV2, 0)
 	for _, paymentInfo := range params.PaymentInfo {
 		// We do not mind duplicated OTAs, server will handle them.
-		outputCoin, err := coin.NewCoinFromPaymentInfo(coin.NewTransferCoinParams(paymentInfo, params.GetSenderShard()))
+		outputCoin, seal, err := coin.NewCoinFromPaymentInfo(coin.NewTransferCoinParams(paymentInfo, params.GetSenderShard()))
 		if err != nil {
 			log.Printf("Cannot parse outputCoinV2 to outputCoins, error %v\n", err)
 			return nil, nil, err
 		}
-
+		_ = seal //TODO: export
 		outputCoins = append(outputCoins, outputCoin)
 	}
 

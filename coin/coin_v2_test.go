@@ -2,15 +2,15 @@ package coin
 
 import (
 	"fmt"
-	"github.com/incognitochain/go-incognito-sdk-v2/common"
-	"github.com/incognitochain/go-incognito-sdk-v2/crypto"
-	"github.com/incognitochain/go-incognito-sdk-v2/key"
-	"github.com/incognitochain/go-incognito-sdk-v2/wallet"
 	"log"
 	"testing"
+
+	"github.com/incognitochain/go-incognito-sdk-v2/common"
+	"github.com/incognitochain/go-incognito-sdk-v2/crypto"
+	"github.com/incognitochain/go-incognito-sdk-v2/wallet"
 )
 
-func newRandomCoinCA(info *key.PaymentInfo, tokenID *common.Hash) (*CoinV2, error) {
+func newRandomCoinCA(info *PaymentInfo, tokenID *common.Hash) (*CoinV2, error) {
 	pk, err := new(crypto.Point).FromBytesS(info.PaymentAddress.Pk)
 	if err != nil {
 		return nil, err
@@ -104,7 +104,7 @@ func TestCoinV2_GetTokenId(t *testing.T) {
 		}
 		keySet := keyWallet.KeySet
 
-		paymentInfo := key.InitPaymentInfo(keySet.PaymentAddress, common.RandUint64(), nil)
+		paymentInfo := InitPaymentInfo(keySet.PaymentAddress, common.RandUint64(), nil)
 		tokenId := tokenIDList[common.RandInt()%len(tokenIDList)]
 
 		randomCoin, err := newRandomCoinCA(paymentInfo, tokenId)

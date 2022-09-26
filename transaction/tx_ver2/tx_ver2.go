@@ -3,6 +3,12 @@ package tx_ver2
 import (
 	"encoding/json"
 	"fmt"
+	"math"
+	"math/big"
+	"sort"
+	"strconv"
+	"time"
+
 	"github.com/incognitochain/go-incognito-sdk-v2/coin"
 	"github.com/incognitochain/go-incognito-sdk-v2/common"
 	"github.com/incognitochain/go-incognito-sdk-v2/crypto"
@@ -13,11 +19,6 @@ import (
 	"github.com/incognitochain/go-incognito-sdk-v2/transaction/tx_generic"
 	"github.com/incognitochain/go-incognito-sdk-v2/transaction/utils"
 	"github.com/incognitochain/go-incognito-sdk-v2/wallet"
-	"math"
-	"math/big"
-	"sort"
-	"strconv"
-	"time"
 )
 
 // SigPubKey represents the sigPubKey of a Tx.
@@ -96,9 +97,10 @@ func (sigPub *SigPubKey) SetBytes(b []byte) error {
 
 // Tx implements a PRV transaction v2. It is a embedded TxBase with some overridden functions.
 // A transaction v2 is mainly composed of
-//	- OTA: different output coins have different public key, even if they belong to the same user.
-//	- MLSAG: a ring signature scheme used to anonymize the true sender.
-//	- BulletProofs: a range proof used to prove that a value lies within an interval without revealing it.
+//   - OTA: different output coins have different public key, even if they belong to the same user.
+//   - MLSAG: a ring signature scheme used to anonymize the true sender.
+//   - BulletProofs: a range proof used to prove that a value lies within an interval without revealing it.
+//
 // By default, a transaction v2 is private, meaning that most of the stuff is hidden to public observers.
 type Tx struct {
 	tx_generic.TxBase
@@ -331,11 +333,11 @@ func (tx *Tx) prove(params *tx_generic.TxPrivacyInitParams) error {
 	var err error
 	outputCoins := make([]*coin.CoinV2, 0)
 	for _, paymentInfo := range params.PaymentInfo {
-		outputCoin, err := coin.NewCoinFromPaymentInfo(coin.NewTransferCoinParams(paymentInfo, params.GetSenderShard())) //We do not mind duplicated OTAs, server will handle them.
+		outputCoin, senderSeal, err := coin.NewCoinFromPaymentInfo(coin.NewCoinParams().From(paymentInfo, int(params.GetSenderShard()), coin.PrivacyTypeTransfer))
 		if err != nil {
 			return err
 		}
-
+		_ = senderSeal //TODO export
 		outputCoins = append(outputCoins, outputCoin)
 	}
 

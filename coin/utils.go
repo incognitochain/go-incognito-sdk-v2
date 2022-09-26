@@ -1,11 +1,13 @@
 package coin
 
 import (
+	"encoding/hex"
+	"encoding/json"
+	"errors"
 	"fmt"
 
 	"github.com/incognitochain/go-incognito-sdk-v2/common"
 	"github.com/incognitochain/go-incognito-sdk-v2/crypto"
-	"github.com/incognitochain/go-incognito-sdk-v2/key"
 	"github.com/incognitochain/go-incognito-sdk-v2/wallet"
 )
 
@@ -112,22 +114,25 @@ func NewCoinFromOTAReceiver(otaReceiver OTAReceiver, amount uint64, info []byte)
 }
 
 // NewCoinFromPaymentInfo creates a new CoinV2 from the given payment info.
-func NewCoinFromPaymentInfo(p *CoinParams) (*CoinV2, error) {
-	info := p.PaymentInfo
-	if info.OTAReceiver != "" {
-		otaReceiver := new(OTAReceiver)
-		err := otaReceiver.FromString(info.OTAReceiver)
-		if err != nil {
-			return nil, fmt.Errorf("invalid otaReceiver %v: %v", info.OTAReceiver, err)
-		}
 
-		return NewCoinFromOTAReceiver(*otaReceiver, info.Amount, info.Message), nil
+func NewCoinFromPaymentInfo(p *CoinParams) (*CoinV2, *SenderSeal, error) {
+	if p.OTAReceiver != nil {
+		c := NewCoinFromAmountAndTxRandomBytes(p.Amount, &p.OTAReceiver.PublicKey, &p.OTAReceiver.TxRandom, p.Message)
+		ind, err := p.OTAReceiver.TxRandom.GetIndex()
+		if err != nil {
+			return nil, nil, err
+		}
+		seal := SenderSeal{
+			r:             *(&crypto.Scalar{}).FromUint64(0),
+			txRandomIndex: ind,
+		}
+		return c, &seal, nil
 	}
 
-	receiverPublicKey, err := new(crypto.Point).FromBytesS(info.PaymentAddress.Pk)
+	receiverPublicKey, err := new(crypto.Point).FromBytesS(p.PaymentAddress.Pk)
 	if err != nil {
 		errStr := fmt.Sprintf("Cannot parse outputCoinV2 from PaymentInfo when parseByte PublicKey, error %v ", err)
-		return nil, fmt.Errorf(errStr)
+		return nil, nil, errors.New(errStr)
 	}
 	receiverPublicKeyBytes := receiverPublicKey.ToBytesS()
 	targetShardID := common.GetShardIDFromLastByte(receiverPublicKeyBytes[len(receiverPublicKeyBytes)-1])
@@ -137,45 +142,47 @@ func NewCoinFromPaymentInfo(p *CoinParams) (*CoinV2, error) {
 	c.SetAmount(new(crypto.Scalar).FromUint64(p.Amount))
 	c.SetRandomness(crypto.RandomScalar())
 	c.SetSharedRandom(crypto.RandomScalar())        // shared randomness for creating one-time-address
-	c.SetSharedConcealRandom(crypto.RandomScalar()) // shared randomness for concealing amount and blinding asset tag
+	c.SetSharedConcealRandom(crypto.RandomScalar()) //shared randomness for concealing amount and blinding asset tag
 	c.SetInfo(p.Message)
 	c.SetCommitment(crypto.PedCom.CommitAtIndex(c.GetAmount(), c.GetRandomness(), crypto.PedersenValueIndex))
 
-	// If this is going to burning address then don't need to create ota
+	// If this is going to burning address then dont need to create ota
 	if wallet.IsPublicKeyBurningAddress(p.PaymentAddress.Pk) {
 		publicKey, err := new(crypto.Point).FromBytesS(p.PaymentAddress.Pk)
 		if err != nil {
 			panic("Something is wrong with info.paymentAddress.pk, burning address should be a valid point")
 		}
 		c.SetPublicKey(publicKey)
-		return c, nil
+		return c, nil, nil
 	}
 
 	// Increase index until have the right shardID
 	index := uint32(0)
 	publicOTA := p.PaymentAddress.GetOTAPublicKey()
-	if publicOTA == nil {
-		return nil, fmt.Errorf("public OTA from payment address is nil")
-	}
 	publicSpend := p.PaymentAddress.GetPublicSpend()
 	rK := new(crypto.Point).ScalarMult(publicOTA, c.GetSharedRandom())
 	for {
-		index++
+		index += 1
 
+		// Get publickey
 		hash := crypto.HashToScalar(append(rK.ToBytesS(), common.Uint32ToBytes(index)...))
 		HrKG := new(crypto.Point).ScalarMultBase(hash)
 		publicKey := new(crypto.Point).Add(HrKG, publicSpend)
 		c.SetPublicKey(publicKey)
 
-		senderShardID, receivingShardID, coinPrivacyType, _ := DeriveShardInfoFromCoin(publicKey.ToBytesS())
-		if receivingShardID == int(targetShardID) && senderShardID == p.SenderShardID && coinPrivacyType == p.CoinPrivacyType {
+		senderShardID, recvShardID, coinPrivacyType, _ := DeriveShardInfoFromCoin(publicKey.ToBytesS())
+		if recvShardID == int(targetShardID) && senderShardID == p.SenderShardID && coinPrivacyType == p.CoinPrivacyType {
 			otaRandomPoint := new(crypto.Point).ScalarMultBase(c.GetSharedRandom())
 			concealRandomPoint := new(crypto.Point).ScalarMultBase(c.GetSharedConcealRandom())
 			c.SetTxRandomDetail(concealRandomPoint, otaRandomPoint, index)
 			break
 		}
 	}
-	return c, nil
+	seal := SenderSeal{
+		r:             *c.GetSharedRandom(),
+		txRandomIndex: index,
+	}
+	return c, &seal, nil
 }
 
 const (
@@ -205,9 +212,24 @@ func DeriveShardInfoFromCoin(coinPubKey []byte) (int, int, int, error) {
 
 // CoinParams contains the necessary data to create a new coin.
 type CoinParams struct {
-	key.PaymentInfo
+	PaymentInfo
 	SenderShardID   int
 	CoinPrivacyType int
+}
+
+func (p *CoinParams) FromPaymentInfo(inf *PaymentInfo) *CoinParams {
+	var receiverPublicKeyBytes []byte
+	if inf.PaymentAddress != nil {
+		receiverPublicKeyBytes = inf.PaymentAddress.Pk
+	} else if inf.OTAReceiver != nil {
+		receiverPublicKeyBytes = inf.OTAReceiver.PublicKey.ToBytesS()
+	}
+	shardID := common.GetShardIDFromLastByte(receiverPublicKeyBytes[len(receiverPublicKeyBytes)-1])
+	return &CoinParams{
+		PaymentInfo:     *inf,
+		SenderShardID:   int(shardID),
+		CoinPrivacyType: PrivacyTypeTransfer,
+	}
 }
 
 // NewCoinParams returns an empty CoinParams.
@@ -216,7 +238,7 @@ func NewCoinParams() *CoinParams { return &CoinParams{} }
 // NewTransferCoinParams returns a new CoinParams for the transferring purpose.
 // If `senderShardParams` is not given, `senderShard` will default to the shardID of the given payment info.
 // Otherwise, the first value of `senderShardParams` will be set as the `senderShard`.
-func NewTransferCoinParams(paymentInfo *key.PaymentInfo, senderShardParams ...byte) *CoinParams {
+func NewTransferCoinParams(paymentInfo *PaymentInfo, senderShardParams ...byte) *CoinParams {
 	var senderShard byte
 	if len(senderShardParams) > 0 {
 		senderShard = senderShardParams[0]
@@ -232,8 +254,17 @@ func NewTransferCoinParams(paymentInfo *key.PaymentInfo, senderShardParams ...by
 	}
 }
 
+// From initializes the CoinParam using input data (PaymentInfo must not be nil)
+func (p *CoinParams) From(inf *PaymentInfo, sid, cptype int) *CoinParams {
+	return &CoinParams{
+		PaymentInfo:     *inf,
+		SenderShardID:   sid % common.MaxShardNumber,
+		CoinPrivacyType: cptype % (PrivacyTypeMint + 1),
+	}
+}
+
 // NewMintCoinParams returns a new CoinParams for the minting purpose.
-func NewMintCoinParams(paymentInfo *key.PaymentInfo) *CoinParams {
+func NewMintCoinParams(paymentInfo *PaymentInfo) *CoinParams {
 	var senderShard byte
 	receiverPublicKeyBytes := paymentInfo.PaymentAddress.Pk
 	senderShard = common.GetShardIDFromLastByte(receiverPublicKeyBytes[len(receiverPublicKeyBytes)-1])
@@ -243,4 +274,48 @@ func NewMintCoinParams(paymentInfo *key.PaymentInfo) *CoinParams {
 		SenderShardID:   int(senderShard),
 		CoinPrivacyType: PrivacyTypeMint,
 	}
+}
+
+type SenderSeal struct {
+	r             crypto.Scalar
+	txRandomIndex uint32
+}
+
+func (s SenderSeal) GetR() *crypto.Scalar { return &s.r }
+func (s SenderSeal) GetIndex() uint32     { return s.txRandomIndex }
+func (s SenderSeal) MarshalJSON() ([]byte, error) {
+	var res []byte = append(s.r.ToBytesS(), common.Uint32ToBytes(s.txRandomIndex)...)
+	return json.Marshal(hex.EncodeToString(res))
+}
+func (s *SenderSeal) UnmarshalJSON(src []byte) error {
+	var temp string
+	json.Unmarshal(src, &temp)
+	raw, err := hex.DecodeString(temp)
+	if err != nil {
+		return err
+	}
+	if len(raw) == crypto.Ed25519KeySize+4 {
+		sc := &crypto.Scalar{}
+		sc.FromBytesS(raw[:crypto.Ed25519KeySize])
+		ind, _ := common.BytesToUint32(raw[crypto.Ed25519KeySize:])
+		*s = SenderSeal{
+			r:             *sc,
+			txRandomIndex: ind,
+		}
+		return nil
+	}
+	return errors.New("Error unmarshalling sender seal : unexpected length")
+}
+
+func NewCoinFromAmountAndTxRandomBytes(amount uint64, publicKey *crypto.Point, txRandom *TxRandom, info []byte) *CoinV2 {
+	c := new(CoinV2).Init()
+	c.SetPublicKey(publicKey)
+	c.SetAmount(new(crypto.Scalar).FromUint64(amount))
+	c.SetRandomness(crypto.RandomScalar())
+	c.SetTxRandom(txRandom)
+	c.SetCommitment(crypto.PedCom.CommitAtIndex(c.GetAmount(), c.GetRandomness(), crypto.PedersenValueIndex))
+	c.SetSharedRandom(nil)
+	c.SetSharedConcealRandom(crypto.RandomScalar())
+	c.SetInfo(info)
+	return c
 }

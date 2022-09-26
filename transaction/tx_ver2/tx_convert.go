@@ -2,6 +2,8 @@ package tx_ver2
 
 import (
 	"fmt"
+	"log"
+
 	"github.com/incognitochain/go-incognito-sdk-v2/coin"
 	"github.com/incognitochain/go-incognito-sdk-v2/common"
 	"github.com/incognitochain/go-incognito-sdk-v2/crypto"
@@ -11,7 +13,6 @@ import (
 	"github.com/incognitochain/go-incognito-sdk-v2/privacy/v1/zkp/serialnumbernoprivacy"
 	"github.com/incognitochain/go-incognito-sdk-v2/transaction/tx_generic"
 	"github.com/incognitochain/go-incognito-sdk-v2/transaction/utils"
-	"log"
 
 	"strconv"
 	"time"
@@ -20,7 +21,7 @@ import (
 // TxConvertVer1ToVer2InitParams consists of parameters used to create a new PRV conversion transaction.
 type TxConvertVer1ToVer2InitParams struct {
 	senderSK    *key.PrivateKey
-	paymentInfo []*key.PaymentInfo
+	paymentInfo []*coin.PaymentInfo
 	inputCoins  []coin.PlainCoin
 	fee         uint64
 	tokenID     *common.Hash // default is nil -> use for prv coin
@@ -31,7 +32,7 @@ type TxConvertVer1ToVer2InitParams struct {
 
 // NewTxConvertVer1ToVer2InitParams creates a new TxConvertVer1ToVer2InitParams from the given parameters.
 func NewTxConvertVer1ToVer2InitParams(senderSK *key.PrivateKey,
-	paymentInfo []*key.PaymentInfo,
+	paymentInfo []*coin.PaymentInfo,
 	inputCoins []coin.PlainCoin,
 	fee uint64,
 	tokenID *common.Hash, // default is nil -> use for prv coin
@@ -58,9 +59,9 @@ func NewTxConvertVer1ToVer2InitParams(senderSK *key.PrivateKey,
 
 // InitConversion creates a conversion transaction that converts PRV UTXOs v1 to v2. A conversion transaction is
 // a special PRV transaction of version 2. It is non-private, meaning that all details of the transaction are publicly visible.
-// 	- InputCoins: PlainCoin V1
-//	- OutputCoins: CoinV2
-//	- Signature: Schnorr signature with no privacy.
+//   - InputCoins: PlainCoin V1
+//   - OutputCoins: CoinV2
+//   - Signature: Schnorr signature with no privacy.
 func InitConversion(tx *Tx, params *TxConvertVer1ToVer2InitParams) error {
 	// validate again
 	if err := validateTxConvertVer1ToVer2Params(params); err != nil {
@@ -142,14 +143,14 @@ func initializeTxConversion(tx *Tx, params *TxConvertVer1ToVer2InitParams) error
 	return nil
 }
 
-func createOutputCoins(paymentInfos []*key.PaymentInfo, tokenID *common.Hash) ([]*coin.CoinV2, error) {
+func createOutputCoins(paymentInfos []*coin.PaymentInfo, tokenID *common.Hash) ([]*coin.CoinV2, error) {
 	var err error
 	isPRV := (tokenID == nil) || (*tokenID == common.PRVCoinID)
 	c := make([]*coin.CoinV2, len(paymentInfos))
 
 	for i := 0; i < len(paymentInfos); i += 1 {
 		if isPRV {
-			c[i], err = coin.NewCoinFromPaymentInfo(coin.NewTransferCoinParams(paymentInfos[i]))
+			c[i], _, err = coin.NewCoinFromPaymentInfo(coin.NewTransferCoinParams(paymentInfos[i]))
 			if err != nil {
 				log.Printf("TxConversion cannot create new coin unique OTA, got error %v\n", err)
 				return nil, err
@@ -203,14 +204,14 @@ func proveConversion(tx *Tx, params *TxConvertVer1ToVer2InitParams) error {
 type CustomTokenConversionParams struct {
 	tokenID       *common.Hash
 	tokenInputs   []coin.PlainCoin
-	tokenPayments []*key.PaymentInfo
+	tokenPayments []*coin.PaymentInfo
 }
 
 // TxTokenConvertVer1ToVer2InitParams consists of parameters used to create a new token conversion transaction.
 type TxTokenConvertVer1ToVer2InitParams struct {
 	senderSK    *key.PrivateKey
 	feeInputs   []coin.PlainCoin
-	feePayments []*key.PaymentInfo
+	feePayments []*coin.PaymentInfo
 	fee         uint64
 	tokenParams *CustomTokenConversionParams
 	metaData    metadata.Metadata
@@ -221,9 +222,9 @@ type TxTokenConvertVer1ToVer2InitParams struct {
 // NewTxTokenConvertVer1ToVer2InitParams creates a new TxTokenConvertVer1ToVer2InitParams from the given parameters.
 func NewTxTokenConvertVer1ToVer2InitParams(senderSK *key.PrivateKey,
 	feeInputs []coin.PlainCoin,
-	feePayments []*key.PaymentInfo,
+	feePayments []*coin.PaymentInfo,
 	tokenInputs []coin.PlainCoin,
-	tokenPayments []*key.PaymentInfo,
+	tokenPayments []*coin.PaymentInfo,
 	fee uint64,
 	tokenID *common.Hash, // tokenID of the conversion coin
 	metaData metadata.Metadata,
@@ -255,11 +256,11 @@ func NewTxTokenConvertVer1ToVer2InitParams(senderSK *key.PrivateKey,
 // transaction is a special token transaction of version 2. It pays the transaction fee in PRV and it is required that
 // the account has enough PRV v2 to pay the fee. This transaction is non-private, meaning that all details of the
 // transaction are publicly visible.
-//	- TxBase: A PRV transaction V2
-//	- TxNormal:
-// 		+ InputCoins: PlainCoin V1
-//		+ OutputCoins: CoinV2
-//		+ Signature: Schnorr signature with no privacy.
+//   - TxBase: A PRV transaction V2
+//   - TxNormal:
+//   - InputCoins: PlainCoin V1
+//   - OutputCoins: CoinV2
+//   - Signature: Schnorr signature with no privacy.
 func InitTokenConversion(txToken *TxToken, params *TxTokenConvertVer1ToVer2InitParams) error {
 	if err := validateTxTokenConvertVer1ToVer2Params(params); err != nil {
 		return err

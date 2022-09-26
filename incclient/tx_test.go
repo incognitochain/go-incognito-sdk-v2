@@ -389,7 +389,7 @@ func TestIncClient_SendToOTA(t *testing.T) {
 	Logger.IsEnable = false
 
 	senderPrivateKey := "1111111cnisw5tuG28JNkiw3Etei3vVn5YTHEbbsxrruRuK5Jt9ynh4Pg5YJCtKbJiYdE3S2cKNysAYXtjTfuddWyRgzBj18FA8jV8VUZf"
-	receiverPrivateKey := "112t8rnXUbFHzsnX7zdQouzxXEWArruE4rYzeswrEtvL3iBkcgXAXsQk4kQk23XfLNU6wMknyKk8UAu8fLBfkcUVMgxTNsfrYZURAnPqhffA"
+	receiverPrivateKey := "112t8rnXKhWQ6APJpRBSKWSjkW7zq8X74geRKewovGSUP7b2EyAjusKADrF4GmiHHVbxUBVt5GnPV7qGURkB86vwikk9GUh1NMyamuqjend5"
 	receiverWallet, err := wallet.Base58CheckDeserialize(receiverPrivateKey)
 	if err != nil {
 		panic(err)
@@ -430,7 +430,7 @@ func TestIncClient_SendToOTA(t *testing.T) {
 		}
 		log.Printf("oldReceiverBalance: %v\n", oldReceiverBalance)
 
-		txFee := 40 + (common.RandUint64()%10)*10
+		txFee := 80 + (common.RandUint64()%10)*10
 
 		// choose the sending amount
 		sendingAmount := uint64(1234)
@@ -438,13 +438,13 @@ func TestIncClient_SendToOTA(t *testing.T) {
 
 		// generate a new OTAReceiver
 		otaReceiver := new(coin.OTAReceiver)
-		err = otaReceiver.FromAddress(receiverAddr)
+		err = otaReceiver.From(receiverAddr, int(GetShardIDFromPrivateKey(senderPrivateKey)), coin.PrivacyTypeTransfer, false)
 		if err != nil {
 			panic("cannot generate a new OTAReceiver")
 		}
-		log.Printf("OTAReceiver: %v\n", otaReceiver.String(true))
+		log.Printf("OTAReceiver: %v\n", otaReceiver.String())
 
-		txParam := NewTxParam(senderPrivateKey, []string{otaReceiver.String(true)}, []uint64{sendingAmount}, txFee, nil, nil, nil)
+		txParam := NewTxParam(senderPrivateKey, []string{otaReceiver.String()}, []uint64{sendingAmount}, txFee, nil, nil, nil)
 		encodedTx, txHash, err := ic.CreateRawTransactionVer2(txParam)
 		if err != nil {
 			panic(err)

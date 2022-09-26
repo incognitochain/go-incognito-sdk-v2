@@ -7,7 +7,6 @@ import (
 	"github.com/incognitochain/go-incognito-sdk-v2/coin"
 	"github.com/incognitochain/go-incognito-sdk-v2/common"
 	"github.com/incognitochain/go-incognito-sdk-v2/common/base58"
-	"github.com/incognitochain/go-incognito-sdk-v2/key"
 	"github.com/incognitochain/go-incognito-sdk-v2/metadata"
 	"github.com/incognitochain/go-incognito-sdk-v2/rpchandler"
 	"github.com/incognitochain/go-incognito-sdk-v2/transaction/tx_generic"
@@ -77,10 +76,10 @@ func (client *IncClient) CreateRawTokenTransactionVer1(txParam *TxParam) ([]byte
 	}
 
 	//Create list of payment infos
-	var tokenReceivers []*key.PaymentInfo
+	var tokenReceivers []*coin.PaymentInfo
 	if txParam.txTokenParam.tokenType == utils.CustomTokenInit {
-		uniqueReceiver := key.PaymentInfo{PaymentAddress: senderWallet.KeySet.PaymentAddress, Amount: totalAmount, Message: []byte{}}
-		tokenReceivers = []*key.PaymentInfo{&uniqueReceiver}
+		uniqueReceiver := coin.PaymentInfo{PaymentAddress: &senderWallet.KeySet.PaymentAddress, Amount: totalAmount, Message: []byte{}}
+		tokenReceivers = []*coin.PaymentInfo{&uniqueReceiver}
 	} else {
 		tokenReceivers, err = createPaymentInfos(txParam.txTokenParam.receiverList, txParam.txTokenParam.amountList)
 		if err != nil {
@@ -148,7 +147,7 @@ func (client *IncClient) CreateRawTokenTransactionVer1(txParam *TxParam) ([]byte
 	tokenParam := tx_generic.NewTokenParam(tokenIDStr, "", "",
 		totalAmount, txParam.txTokenParam.tokenType, tokenReceivers, coinsTokenToSpend, false, tokenFee, kvArgsToken)
 
-	prvReceivers := make([]*key.PaymentInfo, 0)
+	prvReceivers := make([]*coin.PaymentInfo, 0)
 	if len(txParam.receiverList) > 0 {
 		prvReceivers, err = createPaymentInfos(txParam.receiverList, txParam.amountList)
 		if err != nil {
@@ -241,7 +240,7 @@ func (client *IncClient) CreateRawTokenTransactionVer2(txParam *TxParam) ([]byte
 	tokenParam := tx_generic.NewTokenParam(tokenIDStr, "", "",
 		totalAmount, txParam.txTokenParam.tokenType, tokenReceivers, coinsTokenToSpend, false, 0, kvArgsToken)
 
-	prvReceivers := make([]*key.PaymentInfo, 0)
+	prvReceivers := make([]*coin.PaymentInfo, 0)
 	if len(txParam.receiverList) > 0 {
 		prvReceivers, err = createPaymentInfos(txParam.receiverList, txParam.amountList)
 		if err != nil {

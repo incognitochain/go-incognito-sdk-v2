@@ -2,6 +2,9 @@ package tx_ver2
 
 import (
 	"fmt"
+	"log"
+	"math/big"
+
 	"github.com/incognitochain/go-incognito-sdk-v2/coin"
 	"github.com/incognitochain/go-incognito-sdk-v2/common"
 	"github.com/incognitochain/go-incognito-sdk-v2/crypto"
@@ -9,8 +12,6 @@ import (
 	"github.com/incognitochain/go-incognito-sdk-v2/privacy/v2/mlsag"
 	"github.com/incognitochain/go-incognito-sdk-v2/transaction/tx_generic"
 	"github.com/incognitochain/go-incognito-sdk-v2/transaction/utils"
-	"log"
-	"math/big"
 )
 
 // Create unique OTA coins without the help of the db
@@ -18,11 +19,12 @@ func createUniqueOTACoinCA(p *coin.CoinParams, tokenID *common.Hash) (*coin.Coin
 	if tokenID == nil {
 		tokenID = &common.PRVCoinID
 	}
-	c, sharedSecret, err := coin.NewCoinCA(p, tokenID)
+	c, sharedSecret, seal, err := coin.NewCoinCA(p, tokenID)
 	if err != nil {
 		log.Printf("Cannot parse coin based on payment info err: %v", err)
 		return nil, nil, err
 	}
+	_ = seal //TODO: export
 	// If previously created coin is burning address
 	if sharedSecret == nil {
 		// assetTag := privacy.HashToPoint(tokenID[:])

@@ -2,11 +2,11 @@ package coin
 
 import (
 	"fmt"
-	"github.com/incognitochain/go-incognito-sdk-v2/common"
-	"github.com/incognitochain/go-incognito-sdk-v2/key"
-	"github.com/incognitochain/go-incognito-sdk-v2/wallet"
 	"testing"
 	"time"
+
+	"github.com/incognitochain/go-incognito-sdk-v2/common"
+	"github.com/incognitochain/go-incognito-sdk-v2/wallet"
 )
 
 func TestOTAReceiver_FromCoinParams(t *testing.T) {
@@ -27,8 +27,8 @@ func TestOTAReceiver_FromCoinParams(t *testing.T) {
 		if err != nil {
 			panic(fmt.Sprintf("%v %v", prefix, err))
 		}
-		paymentInfo := &key.PaymentInfo{
-			PaymentAddress: w.KeySet.PaymentAddress,
+		paymentInfo := &PaymentInfo{
+			PaymentAddress: &w.KeySet.PaymentAddress,
 			Amount:         0,
 			Message:        []byte{},
 		}

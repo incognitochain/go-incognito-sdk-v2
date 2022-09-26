@@ -120,31 +120,26 @@ func (cp *coinParams) SetBytes(data []byte) error {
 	return nil
 }
 
-// createPaymentInfos creates a list of key.PaymentInfo based on the provided address list and corresponding amount list.
-func createPaymentInfos(addrList []string, amountList []uint64) ([]*key.PaymentInfo, error) {
+// createPaymentInfos creates a list of coin.PaymentInfo based on the provided address list and corresponding amount list.
+func createPaymentInfos(addrList []string, amountList []uint64) ([]*coin.PaymentInfo, error) {
 	if len(addrList) != len(amountList) {
 		return nil, fmt.Errorf("length of payment address (%v) and length amount (%v) mismatch", len(addrList), len(amountList))
 	}
 
-	paymentInfos := make([]*key.PaymentInfo, 0)
+	paymentInfos := make([]*coin.PaymentInfo, 0)
 	for i, receiver := range addrList {
-		paymentInfo := key.PaymentInfo{Amount: amountList[i], Message: []byte{}}
+		paymentInfo := coin.PaymentInfo{Amount: amountList[i], Message: []byte{}}
 		receiverWallet, err := wallet.Base58CheckDeserialize(receiver)
 		if err != nil {
-			otaReceiver := new(coin.OTAReceiver)
-			err = otaReceiver.FromString(receiver)
-			if err != nil {
-				return nil, fmt.Errorf("invalid receiver %v", receiver)
+			var r coin.OTAReceiver
+			err := r.FromString(receiver)
+			if err == nil {
+				paymentInfo.OTAReceiver = &r
+			} else {
+				return nil, err
 			}
-			if !otaReceiver.IsValid() {
-				return nil, fmt.Errorf("invalid receiver %v", receiver)
-			}
-			// if !otaReceiver.IsConcealable() {
-			// 	return nil, fmt.Errorf("OTAReceiver %v does not support private transaction", receiver)
-			// }
-			paymentInfo.OTAReceiver = receiver
 		} else {
-			paymentInfo.PaymentAddress = receiverWallet.KeySet.PaymentAddress
+			paymentInfo.PaymentAddress = &receiverWallet.KeySet.PaymentAddress
 		}
 
 		paymentInfos = append(paymentInfos, &paymentInfo)

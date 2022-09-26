@@ -3,16 +3,17 @@ package incclient
 import (
 	"bytes"
 	"fmt"
-	"github.com/incognitochain/go-incognito-sdk-v2/coin"
-	"github.com/incognitochain/go-incognito-sdk-v2/common"
-	"github.com/incognitochain/go-incognito-sdk-v2/common/base58"
-	"github.com/incognitochain/go-incognito-sdk-v2/transaction/tx_generic"
-	"github.com/incognitochain/go-incognito-sdk-v2/wallet"
 	"log"
 	"math"
 	"strconv"
 	"testing"
 	"time"
+
+	"github.com/incognitochain/go-incognito-sdk-v2/coin"
+	"github.com/incognitochain/go-incognito-sdk-v2/common"
+	"github.com/incognitochain/go-incognito-sdk-v2/common/base58"
+	"github.com/incognitochain/go-incognito-sdk-v2/transaction/tx_generic"
+	"github.com/incognitochain/go-incognito-sdk-v2/wallet"
 )
 
 func TestIncClient_CreateRawTokenTransaction(t *testing.T) {
@@ -640,12 +641,12 @@ func TestIncClient_SendTokenToOTA(t *testing.T) {
 		if err != nil {
 			panic("cannot generate a new OTAReceiver")
 		}
-		log.Printf("OTAReceiver: %v\n", otaReceiver.String(true))
+		log.Printf("OTAReceiver: %v\n", otaReceiver.String())
 		log.Printf("OTAPubKey: %v\n", base58.Base58Check{}.Encode(otaReceiver.PublicKey.ToBytesS(), 0))
 
 		txTokenParam := NewTxTokenParam(
 			tokenID, 1,
-			[]string{otaReceiver.String(true)}, []uint64{sendingAmount},
+			[]string{otaReceiver.String()}, []uint64{sendingAmount},
 			false, 0, nil,
 		)
 		txParam := NewTxParam(senderPrivateKey, []string{}, []uint64{}, txFee, txTokenParam, nil, nil)
@@ -743,7 +744,7 @@ func TestIncClient_CannotSendTokenToSameOTATwice(t *testing.T) {
 
 		txTokenParam := NewTxTokenParam(
 			tokenID, 1,
-			[]string{otaReceiver.String(true)}, []uint64{sendingAmount},
+			[]string{otaReceiver.String()}, []uint64{sendingAmount},
 			false, 0, nil,
 		)
 		txParam := NewTxParam(senderPrivateKey, []string{}, []uint64{}, txFee, txTokenParam, nil, nil)

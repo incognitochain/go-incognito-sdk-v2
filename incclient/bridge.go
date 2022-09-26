@@ -8,7 +8,6 @@ import (
 	rCommon "github.com/ethereum/go-ethereum/common"
 	"github.com/incognitochain/go-incognito-sdk-v2/coin"
 	"github.com/incognitochain/go-incognito-sdk-v2/crypto"
-	"github.com/incognitochain/go-incognito-sdk-v2/key"
 	"github.com/incognitochain/go-incognito-sdk-v2/rpchandler/rpc"
 
 	ethCommon "github.com/ethereum/go-ethereum/common"
@@ -436,7 +435,7 @@ func (client *IncClient) CreateBridgeAggConvertTokenToUnifiedTokenRequestTransac
 	}
 
 	otaReceiver := coin.OTAReceiver{}
-	paymentInfo := &key.PaymentInfo{PaymentAddress: senderWallet.KeySet.PaymentAddress, Message: []byte{}}
+	paymentInfo := &coin.PaymentInfo{PaymentAddress: &senderWallet.KeySet.PaymentAddress, Message: []byte{}}
 	err = otaReceiver.FromCoinParams(coin.NewMintCoinParams(paymentInfo))
 	if err != nil {
 		return nil, "", err

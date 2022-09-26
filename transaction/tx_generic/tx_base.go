@@ -6,6 +6,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math"
+	"sort"
+	"strconv"
+	"time"
+
 	"github.com/incognitochain/go-incognito-sdk-v2/coin"
 	"github.com/incognitochain/go-incognito-sdk-v2/common"
 	"github.com/incognitochain/go-incognito-sdk-v2/crypto"
@@ -13,10 +18,6 @@ import (
 	"github.com/incognitochain/go-incognito-sdk-v2/metadata"
 	"github.com/incognitochain/go-incognito-sdk-v2/privacy"
 	"github.com/incognitochain/go-incognito-sdk-v2/transaction/utils"
-	"math"
-	"sort"
-	"strconv"
-	"time"
 )
 
 // TxBase represents a PRV transaction field. It is used in both TxVer1 and TxVer2.
@@ -41,7 +42,7 @@ type TxBase struct {
 // TxPrivacyInitParams consists of parameters used to create a new PRV transaction.
 type TxPrivacyInitParams struct {
 	SenderSK    *key.PrivateKey
-	PaymentInfo []*key.PaymentInfo
+	PaymentInfo []*coin.PaymentInfo
 	InputCoins  []coin.PlainCoin
 	Fee         uint64
 	HasPrivacy  bool
@@ -54,7 +55,7 @@ type TxPrivacyInitParams struct {
 // NewTxPrivacyInitParams creates a new TxPrivacyInitParams based on the given inputs.
 func NewTxPrivacyInitParams(
 	senderSK *key.PrivateKey,
-	paymentInfo []*key.PaymentInfo,
+	paymentInfo []*coin.PaymentInfo,
 	inputCoins []coin.PlainCoin,
 	fee uint64,
 	hasPrivacy bool,
@@ -117,9 +118,9 @@ func CalculateSentBackInfo(params *TxPrivacyInitParams, senderPaymentAddress key
 	// Create a new payment to sender's pk where amount is overBalance if > 0
 	if overBalance > 0 {
 		// Should not check error because have checked before
-		changePaymentInfo := new(key.PaymentInfo)
+		changePaymentInfo := new(coin.PaymentInfo)
 		changePaymentInfo.Amount = uint64(overBalance)
-		changePaymentInfo.PaymentAddress = senderPaymentAddress
+		changePaymentInfo.PaymentAddress = &senderPaymentAddress
 		params.PaymentInfo = append(params.PaymentInfo, changePaymentInfo)
 	}
 

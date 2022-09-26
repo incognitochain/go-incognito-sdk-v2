@@ -153,23 +153,6 @@ func (addr PaymentAddress) GetOTAPublicKey() *crypto.Point {
 	return encryptionKey
 }
 
-// PaymentInfo represents the information of a receiver when creating a transaction.
-type PaymentInfo struct {
-	OTAReceiver    string `json:"OTAReceiver,omitempty"`
-	PaymentAddress PaymentAddress
-	Amount         uint64
-	Message        []byte // at most 512 bytes
-}
-
-// InitPaymentInfo creates a new PaymentInfo given a PaymentAddress, an amount and a message.
-func InitPaymentInfo(addr PaymentAddress, amount uint64, message []byte) *PaymentInfo {
-	return &PaymentInfo{
-		PaymentAddress: addr,
-		Amount:         amount,
-		Message:        message,
-	}
-}
-
 // GeneratePrivateKey generates a random 32-byte PrivateKey.
 func GeneratePrivateKey(seed []byte) PrivateKey {
 	bip32PrivateKey := crypto.HashToScalar(seed)

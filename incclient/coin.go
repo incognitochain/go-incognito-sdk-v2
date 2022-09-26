@@ -2,18 +2,18 @@ package incclient
 
 import (
 	"fmt"
+	"math/big"
+	"time"
+
 	"github.com/incognitochain/go-incognito-sdk-v2/coin"
 	"github.com/incognitochain/go-incognito-sdk-v2/common"
 	"github.com/incognitochain/go-incognito-sdk-v2/common/base58"
 	"github.com/incognitochain/go-incognito-sdk-v2/crypto"
-	"github.com/incognitochain/go-incognito-sdk-v2/key"
 	"github.com/incognitochain/go-incognito-sdk-v2/metadata"
 	"github.com/incognitochain/go-incognito-sdk-v2/rpchandler"
 	"github.com/incognitochain/go-incognito-sdk-v2/rpchandler/jsonresult"
 	"github.com/incognitochain/go-incognito-sdk-v2/rpchandler/rpc"
 	"github.com/incognitochain/go-incognito-sdk-v2/wallet"
-	"math/big"
-	"time"
 )
 
 // GetOutputCoins calls the remote server to get all the output tokens for an output coin key.
@@ -622,7 +622,7 @@ func GenerateOTAFromPaymentAddress(paymentAddressStr string, coinType int, sende
 		return "", "", err
 	}
 
-	paymentInfo := key.InitPaymentInfo(keyWallet.KeySet.PaymentAddress, 0, []byte{})
+	paymentInfo := coin.InitPaymentInfo(keyWallet.KeySet.PaymentAddress, 0, []byte{})
 
 	var coinInitParams *coin.CoinParams
 	if coinType == coin.PrivacyTypeMint {

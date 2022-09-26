@@ -3,10 +3,10 @@ package incclient
 import (
 	"encoding/json"
 	"fmt"
+
 	"github.com/incognitochain/go-incognito-sdk-v2/coin"
 	"github.com/incognitochain/go-incognito-sdk-v2/common"
 	"github.com/incognitochain/go-incognito-sdk-v2/common/base58"
-	"github.com/incognitochain/go-incognito-sdk-v2/key"
 	"github.com/incognitochain/go-incognito-sdk-v2/privacy"
 	"github.com/incognitochain/go-incognito-sdk-v2/transaction/tx_ver2"
 	"github.com/incognitochain/go-incognito-sdk-v2/transaction/utils"
@@ -51,10 +51,10 @@ func (client *IncClient) CreateRawConversionTransaction(privateKey string) ([]by
 	}
 	totalAmount -= DefaultPRVFee
 
-	uniquePayment := key.PaymentInfo{PaymentAddress: senderWallet.KeySet.PaymentAddress, Amount: totalAmount, Message: []byte{}}
+	uniquePayment := coin.PaymentInfo{PaymentAddress: &senderWallet.KeySet.PaymentAddress, Amount: totalAmount, Message: []byte{}}
 
 	//Create tx conversion params
-	txParam := tx_ver2.NewTxConvertVer1ToVer2InitParams(&(senderWallet.KeySet.PrivateKey), []*key.PaymentInfo{&uniquePayment}, coinV1List,
+	txParam := tx_ver2.NewTxConvertVer1ToVer2InitParams(&(senderWallet.KeySet.PrivateKey), []*coin.PaymentInfo{&uniquePayment}, coinV1List,
 		DefaultPRVFee, nil, nil, nil, nil)
 
 	tx := new(tx_ver2.Tx)
@@ -119,10 +119,10 @@ func (client *IncClient) CreateRawTokenConversionTransaction(privateKey, tokenID
 	}
 
 	//Create unique receiver for token
-	uniquePayment := key.PaymentInfo{PaymentAddress: senderWallet.KeySet.PaymentAddress, Amount: totalAmount, Message: []byte{}}
+	uniquePayment := coin.PaymentInfo{PaymentAddress: &senderWallet.KeySet.PaymentAddress, Amount: totalAmount, Message: []byte{}}
 
-	txTokenParam := tx_ver2.NewTxTokenConvertVer1ToVer2InitParams(&(senderWallet.KeySet.PrivateKey), coinsToSpendPRV, []*key.PaymentInfo{}, coinV1ListToken,
-		[]*key.PaymentInfo{&uniquePayment}, prvFee, tokenID,
+	txTokenParam := tx_ver2.NewTxTokenConvertVer1ToVer2InitParams(&(senderWallet.KeySet.PrivateKey), coinsToSpendPRV, []*coin.PaymentInfo{}, coinV1ListToken,
+		[]*coin.PaymentInfo{&uniquePayment}, prvFee, tokenID,
 		nil, nil, kvArgsPRV)
 
 	tx := new(tx_ver2.TxToken)
@@ -177,8 +177,8 @@ func (client *IncClient) CreateAndSendRawConversionTransaction(privateKey string
 
 // CreateConversionTransactionWithInputCoins convert a list of PRV UTXOs V1 into PRV UTXOs v2.
 // Parameters:
-//	- privateKey: the private key of the user.
-//	- inputCoins: a list of decrypted, unspent PRV output coins (with the same version).
+//   - privateKey: the private key of the user.
+//   - inputCoins: a list of decrypted, unspent PRV output coins (with the same version).
 //
 // This function uses the DefaultPRVFee to pay the transaction fee.
 //
@@ -220,10 +220,10 @@ func (client *IncClient) CreateConversionTransactionWithInputCoins(privateKey st
 	}
 	totalAmount -= DefaultPRVFee
 
-	uniquePayment := key.PaymentInfo{PaymentAddress: senderWallet.KeySet.PaymentAddress, Amount: totalAmount, Message: []byte{}}
+	uniquePayment := coin.PaymentInfo{PaymentAddress: &senderWallet.KeySet.PaymentAddress, Amount: totalAmount, Message: []byte{}}
 
 	//Create tx conversion params
-	txParam := tx_ver2.NewTxConvertVer1ToVer2InitParams(&(senderWallet.KeySet.PrivateKey), []*key.PaymentInfo{&uniquePayment}, coinV1List,
+	txParam := tx_ver2.NewTxConvertVer1ToVer2InitParams(&(senderWallet.KeySet.PrivateKey), []*coin.PaymentInfo{&uniquePayment}, coinV1List,
 		DefaultPRVFee, nil, nil, nil, nil)
 
 	tx := new(tx_ver2.Tx)
@@ -245,15 +245,14 @@ func (client *IncClient) CreateConversionTransactionWithInputCoins(privateKey st
 
 // CreateTokenConversionTransactionWithInputCoins convert a list of token UTXOs V1 into PRV UTXOs v2.
 // Parameters:
-//	- privateKey: the private key of the user.
-//	- tokenIDStr: the id of the asset being converted.
-//	- tokenInCoins: a list of decrypted, unspent token output coins v1.
-//	- prvInCoins: a list of decrypted, unspent PRV output coins v2 for paying the transaction fee.
-//	- prvIndices: a list of corresponding indices for the prv input coins.
+//   - privateKey: the private key of the user.
+//   - tokenIDStr: the id of the asset being converted.
+//   - tokenInCoins: a list of decrypted, unspent token output coins v1.
+//   - prvInCoins: a list of decrypted, unspent PRV output coins v2 for paying the transaction fee.
+//   - prvIndices: a list of corresponding indices for the prv input coins.
 //
 // This function uses the DefaultPRVFee to pay the transaction fee. Callers must make sure the PRV input coins have
 // enough value to cover the transaction fee.
-//
 func (client *IncClient) CreateTokenConversionTransactionWithInputCoins(privateKey,
 	tokenIDStr string,
 	tokenInCoins []coin.PlainCoin,
@@ -339,11 +338,11 @@ func (client *IncClient) CreateTokenConversionTransactionWithInputCoins(privateK
 	kvArgs[utils.MyIndices] = prvIndices
 
 	//Create unique receiver for token
-	uniquePayment := key.PaymentInfo{PaymentAddress: senderWallet.KeySet.PaymentAddress, Amount: totalAmount, Message: []byte{}}
+	uniquePayment := coin.PaymentInfo{PaymentAddress: &senderWallet.KeySet.PaymentAddress, Amount: totalAmount, Message: []byte{}}
 
 	txTokenParam := tx_ver2.NewTxTokenConvertVer1ToVer2InitParams(&(senderWallet.KeySet.PrivateKey),
-		prvInCoins, []*key.PaymentInfo{}, tokenInCoins,
-		[]*key.PaymentInfo{&uniquePayment}, prvFee, tokenID,
+		prvInCoins, []*coin.PaymentInfo{}, tokenInCoins,
+		[]*coin.PaymentInfo{&uniquePayment}, prvFee, tokenID,
 		nil, nil, kvArgs)
 
 	tx := new(tx_ver2.TxToken)

@@ -4,23 +4,23 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"math/big"
+
 	"github.com/incognitochain/go-incognito-sdk-v2/coin"
 	"github.com/incognitochain/go-incognito-sdk-v2/common"
 	"github.com/incognitochain/go-incognito-sdk-v2/crypto"
-	"github.com/incognitochain/go-incognito-sdk-v2/key"
 	"github.com/incognitochain/go-incognito-sdk-v2/privacy"
 	"github.com/incognitochain/go-incognito-sdk-v2/transaction/tx_generic"
 	"github.com/incognitochain/go-incognito-sdk-v2/transaction/utils"
-	"math/big"
 )
 
 // Tx represents a PRV transaction of version 1. It is a embedded TxBase with some overridden functions.
 // A transaction version is mainly composed of
-//	- Schnorr signature: to sign the transaction.
-//	- One-of-many proof: to anonymize the true sender.
-//	- BulletProofs: a range proof used to prove that a value lies within an interval without revealing it.
-//	- SerialNumberProof: to prove the correctness of serial numbers.
-//	- SerialNumberProof (no privacy): to prove the correctness of serial numbers used in non-private transactions.
+//   - Schnorr signature: to sign the transaction.
+//   - One-of-many proof: to anonymize the true sender.
+//   - BulletProofs: a range proof used to prove that a value lies within an interval without revealing it.
+//   - SerialNumberProof: to prove the correctness of serial numbers.
+//   - SerialNumberProof (no privacy): to prove the correctness of serial numbers used in non-private transactions.
 type Tx struct {
 	tx_generic.TxBase
 }
@@ -248,7 +248,7 @@ func (tx *Tx) proveAndSignCore(params *tx_generic.TxPrivacyInitParams, paymentWi
 	return nil
 }
 
-func generateOutputCoinV1s(paymentInfo []*key.PaymentInfo) ([]*coin.CoinV1, error) {
+func generateOutputCoinV1s(paymentInfo []*coin.PaymentInfo) ([]*coin.CoinV1, error) {
 	outputCoins := make([]*coin.CoinV1, len(paymentInfo))
 	for i, pInfo := range paymentInfo {
 		outputCoins[i] = new(coin.CoinV1)

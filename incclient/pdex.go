@@ -2,10 +2,11 @@ package incclient
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/incognitochain/go-incognito-sdk-v2/coin"
 	"github.com/incognitochain/go-incognito-sdk-v2/common"
 	"github.com/incognitochain/go-incognito-sdk-v2/key"
-	"strings"
 
 	// "github.com/incognitochain/go-incognito-sdk-v2/metadata"
 	metadataCommon "github.com/incognitochain/go-incognito-sdk-v2/metadata/common"
@@ -22,12 +23,12 @@ func (client *IncClient) CreatePdexv3MintNFT(privateKey string) ([]byte, string,
 		return nil, "", err
 	}
 	otaReceiver := coin.OTAReceiver{}
-	paymentInfo := &key.PaymentInfo{PaymentAddress: senderWallet.KeySet.PaymentAddress, Message: []byte{}}
+	paymentInfo := &coin.PaymentInfo{PaymentAddress: &senderWallet.KeySet.PaymentAddress, Message: []byte{}}
 	err = otaReceiver.FromCoinParams(coin.NewMintCoinParams(paymentInfo))
 	if err != nil {
 		return nil, "", err
 	}
-	otaReceiveStr := otaReceiver.String(true)
+	otaReceiveStr := otaReceiver.String()
 	prvRequiredToMintNFT := client.GetMinPRVRequiredToMintNFT(0)
 	md := metadataPdexv3.NewUserMintNftRequestWithValue(otaReceiveStr, prvRequiredToMintNFT)
 
@@ -297,7 +298,7 @@ func (client *IncClient) CreatePdexv3Contribute(privateKey, pairID, pairHash, to
 
 	// construct metadata for contribution
 	temp := coin.OTAReceiver{}
-	paymentInfo := &key.PaymentInfo{PaymentAddress: senderWallet.KeySet.PaymentAddress, Message: []byte{}}
+	paymentInfo := &coin.PaymentInfo{PaymentAddress: &senderWallet.KeySet.PaymentAddress, Message: []byte{}}
 	err = temp.FromCoinParams(coin.NewMintCoinParams(paymentInfo))
 	if err != nil {
 		return nil, "", err
@@ -513,7 +514,7 @@ func (client *IncClient) CreatePdexv3Staking(privateKey, tokenIDStr, nftIDStr st
 
 	// construct metadata for contribution
 	temp := coin.OTAReceiver{}
-	paymentInfo := &key.PaymentInfo{PaymentAddress: senderWallet.KeySet.PaymentAddress, Message: []byte{}}
+	paymentInfo := &coin.PaymentInfo{PaymentAddress: &senderWallet.KeySet.PaymentAddress, Message: []byte{}}
 	err = temp.FromCoinParams(coin.NewMintCoinParams(paymentInfo))
 	if err != nil {
 		return nil, "", err
@@ -689,7 +690,7 @@ func GenerateOTAReceivers(
 	var err error
 	for _, tokenID := range tokens {
 		temp := coin.OTAReceiver{}
-		paymentInfo := &key.PaymentInfo{PaymentAddress: addr, Message: []byte{}}
+		paymentInfo := &coin.PaymentInfo{PaymentAddress: &addr, Message: []byte{}}
 		err = temp.FromCoinParams(coin.NewMintCoinParams(paymentInfo))
 		if err != nil {
 			return nil, err

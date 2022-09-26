@@ -2,6 +2,7 @@ package coin
 
 import (
 	"encoding/json"
+
 	"github.com/incognitochain/go-incognito-sdk-v2/crypto"
 	"github.com/incognitochain/go-incognito-sdk-v2/key"
 )
@@ -125,4 +126,21 @@ func ParseCoinsFromBytes(data []json.RawMessage) ([]Coin, error) {
 		}
 	}
 	return coinList, nil
+}
+
+// PaymentInfo represents the information of a receiver when creating a transaction.
+type PaymentInfo struct {
+	OTAReceiver    *OTAReceiver
+	PaymentAddress *key.PaymentAddress
+	Amount         uint64
+	Message        []byte // at most 512 bytes
+}
+
+// InitPaymentInfo creates a new PaymentInfo given a PaymentAddress, an amount and a message.
+func InitPaymentInfo(addr key.PaymentAddress, amount uint64, message []byte) *PaymentInfo {
+	return &PaymentInfo{
+		PaymentAddress: &addr,
+		Amount:         amount,
+		Message:        message,
+	}
 }
