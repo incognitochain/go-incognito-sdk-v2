@@ -191,6 +191,8 @@ const (
 	getPRVBEP20BurnProof     = "getprvbep20burnproof"
 	getPLGBurnProof          = "getplgburnproof"
 	getFTMBurnProof          = "getftmburnproof"
+	getAURORABurnProof       = "getauroraburnproof"
+	getAVAXBurnProof         = "getavaxburnproof"
 
 	// reward
 	CreateRawWithDrawTransaction = "withdrawreward"

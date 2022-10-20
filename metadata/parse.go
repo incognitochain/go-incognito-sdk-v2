@@ -201,6 +201,14 @@ func ParseMetadata(metaInBytes []byte) (Metadata, error) {
 		md = &metadataBridge.BurnForCallResponse{}
 	case metadataCommon.IssuingReshieldResponseMeta:
 		md = &metadataBridge.IssuingReshieldResponse{}
+	case metadataCommon.IssuingAuroraRequestMeta:
+		md = &metadataBridge.IssuingEVMRequest{}
+	case metadataCommon.IssuingAuroraResponseMeta:
+		md = &IssuingEVMResponse{}
+	case metadataCommon.IssuingAvaxRequestMeta:
+		md = &metadataBridge.IssuingEVMRequest{}
+	case metadataCommon.IssuingAvaxResponseMeta:
+		md = &IssuingEVMResponse{}
 	default:
 		return nil, errors.Errorf("Could not parse metadata with type: %d", theType)
 	}

@@ -13,6 +13,8 @@ const (
 	MainNetBSCHost                    = "https://bsc-dataseed.binance.org"
 	MainNetPLGHost                    = "https://matic-mainnet.chainstacklabs.com"
 	MainNetFTMHost                    = "https://rpc.ftm.tools/"
+	MainNetAURORAHost                 = ""
+	MainNetAVAXHost                   = "https://api.avax.network/ext/bc/C/rpc"
 	MainNetPrivacyVersion             = 2
 )
 
@@ -29,6 +31,8 @@ const (
 	TestNetBSCHost                    = "https://data-seed-prebsc-2-s2.binance.org:8545"
 	TestNetPLGHost                    = "https://matic-mumbai.chainstacklabs.com"
 	TestNetFTMHost                    = "https://rpc.testnet.fantom.network/"
+	TestNetAURORAHost                 = ""
+	TestNetAVAXHost                   = "https://api.avax-test.network/ext/bc/C/rpc"
 	TestNetPrivacyVersion             = 2
 )
 
@@ -45,6 +49,8 @@ const (
 	TestNet1BSCHost                    = "https://data-seed-prebsc-2-s1.binance.org:8545"
 	TestNet1PLGHost                    = "https://polygon-mumbai.g.alchemy.com/v2/CBQ1SQRLf3eQGbTXd_aA3LU7hvmwR33K"
 	TestNet1FTMHost                    = "https://rpc.testnet.fantom.network/"
+	TestNet1AURORAHost                 = ""
+	TestNet1AVAXHost                   = "https://api.avax-test.network/ext/bc/C/rpc"
 	TestNet1PrivacyVersion             = 2
 )
 
