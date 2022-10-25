@@ -167,6 +167,50 @@ func (client *IncClient) CreateAndSendIssuingEVMRequestTransaction(privateKey, t
 	return txHash, nil
 }
 
+func (client *IncClient) CreateIssuingEVMAuroraRequestTransaction(privateKey, tokenIDStr, txHash string) ([]byte, string, error) {
+	tokenID, err := new(common.Hash).NewHashFromStr(tokenIDStr)
+	if err != nil {
+		return nil, "", err
+	}
+	data := make(map[string]interface{})
+
+	data["TxHash"] = txHash
+	data["IncTokenID"] = tokenID
+
+	meta, err := metadataBridge.NewIssuingEVMAuroraRequestFromMap(data, rpc.AURORANetworkID, metadata.IssuingAuroraRequestMeta)
+	if err != nil {
+		return nil, "", err
+	}
+
+	txParam := NewTxParam(privateKey, []string{}, []uint64{}, DefaultPRVFee, nil, meta, nil)
+	return client.CreateRawTransaction(txParam, -1)
+}
+
+// CreateAndSendIssuingEVMRequestTransaction creates an EVM shielding transaction, and submits it to the Incognito network.
+//
+// It returns the transaction's hash, and an error (if any).
+//
+// An additional parameter `evmNetworkID` is introduced to specify the target EVM network. evmNetworkID can be one of the following:
+//   - rpc.ETHNetworkID: the Ethereum network
+//   - rpc.BSCNetworkID: the Binance Smart Chain network
+//   - rpc.PLGNetworkID: the Polygon network
+//   - rpc.FTMNetworkID: the Fantom network
+//
+// If set empty, evmNetworkID defaults to rpc.ETHNetworkID. NOTE that only the first value of evmNetworkID is used.
+func (client *IncClient) CreateAndSendIssuingEVMAuroraRequestTransaction(privateKey, tokenIDStr, txHash string) (string, error) {
+	encodedTx, txHash, err := client.CreateIssuingEVMAuroraRequestTransaction(privateKey, tokenIDStr, txHash)
+	if err != nil {
+		return "", err
+	}
+
+	err = client.SendRawTx(encodedTx)
+	if err != nil {
+		return "", err
+	}
+
+	return txHash, nil
+}
+
 // CreateBurningRequestTransaction creates an EVM burning transaction for exiting the Incognito network.
 //
 // It returns the base58-encoded transaction, the transaction's hash, and an error (if any).
