@@ -168,14 +168,10 @@ func (client *IncClient) CreateAndSendIssuingEVMRequestTransaction(privateKey, t
 }
 
 func (client *IncClient) CreateIssuingEVMAuroraRequestTransaction(privateKey, tokenIDStr, txHash string) ([]byte, string, error) {
-	tokenID, err := new(common.Hash).NewHashFromStr(tokenIDStr)
-	if err != nil {
-		return nil, "", err
-	}
 	data := make(map[string]interface{})
 
 	data["TxHash"] = txHash
-	data["IncTokenID"] = tokenID
+	data["IncTokenID"] = tokenIDStr
 
 	meta, err := metadataBridge.NewIssuingEVMAuroraRequestFromMap(data, rpc.AURORANetworkID, metadata.IssuingAuroraRequestMeta)
 	if err != nil {

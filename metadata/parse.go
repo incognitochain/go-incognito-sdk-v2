@@ -202,7 +202,7 @@ func ParseMetadata(metaInBytes []byte) (Metadata, error) {
 	case metadataCommon.IssuingReshieldResponseMeta:
 		md = &metadataBridge.IssuingReshieldResponse{}
 	case metadataCommon.IssuingAuroraRequestMeta:
-		md = &metadataBridge.IssuingEVMRequest{}
+		md = &metadataBridge.IssuingEVMAuroraRequest{}
 	case metadataCommon.IssuingAuroraResponseMeta:
 		md = &IssuingEVMResponse{}
 	case metadataCommon.IssuingAvaxRequestMeta:
