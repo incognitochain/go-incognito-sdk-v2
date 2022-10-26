@@ -2,6 +2,7 @@ package incclient
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -403,17 +404,29 @@ func (client *IncClient) CreateIssuingpUnifiedRequestTransaction(privateKey, tok
 		Proof     []string     `json:"Proof"`
 	}
 
-	proofData := EVMProof{
-		BlockHash: proof.blockHash,
-		TxIndex:   proof.txIdx,
-		Proof:     proof.nodeList,
-	}
-	proofBytes, err := json.Marshal(proofData)
-	if err != nil {
-		return nil, "", fmt.Errorf("failed to marshal proof")
+	var issuingETHRequestMeta *metadataBridge.ShieldRequest
+	var proofBytes []byte
+	if networkID == 5 { //AURORA_NETWORKID
+		if len(proof.nodeList) != 1 {
+			return nil, "", errors.New("invalid proof for shielding aurora unified token")
+		}
+		txHash, err := common.Hash{}.NewHashFromStr(proof.nodeList[0])
+		if err != nil {
+			return nil, "", errors.New("TxHash incorrect")
+		}
+		proofBytes = txHash.GetBytes()
+	} else {
+		proofData := EVMProof{
+			BlockHash: proof.blockHash,
+			TxIndex:   proof.txIdx,
+			Proof:     proof.nodeList,
+		}
+		proofBytes, err = json.Marshal(proofData)
+		if err != nil {
+			return nil, "", fmt.Errorf("failed to marshal proof")
+		}
 	}
 
-	var issuingETHRequestMeta *metadataBridge.ShieldRequest
 	shieldRequestData := metadataBridge.ShieldRequestData{
 		IncTokenID: *tokenID,
 		NetworkID:  uint8(networkID),
