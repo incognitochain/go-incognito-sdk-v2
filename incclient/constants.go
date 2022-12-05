@@ -63,7 +63,7 @@ const (
 )
 
 const (
-	DefaultPRVFee            = uint64(100)
+	DefaultPRVFee            = uint64(100000000) // 0.1 PRV
 	defaultNftRequiredAmount = 100
 	MaxInputSize             = 30
 	MaxOutputSize            = 30
