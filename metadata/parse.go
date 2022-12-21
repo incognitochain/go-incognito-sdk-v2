@@ -77,6 +77,14 @@ func ParseMetadata(metaInBytes []byte) (Metadata, error) {
 		md = &IssuingEVMResponse{}
 	case BurningFantomRequestMeta, BurningFantomForDepositToSCRequestMeta:
 		md = &BurningRequest{}
+	case BurningAuroraForDepositToSCRequestMeta:
+		md = &metadataBridge.BurningRequest{}
+	case BurningAvaxForDepositToSCRequestMeta:
+		md = &metadataBridge.BurningRequest{}
+	case BurningAuroraRequestMeta:
+		md = &metadataBridge.BurningRequest{}
+	case BurningAvaxRequestMeta:
+		md = &metadataBridge.BurningRequest{}
 	case ShardStakingMeta:
 		md = &StakingMetadata{}
 	case BeaconStakingMeta:
