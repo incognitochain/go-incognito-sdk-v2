@@ -2,6 +2,7 @@ package incclient
 
 import (
 	"fmt"
+	"github.com/incognitochain/go-incognito-sdk-v2/coin"
 	"github.com/incognitochain/go-incognito-sdk-v2/rpchandler"
 	"github.com/incognitochain/go-incognito-sdk-v2/rpchandler/jsonresult"
 	"github.com/incognitochain/go-incognito-sdk-v2/rpchandler/rpc"
@@ -110,6 +111,56 @@ func (client *IncClient) CreateBurningPRVPeggingRequestTransaction(
 	return client.CreateRawTransaction(txParam, -1)
 }
 
+// CreateBurningPRVRequestTransaction creates a PRV pegging burning transaction for exiting the Incognito network.
+//
+// It returns the base58-encoded transaction, the transaction's hash, and an error (if any).
+func (client *IncClient) CreateBurningPRVRequestTransaction(
+	privateKey, remoteAddress string, burnedAmount uint64, evmNetworkIDs ...int,
+) ([]byte, string, error) {
+	tokenIDStr := common.PRVIDStr
+	tokenID, err := new(common.Hash).NewHashFromStr(tokenIDStr)
+	if err != nil {
+		return nil, "", err
+	}
+
+	senderWallet, err := wallet.Base58CheckDeserialize(privateKey)
+	if err != nil {
+		return nil, "", fmt.Errorf("cannot deserialize the sender private key")
+	}
+	burnerAddress := senderWallet.KeySet.PaymentAddress
+	if common.AddressVersion == 0 {
+		burnerAddress.OTAPublic = nil
+	}
+
+	if strings.Contains(remoteAddress, "0x") {
+		remoteAddress = remoteAddress[2:]
+	}
+
+	mdType := metadata.BurningPRVRequestMeta
+	if len(evmNetworkIDs) > 0 {
+		switch evmNetworkIDs[0] {
+		case rpc.ETHNetworkID:
+			mdType = metadata.BurningPRVRequestMeta
+		default:
+			return nil, "", rpc.EVMNetworkNotFoundError(evmNetworkIDs[0])
+		}
+	}
+
+	var recv coin.OTAReceiver
+	err = recv.FromAddress(senderWallet.KeySet.PaymentAddress)
+
+	var md *metadata.BurningPRVRequest
+	md, err = metadata.NewBurningPRVRequest(burnerAddress, burnedAmount, *tokenID, tokenIDStr, remoteAddress, recv, mdType)
+	if err != nil {
+		return nil, "", fmt.Errorf("cannot init burning request with tokenID %v, burnedAmount %v, remoteAddress %v: %v",
+			tokenIDStr, burnedAmount, remoteAddress, err)
+	}
+
+	txParam := NewTxParam(privateKey, []string{common.BurningAddress2}, []uint64{burnedAmount}, DefaultPRVFee, nil, md, nil)
+
+	return client.CreateRawTransaction(txParam, -1)
+}
+
 // CreateAndSendBurningPRVPeggingRequestTransaction creates a PRV pegging burning transaction for exiting the Incognito network,
 // and submits it to the network.
 //
@@ -118,6 +169,26 @@ func (client *IncClient) CreateAndSendBurningPRVPeggingRequestTransaction(
 	privateKey, remoteAddress string, burnedAmount uint64, evmNetworkIDs ...int,
 ) (string, error) {
 	encodedTx, txHash, err := client.CreateBurningPRVPeggingRequestTransaction(privateKey, remoteAddress, burnedAmount, evmNetworkIDs...)
+	if err != nil {
+		return "", err
+	}
+
+	err = client.SendRawTx(encodedTx)
+	if err != nil {
+		return "", err
+	}
+
+	return txHash, nil
+}
+
+// CreateAndSendBurningPRVRequestTransaction creates a PRV pegging burning transaction for exiting the Incognito network,
+// and submits it to the network.
+//
+// It returns the transaction's hash, and an error (if any).
+func (client *IncClient) CreateAndSendBurningPRVRequestTransaction(
+	privateKey, remoteAddress string, burnedAmount uint64, evmNetworkIDs ...int,
+) (string, error) {
+	encodedTx, txHash, err := client.CreateBurningPRVRequestTransaction(privateKey, remoteAddress, burnedAmount, evmNetworkIDs...)
 	if err != nil {
 		return "", err
 	}

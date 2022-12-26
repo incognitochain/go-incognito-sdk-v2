@@ -211,4 +211,5 @@ const (
 
 	BurningFantomForDepositToSCRequestMeta = metadataCommon.BurningFantomForDepositToSCRequestMeta
 	BurningFantomConfirmForDepositToSCMeta = metadataCommon.BurningFantomConfirmForDepositToSCMeta
+	BurningPRVRequestMeta                  = metadataCommon.BurningPRVRequestMeta
 )
