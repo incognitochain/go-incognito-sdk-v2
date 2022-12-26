@@ -212,4 +212,32 @@ const (
 	BurningFantomForDepositToSCRequestMeta = metadataCommon.BurningFantomForDepositToSCRequestMeta
 	BurningFantomConfirmForDepositToSCMeta = metadataCommon.BurningFantomConfirmForDepositToSCMeta
 	BurningPRVRequestMeta                  = metadataCommon.BurningPRVRequestMeta
+
+	BridgeAggConvertTokenToUnifiedTokenRequestMeta  = metadataCommon.BridgeAggConvertTokenToUnifiedTokenRequestMeta
+	BridgeAggConvertTokenToUnifiedTokenResponseMeta = metadataCommon.BridgeAggConvertTokenToUnifiedTokenResponseMeta
+	IssuingUnifiedTokenRequestMeta                  = metadataCommon.IssuingUnifiedTokenRequestMeta
+	IssuingUnifiedTokenResponseMeta                 = metadataCommon.IssuingUnifiedTokenResponseMeta
+	BurningUnifiedTokenRequestMeta                  = metadataCommon.BurningUnifiedTokenRequestMeta
+	BurningUnifiedTokenResponseMeta                 = metadataCommon.BurningUnifiedTokenResponseMeta
+
+	BurnForCallConfirmMeta      = metadataCommon.BurnForCallConfirmMeta
+	BurnForCallRequestMeta      = metadataCommon.BurnForCallRequestMeta
+	BurnForCallResponseMeta     = metadataCommon.BurnForCallResponseMeta
+	IssuingReshieldResponseMeta = metadataCommon.IssuingReshieldResponseMeta
+
+	IssuingAuroraRequestMeta  = metadataCommon.IssuingAuroraRequestMeta
+	IssuingAuroraResponseMeta = metadataCommon.IssuingAuroraResponseMeta
+	BurningAuroraRequestMeta  = metadataCommon.BurningAuroraRequestMeta
+	BurningAuroraConfirmMeta  = metadataCommon.BurningAuroraConfirmMeta
+
+	IssuingAvaxRequestMeta  = metadataCommon.IssuingAvaxRequestMeta
+	IssuingAvaxResponseMeta = metadataCommon.IssuingAvaxResponseMeta
+	BurningAvaxRequestMeta  = metadataCommon.BurningAvaxRequestMeta
+	BurningAvaxConfirmMeta  = metadataCommon.BurningAvaxConfirmMeta
+
+	BurningAuroraForDepositToSCRequestMeta = metadataCommon.BurningAuroraForDepositToSCRequestMeta
+	BurningAuroraConfirmForDepositToSCMeta = metadataCommon.BurningAuroraConfirmForDepositToSCMeta
+
+	BurningAvaxForDepositToSCRequestMeta = metadataCommon.BurningAvaxForDepositToSCRequestMeta
+	BurningAvaxConfirmForDepositToSCMeta = metadataCommon.BurningAvaxConfirmForDepositToSCMeta
 )

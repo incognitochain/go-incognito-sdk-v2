@@ -191,6 +191,8 @@ const (
 	getPRVBEP20BurnProof     = "getprvbep20burnproof"
 	getPLGBurnProof          = "getplgburnproof"
 	getFTMBurnProof          = "getftmburnproof"
+	getAURORABurnProof       = "getauroraburnproof"
+	getAVAXBurnProof         = "getavaxburnproof"
 
 	// reward
 	CreateRawWithDrawTransaction = "withdrawreward"
@@ -265,6 +267,21 @@ const (
 	getPdexv3EstimatedStakingPoolReward            = "pdexv3_getEstimatedStakingPoolReward"
 	createAndSendTxWithPdexv3WithdrawStakingReward = "pdexv3_txWithdrawStakingReward"
 	getPdexv3WithdrawalStakingRewardStatus         = "pdexv3_getWithdrawalStakingRewardStatus"
+
+	// bridgeagg method
+	bridgeaggState = "bridgeaggGetState"
+	// bridgeaggModifyParam                 = "bridgeaggModifyParam"
+	// bridgeaggStatusModifyParam           = "bridgeaggStatusModifyParam"
+	// bridgeaggConvert                     = "bridgeaggConvert"
+	bridgeaggStatusConvert = "bridgeaggGetStatusConvert"
+	// bridgeaggShield                      = "bridgeaggShield"
+	bridgeaggStatusShield = "bridgeaggGetStatusShield"
+	// bridgeaggUnshield                    = "bridgeaggUnshield"
+	bridgeaggStatusUnshield              = "bridgeaggGetStatusUnshield"
+	bridgeaggEstimateFeeByExpectedAmount = "bridgeaggEstimateFeeByExpectedAmount"
+	bridgeaggEstimateFeeByBurntAmount    = "bridgeaggEstimateFeeByBurntAmount"
+	bridgeaggEstimateReward              = "bridgeaggEstimateReward"
+	bridgeaggGetBurnProof                = "bridgeaggGetBurnProof"
 
 	// get burning address
 	getBurningAddress = "getburningaddress"

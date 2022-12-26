@@ -35,7 +35,7 @@ func (sc Scalar) ToBytesS() []byte {
 }
 
 // FromBytes sets an array of 32 bytes to a Scalar.
-func (sc *Scalar) FromBytes(b [Ed25519KeySize]byte) *Scalar {
+func (sc *Scalar) FromBytes(b [C25519.KeyLength]byte) *Scalar {
 	sc.key.FromBytes(b)
 	return sc
 }

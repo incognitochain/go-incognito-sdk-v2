@@ -4,10 +4,10 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+
 	"github.com/incognitochain/go-incognito-sdk-v2/coin"
 	"github.com/incognitochain/go-incognito-sdk-v2/common"
 	"github.com/incognitochain/go-incognito-sdk-v2/crypto"
-	"github.com/incognitochain/go-incognito-sdk-v2/key"
 	"github.com/incognitochain/go-incognito-sdk-v2/privacy/proof/range_proof"
 	"github.com/incognitochain/go-incognito-sdk-v2/privacy/v2/bulletproofs"
 	"github.com/incognitochain/go-incognito-sdk-v2/wallet"
@@ -332,7 +332,7 @@ func (proof *ProofV2) IsConfidentialAsset() (bool, error) {
 }
 
 // Prove returns a ProofV2 based on the given input coins, output coins, shared secrets, etc.
-func Prove(inputCoins []coin.PlainCoin, outputCoins []*coin.CoinV2, sharedSecrets []*crypto.Point, hasConfidentialAsset bool, paymentInfo []*key.PaymentInfo) (*ProofV2, error) {
+func Prove(inputCoins []coin.PlainCoin, outputCoins []*coin.CoinV2, sharedSecrets []*crypto.Point, hasConfidentialAsset bool, paymentInfo []*coin.PaymentInfo) (*ProofV2, error) {
 	var err error
 
 	proof := new(ProofV2)
@@ -401,10 +401,16 @@ func Prove(inputCoins []coin.PlainCoin, outputCoins []*coin.CoinV2, sharedSecret
 	// After Prove, we should hide all information in coin details.
 	for i, outputCoin := range proof.outputCoins {
 		if !wallet.IsPublicKeyBurningAddress(outputCoin.GetPublicKey().ToBytesS()) {
-			if err = outputCoin.ConcealOutputCoin(paymentInfo[i].PaymentAddress.GetPublicView()); err != nil {
+			// if err = outputCoin.ConcealOutputCoin(paymentInfo[i]); err != nil {
+			// 	return nil, err
+			// }
+			concealPoint := (&crypto.Point{}).Identity()
+			if paymentInfo[i].PaymentAddress != nil {
+				concealPoint = paymentInfo[i].PaymentAddress.GetPublicView()
+			}
+			if err = outputCoin.ConcealOutputCoin(concealPoint); err != nil {
 				return nil, err
 			}
-
 			// OutputCoin.GetKeyImage should be nil even though we do not have it
 			// Because otherwise the RPC server will return the Bytes of [1 0 0 0 0 ...] (the default byte)
 			proof.outputCoins[i].SetKeyImage(nil)

@@ -3,7 +3,9 @@ package coin
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
+
 	"github.com/incognitochain/go-incognito-sdk-v2/common"
 	"github.com/incognitochain/go-incognito-sdk-v2/common/base58"
 	"github.com/incognitochain/go-incognito-sdk-v2/crypto"
@@ -12,10 +14,10 @@ import (
 
 // TxRandom is a struct implementing for transactions of version 2.
 //
-// A TxRandom consists of 3 elements, represented a an array of TxRandomGroupSize bytes:
-//	- An OTA random point
-//	- A conceal random point
-//	- An index
+// A TxRandom consists of 3 elements, represented an array of TxRandomGroupSize bytes:
+//   - An OTA random point
+//   - A concealing random point
+//   - An index
 type TxRandom [TxRandomGroupSize]byte
 
 // NewTxRandom initializes a new TxRandom.
@@ -102,7 +104,7 @@ type CoinV2 struct {
 	// sharedRandom is only visible when creating coins, when it is broadcast to network, it will be set to null
 	sharedConcealRandom *crypto.Scalar //rConceal: shared random when concealing output coin and blinding assetTag
 	sharedRandom        *crypto.Scalar // rOTA: shared random when creating one-time-address
-	txRandom            *TxRandom      // rConceal*G + rOTA*G + index
+	txRandom            *TxRandom      // rConceal*G || rOTA*G || index
 
 	// mask = randomness
 	// amount = value
@@ -144,7 +146,7 @@ func (c CoinV2) ParseKeyImageWithPrivateKey(privateKey key.PrivateKey) (*crypto.
 
 // ConcealOutputCoin conceals the amount of coin using the publicView of the receiver
 //
-//	- AdditionalData: must be the publicView of the receiver.
+//   - AdditionalData: must be the publicView of the receiver.
 func (c *CoinV2) ConcealOutputCoin(additionalData interface{}) error {
 	// If this coin is already encrypted or it is created by other person then cannot conceal
 	if c.IsEncrypted() || c.GetSharedConcealRandom() == nil {
@@ -152,7 +154,7 @@ func (c *CoinV2) ConcealOutputCoin(additionalData interface{}) error {
 	}
 	publicView, ok := additionalData.(*crypto.Point)
 	if !ok {
-		return fmt.Errorf("cannot conceal CoinV2 without receiver view key")
+		return errors.New("Cannot conceal CoinV2 without receiver view key")
 	}
 
 	rK := new(crypto.Point).ScalarMult(publicView, c.GetSharedConcealRandom()) //rK = sharedConcealRandom * publicView
@@ -162,7 +164,7 @@ func (c *CoinV2) ConcealOutputCoin(additionalData interface{}) error {
 	mask := new(crypto.Scalar).Add(c.GetRandomness(), hash) //mask = c.mask + hash
 
 	hash = crypto.HashToScalar(hash.ToBytesS())
-	amount := new(crypto.Scalar).Add(c.GetAmount(), hash) //amount = c.amount + hash
+	amount := new(crypto.Scalar).Add(c.GetAmount(), hash) //amount = c.amout + hash
 	c.SetRandomness(mask)
 	c.SetAmount(amount)
 	c.SetSharedConcealRandom(nil)
@@ -327,7 +329,7 @@ func (c CoinV2) GetTxRandomDetail() (*crypto.Point, *crypto.Point, uint32, error
 // GetShardID returns the shardID in which a CoinV2 belongs to.
 func (c CoinV2) GetShardID() (uint8, error) {
 	if c.publicKey == nil {
-		return 255, fmt.Errorf("cannot get GetShardID because GetPublicKey of PlainCoin is concealed")
+		return 255, fmt.Errorf("cannot GetShardID because GetPublicKey of PlainCoin is concealed")
 	}
 	pubKeyBytes := c.publicKey.ToBytes()
 	lastByte := pubKeyBytes[crypto.Ed25519KeySize-1]
@@ -652,8 +654,8 @@ func (c *CoinV2) DoesCoinBelongToKeySet(keySet *key.KeySet) (bool, *crypto.Point
 
 // GetTokenId attempts to retrieve the asset a CoinV2.
 // Parameters:
-// 	- keySet: the key set of the user, must contain an OTAKey
-//	- rawAssetTags: a pre-computed mapping from a raw assetTag to the tokenId (e.g, HashToPoint(PRV) => PRV).
+//   - keySet: the key set of the user, must contain an OTAKey
+//   - rawAssetTags: a pre-computed mapping from a raw assetTag to the tokenId (e.g, HashToPoint(PRV) => PRV).
 func (c *CoinV2) GetTokenId(keySet *key.KeySet, rawAssetTags map[string]*common.Hash) (*common.Hash, error) {
 	if c.rawAssetTag != nil {
 		if asset, ok := rawAssetTags[c.rawAssetTag.String()]; ok {

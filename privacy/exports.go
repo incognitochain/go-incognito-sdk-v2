@@ -2,11 +2,11 @@ package privacy
 
 import (
 	"errors"
+
 	"github.com/incognitochain/go-incognito-sdk-v2/privacy/conversion"
 
 	"github.com/incognitochain/go-incognito-sdk-v2/coin"
 	"github.com/incognitochain/go-incognito-sdk-v2/crypto"
-	"github.com/incognitochain/go-incognito-sdk-v2/key"
 	"github.com/incognitochain/go-incognito-sdk-v2/privacy/proof"
 	"github.com/incognitochain/go-incognito-sdk-v2/privacy/proof/range_proof"
 	"github.com/incognitochain/go-incognito-sdk-v2/privacy/utils"
@@ -83,6 +83,6 @@ func ArrayScalarToBytes(arr *[]*crypto.Scalar) ([]byte, error) {
 
 // ProveV2 returns a ProofV2 based on the given input coins, output coins, shared secrets, etc.
 // It is usually used in constructing a transaction of version 2.
-func ProveV2(inputCoins []coin.PlainCoin, outputCoins []*coin.CoinV2, sharedSecrets []*crypto.Point, hasPrivacy bool, paymentInfo []*key.PaymentInfo) (*ProofV2, error) {
+func ProveV2(inputCoins []coin.PlainCoin, outputCoins []*coin.CoinV2, sharedSecrets []*crypto.Point, hasPrivacy bool, paymentInfo []*coin.PaymentInfo) (*ProofV2, error) {
 	return v2.Prove(inputCoins, outputCoins, sharedSecrets, hasPrivacy, paymentInfo)
 }

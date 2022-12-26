@@ -2,19 +2,18 @@ package incclient
 
 import (
 	"fmt"
+	"math/big"
+	"time"
+
 	"github.com/incognitochain/go-incognito-sdk-v2/coin"
 	"github.com/incognitochain/go-incognito-sdk-v2/common"
 	"github.com/incognitochain/go-incognito-sdk-v2/common/base58"
 	"github.com/incognitochain/go-incognito-sdk-v2/crypto"
-	"github.com/incognitochain/go-incognito-sdk-v2/key"
 	"github.com/incognitochain/go-incognito-sdk-v2/metadata"
 	"github.com/incognitochain/go-incognito-sdk-v2/rpchandler"
 	"github.com/incognitochain/go-incognito-sdk-v2/rpchandler/jsonresult"
 	"github.com/incognitochain/go-incognito-sdk-v2/rpchandler/rpc"
 	"github.com/incognitochain/go-incognito-sdk-v2/wallet"
-	"log"
-	"math/big"
-	"time"
 )
 
 // GetOutputCoins calls the remote server to get all the output tokens for an output coin key.
@@ -26,8 +25,8 @@ import (
 // switches to the non-cache method.
 //
 // The returned result consists of
-//	- A list of output coins
-//	- A list of corresponding indices. For an output coin v1, its index is -1.
+//   - A list of output coins
+//   - A list of corresponding indices. For an output coin v1, its index is -1.
 func (client *IncClient) GetOutputCoins(outCoinKey *rpc.OutCoinKey, tokenID string, height uint64, isFromCache ...bool) ([]jsonresult.ICoinInfo, []*big.Int, error) {
 	fromCache := true
 	if len(isFromCache) != 0 {
@@ -69,8 +68,8 @@ func (client *IncClient) GetOutputCoinsV2(outCoinKey *rpc.OutCoinKey, tokenID st
 
 // GetListDecryptedOutCoin retrieves and decrypts all the output tokens for a private key.
 // It returns
-//	- a map from the serial number to the output coin;
-//	- error (if any).
+//   - a map from the serial number to the output coin;
+//   - error (if any).
 func (client *IncClient) GetListDecryptedOutCoin(privateKey string, tokenID string, height uint64) (map[string]coin.PlainCoin, error) {
 	outCoinKey, err := NewOutCoinKeyFromPrivateKey(privateKey)
 	if err != nil {
@@ -151,6 +150,9 @@ func (client *IncClient) GetUnspentOutputCoins(privateKey, tokenID string, heigh
 	listDecryptedOutCoins, listKeyImages, err := GetListDecryptedCoins(privateKey, listOutputCoins)
 	if err != nil {
 		return nil, nil, err
+	}
+	if len(listKeyImages) == 0 {
+		return nil, nil, nil
 	}
 
 	shardID := common.GetShardIDFromLastByte(keyWallet.KeySet.PaymentAddress.Pk[len(keyWallet.KeySet.PaymentAddress.Pk)-1])
@@ -382,8 +384,10 @@ func (client *IncClient) GetOTACoinsByIndices(shardID byte, tokenID string, idxL
 //
 // Sample output:
 // map[
+//
 //	0000000000000000000000000000000000000000000000000000000000000004:map[0:43635 1:14775 2:11407 3:20724 4:12613 5:10165 6:18216 7:15629]
 //	0000000000000000000000000000000000000000000000000000000000000005:map[0:37831 1:7379 2:2349 3:11310 4:2218 5:2247 6:8416 7:8601]
+//
 // ]
 func (client *IncClient) GetOTACoinLength() (map[string]map[byte]uint64, error) {
 	responseInBytes, err := client.rpcServer.GetOTACoinLength()
@@ -595,7 +599,7 @@ func GetListDecryptedCoins(privateKey string, listOutputCoins []jsonresult.ICoin
 			}
 			decryptedCoin, err := tmpCoinV2.Decrypt(&keyWallet.KeySet)
 			if err != nil {
-				log.Printf("Decrypt %v error: %v\n", base58.Base58Check{}.Encode(outCoin.GetPublicKey().ToBytesS(), 0), err)
+				Logger.Printf("Decrypt %v error: %v\n", base58.Base58Check{}.Encode(outCoin.GetPublicKey().ToBytesS(), 0), err)
 				continue
 			}
 			keyImage := decryptedCoin.GetKeyImage()
@@ -618,7 +622,7 @@ func GenerateOTAFromPaymentAddress(paymentAddressStr string, coinType int, sende
 		return "", "", err
 	}
 
-	paymentInfo := key.InitPaymentInfo(keyWallet.KeySet.PaymentAddress, 0, []byte{})
+	paymentInfo := coin.InitPaymentInfo(keyWallet.KeySet.PaymentAddress, 0, []byte{})
 
 	var coinInitParams *coin.CoinParams
 	if coinType == coin.PrivacyTypeMint {

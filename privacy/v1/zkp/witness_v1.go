@@ -2,10 +2,10 @@ package zkp
 
 import (
 	"fmt"
+
 	"github.com/incognitochain/go-incognito-sdk-v2/coin"
 	"github.com/incognitochain/go-incognito-sdk-v2/common"
 	"github.com/incognitochain/go-incognito-sdk-v2/crypto"
-	"github.com/incognitochain/go-incognito-sdk-v2/key"
 	"github.com/incognitochain/go-incognito-sdk-v2/privacy/utils"
 	"github.com/incognitochain/go-incognito-sdk-v2/privacy/v1/zkp/bulletproofs"
 	"github.com/incognitochain/go-incognito-sdk-v2/privacy/v1/zkp/oneoutofmany"
@@ -269,7 +269,7 @@ func (w *PaymentWitness) Init(PaymentWitnessParam PaymentWitnessParam) error {
 }
 
 // Prove creates big ProofV1.
-func (w *PaymentWitness) Prove(hasPrivacy bool, paymentInfo []*key.PaymentInfo) (*ProofV1, error) {
+func (w *PaymentWitness) Prove(hasPrivacy bool, paymentInfo []*coin.PaymentInfo) (*ProofV1, error) {
 	proof := new(ProofV1)
 	proof.Init()
 

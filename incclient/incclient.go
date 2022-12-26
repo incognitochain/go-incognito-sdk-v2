@@ -4,9 +4,10 @@ package incclient
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/incognitochain/go-incognito-sdk-v2/common"
 	"github.com/incognitochain/go-incognito-sdk-v2/rpchandler/rpc"
-	"strings"
 )
 
 // IncClient defines the environment with which users want to interact.
@@ -31,10 +32,12 @@ type IncClient struct {
 func NewTestNetClient() (*IncClient, error) {
 	rpcServer := rpc.NewRPCServer(TestNetFullNode)
 	evmServers := map[int]*rpc.RPCServer{
-		rpc.ETHNetworkID: rpc.NewRPCServer(TestNetETHHost),
-		rpc.BSCNetworkID: rpc.NewRPCServer(TestNetBSCHost),
-		rpc.PLGNetworkID: rpc.NewRPCServer(TestNetPLGHost),
-		rpc.FTMNetworkID: rpc.NewRPCServer(TestNetFTMHost),
+		rpc.ETHNetworkID:    rpc.NewRPCServer(TestNetETHHost),
+		rpc.BSCNetworkID:    rpc.NewRPCServer(TestNetBSCHost),
+		rpc.PLGNetworkID:    rpc.NewRPCServer(TestNetPLGHost),
+		rpc.FTMNetworkID:    rpc.NewRPCServer(TestNetFTMHost),
+		rpc.AURORANetworkID: rpc.NewRPCServer(TestNetAURORAHost),
+		rpc.AVAXNetworkID:   rpc.NewRPCServer(TestNetAVAXHost),
 	}
 
 	incClient := IncClient{
@@ -82,10 +85,12 @@ func NewTestNetClientWithCache() (*IncClient, error) {
 func NewTestNet1Client() (*IncClient, error) {
 	rpcServer := rpc.NewRPCServer(TestNet1FullNode)
 	evmServers := map[int]*rpc.RPCServer{
-		rpc.ETHNetworkID: rpc.NewRPCServer(TestNet1ETHHost),
-		rpc.BSCNetworkID: rpc.NewRPCServer(TestNet1BSCHost),
-		rpc.PLGNetworkID: rpc.NewRPCServer(TestNet1PLGHost),
-		rpc.FTMNetworkID: rpc.NewRPCServer(TestNet1FTMHost),
+		rpc.ETHNetworkID:    rpc.NewRPCServer(TestNet1ETHHost),
+		rpc.BSCNetworkID:    rpc.NewRPCServer(TestNet1BSCHost),
+		rpc.PLGNetworkID:    rpc.NewRPCServer(TestNet1PLGHost),
+		rpc.FTMNetworkID:    rpc.NewRPCServer(TestNet1FTMHost),
+		rpc.AURORANetworkID: rpc.NewRPCServer(TestNet1AURORAHost),
+		rpc.AVAXNetworkID:   rpc.NewRPCServer(TestNet1AVAXHost),
 	}
 
 	incClient := IncClient{
@@ -132,10 +137,12 @@ func NewTestNet1ClientWithCache() (*IncClient, error) {
 func NewMainNetClient() (*IncClient, error) {
 	rpcServer := rpc.NewRPCServer(MainNetFullNode)
 	evmServers := map[int]*rpc.RPCServer{
-		rpc.ETHNetworkID: rpc.NewRPCServer(MainNetETHHost),
-		rpc.BSCNetworkID: rpc.NewRPCServer(MainNetBSCHost),
-		rpc.PLGNetworkID: rpc.NewRPCServer(MainNetPLGHost),
-		rpc.FTMNetworkID: rpc.NewRPCServer(MainNetFTMHost),
+		rpc.ETHNetworkID:    rpc.NewRPCServer(MainNetETHHost),
+		rpc.BSCNetworkID:    rpc.NewRPCServer(MainNetBSCHost),
+		rpc.PLGNetworkID:    rpc.NewRPCServer(MainNetPLGHost),
+		rpc.FTMNetworkID:    rpc.NewRPCServer(MainNetFTMHost),
+		rpc.AURORANetworkID: rpc.NewRPCServer(MainNetAURORAHost),
+		rpc.AVAXNetworkID:   rpc.NewRPCServer(MainNetAVAXHost),
 	}
 
 	incClient := IncClient{

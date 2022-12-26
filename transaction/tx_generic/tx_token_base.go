@@ -4,11 +4,12 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"sort"
+
 	"github.com/incognitochain/go-incognito-sdk-v2/coin"
 	"github.com/incognitochain/go-incognito-sdk-v2/common"
 	"github.com/incognitochain/go-incognito-sdk-v2/key"
 	"github.com/incognitochain/go-incognito-sdk-v2/metadata"
-	"sort"
 )
 
 // Tx is a alias for metadata.Transaction
@@ -25,7 +26,7 @@ type TxTokenBase struct {
 // TxTokenParams consists of parameters used to create a new token transaction.
 type TxTokenParams struct {
 	SenderKey       *key.PrivateKey
-	PaymentInfo     []*key.PaymentInfo
+	PaymentInfo     []*coin.PaymentInfo
 	InputCoin       []coin.PlainCoin
 	FeeNativeCoin   uint64
 	TokenParams     *TokenParam
@@ -39,15 +40,15 @@ type TxTokenParams struct {
 
 // TokenParam represents the parameters of a token transaction.
 type TokenParam struct {
-	PropertyID     string             `json:"TokenID"`
-	PropertyName   string             `json:"TokenName"`
-	PropertySymbol string             `json:"TokenSymbol"`
-	Amount         uint64             `json:"TokenAmount"`
-	TokenTxType    int                `json:"TokenTxType"`
-	Receiver       []*key.PaymentInfo `json:"TokenReceiver"`
-	TokenInput     []coin.PlainCoin   `json:"TokenInput"`
-	Mintable       bool               `json:"TokenMintable"`
-	Fee            uint64             `json:"TokenFee"`
+	PropertyID     string              `json:"TokenID"`
+	PropertyName   string              `json:"TokenName"`
+	PropertySymbol string              `json:"TokenSymbol"`
+	Amount         uint64              `json:"TokenAmount"`
+	TokenTxType    int                 `json:"TokenTxType"`
+	Receiver       []*coin.PaymentInfo `json:"TokenReceiver"`
+	TokenInput     []coin.PlainCoin    `json:"TokenInput"`
+	Mintable       bool                `json:"TokenMintable"`
+	Fee            uint64              `json:"TokenFee"`
 	KvArgs         map[string]interface{}
 }
 
@@ -55,7 +56,7 @@ type TokenParam struct {
 func NewTokenParam(propertyID, propertyName, propertySymbol string,
 	amount uint64,
 	tokenTxType int,
-	receivers []*key.PaymentInfo,
+	receivers []*coin.PaymentInfo,
 	tokenInput []coin.PlainCoin,
 	mintable bool,
 	fee uint64,
@@ -78,7 +79,7 @@ func NewTokenParam(propertyID, propertyName, propertySymbol string,
 
 // NewTxTokenParams creates a new TxTokenParams based on the given inputs.
 func NewTxTokenParams(senderKey *key.PrivateKey,
-	paymentInfo []*key.PaymentInfo,
+	paymentInfo []*coin.PaymentInfo,
 	inputCoin []coin.PlainCoin,
 	feeNativeCoin uint64,
 	tokenParams *TokenParam,

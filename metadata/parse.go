@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	metadataBridge "github.com/incognitochain/go-incognito-sdk-v2/metadata/bridge"
 	metadataCommon "github.com/incognitochain/go-incognito-sdk-v2/metadata/common"
 	metadataPdexv3 "github.com/incognitochain/go-incognito-sdk-v2/metadata/pdexv3"
 	"github.com/pkg/errors"
@@ -78,6 +79,14 @@ func ParseMetadata(metaInBytes []byte) (Metadata, error) {
 		md = &IssuingEVMResponse{}
 	case BurningFantomRequestMeta, BurningFantomForDepositToSCRequestMeta:
 		md = &BurningRequest{}
+	case BurningAuroraForDepositToSCRequestMeta:
+		md = &metadataBridge.BurningRequest{}
+	case BurningAvaxForDepositToSCRequestMeta:
+		md = &metadataBridge.BurningRequest{}
+	case BurningAuroraRequestMeta:
+		md = &metadataBridge.BurningRequest{}
+	case BurningAvaxRequestMeta:
+		md = &metadataBridge.BurningRequest{}
 	case ShardStakingMeta:
 		md = &StakingMetadata{}
 	case BeaconStakingMeta:
@@ -182,6 +191,34 @@ func ParseMetadata(metaInBytes []byte) (Metadata, error) {
 		md = &metadataPdexv3.WithdrawalStakingRewardRequest{}
 	case metadataCommon.Pdexv3WithdrawStakingRewardResponseMeta:
 		md = &metadataPdexv3.WithdrawalStakingRewardResponse{}
+	case metadataCommon.BridgeAggModifyParamMeta:
+		md = &metadataBridge.ModifyBridgeAggParamReq{}
+	case metadataCommon.BridgeAggConvertTokenToUnifiedTokenRequestMeta:
+		md = &metadataBridge.ConvertTokenToUnifiedTokenRequest{}
+	case metadataCommon.BridgeAggConvertTokenToUnifiedTokenResponseMeta:
+		md = &metadataBridge.ConvertTokenToUnifiedTokenResponse{}
+	case metadataCommon.IssuingUnifiedTokenRequestMeta:
+		md = &metadataBridge.ShieldRequest{}
+	case metadataCommon.IssuingUnifiedTokenResponseMeta:
+		md = &metadataBridge.ShieldResponse{}
+	case metadataCommon.BurningUnifiedTokenRequestMeta:
+		md = &metadataBridge.UnshieldRequest{}
+	case metadataCommon.BurningUnifiedTokenResponseMeta:
+		md = &metadataBridge.UnshieldResponse{}
+	case metadataCommon.BurnForCallRequestMeta:
+		md = &metadataBridge.BurnForCallRequest{}
+	case metadataCommon.BurnForCallResponseMeta:
+		md = &metadataBridge.BurnForCallResponse{}
+	case metadataCommon.IssuingReshieldResponseMeta:
+		md = &metadataBridge.IssuingReshieldResponse{}
+	case metadataCommon.IssuingAuroraRequestMeta:
+		md = &metadataBridge.IssuingEVMAuroraRequest{}
+	case metadataCommon.IssuingAuroraResponseMeta:
+		md = &IssuingEVMResponse{}
+	case metadataCommon.IssuingAvaxRequestMeta:
+		md = &metadataBridge.IssuingEVMRequest{}
+	case metadataCommon.IssuingAvaxResponseMeta:
+		md = &IssuingEVMResponse{}
 	default:
 		return nil, errors.Errorf("Could not parse metadata with type: %d", theType)
 	}

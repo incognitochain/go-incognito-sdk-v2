@@ -3,10 +3,10 @@ package incclient
 import (
 	"encoding/json"
 	"fmt"
+
 	"github.com/incognitochain/go-incognito-sdk-v2/coin"
 	"github.com/incognitochain/go-incognito-sdk-v2/common"
 	"github.com/incognitochain/go-incognito-sdk-v2/common/base58"
-	"github.com/incognitochain/go-incognito-sdk-v2/key"
 	"github.com/incognitochain/go-incognito-sdk-v2/metadata"
 	"github.com/incognitochain/go-incognito-sdk-v2/rpchandler"
 	"github.com/incognitochain/go-incognito-sdk-v2/transaction/tx_generic"
@@ -76,10 +76,10 @@ func (client *IncClient) CreateRawTokenTransactionVer1(txParam *TxParam) ([]byte
 	}
 
 	//Create list of payment infos
-	var tokenReceivers []*key.PaymentInfo
+	var tokenReceivers []*coin.PaymentInfo
 	if txParam.txTokenParam.tokenType == utils.CustomTokenInit {
-		uniqueReceiver := key.PaymentInfo{PaymentAddress: senderWallet.KeySet.PaymentAddress, Amount: totalAmount, Message: []byte{}}
-		tokenReceivers = []*key.PaymentInfo{&uniqueReceiver}
+		uniqueReceiver := coin.PaymentInfo{PaymentAddress: &senderWallet.KeySet.PaymentAddress, Amount: totalAmount, Message: []byte{}}
+		tokenReceivers = []*coin.PaymentInfo{&uniqueReceiver}
 	} else {
 		tokenReceivers, err = createPaymentInfos(txParam.txTokenParam.receiverList, txParam.txTokenParam.amountList)
 		if err != nil {
@@ -147,7 +147,7 @@ func (client *IncClient) CreateRawTokenTransactionVer1(txParam *TxParam) ([]byte
 	tokenParam := tx_generic.NewTokenParam(tokenIDStr, "", "",
 		totalAmount, txParam.txTokenParam.tokenType, tokenReceivers, coinsTokenToSpend, false, tokenFee, kvArgsToken)
 
-	prvReceivers := make([]*key.PaymentInfo, 0)
+	prvReceivers := make([]*coin.PaymentInfo, 0)
 	if len(txParam.receiverList) > 0 {
 		prvReceivers, err = createPaymentInfos(txParam.receiverList, txParam.amountList)
 		if err != nil {
@@ -240,7 +240,7 @@ func (client *IncClient) CreateRawTokenTransactionVer2(txParam *TxParam) ([]byte
 	tokenParam := tx_generic.NewTokenParam(tokenIDStr, "", "",
 		totalAmount, txParam.txTokenParam.tokenType, tokenReceivers, coinsTokenToSpend, false, 0, kvArgsToken)
 
-	prvReceivers := make([]*key.PaymentInfo, 0)
+	prvReceivers := make([]*coin.PaymentInfo, 0)
 	if len(txParam.receiverList) > 0 {
 		prvReceivers, err = createPaymentInfos(txParam.receiverList, txParam.amountList)
 		if err != nil {
@@ -361,13 +361,13 @@ func (client *IncClient) CreateTokenInitTransactionV2(privateKey, tokenName, tok
 
 // CreateRawTokenTransactionWithInputCoins creates a raw token transaction from the provided input coins.
 // Parameters:
-//	- txParam: a regular TxParam.
-//	- tokenInCoins: a list of decrypted, unspent token output coins (with the same version).
-//	- tokenIndices: a list of corresponding indices for the token input coins. This value must not be `nil` if the caller is
-//	creating a transaction v2.
-//	- prvInCoins: a list of decrypted, unspent PRV output coins for paying the transaction fee (if have).
-//	- prvIndices: a list of corresponding indices for the prv input coins. This value must not be `nil` if the caller is
-//	creating a transaction v2.
+//   - txParam: a regular TxParam.
+//   - tokenInCoins: a list of decrypted, unspent token output coins (with the same version).
+//   - tokenIndices: a list of corresponding indices for the token input coins. This value must not be `nil` if the caller is
+//     creating a transaction v2.
+//   - prvInCoins: a list of decrypted, unspent PRV output coins for paying the transaction fee (if have).
+//   - prvIndices: a list of corresponding indices for the prv input coins. This value must not be `nil` if the caller is
+//     creating a transaction v2.
 //
 // For transaction with metadata, callers must make sure other values of `param` are valid.
 //

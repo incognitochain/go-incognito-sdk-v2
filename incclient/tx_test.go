@@ -1,14 +1,18 @@
 package incclient
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/incognitochain/go-incognito-sdk-v2/coin"
-	"github.com/incognitochain/go-incognito-sdk-v2/common"
-	"github.com/incognitochain/go-incognito-sdk-v2/metadata"
 	"log"
 	"math"
 	"testing"
+
+	"github.com/incognitochain/go-incognito-sdk-v2/coin"
+	"github.com/incognitochain/go-incognito-sdk-v2/common"
+	"github.com/incognitochain/go-incognito-sdk-v2/common/base58"
+	"github.com/incognitochain/go-incognito-sdk-v2/metadata"
+	"github.com/incognitochain/go-incognito-sdk-v2/wallet"
 )
 
 // getBalanceByVersion is for testing purposes ONLY.
@@ -370,6 +374,229 @@ func TestIncClient_CreateRawTransactionWithInputCoinsV2(t *testing.T) {
 		err = waitingCheckBalanceUpdated(privateKey, common.PRVIDStr, oldSenderBalance, expectedSenderBalance, 2)
 		if err != nil {
 			panic(err)
+		}
+
+		log.Printf("FINISHED TEST %v\n\n", i)
+	}
+}
+
+func TestIncClient_SendToOTA(t *testing.T) {
+	var err error
+	ic, err = NewTestNetClientWithCache()
+	if err != nil {
+		panic(err)
+	}
+	Logger.IsEnable = false
+
+	senderPrivateKey := "1111111cnisw5tuG28JNkiw3Etei3vVn5YTHEbbsxrruRuK5Jt9ynh4Pg5YJCtKbJiYdE3S2cKNysAYXtjTfuddWyRgzBj18FA8jV8VUZf"
+	receiverPrivateKey := "112t8rnXKhWQ6APJpRBSKWSjkW7zq8X74geRKewovGSUP7b2EyAjusKADrF4GmiHHVbxUBVt5GnPV7qGURkB86vwikk9GUh1NMyamuqjend5"
+	receiverWallet, err := wallet.Base58CheckDeserialize(receiverPrivateKey)
+	if err != nil {
+		panic(err)
+	}
+	receiverAddr := receiverWallet.KeySet.PaymentAddress
+
+	senderWallet, err := wallet.Base58CheckDeserialize(senderPrivateKey)
+	if err != nil {
+		panic(err)
+	}
+	// senderAddr := senderWallet.KeySet.PaymentAddress
+
+	// coins, indicies, err := ic.getUTXOsListByVersion("1111111cnisw5tuG28JNkiw3Etei3vVn5YTHEbbsxrruRuK5Jt9ynh4Pg5YJCtKbJiYdE3S2cKNysAYXtjTfuddWyRgzBj18FA8jV8VUZf", common.PRVCoinID.String(), 2)
+	// if err != nil {
+	// 	panic(err)
+	// }
+
+	// for idx, v := range coins {
+	// 	log.Println("coin", indicies[idx], v.GetValue())
+	// }
+
+	log.Println("shardID1", GetShardIDFromPrivateKey(senderPrivateKey))
+	log.Println("shardID2", GetShardIDFromPrivateKey(receiverPrivateKey))
+
+	// t.Skip()
+	for i := 0; i < numTests; i++ {
+		log.Printf("TEST %v\n", i)
+
+		oldSenderBalance, err := getBalanceByVersion(senderPrivateKey, common.PRVIDStr, 2)
+		if err != nil {
+			panic(err)
+		}
+		log.Printf("oldSenderBalance: %v\n", oldSenderBalance)
+
+		oldReceiverBalance, err := getBalanceByVersion(receiverPrivateKey, common.PRVIDStr, 2)
+		if err != nil {
+			panic(err)
+		}
+		log.Printf("oldReceiverBalance: %v\n", oldReceiverBalance)
+
+		txFee := 80 + (common.RandUint64()%10)*10
+
+		// choose the sending amount
+		sendingAmount := uint64(1234)
+		log.Printf("SendingAmount: %v, txFee: %v\n", sendingAmount, txFee)
+
+		// generate a new OTAReceiver
+		otaReceiver := new(coin.OTAReceiver)
+		err = otaReceiver.From(receiverAddr, int(GetShardIDFromPrivateKey(senderPrivateKey)), coin.PrivacyTypeTransfer, false)
+		if err != nil {
+			panic("cannot generate a new OTAReceiver")
+		}
+		log.Printf("OTAReceiver: %v\n", otaReceiver.String())
+
+		txParam := NewTxParam(senderPrivateKey, []string{otaReceiver.String()}, []uint64{sendingAmount}, txFee, nil, nil, nil)
+		encodedTx, txHash, err := ic.CreateRawTransactionVer2(txParam)
+		if err != nil {
+			panic(err)
+		}
+		err = ic.SendRawTx(encodedTx)
+		if err != nil {
+			panic(err)
+		}
+		log.Printf("TxHash created: %v\n", txHash)
+
+		// checking if tx is in blocks
+		log.Printf("Checking status of tx %v...\n", txHash)
+		err = waitingCheckTxInBlock(txHash)
+		if err != nil {
+			panic(err)
+		}
+
+		// checking if tx has spent the coinsToSpend
+		tx, err := ic.GetTx(txHash)
+		if err != nil {
+			panic(err)
+		}
+		passed := false
+		for _, outputCoin := range tx.GetProof().GetOutputCoins() {
+			if bytes.Equal(outputCoin.GetPublicKey().ToBytesS(), otaReceiver.PublicKey.ToBytesS()) {
+				passed = true
+				continue
+			}
+		}
+		if !passed {
+			panic(fmt.Sprintf("no public key %v found",
+				base58.Base58Check{}.Encode(otaReceiver.PublicKey.ToBytesS(), 0)))
+		}
+
+		// checking updated balance
+		expectedReceiverBalance := oldReceiverBalance + sendingAmount
+		expectedSenderBalance := oldSenderBalance - sendingAmount - txFee
+		if senderPrivateKey == receiverPrivateKey {
+			expectedReceiverBalance = oldReceiverBalance - txFee
+			expectedSenderBalance = oldSenderBalance - txFee
+		}
+		err = waitingCheckBalanceUpdated(receiverPrivateKey, common.PRVIDStr, oldReceiverBalance, expectedReceiverBalance, 2)
+		if err != nil {
+			panic(err)
+		}
+		err = waitingCheckBalanceUpdated(senderPrivateKey, common.PRVIDStr, oldSenderBalance, expectedSenderBalance, 2)
+		if err != nil {
+			panic(err)
+		}
+
+		coins, indicies, err := ic.getUTXOsListByVersion(receiverPrivateKey, common.PRVCoinID.String(), 2)
+		if err != nil {
+			panic(err)
+		}
+
+		for idx, v := range coins {
+			log.Println("coin", indicies[idx], v.GetValue())
+		}
+
+		txParam = NewTxParam(receiverPrivateKey, []string{senderWallet.Base58CheckSerialize(wallet.PaymentAddressType)}, []uint64{sendingAmount - txFee - 100}, txFee, nil, nil, nil)
+		txRaw, txHash, err := ic.CreateRawTransactionWithInputCoins(txParam, coins, indicies)
+		if err != nil {
+			panic(err)
+		}
+
+		log.Println("txHash", txHash)
+		err = ic.SendRawTx(txRaw)
+		if err != nil {
+			panic(err)
+		}
+
+		log.Printf("FINISHED TEST %v\n\n", i)
+	}
+}
+
+func TestIncClient_CannotSendToSameOTATwice(t *testing.T) {
+	var err error
+	ic, err = NewTestNetClientWithCache()
+	if err != nil {
+		panic(err)
+	}
+	Logger.IsEnable = false
+
+	senderPrivateKey := "11111117yu4WAe9fiqmRR4GTxocW6VUKD4dB58wHFjbcQXeDSWQMNyND6Ms3x136EfGcfL7rk3L83BZBzUJLSczmmNi1ngra1WW5Wsjsu5P"
+	receiverPrivateKey := "11111117yu4WAe9fiqmRR4GTxocW6VUKD4dB58wHFjbcQXeDSWQMNyND6Ms3x136EfGcfL7rk3L83BZBzUJLSczmmNi1ngra1WW5Wsjsu5P"
+	receiverWallet, err := wallet.Base58CheckDeserialize(receiverPrivateKey)
+	if err != nil {
+		panic(err)
+	}
+	receiverAddr := receiverWallet.KeySet.PaymentAddress
+
+	for i := 0; i < numTests; i++ {
+		log.Printf("TEST %v\n", i)
+
+		txFee := 40 + (common.RandUint64()%10)*10
+		// choose the sending amount
+		sendingAmount := common.RandUint64() % 100000
+		log.Printf("SendingAmount: %v, txFee: %v\n", sendingAmount, txFee)
+
+		// generate a new OTAReceiver
+		otaReceiver := new(coin.OTAReceiver)
+		err = otaReceiver.FromAddress(receiverAddr)
+		if err != nil {
+			panic("cannot generate a new OTAReceiver")
+		}
+		log.Printf("OTAReceiver: %v\n", otaReceiver.String())
+
+		txParam := NewTxParam(senderPrivateKey, []string{otaReceiver.String()}, []uint64{sendingAmount}, txFee, nil, nil, nil)
+		encodedTx, txHash, err := ic.CreateRawTransactionVer2(txParam)
+		if err != nil {
+			panic(err)
+		}
+		err = ic.SendRawTx(encodedTx)
+		if err != nil {
+			panic(err)
+		}
+		log.Printf("TxHash created: %v\n", txHash)
+
+		// checking if tx is in blocks
+		log.Printf("Checking status of tx %v...\n", txHash)
+		err = waitingCheckTxInBlock(txHash)
+		if err != nil {
+			panic(err)
+		}
+
+		// checking if tx has spent the coinsToSpend
+		tx, err := ic.GetTx(txHash)
+		if err != nil {
+			panic(err)
+		}
+		passed := false
+		for _, outputCoin := range tx.GetProof().GetOutputCoins() {
+			if bytes.Equal(outputCoin.GetPublicKey().ToBytesS(), otaReceiver.PublicKey.ToBytesS()) {
+				passed = true
+				continue
+			}
+		}
+		if !passed {
+			panic(fmt.Sprintf("no public key %v found",
+				base58.Base58Check{}.Encode(otaReceiver.PublicKey.ToBytesS(), 0)))
+		}
+
+		encodedTx, txHash, err = ic.CreateRawTransactionVer2(txParam)
+		if err != nil {
+			panic(err)
+		}
+		err = ic.SendRawTx(encodedTx)
+		if err == nil {
+			log.Printf("2ndTxHash: %v\n", txHash)
+			panic("should have panicked here!!!")
+		} else {
+			log.Printf("SendRawTx error: %v\n", err)
 		}
 
 		log.Printf("FINISHED TEST %v\n\n", i)

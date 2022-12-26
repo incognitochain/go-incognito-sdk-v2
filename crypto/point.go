@@ -63,7 +63,7 @@ func (p Point) ToBytesS() []byte {
 }
 
 // FromBytes sets an array of 32 bytes to a Point.
-func (p *Point) FromBytes(b [Ed25519KeySize]byte) (*Point, error) {
+func (p *Point) FromBytes(b [C25519.KeyLength]byte) (*Point, error) {
 	p.key.FromBytes(b)
 
 	var point C25519.ExtendedGroupElement

@@ -2,8 +2,9 @@ package main
 
 import (
 	"fmt"
-	"github.com/incognitochain/go-incognito-sdk-v2/incclient"
 	"log"
+
+	"github.com/incognitochain/go-incognito-sdk-v2/incclient"
 )
 
 func main() {
