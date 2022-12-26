@@ -2,6 +2,10 @@ package incclient
 
 import (
 	"fmt"
+	"log"
+	"math/big"
+	"time"
+
 	"github.com/incognitochain/go-incognito-sdk-v2/coin"
 	"github.com/incognitochain/go-incognito-sdk-v2/common"
 	"github.com/incognitochain/go-incognito-sdk-v2/common/base58"
@@ -12,9 +16,6 @@ import (
 	"github.com/incognitochain/go-incognito-sdk-v2/rpchandler/jsonresult"
 	"github.com/incognitochain/go-incognito-sdk-v2/rpchandler/rpc"
 	"github.com/incognitochain/go-incognito-sdk-v2/wallet"
-	"log"
-	"math/big"
-	"time"
 )
 
 // GetOutputCoins calls the remote server to get all the output tokens for an output coin key.
