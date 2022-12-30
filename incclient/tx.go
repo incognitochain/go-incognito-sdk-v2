@@ -217,7 +217,7 @@ func (client *IncClient) CreateRawTransactionWithInputCoins(param *TxParam, inpu
 func (client *IncClient) SendRawTx(encodedTx []byte) error {
 	responseInBytes, err := client.rpcServer.SendRawTx(string(encodedTx))
 	if err != nil {
-		return nil
+		return err
 	}
 
 	err = rpchandler.ParseResponse(responseInBytes, nil)

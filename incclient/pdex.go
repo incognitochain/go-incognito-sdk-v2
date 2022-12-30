@@ -143,6 +143,114 @@ func (client *IncClient) CreateAndSendPdexv3TradeTransaction(privateKey string, 
 	return txHash, nil
 }
 
+// CreatePdexv3TradeWithOTAReceivers creates a trading transaction.
+//
+// It returns the base58-encoded transaction, the transaction's hash, and an error (if any).
+func (client *IncClient) CreatePdexv3TradeWithOTAReceivers(privateKey string, tradePath []string, tokenIDToSellStr,
+	tokenIDToBuyStr string, amount uint64, expectedBuy, tradingFee uint64, feeInPRV bool,
+	otaReceiver map[string]string,
+) ([]byte, string, error) {
+	senderWallet, err := wallet.Base58CheckDeserialize(privateKey)
+	if err != nil {
+		return nil, "", err
+	}
+	minAccept := expectedBuy
+
+	////uncomment this code if you want to get the best price
+	//minAccept, err = CheckPrice(tokenIDToSell, tokenIDToBuy, amount)
+	//if err != nil {
+	//	return nil, "", err
+	//}
+
+	tokenSell, err := common.Hash{}.NewHashFromStr(tokenIDToSellStr)
+	if err != nil {
+		return nil, "", err
+	}
+	tokenBuy, err := common.Hash{}.NewHashFromStr(tokenIDToBuyStr)
+	if err != nil {
+		return nil, "", err
+	}
+
+	// construct trade metadata
+	md, _ := metadataPdexv3.NewTradeRequest(
+		tradePath, *tokenSell, amount,
+		minAccept, tradingFee, nil,
+		metadataCommon.Pdexv3TradeRequestMeta,
+	)
+	// create one-time receivers for response TX
+	isPRV := md.TokenToSell == common.PRVCoinID
+
+	if otaReceiver != nil && len(otaReceiver) > 0 {
+		otaReceiverRes := map[common.Hash]coin.OTAReceiver{}
+		for tokenIDStr, otaStr := range otaReceiver {
+			tokenId, err := common.Hash{}.NewHashFromStr(tokenIDStr)
+			if err != nil {
+				return nil, "", fmt.Errorf("Invalid format tokenID %v", err)
+			}
+			tmp := &coin.OTAReceiver{}
+			err = tmp.FromString(otaStr)
+			if err != nil {
+				return nil, "", fmt.Errorf("Invalid format OTAReceiver %v", err)
+			}
+			otaReceiverRes[*tokenId] = *tmp
+
+		}
+		md.Receiver = otaReceiverRes
+	} else {
+		tokenList := []common.Hash{md.TokenToSell, *tokenBuy}
+		// add a receiver for PRV if necessary
+		if feeInPRV && !isPRV && *tokenBuy != common.PRVCoinID {
+			tokenList = append(tokenList, common.PRVCoinID)
+		}
+		md.Receiver, err = GenerateOTAReceivers(
+			tokenList, senderWallet.KeySet.PaymentAddress)
+		if err != nil {
+			return nil, "", err
+		}
+	}
+
+	if isPRV {
+		txParam := NewTxParam(privateKey, []string{common.BurningAddress2}, []uint64{amount + tradingFee}, 0, nil, md, nil)
+		return client.CreateRawTransaction(txParam, 2)
+	} else {
+		var txParam *TxParam
+		if feeInPRV {
+			tokenParam := NewTxTokenParam(tokenIDToSellStr, 1, []string{common.BurningAddress2}, []uint64{amount}, false, 0, nil)
+			txParam = NewTxParam(privateKey, []string{common.BurningAddress2}, []uint64{tradingFee}, 0, tokenParam, md, nil)
+		} else {
+			tokenParam := NewTxTokenParam(tokenIDToSellStr, 1, []string{common.BurningAddress2}, []uint64{amount + tradingFee}, false, 0, nil)
+			txParam = NewTxParam(privateKey, []string{}, []uint64{}, 0, tokenParam, md, nil)
+		}
+		return client.CreateRawTokenTransaction(txParam, 2)
+	}
+}
+
+// CreateAndSendPdexv3TradeWithOTAReceiversTransaction creates a trading transaction (version 2 only), and submits it to the Incognito network.
+//
+// It returns the transaction's hash, and an error (if any).
+func (client *IncClient) CreateAndSendPdexv3TradeWithOTAReceiversTransaction(privateKey string, tradePath []string, tokenIDToSellStr, tokenIDToBuyStr string, amount uint64,
+	expectedBuy, tradingFee uint64, feeInPRV bool, otaReceiver map[string]string,
+) (string, error) {
+	encodedTx, txHash, err := client.CreatePdexv3TradeWithOTAReceivers(privateKey, tradePath, tokenIDToSellStr, tokenIDToBuyStr, amount, expectedBuy, tradingFee, feeInPRV, otaReceiver)
+	if err != nil {
+		return "", err
+	}
+
+	if tokenIDToSellStr == common.PRVIDStr {
+		err = client.SendRawTx(encodedTx)
+		if err != nil {
+			return "", err
+		}
+	} else {
+		err = client.SendRawTokenTx(encodedTx)
+		if err != nil {
+			return "", err
+		}
+	}
+
+	return txHash, nil
+}
+
 // CreatePdexv3AddOrder creates a transaction that adds a new order in pdex v3.
 //
 // It returns the base58-encoded transaction, the transaction's hash, and an error (if any).

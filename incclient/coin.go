@@ -136,7 +136,7 @@ func (client *IncClient) GetUnspentOutputCoins(privateKey, tokenID string, heigh
 	if err != nil {
 		return nil, nil, err
 	}
-	outCoinKey.SetReadonlyKey("") // call this if you do not want the remote full-node to decrypt your coin
+	// outCoinKey.SetReadonlyKey("") // call this if you do not want the remote full-node to decrypt your coin
 
 	listOutputCoins, listIndices, err := client.GetOutputCoins(outCoinKey, tokenID, height)
 	if err != nil {
