@@ -211,6 +211,7 @@ const (
 
 	BurningFantomForDepositToSCRequestMeta = metadataCommon.BurningFantomForDepositToSCRequestMeta
 	BurningFantomConfirmForDepositToSCMeta = metadataCommon.BurningFantomConfirmForDepositToSCMeta
+	BurningPRVRequestMeta                  = metadataCommon.BurningPRVRequestMeta
 
 	BridgeAggConvertTokenToUnifiedTokenRequestMeta  = metadataCommon.BridgeAggConvertTokenToUnifiedTokenRequestMeta
 	BridgeAggConvertTokenToUnifiedTokenResponseMeta = metadataCommon.BridgeAggConvertTokenToUnifiedTokenResponseMeta

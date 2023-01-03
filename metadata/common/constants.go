@@ -193,6 +193,7 @@ const (
 	BurningFantomConfirmMeta               = 155
 	BurningFantomForDepositToSCRequestMeta = 334
 	BurningFantomConfirmForDepositToSCMeta = 156
+	BurningPRVRequestMeta                  = 338
 
 	// bridgeagg
 	BridgeAggModifyParamMeta                        = 340

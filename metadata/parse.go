@@ -65,6 +65,8 @@ func ParseMetadata(metaInBytes []byte) (Metadata, error) {
 		md = &BurningRequest{}
 	case BurningPRVERC20RequestMeta:
 		md = &BurningRequest{}
+	case BurningPRVRequestMeta:
+		md = &BurningPRVRequest{}
 	case IssuingPLGRequestMeta:
 		md = &IssuingEVMRequest{}
 	case IssuingPLGResponseMeta:
