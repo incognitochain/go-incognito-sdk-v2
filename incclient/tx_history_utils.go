@@ -3,6 +3,8 @@ package incclient
 import (
 	"encoding/csv"
 	"fmt"
+	"os"
+
 	"github.com/incognitochain/go-incognito-sdk-v2/coin"
 	"github.com/incognitochain/go-incognito-sdk-v2/common"
 	"github.com/incognitochain/go-incognito-sdk-v2/common/base58"
@@ -11,7 +13,6 @@ import (
 	metadataCommon "github.com/incognitochain/go-incognito-sdk-v2/metadata/common"
 	"github.com/incognitochain/go-incognito-sdk-v2/privacy"
 	"github.com/incognitochain/go-incognito-sdk-v2/transaction/tx_generic"
-	"os"
 )
 
 const (
@@ -38,6 +39,7 @@ var txMetadataNote = map[int]string{
 	metadata.ShardStakingMeta:           fmt.Sprintf("%v Staking", committeePrefix),
 	metadata.BeaconStakingMeta:          fmt.Sprintf("%v Staking", committeePrefix),
 	metadata.UnStakingMeta:              fmt.Sprintf("%v Un-staking", committeePrefix),
+	metadata.AddStakingMeta:             fmt.Sprintf("%v Add-staking", committeePrefix),
 	metadata.StopAutoStakingMeta:        fmt.Sprintf("%v Stop-staking", committeePrefix),
 	metadata.WithDrawRewardRequestMeta:  fmt.Sprintf("%v Withdraw Reward Request", committeePrefix),
 	metadata.WithDrawRewardResponseMeta: fmt.Sprintf("%v Withdraw Reward Response", committeePrefix),

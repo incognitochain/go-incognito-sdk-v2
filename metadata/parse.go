@@ -88,6 +88,8 @@ func ParseMetadata(metaInBytes []byte) (Metadata, error) {
 		md = &WithDrawRewardResponse{}
 	case UnStakingMeta:
 		md = &UnStakingMetadata{}
+	case AddStakingMeta:
+		md = &AddStakingMetadata{}
 	case StopAutoStakingMeta:
 		md = &StopAutoStakingMetadata{}
 	case PDEContributionMeta:

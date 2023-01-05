@@ -197,6 +197,7 @@ func buildMetaInfo() {
 		WithDrawRewardRequestMeta,
 		StopAutoStakingMeta,
 		UnStakingMeta,
+		AddStakingMeta,
 	}
 
 	metaListNInfo = append(metaListNInfo, ListAndInfo{
@@ -432,9 +433,9 @@ func IsPortalMetaTypeV3(metaType int) bool {
 	return res
 }
 
-//Checks if a string payment address is supported by the underlying transaction.
+// Checks if a string payment address is supported by the underlying transaction.
 //
-//TODO: try another approach since the function itself is too complicated.
+// TODO: try another approach since the function itself is too complicated.
 func AssertPaymentAddressAndTxVersion(paymentAddress interface{}, version int8) (key.PaymentAddress, error) {
 	var addr key.PaymentAddress
 	var ok bool
@@ -489,11 +490,11 @@ func IsPortalMetaTypeV4(metaType int) bool {
 	return res
 }
 
-//genTokenID generates a (deterministically) random tokenID for the request transaction.
-//From now on, users cannot generate their own tokenID.
-//The generated tokenID is calculated as the hash of the following components:
-//	- The Tx hash
-//	- The shardID at which the request is sent
+// genTokenID generates a (deterministically) random tokenID for the request transaction.
+// From now on, users cannot generate their own tokenID.
+// The generated tokenID is calculated as the hash of the following components:
+//   - The Tx hash
+//   - The shardID at which the request is sent
 func GenTokenIDFromRequest(txHash string, shardID byte) *common.Hash {
 	record := txHash + strconv.FormatUint(uint64(shardID), 10)
 
