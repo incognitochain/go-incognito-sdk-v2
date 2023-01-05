@@ -6,15 +6,15 @@ import (
 
 // StakingMetadata is a request to stake a node to beacon a validator.
 // The user has to burn 1750 PRV to stake a node.
-//	- FunderPaymentAddress: the address of the user burning 1750 PRV.
-//	- CommitteePublicKey: the public key that is used in the consensus protocol.
-//	- RewardReceiverPaymentAddress: the address to which staking rewards will be paid.
-//	- AutoReStaking: the indicator of whether to stay staked after being swapped out of a committee.
+//   - FunderPaymentAddress: the address of the user burning 1750 PRV.
+//   - CommitteePublicKey: the public key that is used in the consensus protocol.
+//   - RewardReceiverPaymentAddress: the address to which staking rewards will be paid.
+//   - AutoReStaking: the indicator of whether to stay staked after being swapped out of a committee.
 type StakingMetadata struct {
 	MetadataBase
 	FunderPaymentAddress         string
 	RewardReceiverPaymentAddress string
-	StakingAmountShard           uint64
+	StakingAmount                uint64
 	AutoReStaking                bool
 	CommitteePublicKey           string
 }
@@ -39,7 +39,7 @@ func NewStakingMetadata(
 		MetadataBase:                 *metadataBase,
 		FunderPaymentAddress:         funderPaymentAddress,
 		RewardReceiverPaymentAddress: rewardReceiverPaymentAddress,
-		StakingAmountShard:           stakingAmountShard,
+		StakingAmount:                stakingAmountShard,
 		CommitteePublicKey:           committeePublicKey,
 		AutoReStaking:                autoReStaking,
 	}, nil
