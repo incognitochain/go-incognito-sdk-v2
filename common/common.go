@@ -5,9 +5,10 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	ethCrypto "github.com/ethereum/go-ethereum/crypto"
 	"math/big"
 	"reflect"
+
+	ethCrypto "github.com/ethereum/go-ethereum/crypto"
 )
 
 // SliceExists checks if an item exists in a slice.
@@ -126,7 +127,7 @@ func PrintJson(obj interface{}, descFormat string, a ...interface{}) {
 }
 
 var (
-	MaxTxSize = uint64(100) // unit KB = 100KB
+	MaxTxSize = uint64(500) // unit KB = 100KB
 )
 
 var (

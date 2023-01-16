@@ -3,10 +3,11 @@ package incclient
 import (
 	"crypto/sha256"
 	"fmt"
-	"github.com/btcsuite/btcd/chaincfg/chainhash"
-	"github.com/btcsuite/btcd/txscript"
-	"github.com/btcsuite/btcutil"
-	"github.com/btcsuite/btcutil/hdkeychain"
+
+	"github.com/0xkraken/btcd/chaincfg/chainhash"
+	"github.com/0xkraken/btcd/txscript"
+	"github.com/0xkraken/btcutil"
+	"github.com/0xkraken/btcutil/hdkeychain"
 	"github.com/incognitochain/go-incognito-sdk-v2/metadata"
 	"github.com/incognitochain/go-incognito-sdk-v2/rpchandler"
 )

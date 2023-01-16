@@ -1,6 +1,6 @@
 package incclient
 
-import "github.com/btcsuite/btcd/chaincfg"
+import "github.com/0xkraken/btcd/chaincfg"
 
 // BTCPortalV4Params is a simplified version of the corresponding v4 portal param used in the Incognito network for the BTC token.
 type BTCPortalV4Params struct {
