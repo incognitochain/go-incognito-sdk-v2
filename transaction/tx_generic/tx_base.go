@@ -6,17 +6,20 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math"
+	"sort"
+	"strconv"
+	"time"
+
 	"github.com/incognitochain/go-incognito-sdk-v2/coin"
 	"github.com/incognitochain/go-incognito-sdk-v2/common"
 	"github.com/incognitochain/go-incognito-sdk-v2/crypto"
 	"github.com/incognitochain/go-incognito-sdk-v2/key"
 	"github.com/incognitochain/go-incognito-sdk-v2/metadata"
 	"github.com/incognitochain/go-incognito-sdk-v2/privacy"
+
+	// "github.com/incognitochain/go-incognito-sdk-v2/transaction/tx_generic"
 	"github.com/incognitochain/go-incognito-sdk-v2/transaction/utils"
-	"math"
-	"sort"
-	"strconv"
-	"time"
 )
 
 // TxBase represents a PRV transaction field. It is used in both TxVer1 and TxVer2.
@@ -154,6 +157,31 @@ func GetTxVersionFromCoins(inputCoins []coin.PlainCoin) (int8, error) {
 	}
 }
 
+func (tx *TxBase) GetNetworkFee(params *TxPrivacyInitParams) uint64 {
+	tokenParam := new(TokenParam)
+	numInputPRV := len(params.InputCoins)
+	numOutputPRV := len(params.PaymentInfo)
+	if params.TokenID != nil {
+		//Calculate the total transacted amount
+		totalAmount := uint64(0)
+		for _, info := range params.PaymentInfo {
+			totalAmount += info.Amount
+		}
+		tokenParam = NewTokenParam(params.TokenID.String(), "", "", totalAmount, utils.CustomTokenTransfer, params.PaymentInfo, params.InputCoins, false, 0, nil)
+		numInputPRV = 0
+		numOutputPRV = 0
+	}
+
+	paramEstTxSize := NewEstimateTxSizeParam(int(tx.Version), numInputPRV, numOutputPRV, params.HasPrivacy, params.MetaData, tokenParam, LimitFee)
+	txSize := EstimateTxSize(paramEstTxSize)
+
+	if txSize > 100 {
+		return LimitFee * txSize
+	} else {
+		return DefaultPRVFee
+	}
+}
+
 // InitializeTxAndParams initializes a new TxBase with values, prepared for the next steps.
 func (tx *TxBase) InitializeTxAndParams(params *TxPrivacyInitParams) error {
 	var err error
@@ -177,6 +205,12 @@ func (tx *TxBase) InitializeTxAndParams(params *TxPrivacyInitParams) error {
 	}
 	if tx.Info, err = GetTxInfo(params.Info); err != nil {
 		return err
+	}
+
+	estFee := tx.GetNetworkFee(params)
+	if estFee != params.Fee {
+		params.Fee = estFee
+		tx.Fee = estFee
 	}
 
 	// Params: update balance if overbalance

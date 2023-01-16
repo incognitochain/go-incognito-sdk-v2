@@ -2,7 +2,9 @@ package privacy
 
 import (
 	"errors"
+
 	"github.com/incognitochain/go-incognito-sdk-v2/privacy/conversion"
+	"github.com/incognitochain/incognito-chain/privacy/operation"
 
 	"github.com/incognitochain/go-incognito-sdk-v2/coin"
 	"github.com/incognitochain/go-incognito-sdk-v2/crypto"
@@ -20,6 +22,10 @@ import (
 
 const (
 	RingSize = utils.RingSize
+	// MaxPrivacyAttempts = coin.MaxAttempts
+	TxRandomGroupSize = coin.TxRandomGroupSize
+
+	Ed25519KeySize = operation.Ed25519KeySize
 )
 
 // PedCom represents the parameters for the Pedersen commitment scheme.

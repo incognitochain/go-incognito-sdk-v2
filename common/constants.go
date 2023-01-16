@@ -21,6 +21,12 @@ const (
 	PublicKeySize    = 32  // bytes
 	BLSPublicKeySize = 128 // bytes
 	BriPublicKeySize = 33  // bytes
+
+	// for signature size
+	// it is used for both privacy and no privacy
+	SigPubKeySize    = 32
+	SigNoPrivacySize = 64
+	SigPrivacySize   = 96
 )
 
 // For all Transaction information
