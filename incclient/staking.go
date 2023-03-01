@@ -11,8 +11,8 @@ import (
 )
 
 const (
-	SHARD_STAKING_AMOUNT      = uint64(1750000000000)
-	MIN_BEACON_STAKING_AMOUNT = SHARD_STAKING_AMOUNT * 50
+	SHARD_STAKING_AMOUNT      = DefaultShardStakeAmount
+	MIN_BEACON_STAKING_AMOUNT = DefaultBeaconStakeAmount
 )
 
 // CreateShardStakingTransaction creates a raw staking transaction.
@@ -104,7 +104,7 @@ func (client *IncClient) CreateBeaconStakingTransaction(privateKey, privateSeed,
 		return nil, "", fmt.Errorf("committee to bytes error: %v", err)
 	}
 
-	if (stakingAmount < MIN_BEACON_STAKING_AMOUNT) || (stakingAmount%SHARD_STAKING_AMOUNT == 0) {
+	if (stakingAmount < MIN_BEACON_STAKING_AMOUNT) || (stakingAmount%SHARD_STAKING_AMOUNT != 0) {
 		return nil, "", fmt.Errorf("Invalid beacon staking amount: %v, min beacon staking: %v, shard staking amount %v", stakingAmount, MIN_BEACON_STAKING_AMOUNT, SHARD_STAKING_AMOUNT)
 	}
 
@@ -151,7 +151,7 @@ func (client *IncClient) CreateBeaconAddStakingTransaction(privateKey, privateSe
 		return nil, "", fmt.Errorf("cannot create committee key from pk: %v, seed: %v. Error: %v", pk, seed, err)
 	}
 
-	if (addStakingAmount < SHARD_STAKING_AMOUNT*3) || (addStakingAmount%SHARD_STAKING_AMOUNT == 0) {
+	if (addStakingAmount < SHARD_STAKING_AMOUNT*3) || (addStakingAmount%SHARD_STAKING_AMOUNT != 0) {
 		return nil, "", fmt.Errorf("Invalid beacon staking amount: %v, min add staking amount: %v, shard staking amount %v", addStakingAmount, SHARD_STAKING_AMOUNT*3, SHARD_STAKING_AMOUNT)
 	}
 

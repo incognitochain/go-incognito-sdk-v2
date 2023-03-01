@@ -14,7 +14,7 @@ type StakingMetadata struct {
 	MetadataBase
 	FunderPaymentAddress         string
 	RewardReceiverPaymentAddress string
-	StakingAmount                uint64
+	StakingAmountShard           uint64
 	AutoReStaking                bool
 	CommitteePublicKey           string
 }
@@ -39,7 +39,7 @@ func NewStakingMetadata(
 		MetadataBase:                 *metadataBase,
 		FunderPaymentAddress:         funderPaymentAddress,
 		RewardReceiverPaymentAddress: rewardReceiverPaymentAddress,
-		StakingAmount:                stakingAmountShard,
+		StakingAmountShard:           stakingAmountShard,
 		CommitteePublicKey:           committeePublicKey,
 		AutoReStaking:                autoReStaking,
 	}, nil
