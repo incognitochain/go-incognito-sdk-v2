@@ -18,8 +18,8 @@ func main() {
 	candidateAddress := incclient.PrivateKeyToPaymentAddress(privateKey, -1)
 	rewardAddress := candidateAddress //NOTE: the reward receiver can either be the same as the candidate address or be different
 	autoReStake := true
-	beaconStakingAmount := uint64(1750 * 10e9 * 50)
-	beaconAddStakingAmount := uint64(1750 * 10e9 * 5)
+	beaconStakingAmount := uint64(1750 * 1e9 * 50)
+	beaconAddStakingAmount := uint64(1750 * 1e9 * 5)
 
 	txHash1, err := client.CreateAndSendShardStakingTransaction(privateKey, privateSeed, candidateAddress, rewardAddress, autoReStake)
 	if err != nil {

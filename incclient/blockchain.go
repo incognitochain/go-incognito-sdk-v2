@@ -3,6 +3,7 @@ package incclient
 import (
 	"encoding/json"
 	"fmt"
+
 	"github.com/incognitochain/go-incognito-sdk-v2/common"
 	"github.com/incognitochain/go-incognito-sdk-v2/rpchandler"
 	"github.com/incognitochain/go-incognito-sdk-v2/rpchandler/jsonresult"
@@ -169,4 +170,17 @@ func (client *IncClient) GetBeaconBestState(shardID int) (*jsonresult.BeaconBest
 	}
 
 	return &res, nil
+}
+
+// GetBeaconBestState returns the latest state of the beacon chain.
+func (client *IncClient) GetBeaconStaker(beaconHeight uint64, beaconStakerPublicKey string) (interface{}, error) {
+	return client.rpcServer.GetBeaconStaker(beaconHeight, beaconStakerPublicKey)
+}
+
+func (client *IncClient) GetShardStaker(beaconHeight uint64, shardStakerPublicKey string) (interface{}, error) {
+	return client.rpcServer.GetShardStaker(beaconHeight, shardStakerPublicKey)
+}
+
+func (client *IncClient) GetBeaconCommitteeState(beaconHeight uint64) (interface{}, error) {
+	return client.rpcServer.GetBeaconCommitteeState(beaconHeight)
 }
