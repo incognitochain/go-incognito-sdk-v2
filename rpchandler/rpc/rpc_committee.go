@@ -19,3 +19,26 @@ func (server *RPCServer) GetCommitteeStateByShardID(shardID int, shardRootHash s
 
 	return server.SendQuery(getCommitteeStateByShard, params)
 }
+
+func (server *RPCServer) GetBeaconStaker(beaconHeight uint64, beaconStakerPublicKey string) (interface{}, error) {
+	params := make([]interface{}, 0)
+	params = append(params, beaconHeight)
+	params = append(params, beaconStakerPublicKey)
+
+	return server.SendQuery(getBeaconStaker, params)
+}
+
+func (server *RPCServer) GetShardStaker(beaconHeight uint64, shardStakerPublicKey string) ([]byte, error) {
+	params := make([]interface{}, 0)
+	params = append(params, beaconHeight)
+	params = append(params, shardStakerPublicKey)
+
+	return server.SendQuery(getShardStaker, params)
+}
+
+func (server *RPCServer) GetBeaconCommitteeState(beaconHeight uint64) ([]byte, error) {
+	params := make([]interface{}, 0)
+	params = append(params, beaconHeight)
+
+	return server.SendQuery(getBeaconCommitteeState, params)
+}

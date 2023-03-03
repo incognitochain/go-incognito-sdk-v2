@@ -57,7 +57,10 @@ const (
 )
 
 const (
-	DefaultPRVFee            = uint64(100)
+	DefaultPRVFee            = uint64(100000000) // 0.1 PRV
+	DefaultShardStakeAmount  = uint64(1750000000000)
+	DefaultBeaconStakeAmount = DefaultShardStakeAmount * 50
+	DefaultAddStakeAmount    = DefaultShardStakeAmount * 3
 	defaultNftRequiredAmount = 100
 	MaxInputSize             = 30
 	MaxOutputSize            = 30

@@ -315,6 +315,10 @@ const (
 	//validator state
 	getValKeyState = "getvalkeystate"
 
+	getBeaconStaker         = "getbeaconstaker"
+	getShardStaker          = "getshardstaker"
+	getBeaconCommitteeState = "getbeaconcommitteestate"
+
 	getAllTradesInMemPool = "getalltradesinmempool"
 	getAllTradesByAddress = "getalltradesbyaddress"
 )

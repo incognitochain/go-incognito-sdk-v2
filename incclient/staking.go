@@ -2,11 +2,17 @@ package incclient
 
 import (
 	"fmt"
+
 	"github.com/incognitochain/go-incognito-sdk-v2/common"
 	"github.com/incognitochain/go-incognito-sdk-v2/common/base58"
 	"github.com/incognitochain/go-incognito-sdk-v2/key"
 	"github.com/incognitochain/go-incognito-sdk-v2/metadata"
 	"github.com/incognitochain/go-incognito-sdk-v2/wallet"
+)
+
+const (
+	SHARD_STAKING_AMOUNT      = DefaultShardStakeAmount
+	MIN_BEACON_STAKING_AMOUNT = DefaultBeaconStakeAmount
 )
 
 // CreateShardStakingTransaction creates a raw staking transaction.
@@ -49,7 +55,7 @@ func (client *IncClient) CreateShardStakingTransaction(privateKey, privateSeed, 
 		return nil, "", fmt.Errorf("committee to bytes error: %v", err)
 	}
 
-	stakingAmount := uint64(1750000000000)
+	stakingAmount := SHARD_STAKING_AMOUNT
 
 	stakingMetadata, err := metadata.NewStakingMetadata(metadata.ShardStakingMeta, funderAddr, rewardReceiverAddr, stakingAmount,
 		base58.Base58Check{}.Encode(committeePKBytes, common.ZeroByte), autoStake)
@@ -59,9 +65,134 @@ func (client *IncClient) CreateShardStakingTransaction(privateKey, privateSeed, 
 	return client.CreateRawTransaction(txParam, -1)
 }
 
+func (client *IncClient) CreateBeaconStakingTransaction(privateKey, privateSeed, candidateAddr, rewardReceiverAddr string, stakingAmount uint64) ([]byte, string, error) {
+	senderWallet, err := wallet.Base58CheckDeserialize(privateKey)
+	if err != nil {
+		return nil, "", err
+	}
+
+	funderAddr := senderWallet.Base58CheckSerialize(wallet.PaymentAddressType)
+
+	if len(candidateAddr) == 0 {
+		candidateAddr = funderAddr
+	}
+	if len(rewardReceiverAddr) == 0 {
+		rewardReceiverAddr = funderAddr
+	}
+
+	candidateWallet, err := wallet.Base58CheckDeserialize(candidateAddr)
+	if err != nil {
+		return nil, "", err
+	}
+	pk := candidateWallet.KeySet.PaymentAddress.Pk
+	if len(pk) == 0 {
+		return nil, "", fmt.Errorf("candidate payment address invalid: %v", candidateAddr)
+	}
+
+	seed, _, err := base58.Base58Check{}.Decode(privateSeed)
+	if err != nil {
+		return nil, "", fmt.Errorf("cannot decode private seed: %v", privateSeed)
+	}
+
+	committeePK, err := key.NewCommitteeKeyFromSeed(seed, pk)
+	if err != nil {
+		return nil, "", fmt.Errorf("cannot create committee key from pk: %v, seed: %v. Error: %v", pk, seed, err)
+	}
+
+	committeePKBytes, err := committeePK.Bytes()
+	if err != nil {
+		return nil, "", fmt.Errorf("committee to bytes error: %v", err)
+	}
+
+	if (stakingAmount < MIN_BEACON_STAKING_AMOUNT) || (stakingAmount%SHARD_STAKING_AMOUNT != 0) {
+		return nil, "", fmt.Errorf("Invalid beacon staking amount: %v, min beacon staking: %v, shard staking amount %v", stakingAmount, MIN_BEACON_STAKING_AMOUNT, SHARD_STAKING_AMOUNT)
+	}
+
+	stakingMetadata, err := metadata.NewStakingMetadata(metadata.BeaconStakingMeta, funderAddr, rewardReceiverAddr, stakingAmount,
+		base58.Base58Check{}.Encode(committeePKBytes, common.ZeroByte), true)
+
+	txParam := NewTxParam(privateKey, []string{common.BurningAddress2}, []uint64{stakingAmount}, 0, nil, stakingMetadata, nil)
+
+	return client.CreateRawTransaction(txParam, -1)
+}
+
+func (client *IncClient) CreateBeaconAddStakingTransaction(privateKey, privateSeed, candidateAddr string, addStakingAmount uint64) ([]byte, string, error) {
+	senderWallet, err := wallet.Base58CheckDeserialize(privateKey)
+	if err != nil {
+		return nil, "", err
+	}
+
+	funderAddr := senderWallet.Base58CheckSerialize(wallet.PaymentAddressType)
+
+	if len(candidateAddr) == 0 {
+		candidateAddr = funderAddr
+	}
+
+	candidateWallet, err := wallet.Base58CheckDeserialize(candidateAddr)
+	if err != nil {
+		return nil, "", err
+	}
+	pk := candidateWallet.KeySet.PaymentAddress.Pk
+	if len(pk) == 0 {
+		return nil, "", fmt.Errorf("candidate payment address invalid: %v", candidateAddr)
+	}
+
+	seed, _, err := base58.Base58Check{}.Decode(privateSeed)
+	if err != nil {
+		return nil, "", fmt.Errorf("cannot decode private seed: %v", privateSeed)
+	}
+
+	committeePK, err := key.NewCommitteeKeyFromSeed(seed, pk)
+	if err != nil {
+		return nil, "", fmt.Errorf("cannot create committee key from pk: %v, seed: %v. Error: %v", pk, seed, err)
+	}
+	committeePKStr, err := committeePK.ToBase58()
+	if err != nil {
+		return nil, "", fmt.Errorf("cannot create committee key from pk: %v, seed: %v. Error: %v", pk, seed, err)
+	}
+
+	if (addStakingAmount < SHARD_STAKING_AMOUNT*3) || (addStakingAmount%SHARD_STAKING_AMOUNT != 0) {
+		return nil, "", fmt.Errorf("Invalid beacon staking amount: %v, min add staking amount: %v, shard staking amount %v", addStakingAmount, SHARD_STAKING_AMOUNT*3, SHARD_STAKING_AMOUNT)
+	}
+
+	addStakingMetadata, err := metadata.NewAddStakingMetadata(committeePKStr, addStakingAmount)
+
+	txParam := NewTxParam(privateKey, []string{common.BurningAddress2}, []uint64{addStakingAmount}, 0, nil, addStakingMetadata, nil)
+
+	return client.CreateRawTransaction(txParam, -1)
+}
+
 // CreateAndSendShardStakingTransaction creates a raw staking transaction and broadcasts it to the blockchain.
 func (client *IncClient) CreateAndSendShardStakingTransaction(privateKey, privateSeed, candidateAddr, rewardReceiverAddr string, autoStake bool) (string, error) {
 	encodedTx, txHash, err := client.CreateShardStakingTransaction(privateKey, privateSeed, candidateAddr, rewardReceiverAddr, autoStake)
+	if err != nil {
+		return "", err
+	}
+
+	err = client.SendRawTx(encodedTx)
+	if err != nil {
+		return "", err
+	}
+
+	return txHash, nil
+}
+
+func (client *IncClient) CreateAndSendBeaconStakingTransaction(privateKey, privateSeed, candidateAddr, rewardReceiverAddr string, stakingAmount uint64) (string, error) {
+	encodedTx, txHash, err := client.CreateBeaconStakingTransaction(privateKey, privateSeed, candidateAddr, rewardReceiverAddr, stakingAmount)
+	if err != nil {
+		return "", err
+	}
+
+	err = client.SendRawTx(encodedTx)
+	if err != nil {
+		return "", err
+	}
+
+	return txHash, nil
+}
+
+func (client *IncClient) CreateAndSendBeaconAddStakingTransaction(privateKey, privateSeed, candidateAddr string, stakingAmount uint64) (string, error) {
+	encodedTx, txHash, err := client.CreateBeaconAddStakingTransaction(privateKey, privateSeed, candidateAddr, stakingAmount)
 	if err != nil {
 		return "", err
 	}
