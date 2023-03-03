@@ -39,7 +39,7 @@ func TestIncClient_CreateAndSendBeaconStakingTransaction(t *testing.T) {
 	privateSeed := PrivateKeyToMiningKey(privateKey) //NOTE: the private seed (a.k.a the mining key) can be randomly generated and not be dependent on the private key
 	candidateAddress := PrivateKeyToPaymentAddress(privateKey, -1)
 	rewardAddress := candidateAddress //NOTE: the reward receiver can either be the same as the candidate address or be different
-	stakingAmount := uint64(1750 * 10e9 * 70)
+	stakingAmount := uint64(1750 * 1e9 * 70)
 
 	txHash, err := ic.CreateAndSendBeaconStakingTransaction(privateKey, privateSeed, candidateAddress, rewardAddress, stakingAmount)
 	if err != nil {
@@ -59,7 +59,7 @@ func TestIncClient_CreateAndSendBeaconAddStakingTransaction(t *testing.T) {
 	privateKey := ""
 	privateSeed := PrivateKeyToMiningKey(privateKey) //NOTE: the private seed (a.k.a the mining key) can be randomly generated and not be dependent on the private key
 	candidateAddress := PrivateKeyToPaymentAddress(privateKey, -1)
-	addStakingAmount := uint64(1750 * 10e9 * 7)
+	addStakingAmount := uint64(1750 * 1e9 * 7)
 
 	txHash, err := ic.CreateAndSendBeaconAddStakingTransaction(privateKey, privateSeed, candidateAddress, addStakingAmount)
 	if err != nil {
