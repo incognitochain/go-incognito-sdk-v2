@@ -8,6 +8,7 @@ import (
 	"github.com/incognitochain/go-incognito-sdk-v2/key"
 	"github.com/incognitochain/go-incognito-sdk-v2/metadata"
 	"github.com/incognitochain/go-incognito-sdk-v2/wallet"
+	"github.com/pkg/errors"
 )
 
 const (
@@ -302,6 +303,76 @@ func (client *IncClient) CreateWithDrawRewardTransaction(privateKey, addr, token
 // CreateAndSendWithDrawRewardTransaction creates a raw reward-withdrawing transaction and broadcasts it to the blockchain.
 func (client *IncClient) CreateAndSendWithDrawRewardTransaction(privateKey, addr, tokenIDStr string, version int8) (string, error) {
 	encodedTx, txHash, err := client.CreateWithDrawRewardTransaction(privateKey, addr, tokenIDStr, version)
+	if err != nil {
+		return "", err
+	}
+
+	err = client.SendRawTx(encodedTx)
+	if err != nil {
+		return "", err
+	}
+
+	return txHash, nil
+}
+
+func (client *IncClient) CreateReDelegateTransaction(privateKey, privateSeed, candidateAddr string, delegate string) ([]byte, string, error) {
+	senderWallet, err := wallet.Base58CheckDeserialize(privateKey)
+	if err != nil {
+		return nil, "", err
+	}
+
+	funderAddr := senderWallet.Base58CheckSerialize(wallet.PaymentAddressType)
+
+	if len(candidateAddr) == 0 {
+		candidateAddr = funderAddr
+	}
+
+	candidateWallet, err := wallet.Base58CheckDeserialize(candidateAddr)
+	if err != nil {
+		return nil, "", err
+	}
+	pk := candidateWallet.KeySet.PaymentAddress.Pk
+	if len(pk) == 0 {
+		return nil, "", fmt.Errorf("candidate payment address invalid: %v", candidateAddr)
+	}
+
+	seed, _, err := base58.Base58Check{}.Decode(privateSeed)
+	if err != nil {
+		return nil, "", fmt.Errorf("cannot decode private seed: %v", privateSeed)
+	}
+
+	committeePK, err := key.NewCommitteeKeyFromSeed(seed, pk)
+	if err != nil {
+		return nil, "", fmt.Errorf("cannot create committee key from pk: %v, seed: %v. Error: %v", pk, seed, err)
+	}
+	committeePKStr, err := committeePK.ToBase58()
+	if err != nil {
+		return nil, "", fmt.Errorf("cannot create committee key from pk: %v, seed: %v. Error: %v", pk, seed, err)
+	}
+
+	delegatePKStruct := &key.CommitteePublicKey{}
+	err = delegatePKStruct.FromString(delegate)
+	if err != nil {
+		return nil, "", err
+	}
+	delegateUIDI, err := client.rpcServer.GetBeaconCandidateUID(delegate)
+	if err != nil {
+		return nil, "", err
+	}
+
+	delegateUID, ok := delegateUIDI.(string)
+	if !ok {
+		return nil, "", errors.Errorf("Expected get Beacon Candidate UID of beacon %+v at string, but received %+v", delegate, delegateUIDI)
+	}
+	redelegateMetadata, err := metadata.NewReDelegateMetadata(committeePKStr, delegate, delegateUID)
+
+	txParam := NewTxParam(privateKey, []string{common.BurningAddress2}, []uint64{0}, 0, nil, redelegateMetadata, nil)
+
+	return client.CreateRawTransaction(txParam, -1)
+}
+
+func (client *IncClient) CreateAndSendReDelegateTransaction(privateKey, privateSeed, candidateAddr string, delegate string) (string, error) {
+	encodedTx, txHash, err := client.CreateReDelegateTransaction(privateKey, privateSeed, candidateAddr, delegate)
 	if err != nil {
 		return "", err
 	}
