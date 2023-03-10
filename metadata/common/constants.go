@@ -31,6 +31,7 @@ const (
 	BeaconStakingMeta   = 64
 	UnStakingMeta       = 210
 	AddStakingMeta      = 360
+	ReDelegateMeta      = 361
 
 	// Incognito -> Ethereum bridge
 	BeaconSwapConfirmMeta = 70

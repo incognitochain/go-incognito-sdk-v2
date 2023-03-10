@@ -319,6 +319,8 @@ const (
 	getShardStaker          = "getshardstaker"
 	getBeaconCommitteeState = "getbeaconcommitteestate"
 
+	getBeaconCandidateUID = "getbeaconcandidateuid"
+
 	getAllTradesInMemPool = "getalltradesinmempool"
 	getAllTradesByAddress = "getalltradesbyaddress"
 )
