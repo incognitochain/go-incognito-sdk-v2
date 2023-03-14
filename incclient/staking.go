@@ -117,6 +117,35 @@ func (client *IncClient) CreateBeaconStakingTransaction(privateKey, privateSeed,
 	return client.CreateRawTransaction(txParam, -1)
 }
 
+func (client *IncClient) CreateBeaconStakingTransactionV2(funderPrivateKey, committeePKStr, rewardReceiverAddr string, stakingAmount uint64) ([]byte, string, error) {
+	senderWallet, err := wallet.Base58CheckDeserialize(funderPrivateKey)
+	if err != nil {
+		return nil, "", err
+	}
+
+	funderAddr := senderWallet.Base58CheckSerialize(wallet.PaymentAddressType)
+
+	if len(rewardReceiverAddr) == 0 {
+		rewardReceiverAddr = funderAddr
+	}
+
+	cpkStruct := key.NewCommitteePublicKey()
+	err = cpkStruct.FromString(committeePKStr)
+	if err != nil {
+		return nil, "", err
+	}
+
+	if (stakingAmount < MIN_BEACON_STAKING_AMOUNT) || (stakingAmount%SHARD_STAKING_AMOUNT != 0) {
+		return nil, "", fmt.Errorf("Invalid beacon staking amount: %v, min beacon staking: %v, shard staking amount %v", stakingAmount, MIN_BEACON_STAKING_AMOUNT, SHARD_STAKING_AMOUNT)
+	}
+
+	stakingMetadata, err := metadata.NewStakingMetadata(metadata.BeaconStakingMeta, funderAddr, rewardReceiverAddr, stakingAmount, committeePKStr, true)
+
+	txParam := NewTxParam(funderPrivateKey, []string{common.BurningAddress2}, []uint64{stakingAmount}, 0, nil, stakingMetadata, nil)
+
+	return client.CreateRawTransaction(txParam, -1)
+}
+
 func (client *IncClient) CreateBeaconAddStakingTransaction(privateKey, privateSeed, candidateAddr string, addStakingAmount uint64) ([]byte, string, error) {
 	senderWallet, err := wallet.Base58CheckDeserialize(privateKey)
 	if err != nil {
@@ -163,6 +192,25 @@ func (client *IncClient) CreateBeaconAddStakingTransaction(privateKey, privateSe
 	return client.CreateRawTransaction(txParam, -1)
 }
 
+func (client *IncClient) CreateBeaconAddStakingTransactionV2(funderPrivateKey, committeePKStr string, addStakingAmount uint64) ([]byte, string, error) {
+
+	cpkStruct := key.NewCommitteePublicKey()
+	err := cpkStruct.FromString(committeePKStr)
+	if err != nil {
+		return nil, "", err
+	}
+
+	if (addStakingAmount < SHARD_STAKING_AMOUNT*3) || (addStakingAmount%SHARD_STAKING_AMOUNT != 0) {
+		return nil, "", fmt.Errorf("Invalid beacon staking amount: %v, min add staking amount: %v, shard staking amount %v", addStakingAmount, SHARD_STAKING_AMOUNT*3, SHARD_STAKING_AMOUNT)
+	}
+
+	addStakingMetadata, err := metadata.NewAddStakingMetadata(committeePKStr, addStakingAmount)
+
+	txParam := NewTxParam(funderPrivateKey, []string{common.BurningAddress2}, []uint64{addStakingAmount}, 0, nil, addStakingMetadata, nil)
+
+	return client.CreateRawTransaction(txParam, -1)
+}
+
 // CreateAndSendShardStakingTransaction creates a raw staking transaction and broadcasts it to the blockchain.
 func (client *IncClient) CreateAndSendShardStakingTransaction(privateKey, privateSeed, candidateAddr, rewardReceiverAddr string, autoStake bool) (string, error) {
 	encodedTx, txHash, err := client.CreateShardStakingTransaction(privateKey, privateSeed, candidateAddr, rewardReceiverAddr, autoStake)
@@ -192,8 +240,36 @@ func (client *IncClient) CreateAndSendBeaconStakingTransaction(privateKey, priva
 	return txHash, nil
 }
 
+func (client *IncClient) CreateAndSendBeaconStakingTransactionV2(privateKey, committeePKString, rewardReceiverAddr string, stakingAmount uint64) (string, error) {
+	encodedTx, txHash, err := client.CreateBeaconStakingTransactionV2(privateKey, committeePKString, rewardReceiverAddr, stakingAmount)
+	if err != nil {
+		return "", err
+	}
+
+	err = client.SendRawTx(encodedTx)
+	if err != nil {
+		return "", err
+	}
+
+	return txHash, nil
+}
+
 func (client *IncClient) CreateAndSendBeaconAddStakingTransaction(privateKey, privateSeed, candidateAddr string, stakingAmount uint64) (string, error) {
 	encodedTx, txHash, err := client.CreateBeaconAddStakingTransaction(privateKey, privateSeed, candidateAddr, stakingAmount)
+	if err != nil {
+		return "", err
+	}
+
+	err = client.SendRawTx(encodedTx)
+	if err != nil {
+		return "", err
+	}
+
+	return txHash, nil
+}
+
+func (client *IncClient) CreateAndSendBeaconAddStakingTransactionV2(privateKey, committeePKString string, stakingAmount uint64) (string, error) {
+	encodedTx, txHash, err := client.CreateBeaconAddStakingTransactionV2(privateKey, committeePKString, stakingAmount)
 	if err != nil {
 		return "", err
 	}
