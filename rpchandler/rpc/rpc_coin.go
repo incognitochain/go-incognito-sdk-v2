@@ -3,6 +3,7 @@ package rpc
 import (
 	"errors"
 	"fmt"
+
 	"github.com/incognitochain/go-incognito-sdk-v2/rpchandler"
 	"github.com/incognitochain/go-incognito-sdk-v2/rpchandler/jsonresult"
 )
@@ -34,7 +35,7 @@ func (server *RPCServer) GetListOutputCoinsByRPCV2(outCoinKey *OutCoinKey, token
 
 	params := make([]interface{}, 0)
 	params = append(params, 0)
-	params = append(params, 999999)
+	params = append(params, 99999999)
 	params = append(params, []interface{}{keyParams})
 	params = append(params, tokenID)
 
@@ -66,7 +67,7 @@ func (server *RPCServer) ListUnspentOutputCoinsByRPC(privateKey string) ([]byte,
 
 	params := make([]interface{}, 0)
 	params = append(params, 0)
-	params = append(params, 999999)
+	params = append(params, 99999999)
 	params = append(params, []interface{}{keyParams})
 
 	return server.SendQuery(listOutputCoinsFromCache, params)

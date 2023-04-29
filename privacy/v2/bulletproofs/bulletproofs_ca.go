@@ -2,6 +2,7 @@ package bulletproofs
 
 import (
 	"fmt"
+
 	"github.com/incognitochain/go-incognito-sdk-v2/coin"
 	"github.com/incognitochain/go-incognito-sdk-v2/crypto"
 	"github.com/incognitochain/go-incognito-sdk-v2/privacy/utils"
@@ -35,6 +36,7 @@ func GetFirstAssetTag(coins []*coin.CoinV2) (*crypto.Point, error) {
 func (wit Witness) ProveUsingBase(b *crypto.Point) (*RangeProof, error) {
 	cACommitmentScheme.G[crypto.PedersenValueIndex] = b
 	proof := new(RangeProof)
+	proof.Init()
 	numValue := len(wit.values)
 	if numValue > utils.MaxOutputCoin {
 		return nil, fmt.Errorf("must less than MaxOutputCoin")
@@ -54,6 +56,15 @@ func (wit Witness) ProveUsingBase(b *crypto.Point) (*RangeProof, error) {
 	for i := numValue; i < numValuePad; i++ {
 		values[i] = uint64(0)
 		rands[i] = new(crypto.Scalar).FromUint64(0)
+	}
+
+	proof.cmsValue = make([]*crypto.Point, numValue)
+	initChal := aggParam.cs.ToBytesS()
+	for i := 0; i < numValue; i++ {
+		proof.cmsValue[i] = new(crypto.Point).AddPedersen(new(crypto.Scalar).FromUint64(values[i]), b, rands[i], crypto.PedCom.G[crypto.PedersenRandomnessIndex])
+		if proof.version >= 2 {
+			initChal = append(initChal, proof.cmsValue[i].ToBytesS()...)
+		}
 	}
 
 	// Convert values to binary array
@@ -88,7 +99,8 @@ func (wit Witness) ProveUsingBase(b *crypto.Point) (*RangeProof, error) {
 		proof.s = S
 	}
 	// challenge y, z
-	y := generateChallenge(aggParam.cs.ToBytesS(), []*crypto.Point{proof.a, proof.s})
+	// y := generateChallenge(aggParam.cs.ToBytesS(), []*crypto.Point{proof.a, proof.s})
+	y := generateChallenge(initChal, []*crypto.Point{proof.a, proof.s})
 	z := generateChallenge(y.ToBytesS(), []*crypto.Point{proof.a, proof.s})
 
 	// LINE 51-54
