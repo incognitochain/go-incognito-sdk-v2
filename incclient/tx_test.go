@@ -12,7 +12,6 @@ import (
 	"github.com/incognitochain/go-incognito-sdk-v2/common"
 	"github.com/incognitochain/go-incognito-sdk-v2/common/base58"
 	"github.com/incognitochain/go-incognito-sdk-v2/metadata"
-	"github.com/incognitochain/go-incognito-sdk-v2/wallet"
 )
 
 // getBalanceByVersion is for testing purposes ONLY.
@@ -106,6 +105,84 @@ func TestIncClient_CreateRawTransaction(t *testing.T) {
 			panic(err)
 		}
 		log.Printf("FINISHED TEST %v\n\n", i)
+	}
+
+}
+
+func TestIncClient_CreateAndSendTransaction(t *testing.T) {
+	var err error
+	ic, err = NewTestNetClient()
+	if err != nil {
+		panic(err)
+	}
+	Logger.IsEnable = false
+
+	privateKey := ""
+
+	receiverPrivateKey := ""
+	paymentAddress := PrivateKeyToPaymentAddress(receiverPrivateKey, -1)
+
+	// paymentAddress := "12swbJLzycpN7m4V8gFgvXcpM1NepUVkHTv8Cpy4AwuNs2jT9FLaFkLn6PcRPV6c8vYtxg1qzvi69hx3SqwyjPbeAMScRmqzpebfGZg9CShinMKFq6yP1h4nzLZp77Qu1V2JRdn74bpeAtXZ7B3Q"
+
+	for i := 0; i < 1; i++ {
+		version := 2
+		log.Printf("TEST %v, VERSION %v\n", i, version)
+		oldSenderBalance, err := getBalanceByVersion(privateKey, common.PRVIDStr, uint8(version))
+		if err != nil {
+			panic(err)
+		}
+		log.Printf("oldSenderBalance: %v\n", oldSenderBalance)
+
+		oldReceiverBalance, err := getBalanceByVersion(receiverPrivateKey, common.PRVIDStr, uint8(version))
+		if err != nil {
+			panic(err)
+		}
+		log.Printf("oldReceiverBalance: %v\n", oldReceiverBalance)
+
+		sendingAmount := uint64(100) // 1e9
+		receiverList := []string{paymentAddress}
+		amountList := []uint64{sendingAmount}
+		tokenID := "d88840264322db699177328ee5901f42fb78d7b4958b791bd03ca87fa2390f4b"
+		log.Printf("sendingAmount: %v\n", sendingAmount)
+
+		// txHash, err := ic.CreateAndSendRawTransaction(privateKey, receiverList, amountList, int8(version), nil)
+		// if err != nil {
+		// 	panic(err)
+		// }
+
+		// fmt.Printf("TxHash: %v\n", txHash)
+
+		txHash, err := ic.CreateAndSendRawTokenTransaction(privateKey, receiverList, amountList, tokenID, int8(version), nil)
+		if err != nil {
+			panic(err)
+		}
+
+		fmt.Printf("TxHash: %v\n", txHash)
+
+		// checking if tx is in blocks
+		log.Printf("Checking status of tx %v...\n", txHash)
+		err = waitingCheckTxInBlock(txHash)
+		if err != nil {
+			panic(err)
+		}
+
+		// // checking updated balance
+		// log.Printf("Checking balance of tx %v...\n", receiverPrivateKey)
+		// expectedReceiverBalance := oldReceiverBalance + sendingAmount
+		// expectedSenderBalance := oldSenderBalance - sendingAmount - DefaultPRVFee
+		// if privateKey == receiverPrivateKey {
+		// 	expectedReceiverBalance = oldReceiverBalance - DefaultPRVFee
+		// 	expectedSenderBalance = oldSenderBalance - DefaultPRVFee
+		// }
+		// err = waitingCheckBalanceUpdated(receiverPrivateKey, common.PRVIDStr, oldReceiverBalance, expectedReceiverBalance, uint8(version))
+		// if err != nil {
+		// 	panic(err)
+		// }
+		// err = waitingCheckBalanceUpdated(privateKey, common.PRVIDStr, oldSenderBalance, expectedSenderBalance, uint8(version))
+		// if err != nil {
+		// 	panic(err)
+		// }
+		// log.Printf("FINISHED TEST %v\n\n", i)
 	}
 
 }

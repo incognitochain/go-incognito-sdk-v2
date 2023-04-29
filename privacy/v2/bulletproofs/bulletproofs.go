@@ -2,6 +2,7 @@ package bulletproofs
 
 import (
 	"fmt"
+
 	"github.com/incognitochain/go-incognito-sdk-v2/crypto"
 	"github.com/incognitochain/go-incognito-sdk-v2/privacy/utils"
 )
@@ -21,6 +22,7 @@ type Witness struct {
 
 // RangeProof represents a Bulletproofs proof.
 type RangeProof struct {
+	version           uint8
 	cmsValue          []*crypto.Point
 	a                 *crypto.Point
 	s                 *crypto.Point
@@ -44,6 +46,11 @@ func (proof *RangeProof) Init() {
 	proof.tHat = new(crypto.Scalar)
 	proof.mu = new(crypto.Scalar)
 	proof.innerProductProof = new(InnerProductProof).Init()
+	proof.version = 2
+}
+
+func (proof RangeProof) GetVersion() uint8 {
+	return proof.version
 }
 
 // IsNil checks if a RangeProof is empty.
@@ -75,6 +82,11 @@ func (proof RangeProof) IsNil() bool {
 // Bytes returns the byte-representation of a RangeProof.
 func (proof RangeProof) Bytes() []byte {
 	var res []byte
+
+	if proof.version >= 2 {
+		res = append(res, byte(0))
+		res = append(res, byte(proof.version))
+	}
 
 	if proof.IsNil() {
 		return []byte{}
@@ -110,6 +122,13 @@ func (proof *RangeProof) SetCommitments(v []*crypto.Point) {
 func (proof *RangeProof) SetBytes(bytes []byte) error {
 	if len(bytes) == 0 {
 		return nil
+	}
+	if bytes[0] == 0 {
+		// parse versions
+		proof.version = uint8(bytes[1])
+		bytes = bytes[2:]
+	} else {
+		proof.version = 1
 	}
 
 	lenValues := int(bytes[0])
@@ -207,6 +226,7 @@ func (wit *Witness) Set(values []uint64, rands []*crypto.Scalar) {
 // Prove returns the RangeProof for a Witness.
 func (wit Witness) Prove() (*RangeProof, error) {
 	proof := new(RangeProof)
+	proof.Init()
 	numValue := len(wit.values)
 	if numValue > utils.MaxOutputCoin {
 		return nil, fmt.Errorf("must less than MaxOutputCoin")
@@ -229,8 +249,12 @@ func (wit Witness) Prove() (*RangeProof, error) {
 	}
 
 	proof.cmsValue = make([]*crypto.Point, numValue)
+	initChal := aggParam.cs.ToBytesS()
 	for i := 0; i < numValue; i++ {
 		proof.cmsValue[i] = crypto.PedCom.CommitAtIndex(new(crypto.Scalar).FromUint64(values[i]), rands[i], crypto.PedersenValueIndex)
+		if proof.version >= 2 {
+			initChal = append(initChal, proof.cmsValue[i].ToBytesS()...)
+		}
 	}
 	// Convert values to binary array
 	aL := make([]*crypto.Scalar, N)
@@ -264,7 +288,8 @@ func (wit Witness) Prove() (*RangeProof, error) {
 		proof.s = S
 	}
 	// challenge y, z
-	y := generateChallenge(aggParam.cs.ToBytesS(), []*crypto.Point{proof.a, proof.s})
+	// y := generateChallenge(aggParam.cs.ToBytesS(), []*crypto.Point{proof.a, proof.s})
+	y := generateChallenge(initChal, []*crypto.Point{proof.a, proof.s})
 	z := generateChallenge(y.ToBytesS(), []*crypto.Point{proof.a, proof.s})
 
 	// LINE 51-54
