@@ -140,7 +140,7 @@ func (client *IncClient) GetUnspentOutputCoins(privateKey, tokenID string, heigh
 
 	listOutputCoins, listIndices, err := client.GetOutputCoins(outCoinKey, tokenID, height)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, fmt.Errorf("cannot get output coins: %v %v", tokenID, err)
 	}
 
 	if len(listOutputCoins) == 0 {
@@ -158,7 +158,7 @@ func (client *IncClient) GetUnspentOutputCoins(privateKey, tokenID string, heigh
 	shardID := common.GetShardIDFromLastByte(keyWallet.KeySet.PaymentAddress.Pk[len(keyWallet.KeySet.PaymentAddress.Pk)-1])
 	checkSpentList, err := client.CheckCoinsSpent(shardID, tokenID, listKeyImages)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, fmt.Errorf("cannot check spent coins: %v %v %v", tokenID, len(listKeyImages), err)
 	}
 
 	listUnspentOutputCoins := make([]coin.PlainCoin, 0)
