@@ -123,7 +123,7 @@ func (proof *RangeProof) SetBytes(bytes []byte) error {
 	if len(bytes) == 0 {
 		return nil
 	}
-	if bytes[0] == 0 {
+	if bytes[0] == 0 && len(bytes)%crypto.Ed25519KeySize == 4 {
 		// parse versions
 		proof.version = uint8(bytes[1])
 		bytes = bytes[2:]
