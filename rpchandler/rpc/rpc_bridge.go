@@ -2,6 +2,7 @@ package rpc
 
 import (
 	"fmt"
+
 	"github.com/incognitochain/go-incognito-sdk-v2/metadata"
 )
 
@@ -42,10 +43,11 @@ func EVMNetworkNotFoundError(evmNetworkID int) error {
 
 // GetBurnProof retrieves the burning proof of a transaction with the given target evmNetworkID.
 // evmNetworkID can be one of the following:
-//	- ETHNetworkID: the Ethereum network
-//	- BSCNetworkID: the Binance Smart Chain network
-//	- PLGNetworkID: the Polygon network
-//	- FTMNetworkID: the Fantom network
+//   - ETHNetworkID: the Ethereum network
+//   - BSCNetworkID: the Binance Smart Chain network
+//   - PLGNetworkID: the Polygon network
+//   - FTMNetworkID: the Fantom network
+//
 // If set empty, evmNetworkID defaults to ETHNetworkID. NOTE that only the first value of evmNetworkID is used.
 func (server *RPCServer) GetBurnProof(txHash string, evmNetworkID ...int) ([]byte, error) {
 	networkID := ETHNetworkID

@@ -3,6 +3,8 @@ package incclient
 import (
 	"encoding/json"
 	"fmt"
+	"math"
+
 	"github.com/incognitochain/go-incognito-sdk-v2/coin"
 	"github.com/incognitochain/go-incognito-sdk-v2/common"
 	"github.com/incognitochain/go-incognito-sdk-v2/common/base58"
@@ -119,6 +121,12 @@ func (client *IncClient) CreateRawTransactionVer2(param *TxParam) ([]byte, strin
 		txFee = DefaultPRVFee
 	}
 
+	// set default fee per tx inscribe temporarily
+	isInscribeTx := param.md.GetType() == metadata.InscribeRequestMeta
+	if isInscribeTx {
+		txFee = InscMinFeePerTx
+	}
+
 	//Calculate the total transacted amount
 	totalAmount := txFee
 	for _, amount := range param.amountList {
@@ -137,11 +145,32 @@ func (client *IncClient) CreateRawTransactionVer2(param *TxParam) ([]byte, strin
 
 	txParam := tx_generic.NewTxPrivacyInitParams(&(senderWallet.KeySet.PrivateKey), paymentInfos, coinsToSpend, txFee, hasPrivacy, &common.PRVCoinID, param.md, nil, kArgs)
 
+	// re-estimate tx fee with actual number of input coins
+	if isInscribeTx {
+		estimateSizeParam := tx_generic.NewEstimateTxSizeParam(2, len(coinsToSpend), len(paymentInfos), true, param.md, nil, 0)
+		txSize := uint64(math.Ceil(float64(tx_generic.EstimateTxSizeV2(estimateSizeParam) / 1024.0)))
+		estTxFee := txSize * InscMinFeePerKB
+		if estTxFee < InscMinFeePerTx {
+			estTxFee = InscMinFeePerTx
+		}
+		param.fee = estTxFee
+		totalAmount = totalAmount - txFee + estTxFee
+
+		coinsToSpend, kArgs, err := client.initParamsV2(param, common.PRVIDStr, totalAmount)
+		if err != nil {
+			return nil, "", err
+		}
+
+		txParam = tx_generic.NewTxPrivacyInitParams(&(senderWallet.KeySet.PrivateKey), paymentInfos, coinsToSpend, estTxFee, hasPrivacy, &common.PRVCoinID, param.md, nil, kArgs)
+	}
+
 	tx := new(tx_ver2.Tx)
 	err = tx.Init(txParam)
 	if err != nil {
 		return nil, "", fmt.Errorf("init txver2 error: %v", err)
 	}
+
+	fmt.Println("Tx Fee: ", tx.Fee)
 
 	txBytes, err := json.Marshal(tx)
 	if err != nil {
@@ -174,10 +203,10 @@ func (client *IncClient) CreateAndSendRawTransaction(privateKey string, addrList
 
 // CreateRawTransactionWithInputCoins creates a raw PRV transaction from the provided input coins.
 // Parameters:
-//	- param: a regular TxParam.
-//	- inputCoins: a list of decrypted, unspent PRV output coins (with the same version).
-//	- coinIndices: a list of corresponding indices for the input coins. This value must not be `nil` if the caller is
-//	creating a transaction v2.
+//   - param: a regular TxParam.
+//   - inputCoins: a list of decrypted, unspent PRV output coins (with the same version).
+//   - coinIndices: a list of corresponding indices for the input coins. This value must not be `nil` if the caller is
+//     creating a transaction v2.
 //
 // For transaction with metadata, callers must make sure other values of `param` are valid.
 //
