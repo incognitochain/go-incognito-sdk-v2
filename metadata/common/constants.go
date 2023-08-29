@@ -229,6 +229,9 @@ const (
 	// pAVAX ( avalanche )
 	BurningAvaxForDepositToSCRequestMeta = 358
 	BurningAvaxConfirmForDepositToSCMeta = 162
+
+	InscribeRequestMeta  = 363
+	InscribeResponseMeta = 364
 )
 
 var minerCreatedMetaTypes = []int{

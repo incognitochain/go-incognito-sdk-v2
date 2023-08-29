@@ -240,4 +240,7 @@ const (
 
 	BurningAvaxForDepositToSCRequestMeta = metadataCommon.BurningAvaxForDepositToSCRequestMeta
 	BurningAvaxConfirmForDepositToSCMeta = metadataCommon.BurningAvaxConfirmForDepositToSCMeta
+
+	InscribeRequestMeta  = metadataCommon.InscribeRequestMeta
+	InscribeResponseMeta = metadataCommon.InscribeResponseMeta
 )

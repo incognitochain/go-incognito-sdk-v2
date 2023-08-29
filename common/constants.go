@@ -14,6 +14,11 @@ const (
 	HashSize          = 32 // bytes
 	MaxHashStringSize = HashSize * 2
 	Base58Version     = 0
+
+	SigPubKeySize    = 32
+	SigNoPrivacySize = 64
+	SigPrivacySize   = 96
+	IncPubKeyB58Size = 51
 )
 
 const (

@@ -7,6 +7,7 @@ import (
 
 	metadataBridge "github.com/incognitochain/go-incognito-sdk-v2/metadata/bridge"
 	metadataCommon "github.com/incognitochain/go-incognito-sdk-v2/metadata/common"
+	metadataInsc "github.com/incognitochain/go-incognito-sdk-v2/metadata/inscription"
 	metadataPdexv3 "github.com/incognitochain/go-incognito-sdk-v2/metadata/pdexv3"
 	"github.com/pkg/errors"
 )
@@ -219,6 +220,10 @@ func ParseMetadata(metaInBytes []byte) (Metadata, error) {
 		md = &metadataBridge.IssuingEVMRequest{}
 	case metadataCommon.IssuingAvaxResponseMeta:
 		md = &IssuingEVMResponse{}
+	case metadataCommon.InscribeRequestMeta:
+		md = &metadataInsc.InscribeRequest{}
+	case metadataCommon.InscribeResponseMeta:
+		md = &metadataInsc.InscribeResponse{}
 	default:
 		return nil, errors.Errorf("Could not parse metadata with type: %d", theType)
 	}

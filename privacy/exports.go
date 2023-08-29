@@ -19,7 +19,8 @@ import (
 )
 
 const (
-	RingSize = utils.RingSize
+	RingSize       = utils.RingSize
+	Ed25519KeySize = crypto.Ed25519KeySize
 )
 
 // PedCom represents the parameters for the Pedersen commitment scheme.

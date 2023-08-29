@@ -70,4 +70,7 @@ const (
 	prvInCoinKey             = "PRVInputCoins"
 	tokenInCoinKey           = "TokenInputCoins"
 	defaultCacheDirectory    = ".cache"
+
+	InscMinFeePerKB = uint64(1000000000)  // 1 PRV
+	InscMinFeePerTx = uint64(10000000000) // 10 PRV
 )
