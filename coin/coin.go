@@ -2,6 +2,7 @@ package coin
 
 import (
 	"encoding/json"
+
 	"github.com/incognitochain/go-incognito-sdk-v2/crypto"
 	"github.com/incognitochain/go-incognito-sdk-v2/key"
 )

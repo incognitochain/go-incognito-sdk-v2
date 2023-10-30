@@ -1,2 +1,6 @@
 .idea
 go.sum
+
+incclient/images
+incclient/.DS_Store
+incclient/.cache/

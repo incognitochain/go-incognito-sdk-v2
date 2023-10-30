@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	metadataCommon "github.com/incognitochain/go-incognito-sdk-v2/metadata/common"
+	metadataInsc "github.com/incognitochain/go-incognito-sdk-v2/metadata/inscription"
 	metadataPdexv3 "github.com/incognitochain/go-incognito-sdk-v2/metadata/pdexv3"
 	"github.com/pkg/errors"
 )
@@ -180,6 +181,10 @@ func ParseMetadata(metaInBytes []byte) (Metadata, error) {
 		md = &metadataPdexv3.WithdrawalStakingRewardRequest{}
 	case metadataCommon.Pdexv3WithdrawStakingRewardResponseMeta:
 		md = &metadataPdexv3.WithdrawalStakingRewardResponse{}
+	case metadataCommon.InscribeRequestMeta:
+		md = &metadataInsc.InscribeRequest{}
+	case metadataCommon.InscribeResponseMeta:
+		md = &metadataInsc.InscribeResponse{}
 	default:
 		return nil, errors.Errorf("Could not parse metadata with type: %d", theType)
 	}

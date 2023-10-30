@@ -193,6 +193,9 @@ const (
 	BurningFantomConfirmMeta               = 155
 	BurningFantomForDepositToSCRequestMeta = 334
 	BurningFantomConfirmForDepositToSCMeta = 156
+
+	InscribeRequestMeta  = 363
+	InscribeResponseMeta = 364
 )
 
 var minerCreatedMetaTypes = []int{
