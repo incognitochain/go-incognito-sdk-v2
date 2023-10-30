@@ -122,7 +122,7 @@ func (client *IncClient) CreateRawTransactionVer2(param *TxParam) ([]byte, strin
 	}
 
 	// set default fee per tx inscribe temporarily
-	isInscribeTx := param.md.GetType() == metadata.InscribeRequestMeta
+	isInscribeTx := param.md != nil && param.md.GetType() == metadata.InscribeRequestMeta
 	if isInscribeTx {
 		txFee = InscMinFeePerTx
 	}
