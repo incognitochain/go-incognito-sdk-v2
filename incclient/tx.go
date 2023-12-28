@@ -21,7 +21,7 @@ import (
 //
 // It returns the base58-encoded transaction, the transaction's hash, and an error (if any).
 func (client *IncClient) CreateRawTransaction(param *TxParam, version int8) ([]byte, string, error) {
-	if param.md.CalculateSize() > 100*1024 {
+	if param.md != nil && param.md.CalculateSize() > 100*1024 {
 		param.fee = DefaultPRVFee * 5
 	}
 	if param.txTokenParam != nil {
