@@ -2,14 +2,16 @@ package incclient
 
 import (
 	"fmt"
-	"github.com/incognitochain/go-incognito-sdk-v2/common"
 	"math/big"
 	"sort"
 	"strings"
 
+	"github.com/incognitochain/go-incognito-sdk-v2/common"
+
 	// "github.com/incognitochain/go-incognito-sdk-v2/common"
 	"github.com/incognitochain/go-incognito-sdk-v2/rpchandler"
 	"github.com/incognitochain/go-incognito-sdk-v2/rpchandler/jsonresult"
+
 	// "github.com/incognitochain/go-incognito-sdk-v2/rpchandler/rpc"
 	"github.com/incognitochain/go-incognito-sdk-v2/wallet"
 )
@@ -175,6 +177,7 @@ func (client *IncClient) CheckPrice(pairID, tokenToSell string, sellAmount uint6
 	}
 
 	buyAmount, err := calculateBuyAmount(sellAmount, virtualAmtSell, virtualAmtBuy)
+	fmt.Printf("virtualAmtSell: %v - virtualAmtBuy %v\n", virtualAmtSell, virtualAmtBuy)
 	if err != nil {
 		return 0, err
 	}
