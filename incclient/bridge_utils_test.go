@@ -6,17 +6,18 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"log"
+	"testing"
+
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
-	"github.com/ethereum/go-ethereum/light"
+	"github.com/ethereum/go-ethereum/ethdb/memorydb"
 	"github.com/ethereum/go-ethereum/rlp"
 	"github.com/ethereum/go-ethereum/trie"
 	"github.com/incognitochain/go-incognito-sdk-v2/common/base58"
 	"github.com/incognitochain/go-incognito-sdk-v2/metadata"
 	"github.com/incognitochain/go-incognito-sdk-v2/rpchandler/rpc"
 	"github.com/incognitochain/go-incognito-sdk-v2/transaction/tx_ver2"
-	"log"
-	"testing"
 )
 
 func TestIncClient_GetEVMTxByHash(t *testing.T) {
@@ -239,7 +240,7 @@ func verifyProofAndParseReceipt(iReq *metadata.IssuingEVMRequest) (*types.Receip
 
 	log.Println("keyBuf:", keyBuf.Bytes())
 
-	nodeList := new(light.NodeList)
+	nodeList := memorydb.New()
 	for i, proofStr := range iReq.ProofStrs {
 		proofBytes, err := base64.StdEncoding.DecodeString(proofStr)
 		if err != nil {
@@ -251,7 +252,7 @@ func verifyProofAndParseReceipt(iReq *metadata.IssuingEVMRequest) (*types.Receip
 			return nil, err
 		}
 	}
-	proof := nodeList.NodeSet()
+	proof := nodeList
 	val, err := trie.VerifyProof(evmHeader.ReceiptHash, keyBuf.Bytes(), proof)
 	if err != nil {
 		return nil, err

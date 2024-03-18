@@ -7,7 +7,7 @@ import (
 
 	"github.com/incognitochain/go-incognito-sdk-v2/common"
 
-	"github.com/wemeetagain/go-hdwallet"
+	"github.com/theedtron/go-hdwallet"
 
 	"github.com/stretchr/testify/assert"
 )

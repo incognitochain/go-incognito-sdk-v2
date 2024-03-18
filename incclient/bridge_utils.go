@@ -5,15 +5,16 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"github.com/incognitochain/go-incognito-sdk-v2/common"
-	"github.com/incognitochain/go-incognito-sdk-v2/rpchandler/rpc"
 	"math/big"
 	"strconv"
 	"sync"
 
+	"github.com/ethereum/go-ethereum/ethdb/memorydb"
+	"github.com/incognitochain/go-incognito-sdk-v2/common"
+	"github.com/incognitochain/go-incognito-sdk-v2/rpchandler/rpc"
+
 	rCommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/light"
 	"github.com/ethereum/go-ethereum/rlp"
 	"github.com/ethereum/go-ethereum/trie"
 	"github.com/incognitochain/go-incognito-sdk-v2/rpchandler"
@@ -33,10 +34,11 @@ type BridgeTokenInfo struct {
 // GetEVMTxByHash retrieves an EVM transaction from its hash.
 //
 // An additional parameter `evmNetworkID` is introduced to specify the target EVM network. evmNetworkID can be one of the following:
-//	- rpc.ETHNetworkID: the Ethereum network
-//	- rpc.BSCNetworkID: the Binance Smart Chain network
-//	- rpc.PLGNetworkID: the Polygon network
-//	- rpc.FTMNetworkID: the Fantom network
+//   - rpc.ETHNetworkID: the Ethereum network
+//   - rpc.BSCNetworkID: the Binance Smart Chain network
+//   - rpc.PLGNetworkID: the Polygon network
+//   - rpc.FTMNetworkID: the Fantom network
+//
 // If set empty, evmNetworkID defaults to rpc.ETHNetworkID. NOTE that only the first value of evmNetworkID is used.
 func (client *IncClient) GetEVMTxByHash(txHash string, evmNetworkID ...int) (map[string]interface{}, error) {
 	networkID := rpc.ETHNetworkID
@@ -113,10 +115,11 @@ func (client *IncClient) GetEVMBlockByHash(blockHash string, evmNetworkID ...int
 // GetEVMTxReceipt retrieves an EVM transaction receipt from its hash.
 //
 // An additional parameter `evmNetworkID` is introduced to specify the target EVM network. evmNetworkID can be one of the following:
-//	- rpc.ETHNetworkID: the Ethereum network
-//	- rpc.BSCNetworkID: the Binance Smart Chain network
-//	- rpc.PLGNetworkID: the Polygon network
-//	- rpc.FTMNetworkID: the Fantom network
+//   - rpc.ETHNetworkID: the Ethereum network
+//   - rpc.BSCNetworkID: the Binance Smart Chain network
+//   - rpc.PLGNetworkID: the Polygon network
+//   - rpc.FTMNetworkID: the Fantom network
+//
 // If set empty, evmNetworkID defaults to rpc.ETHNetworkID. NOTE that only the first value of evmNetworkID is used.
 func (client *IncClient) GetEVMTxReceipt(txHash string, evmNetworkID ...int) (*types.Receipt, error) {
 	networkID := rpc.ETHNetworkID
@@ -156,10 +159,11 @@ func (client *IncClient) GetEVMTxReceipt(txHash string, evmNetworkID ...int) (*t
 // GetEVMDepositProof retrieves an EVM-depositing proof of a transaction hash.
 //
 // An additional parameter `evmNetworkID` is introduced to specify the target EVM network. evmNetworkID can be one of the following:
-//	- rpc.ETHNetworkID: the Ethereum network
-//	- rpc.BSCNetworkID: the Binance Smart Chain network
-//	- rpc.PLGNetworkID: the Polygon network
-//	- rpc.FTMNetworkID: the Fantom network
+//   - rpc.ETHNetworkID: the Ethereum network
+//   - rpc.BSCNetworkID: the Binance Smart Chain network
+//   - rpc.PLGNetworkID: the Polygon network
+//   - rpc.FTMNetworkID: the Fantom network
+//
 // If set empty, evmNetworkID defaults to rpc.ETHNetworkID. NOTE that only the first value of evmNetworkID is used.
 func (client *IncClient) GetEVMDepositProof(txHash string, evmNetworkID ...int) (*EVMDepositProof, uint64, error) {
 	// Get tx content
@@ -298,25 +302,31 @@ func (client *IncClient) GetEVMDepositProof(txHash string, evmNetworkID ...int) 
 	Logger.Println("Finish creating receipt trie.")
 
 	// Constructing the proof for the current receipt (source: go-ethereum/trie/proof.go)
-	proof := light.NewNodeSet()
+	proof := memorydb.New()
 	keyBuf.Reset()
 	err = rlp.Encode(keyBuf, uint(txIndex))
 	if err != nil {
 		return nil, 0, fmt.Errorf("rlp encode returns an error: %v", err)
 	}
 	Logger.Println("Start proving receipt trie...")
-	err = receiptTrie.Prove(keyBuf.Bytes(), 0, proof)
+	err = receiptTrie.Prove(keyBuf.Bytes(), proof)
 	if err != nil {
 		return nil, 0, err
 	}
 	Logger.Println("Finish proving receipt trie.")
 
-	nodeList := proof.NodeList()
+	nodeList := proof.NewIterator(nil, nil)
+
 	encNodeList := make([]string, 0)
-	for _, node := range nodeList {
-		str := base64.StdEncoding.EncodeToString(node)
-		encNodeList = append(encNodeList, str)
+
+	for nodeList.Next() {
+		encNodeList = append(encNodeList, base64.StdEncoding.EncodeToString(nodeList.Value()))
 	}
+
+	// for _, node := range nodeList {
+	// 	str := base64.StdEncoding.EncodeToString(node)
+	// 	encNodeList = append(encNodeList, str)
+	// }
 
 	return NewETHDepositProof(uint(blockNumber), blockHash, uint(txIndex), encNodeList), amount, nil
 }
@@ -324,10 +334,11 @@ func (client *IncClient) GetEVMDepositProof(txHash string, evmNetworkID ...int) 
 // GetMostRecentEVMBlockNumber retrieves the most recent EVM block number.
 //
 // An additional parameter `evmNetworkID` is introduced to specify the target EVM network. evmNetworkID can be one of the following:
-//	- rpc.ETHNetworkID: the Ethereum network
-//	- rpc.BSCNetworkID: the Binance Smart Chain network
-//	- rpc.PLGNetworkID: the Polygon network
-//	- rpc.FTMNetworkID: the Fantom network
+//   - rpc.ETHNetworkID: the Ethereum network
+//   - rpc.BSCNetworkID: the Binance Smart Chain network
+//   - rpc.PLGNetworkID: the Polygon network
+//   - rpc.FTMNetworkID: the Fantom network
+//
 // If set empty, evmNetworkID defaults to rpc.ETHNetworkID. NOTE that only the first value of evmNetworkID is used.
 func (client *IncClient) GetMostRecentEVMBlockNumber(evmNetworkID ...int) (uint64, error) {
 	networkID := rpc.ETHNetworkID
@@ -373,10 +384,11 @@ func (client *IncClient) GetMostRecentEVMBlockNumber(evmNetworkID ...int) (uint6
 // GetEVMTransactionStatus returns the status of an EVM transaction.
 //
 // An additional parameter `evmNetworkID` is introduced to specify the target EVM network. evmNetworkID can be one of the following:
-//	- rpc.ETHNetworkID: the Ethereum network
-//	- rpc.BSCNetworkID: the Binance Smart Chain network
-//	- rpc.PLGNetworkID: the Polygon network
-//	- rpc.FTMNetworkID: the Fantom network
+//   - rpc.ETHNetworkID: the Ethereum network
+//   - rpc.BSCNetworkID: the Binance Smart Chain network
+//   - rpc.PLGNetworkID: the Polygon network
+//   - rpc.FTMNetworkID: the Fantom network
+//
 // If set empty, evmNetworkID defaults to rpc.ETHNetworkID. NOTE that only the first value of evmNetworkID is used.
 func (client *IncClient) GetEVMTransactionStatus(txHash string, evmNetworkID ...int) (int, error) {
 	receipt, err := client.GetEVMTxReceipt(txHash, evmNetworkID...)

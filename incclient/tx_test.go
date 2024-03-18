@@ -12,6 +12,7 @@ import (
 	"github.com/incognitochain/go-incognito-sdk-v2/common"
 	"github.com/incognitochain/go-incognito-sdk-v2/common/base58"
 	"github.com/incognitochain/go-incognito-sdk-v2/metadata"
+	"github.com/incognitochain/go-incognito-sdk-v2/wallet"
 )
 
 // getBalanceByVersion is for testing purposes ONLY.
