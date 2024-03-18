@@ -14,6 +14,7 @@ import (
 	"github.com/incognitochain/go-incognito-sdk-v2/rpchandler/rpc"
 
 	rCommon "github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/core/rawdb"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/rlp"
 	"github.com/ethereum/go-ethereum/trie"
@@ -247,7 +248,7 @@ func (client *IncClient) GetEVMDepositProof(txHash string, evmNetworkID ...int) 
 
 	// Constructing the receipt trie (source: go-ethereum/core/types/derive_sha.go)
 	keyBuf := new(bytes.Buffer)
-	receiptTrie := new(trie.Trie)
+	receiptTrie := trie.NewEmpty(trie.NewDatabase(rawdb.NewMemoryDatabase(), nil))
 	receipts := make([]*types.Receipt, 0)
 	for i, tx := range siblingTxs {
 		txStr, ok := tx.(string)
